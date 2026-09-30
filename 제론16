@@ -9001,9 +9001,6 @@ AntiBox2:AddToggle("heyeue", {
 })
 
 local flyingResetConn = nil
-local resetProtectionConn = nil
-local healthProtectionConn = nil
-local isResetting = false
 
 AntiBox3:AddToggle("owiduxj", {
     Text = "Auto reset [Self kill]",
@@ -9016,7 +9013,7 @@ AntiBox3:AddToggle("owiduxj", {
 
         if Value then
             flyingResetConn = rs.GameCorrectionEvents.GameCorrectionsNotify.OnClientEvent:Connect(function(Type)
-                if Type ~= "Flying" or isResetting then
+                if Type ~= "Flying" then
                     return
                 end
 
@@ -9030,13 +9027,6 @@ AntiBox3:AddToggle("owiduxj", {
                     return
                 end
 
-                isResetting = true
-
-                if healthProtectionConn then
-                    healthProtectionConn:Disconnect()
-                    healthProtectionConn = nil
-                end
-
                 pcall(function()
                     rs.CharacterEvents.Struggle:FireServer()
                 end)
@@ -9048,46 +9038,6 @@ AntiBox3:AddToggle("owiduxj", {
         end
     end
 })
-
-resetProtectionConn = plr.CharacterAdded:Connect(function(char)
-    task.wait(0.2)
-
-    local hum = char:WaitForChild("Humanoid", 5)
-    if not hum then
-        return
-    end
-
-    isResetting = false
-
-    hum.MaxHealth = math.huge
-    hum.Health = math.huge
-    hum.BreakJointsOnDeath = false
-    hum.PlatformStand = false
-
-    if healthProtectionConn then
-        healthProtectionConn:Disconnect()
-        healthProtectionConn = nil
-    end
-
-    healthProtectionConn = hum.HealthChanged:Connect(function(health)
-        if isResetting then
-            return
-        end
-
-        if health < hum.MaxHealth then
-            hum.Health = hum.MaxHealth
-        end
-    end)
-end)
-AntiBox3:AddToggle("su2iisiisi", {
-    Text = "Anti kick [Part]",
-    Default = false,
-    Callback = function(Value)
-        AntiKickT = Value
-        task.spawn(AntiKickF)
-    end
-})
-
 do
     local AntiKickT = false
 
