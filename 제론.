@@ -10498,23 +10498,36 @@ SaveManager:BuildConfigSection(Tabs.UISettings)
 Window:SetCornerRadius(20)
 Library.ShowCustomCursor = false
 local watermark = Library:AddDraggableLabel("XERON Premium | FPS | RN ms")
+
+local RunService = game:GetService("RunService")
+local StatsService = game:GetService("Stats")
+
 Players.PlayerAdded:Connect(function()
     task.wait(1)
     local newList = updatePlayerList()
-    Options.TargetPlayer:SetValues(newList)
+    if Options and Options.TargetPlayer then
+        Options.TargetPlayer:SetValues(newList)
+    end
 end)
 
 Players.PlayerRemoving:Connect(function()
     task.wait(0.5)
     local newList = updatePlayerList()
-    Options.TargetPlayer:SetValues(newList)
+    if Options and Options.TargetPlayer then
+        Options.TargetPlayer:SetValues(newList)
+    end
 end)
+
 task.spawn(function()
     while task.wait(0.5) do
-        local fps = math.floor(1 / R.RenderStepped:Wait())
-        local ping = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
+        local fps = math.floor(1 / RunService.RenderStepped:Wait())
+        local ping = 0
+        pcall(function()
+            ping = math.floor(StatsService.Network.ServerStatsItem["Data Ping"]:GetValue())
+        end)
         watermark:SetText(string.format("XERON Premium  | %d FPS | %d ms", fps, ping))
     end
 end)
+
 
 SaveManager:LoadAutoloadConfig()  
