@@ -4524,7 +4524,7 @@ function AntiBlobUseF()
         end
     end)
 end
-local Players = game:GetService("Players")
+ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 
@@ -4567,7 +4567,8 @@ local Window = Library:CreateWindow({
 })
 
 local Tabs = {
-    Info = Window:AddTab("Information")
+    Info = Window:AddTab("Information"),
+    Settings = Window:AddTab("Settings")
 }
 
 local LeftBox = Tabs.Info:AddLeftGroupbox("Player Preview")
@@ -4683,5 +4684,33 @@ SaveManager:IgnoreThemeSettings()
 SaveManager:SetIgnoreIndexes({})
 ThemeManager:SetFolder("ObsidianConfig")
 SaveManager:SetFolder("ObsidianConfig/Main")
-SaveManager:BuildConfigSection(Tabs.Info)
-ThemeManager:ApplyToTab(Tabs.Info)
+
+SaveManager:BuildConfigSection(Tabs.Settings)
+ThemeManager:ApplyToTab(Tabs.Settings)
+
+local function roundUI(obj)
+    if (obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("TextBox") or obj:IsA("ScrollingFrame")) and not obj:FindFirstChildOfClass("UICorner") then
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 8)
+        corner.Parent = obj
+    end
+end
+
+task.spawn(function()
+    task.wait(0.2)
+    local targetGui = Library.ScreenGui or Library.GUI
+    if not targetGui then
+        local CoreGui = game:GetService("CoreGui")
+        targetGui = CoreGui:FindFirstChild("ScreenGui") or CoreGui:FindFirstChild("Obsidian")
+    end
+
+    if targetGui then
+        for _, desc in ipairs(targetGui:GetDescendants()) do
+            roundUI(desc)
+        end
+        targetGui.DescendantAdded:Connect(function(desc)
+            task.wait()
+            roundUI(desc)
+        end)
+    end
+end)
