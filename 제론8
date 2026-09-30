@@ -5004,15 +5004,15 @@ local Window = Library:CreateWindow({
 })
 
 local Tabs = {
-    Info = Window:AddTab("Information"),
-    Player = Window:AddTab("Player"),
-    pass = Window:AddTab("pass"),
-    Combat = Window:AddTab("Combat"),
-    Invincibility = Window:AddTab("Invincibility"),
-    View = Window:AddTab("View"),
-    Loop = Window:AddTab("Loop"),
-    Keybind = Window:AddTab("Keybind"),
-    Settings = Window:AddTab("Settings")
+    Info = Window:AddTab("Information", "server"),
+    Player = Window:AddTab("Player", "player"),
+    pass = Window:AddTab("pass, "shield-x""),
+    Combat = Window:AddTab("Combat", "hand-metal"),
+    Invincibility = Window:AddTab("Invincibility, "scan-eye""),
+    View = Window:AddTab("View",  "balloon"),
+    Loop = Window:AddTab("Loop", "locate-fixed"),
+    Keybind = Window:AddTab("Keybind, "palette""),
+    UISettings = Window:AddTab("UI Settings", "settings")
 }
 
 local playerTab = Tabs.Player
