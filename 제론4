@@ -4525,6 +4525,7 @@ function AntiBlobUseF()
     end)
 end
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 
 local LocalPlayer = Players.LocalPlayer
@@ -4557,9 +4558,6 @@ local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 
-local Options = Library.Options
-local Toggles = Library.Toggles
-
 local Window = Library:CreateWindow({
     Title = "Main Window",
     Center = true,
@@ -4575,7 +4573,71 @@ local Tabs = {
 local LeftBox = Tabs.Info:AddLeftGroupbox("Player Preview")
 local RightBox = Tabs.Info:AddRightGroupbox("User Information")
 
-LeftBox:AddCharacterPreview()
+local ViewportHolder = Instance.new("Frame")
+ViewportHolder.Name = "CharacterPreviewHolder"
+ViewportHolder.Size = UDim2.new(1, 0, 0, 200)
+ViewportHolder.BackgroundTransparency = 1
+ViewportHolder.BorderSizePixel = 0
+ViewportHolder.Parent = LeftBox.Container
+
+local Viewport = Instance.new("ViewportFrame")
+Viewport.Size = UDim2.new(1, 0, 1, 0)
+Viewport.BackgroundTransparency = 1
+Viewport.BorderSizePixel = 0
+Viewport.Parent = ViewportHolder
+
+local ViewportCamera = Instance.new("Camera")
+ViewportCamera.FieldOfView = 50
+Viewport.CurrentCamera = ViewportCamera
+ViewportCamera.Parent = Viewport
+
+local CurrentClone = nil
+local RotateConnection = nil
+
+local function setupCharacter()
+    if CurrentClone then
+        CurrentClone:Destroy()
+        CurrentClone = nil
+    end
+    if RotateConnection then
+        RotateConnection:Disconnect()
+        RotateConnection = nil
+    end
+
+    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    Character.Archivable = true
+    CurrentClone = Character:Clone()
+    Character.Archivable = false
+
+    local Root = CurrentClone:FindFirstChild("HumanoidRootPart") or CurrentClone:FindFirstChild("Torso") or CurrentClone:FindFirstChild("UpperTorso")
+    if Root then
+        for _, obj in ipairs(CurrentClone:GetDescendants()) do
+            if obj:IsA("Script") or obj:IsA("LocalScript") then
+                obj:Destroy()
+            end
+        end
+
+        CurrentClone.Parent = Viewport
+        local Distance = 5.5
+        local Angle = 0
+
+        RotateConnection = RunService.RenderStepped:Connect(function(dt)
+            if not CurrentClone or not Root or not Root.Parent then return end
+            Angle = Angle + (dt * 45)
+            local Radians = math.rad(Angle)
+            local Offset = Vector3.new(math.sin(Radians) * Distance, 0.5, math.cos(Radians) * Distance)
+            ViewportCamera.CFrame = CFrame.new(Root.Position + Offset, Root.Position)
+        end)
+    end
+end
+
+task.spawn(function()
+    setupCharacter()
+    LocalPlayer.CharacterAdded:Connect(function()
+        task.wait(1)
+        setupCharacter()
+    end)
+end)
 
 local StartTime = os.time()
 local HWID = getExecutorHWID()
@@ -4584,7 +4646,7 @@ RightBox:AddLabel("Username: " .. LocalPlayer.Name)
 RightBox:AddLabel("Display: " .. LocalPlayer.DisplayName)
 RightBox:AddLabel("HWID: " .. string.sub(HWID, 1, 16) .. "...")
 
-local UptimeLabel = RightBox:AddLabel("Uptime: 0s")
+local UptimeLabel = RightBox:AddLabel("Uptime: 00:00:00")
 task.spawn(function()
     while task.wait(1) do
         local Elapsed = os.time() - StartTime
