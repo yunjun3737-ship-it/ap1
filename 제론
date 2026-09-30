@@ -2423,6 +2423,371 @@ task.wait(0.1)
         end
     end
 end
+function AntiStruggleGrabF()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local SetNetworkOwner = ReplicatedStorage.GrabEvents.SetNetworkOwner
+    local DestroyGrabLine = ReplicatedStorage.GrabEvents.DestroyGrabLine
+    local CreateGrabLine = ReplicatedStorage.GrabEvents.CreateGrabLine
+    local Players = game:GetService("Players")
+
+    if not AntiStruggleGrabT then return end
+
+    task.spawn(function()
+        while AntiStruggleGrabT do
+            local grabParts = workspace:FindFirstChild("GrabParts")
+            if not grabParts then
+                task.wait()
+                continue
+            end
+
+            local gp = grabParts:FindFirstChild("GrabPart")
+            local weld = gp and gp:FindFirstChildOfClass("WeldConstraint")
+            local part1 = weld and weld.Part1
+
+            if part1 then
+                local ownerPlayer = nil
+                for _, pl in ipairs(Players:GetPlayers()) do
+                    if pl.Character and part1:IsDescendantOf(pl.Character) then
+                        ownerPlayer = pl
+                        break
+                    end
+                end
+
+                while AntiStruggleGrabT and workspace:FindFirstChild("GrabParts") do
+                    if ownerPlayer then
+                        local tgtTorso = ownerPlayer.Character:FindFirstChild("HumanoidRootPart") 
+                        local tgtHum = ownerPlayer.Character:FindFirstChild("Humanoid")
+                        local tgtHead = ownerPlayer.Character:FindFirstChild("Head")
+                        local myTorso = plr.Character:FindFirstChild("HumanoidRootPart") 
+
+                        if tgtTorso and myTorso and tgtHead then
+                            local ownerValue = tgtHead:FindFirstChild("PartOwner")
+                            if tgtTorso then --not ownerValue or ownerValue.Value ~= plr.Name then
+                                SetNetworkOwner:FireServer(tgtTorso, CFrame.lookAt(myTorso.Position, tgtTorso.Position))
+                            end
+                        end
+                    else
+                        if part1.Parent then
+                            local myTorso = plr.Character:FindFirstChild("HumanoidRootPart")
+                            if myTorso then
+                                SetNetworkOwner:FireServer(part1, CFrame.lookAt(myTorso.Position, part1.Position))
+                            end
+                        end
+                    end
+                    task.wait()
+                end
+            end
+            task.wait()
+        end
+    end)
+end
+
+TpKLG = false
+function KillGrabF()
+    while KillGrabT and task.wait() do
+        local grabParts = workspace:FindFirstChild("GrabParts")
+        if not grabParts then continue end
+
+        for _, grabPart in ipairs(grabParts:GetChildren()) do
+            if not KillGrabT then break end
+            if grabPart.Name ~= "GrabPart" then continue end
+
+            local weldConstraint = grabPart:FindFirstChildOfClass("WeldConstraint")
+            if not weldConstraint or not weldConstraint.Part1 then continue end
+
+            local target = weldConstraint.Part1
+            if not target or not target.Parent then continue end
+
+            local targetPlayer = game.Players:FindFirstChild(target.Parent.Name)
+            if not targetPlayer then continue end
+
+            local targetChar = targetPlayer.Character
+            if not targetChar then continue end
+
+            local THead = targetChar:FindFirstChild("Head")
+            local THRP = targetChar:FindFirstChild("HumanoidRootPart")
+            local THum = targetChar:FindFirstChildOfClass("Humanoid")
+
+            if not THead or not THRP or not THum then continue end
+            if THum.Health <= 0 then continue end
+
+            local char = plr.Character
+            if not char then continue end
+
+            local myTorso = char:FindFirstChild("HumanoidRootPart")
+            if not myTorso then continue end
+
+            if (myTorso.Position - target.Position).Magnitude > 30 then continue end
+
+            local partOwner = THead:FindFirstChild("PartOwner")
+
+            if WhiteListMode then
+                local isWhitelisted = false
+                for _, whitelistedName in ipairs(Whitelist) do
+                    if whitelistedName == targetPlayer.Name then
+                        isWhitelisted = true
+                        break
+                    end
+                end
+                if isWhitelisted then continue end
+            end
+
+            if not partOwner or not partOwner:IsA("StringValue") or partOwner.Value ~= plr.Name then
+                pcall(function()
+                    game:GetService("ReplicatedStorage").GrabEvents.SetNetworkOwner:FireServer(THRP, CFrame.lookAt(myTorso.Position, THRP.Position))
+                end)
+                continue
+            end
+
+            game:GetService("ReplicatedStorage").GrabEvents.SetNetworkOwner:FireServer(THRP, CFrame.lookAt(myTorso.Position, THRP.Position))
+            game:GetService("ReplicatedStorage").GrabEvents.DestroyGrabLine:FireServer(THRP)
+
+            weldConstraint.Part0 = nil
+
+            if THum.RigType ~= Enum.HumanoidRigType.R15 and THum.SeatPart == nil then THum.RigType = Enum.HumanoidRigType.R15 end
+            if THum.BreakJointsOnDeath == true and THum.SeatPart == nil then THum.BreakJointsOnDeath = false end
+
+            local FallenY = workspace.FallenPartsDestroyHeight
+            local targetY = (FallenY <= -50000 and -49999.50) or (FallenY <= -100 and -99.50) or -100
+            if TpKLG then THRP.CFrame = CFrame.new(9999, targetY, 9999) end
+        end
+    end
+end
+
+AnhKick = false
+function KickGrabF()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+
+    if not KickGrabT then return end
+
+    local localPlayer = Players.LocalPlayer
+    if not localPlayer or not localPlayer.Character then return end
+
+    local connection
+    connection = RunService.Heartbeat:Connect(function()
+        if not KickGrabT then
+            connection:Disconnect()
+            return
+        end
+
+        local myCharacter = localPlayer.Character
+        local myTorso = myCharacter:FindFirstChild("Torso") or myCharacter:FindFirstChild("HumanoidRootPart")
+        if not myTorso then return end
+
+        local grabParts = workspace:FindFirstChild("GrabParts")
+        if not grabParts then return end
+
+        for _, grabPart in ipairs(grabParts:GetChildren()) do
+            if grabPart.Name == "GrabPart" then
+                local weld = grabPart:FindFirstChildOfClass("WeldConstraint")
+                if not weld then continue end
+
+                local originalPart1 = weld.Part1
+                if not originalPart1 then continue end
+
+                local ownerPlayer
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player ~= localPlayer and player.Character and originalPart1:IsDescendantOf(player.Character) then
+                        ownerPlayer = player
+                        break
+                    end
+                end
+
+                if not ownerPlayer then continue end
+                local tgtTorso = ownerPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if not tgtTorso then continue end
+
+                weld.Part1 = tgtTorso
+
+                if AnhKick then
+                    local tgtHum = ownerPlayer.Character:FindFirstChild("Humanoid")
+                    if not tgtHum then continue end
+
+                    if not tgtHum.Sit then ReplicatedStorage.GrabEvents.SetNetworkOwner:FireServer(tgtTorso, CFrame.lookAt(myTorso.Position, tgtTorso.Position)) end
+                    if tgtHum.Sit then ReplicatedStorage.GrabEvents.DestroyGrabLine:FireServer(tgtTorso) end
+                    if ownerPlayer.IsHeld then ReplicatedStorage.GrabEvents.SetNetworkOwner:FireServer(tgtTorso, CFrame.lookAt(myTorso.Position, tgtTorso.Position)) end
+                    if tgtHum.Sit then ReplicatedStorage.GrabEvents.DestroyGrabLine:FireServer(tgtTorso) end
+                else
+                    ReplicatedStorage.GrabEvents.SetNetworkOwner:FireServer(tgtTorso, CFrame.lookAt(myTorso.Position, tgtTorso.Position))
+                    ReplicatedStorage.GrabEvents.DestroyGrabLine:FireServer(tgtTorso)
+                end
+            end
+        end
+    end)
+end
+local Players = game:GetService("Players")
+
+getgenv().IfKickThenT = true
+getgenv().AnchoredCache = getgenv().AnchoredCache or {}
+
+local function ifKickThenF()
+    Players.PlayerAdded:Connect(function(plr)
+        plr.CharacterAdded:Connect(function(char)
+            local hrp = char:WaitForChild("HumanoidRootPart", 1)
+            if hrp then
+                getgenv().AnchoredCache[plr] = false
+            end
+        end)
+    end)
+
+    Players.PlayerRemoving:Connect(function(plr)
+        if getgenv().AnchoredCache[plr] == true then
+            local DISP = plr.DisplayName
+            local NAP = plr.Name
+            
+            OrionLib:MakeNotification({
+                Name = "[ kick ]",
+                Content = "[" .. DISP .. "] ( @" .. NAP ..  ")",
+                Image = "rbxassetid://4483345998",
+                Time = 7
+            })
+        end
+        getgenv().AnchoredCache[plr] = nil
+    end)
+
+    task.spawn(function()
+        while getgenv().IfKickThenT do
+            for _, plr in ipairs(Players:GetPlayers()) do
+                local char = plr.Character
+                if char then
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        getgenv().AnchoredCache[plr] = (hrp.Anchored == true)
+                    end
+                end
+            end
+            task.wait()
+        end
+    end)
+end
+
+ifKickThenF()
+
+function MasslessGrabF()
+    while MasslessGrabT and task.wait() do
+        local grabParts = workspace:FindFirstChild("GrabParts")
+        
+        if grabParts then
+            local dragParts = {grabParts:FindFirstChild("DragPart"), grabParts:FindFirstChild("DragPart1")}
+            
+            for _, dragPart in pairs(dragParts) do
+                if dragPart then
+                    local alignOrientation = dragPart:FindFirstChildOfClass("AlignOrientation")
+                    if alignOrientation then
+                        alignOrientation.MaxAngularVelocity = math.huge
+                        alignOrientation.MaxTorque = math.huge
+                        alignOrientation.Responsiveness = 200
+                    end
+                    
+                    local alignPosition = dragPart:FindFirstChildOfClass("AlignPosition")
+                    if alignPosition then
+                        alignPosition.MaxAxesForce = Vector3.new(math.huge, math.huge, math.huge)
+                        alignPosition.MaxForce = math.huge
+                        alignPosition.MaxVelocity = math.huge
+                        alignPosition.Responsiveness = 200
+                    end
+                end
+            end
+        end
+    end
+end
+
+function NoClipGrabF()
+    local trackedTargets = {}
+    local playerCheckCooldown = 0
+    
+    local function findAllParts(object, partsList)
+        if object:IsA("BasePart") then
+            partsList[object] = object.CanCollide
+        end
+        
+        for _, child in ipairs(object:GetChildren()) do
+            findAllParts(child, partsList)
+        end
+    end
+    
+    local function setPartsCollision(partsList, enable)
+        for part, originalValue in pairs(partsList) do
+            if part and part.Parent then
+                if enable then
+                    part.CanCollide = originalValue
+                else
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+    
+    while NoClipGrabT and task.wait() do
+        local grabParts = workspace:FindFirstChild("GrabParts")
+        
+        if grabParts then
+            local currentTargets = {}
+            
+            for _, grabPart in ipairs(grabParts:GetChildren()) do
+                if grabPart.Name == "GrabPart" then
+                    local weldConstraint = grabPart:FindFirstChildOfClass("WeldConstraint")
+                    
+                    if weldConstraint and weldConstraint.Part1 then
+                        local target = weldConstraint.Part1
+                        currentTargets[target] = true
+                        
+                        if not trackedTargets[target] then
+                            local partsToDisable = {}
+                            local isPlayer = false
+                            
+                            if target.Parent then
+                                findAllParts(target.Parent, partsToDisable)
+                                local humanoid = target.Parent:FindFirstChildOfClass("Humanoid")
+                                if humanoid then
+                                    isPlayer = true
+                                end
+                            else
+                                if target:IsA("BasePart") then
+                                    partsToDisable[target] = target.CanCollide
+                                end
+                            end
+                            
+                            setPartsCollision(partsToDisable, false)
+                            
+                            local connection
+                            connection = weldConstraint.Destroying:Connect(function()
+                                setPartsCollision(partsToDisable, true)
+                                trackedTargets[target] = nil
+                                if connection then
+                                    connection:Disconnect()
+                                end
+                            end)
+                            
+                            trackedTargets[target] = {
+                                target = target,
+                                connection = connection,
+                                partsToDisable = partsToDisable,
+                                isPlayer = isPlayer,
+                                lastPlayerCheck = os.clock()
+                            }
+                        else
+                            trackedTargets[target].lastPlayerCheck = os.clock()
+                        end
+                    end
+                end
+            end
+            
+            playerCheckCooldown = playerCheckCooldown + task.wait()
+            if playerCheckCooldown >= 0.01 then
+                playerCheckCooldown = 0
+                
+                for target, data in pairs(trackedTargets) do
+                    if data.isPlayer then
+                        
+                    end
+                end
+            end
+        end
+    end
+end
 
 function AntiGrabStickyF()
     local plr = game.Players.LocalPlayer
@@ -4622,7 +4987,7 @@ local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 
 local Window = Library:CreateWindow({
-    Title = "Main Window",
+    Title = "Xeron P",
     Center = true,
     AutoShow = true,
     TabPadding = 8,
@@ -4632,6 +4997,7 @@ local Window = Library:CreateWindow({
 local Tabs = {
     Info = Window:AddTab("Information"),
     Player = Window:AddTab("Player"),
+    pass = Window:AddTab("pass"),
     Combat = Window:AddTab("Combat"),
     Invincibility = Window:AddTab("Invincibility"),
     View = Window:AddTab("View"),
@@ -4640,10 +5006,12 @@ local Tabs = {
 }
 
 local playerTab = Tabs.Player
+local passTab = Tabs.pass
 local grabTab = Tabs.Combat
 local antiTab = Tabs.Invincibility
 local ListTab = Tabs.View
 local LoopTab = Tabs.Loop
+
 
 local LeftBox = Tabs.Info:AddLeftGroupbox("Player Preview")
 local RightBox = Tabs.Info:AddRightGroupbox("User Information")
@@ -9243,3 +9611,454 @@ do
         end
     })
 end
+local PassLineBox = passTab:AddLeftGroupbox("Line")
+local PassSkinBox = passTab:AddLeftGroupbox("line type")
+local PassPresetBox = passTab:AddRightGroupbox("Line preset")
+local PassRainbowBox = passTab:AddRightGroupbox("Rainbow")
+local PassUnlockBox = passTab:AddRightGroupbox("Pass unlock")
+
+PassLineBox:AddInput("GradientLayersInput", {
+    Default = "2",
+    Numeric = true,
+    Finished = true,
+    Text = "Gradient Layer Count (2 ~ 4)",
+    Placeholder = "Default: 2",
+    Callback = function(text)
+        local num = tonumber(text)
+        if num and num >= 2 and num <= 4 then
+            GradientLayers = math.floor(num)
+            if CustomGradientEnabled and game:GetService("ReplicatedStorage"):FindFirstChild("DataEvents") then
+                pcall(function()
+                    local points = {}
+                    if GradientLayers == 2 then
+                        points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(1, Color2)}
+                    elseif GradientLayers == 3 then
+                        points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(0.5, Color2), ColorSequenceKeypoint.new(1, Color3_Val or Color3.new(0,0,0))}
+                    elseif GradientLayers == 4 then
+                        points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(0.33, Color2), ColorSequenceKeypoint.new(0.66, Color3_Val or Color3.new(0,0,0)), ColorSequenceKeypoint.new(1, Color4 or Color3.new(0,1,0))}
+                    end
+                    game:GetService("ReplicatedStorage").DataEvents.UpdateLineColorsEvent:FireServer(ColorSequence.new(points))
+                end)
+            end
+        else
+            Library:Notify("Layer amount must be between 2 and 4.", 3)
+        end
+    end
+})
+
+PassLineBox:AddLabel("Color 1"):AddColorPicker("5", {
+    Default = Color3.fromRGB(255, 255, 255),
+    Title = "Color 1",
+    Callback = function(color)
+        Color1 = color
+        if CustomGradientEnabled and game:GetService("ReplicatedStorage"):FindFirstChild("DataEvents") then
+            pcall(function()
+                local points = {}
+                if GradientLayers == 2 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(1, Color2)}
+                elseif GradientLayers == 3 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(0.5, Color2), ColorSequenceKeypoint.new(1, Color3_Val or Color3.new(0,0,0))}
+                elseif GradientLayers == 4 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(0.33, Color2), ColorSequenceKeypoint.new(0.66, Color3_Val or Color3.new(0,0,0)), ColorSequenceKeypoint.new(1, Color4 or Color3.new(0,1,0))} end
+                game:GetService("ReplicatedStorage").DataEvents.UpdateLineColorsEvent:FireServer(ColorSequence.new(points))
+            end)
+        end
+    end
+})
+
+PassLineBox:AddLabel("Color 2"):AddColorPicker("6", {
+    Default = Color3.fromRGB(255, 255, 255),
+    Title = "Color 2",
+    Callback = function(color)
+        Color2 = color
+        if CustomGradientEnabled and game:GetService("ReplicatedStorage"):FindFirstChild("DataEvents") then
+            pcall(function()
+                local points = {}
+                if GradientLayers == 2 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(1, Color2)}
+                elseif GradientLayers == 3 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(0.5, Color2), ColorSequenceKeypoint.new(1, Color3_Val or Color3.new(0,0,0))}
+                elseif GradientLayers == 4 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(0.33, Color2), ColorSequenceKeypoint.new(0.66, Color3_Val or Color3.new(0,0,0)), ColorSequenceKeypoint.new(1, Color4 or Color3.new(0,1,0))} end
+                game:GetService("ReplicatedStorage").DataEvents.UpdateLineColorsEvent:FireServer(ColorSequence.new(points))
+            end)
+        end
+    end
+})
+
+PassLineBox:AddLabel("Color 3"):AddColorPicker("7", {
+    Default = Color3.fromRGB(255, 255, 255),
+    Title = "Color 3",
+    Callback = function(color)
+        Color3_Val = color
+        if CustomGradientEnabled and game:GetService("ReplicatedStorage"):FindFirstChild("DataEvents") then
+            pcall(function()
+                local points = {}
+                if GradientLayers == 2 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(1, Color2)}
+                elseif GradientLayers == 3 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(0.5, Color2), ColorSequenceKeypoint.new(1, Color3_Val)}
+                elseif GradientLayers == 4 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(0.33, Color2), ColorSequenceKeypoint.new(0.66, Color3_Val), ColorSequenceKeypoint.new(1, Color4 or Color3.new(0,1,0))} end
+                game:GetService("ReplicatedStorage").DataEvents.UpdateLineColorsEvent:FireServer(ColorSequence.new(points))
+            end)
+        end
+    end
+})
+
+PassLineBox:AddLabel("Color 4"):AddColorPicker("8", {
+    Default = Color3.fromRGB(255, 255, 255),
+    Title = "Color 4",
+    Callback = function(color)
+        Color4 = color
+        if CustomGradientEnabled and game:GetService("ReplicatedStorage"):FindFirstChild("DataEvents") then
+            pcall(function()
+                local points = {}
+                if GradientLayers == 2 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(1, Color2)}
+                elseif GradientLayers == 3 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(0.5, Color2), ColorSequenceKeypoint.new(1, Color3_Val or Color3.new(0,0,0))}
+                elseif GradientLayers == 4 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(0.33, Color2), ColorSequenceKeypoint.new(0.66, Color3_Val or Color3.new(0,0,0)), ColorSequenceKeypoint.new(1, Color4)} end
+                game:GetService("ReplicatedStorage").DataEvents.UpdateLineColorsEvent:FireServer(ColorSequence.new(points))
+            end)
+        end
+    end
+})
+
+PassLineBox:AddToggle("CustomGradientToggle", {
+    Text = "Custom Gradient Apply [Owner]",
+    Default = false,
+    Callback = function(val)
+        CustomGradientEnabled = val
+        if val then
+            RainbowLoopEnabled = false 
+            if game:GetService("ReplicatedStorage"):FindFirstChild("DataEvents") then
+                pcall(function()
+                    local points = {}
+                    if GradientLayers == 2 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(1, Color2)}
+                    elseif GradientLayers == 3 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(0.5, Color2), ColorSequenceKeypoint.new(1, Color3_Val or Color3.new(0,0,0))}
+                    elseif GradientLayers == 4 then points = {ColorSequenceKeypoint.new(0, Color1), ColorSequenceKeypoint.new(0.33, Color2), ColorSequenceKeypoint.new(0.66, Color3_Val or Color3.new(0,0,0)), ColorSequenceKeypoint.new(1, Color4 or Color3.new(0,1,0))} end
+                    game:GetService("ReplicatedStorage").DataEvents.UpdateLineColorsEvent:FireServer(ColorSequence.new(points))
+                end)
+            end
+        end
+    end
+})
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+
+local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait() or Players.LocalPlayer
+
+local isSkinEnabled = false
+local selectedSkin = "Default White"
+local skinConnection
+
+local skinSettings = {
+    ["Default White"] = {
+        Texture = "rbxassetid://2273224484", Speed = 3, Width0 = 0.8, Width1 = 0.4,
+        Color = ColorSequence.new(Color3.fromRGB(255,255,255)), Brightness = 1.5
+    },
+    ["Neon"] = {
+        Texture = "rbxassetid://5814122171", Speed = 8, Width0 = 0.3, Width1 = 0.3,
+        Color = ColorSequence.new(Color3.fromRGB(0,255,255)), Brightness = 5
+    },
+    ["Xeron Line"] = {
+        Texture = "rbxassetid://77989137998499", Speed = -5, Width0 = 1.4, Width1 = 0.6,
+    },
+    ["Void"] = {
+        Texture = "rbxassetid://106048110", Speed = 4, Width0 = 1.6, Width1 = 1.6,
+        Color = ColorSequence.new(Color3.fromRGB(120,0,255)), Brightness = 1.2
+    },
+    ["Rainbow laser"] = {
+        Texture = "rbxassetid://2273224484", Speed = 8, Width0 = 0.7, Width1 = 0.7,
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0,Color3.fromRGB(255,0,0)),
+            ColorSequenceKeypoint.new(0.5,Color3.fromRGB(0,255,0)),
+            ColorSequenceKeypoint.new(1,Color3.fromRGB(0,0,255))
+        }), Brightness = 2.5
+    },
+    ["current"] = {
+        Texture = "rbxassetid://242225642", Speed = 20, Width0 = 1.1, Width1 = 1.1,
+        Color = ColorSequence.new(Color3.fromRGB(255,255,50)), Brightness = 6
+    },
+    ["Wave"] = {
+        Texture = "rbxassetid://5814144365", Speed = -8, Width0 = 0.5, Width1 = 0.5,
+        Color = ColorSequence.new(Color3.fromRGB(0,255,80)), Brightness = 3
+    },
+    ["Plasma"] = {
+        Texture = "rbxassetid://131093673", Speed = 6, Width0 = 1.8, Width1 = 0.2,
+        Color = ColorSequence.new(Color3.fromRGB(255,200,130)), Brightness = 5
+    },
+    ["DNA"] = {
+        Texture = "rbxassetid://5814141697", Speed = 5, Width0 = 1.0, Width1 = 1.0,
+        Color = ColorSequence.new(Color3.fromRGB(255,0,120)), Brightness = 3.5
+    },
+    ["Black Hole Stream"] = {
+        Texture = "rbxassetid://5814151528", Speed = -3, Width0 = 2.2, Width1 = 0.05,
+        Color = ColorSequence.new(Color3.fromRGB(15,15,25)), Brightness = 0.8
+    }
+}
+
+local function applyEffectsIfMine(beam)
+    if not isSkinEnabled then return end
+    if not (beam:IsA("Beam") and beam.Name == "GrabBeam") then return end
+
+    local character = LocalPlayer and LocalPlayer.Character
+    if not character then return end
+
+    local isMine = false
+    if beam.Attachment0 and beam.Attachment0:IsDescendantOf(character) then
+        isMine = true
+    elseif beam.Attachment1 and beam.Attachment1:IsDescendantOf(character) then
+        isMine = true
+    end
+
+    if not isMine then return end
+
+    local config = skinSettings[selectedSkin] or skinSettings["Default White"]
+
+    beam.Texture = config.Texture
+    beam.TextureSpeed = config.Speed
+    beam.Color = config.Color
+    beam.LightEmission = 1
+    beam.Brightness = config.Brightness
+    beam.LightInfluence = 0
+    beam.FaceCamera = true
+
+    if selectedSkin == "Default White" or selectedSkin == "Rainbow laser" then
+        beam.TextureMode = Enum.TextureMode.Stretch
+        beam.Width0 = config.Width0
+        beam.Width1 = config.Width1
+        beam.Segments = 1
+        beam.CurveSize0 = 0
+        beam.CurveSize1 = 0
+        beam.Transparency = NumberSequence.new(0.1)
+    else
+        beam.TextureMode = Enum.TextureMode.Wrap
+        beam.Width0 = config.Width0 * 1.8
+        beam.Width1 = config.Width1 * 0.2
+        beam.Segments = 45
+        beam.CurveSize0 = math.random(-12,12)
+        beam.CurveSize1 = math.random(-12,12)
+        beam.Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0,0.3),
+            NumberSequenceKeypoint.new(0.4,0),
+            NumberSequenceKeypoint.new(1,1)
+        })
+    end
+
+    beam:GetPropertyChangedSignal("Texture"):Connect(function()
+        if isSkinEnabled and beam.Texture ~= config.Texture then
+            beam.Texture = config.Texture
+        end
+    end)
+
+    local grabPart
+    if beam.Parent and beam.Parent.Parent then
+        grabPart = beam.Parent.Parent:FindFirstChild("GrabPart")
+    end
+
+    if grabPart then
+        for _, obj in pairs(grabPart:GetChildren()) do
+            if obj:IsA("ParticleEmitter") or obj:IsA("PointLight") or obj.Name:match("OrbitRing") then
+                obj:Destroy()
+            end
+        end
+    end
+end
+
+PassSkinBox:AddDropdown("GrabSkinSelectDropdown", {
+    Values = {
+        "Default White",
+        "Neon",
+        "Xeron Line",
+        "Void",
+        "Rainbow laser",
+        "current",
+        "Wave",
+        "Plasma",
+        "DNA",
+        "Black Hole Stream"
+    },
+    Default = "Default White",
+    Multi = false,
+    Text = "Grab skin select",
+    Callback = function(Value)
+        selectedSkin = Value
+        if isSkinEnabled then
+            for _, obj in pairs(Workspace:GetDescendants()) do
+                applyEffectsIfMine(obj)
+            end
+        end
+    end
+})
+
+PassSkinBox:AddToggle("LineSkinLocalToggle", {
+    Text = "Line skin    [local]",
+    Default = false,
+    Callback = function(Value)
+        isSkinEnabled = Value
+        if isSkinEnabled then
+            for _, obj in pairs(Workspace:GetDescendants()) do
+                applyEffectsIfMine(obj)
+            end
+            skinConnection = Workspace.DescendantAdded:Connect(function(obj)
+                task.defer(function()
+                    applyEffectsIfMine(obj)
+                end)
+            end)
+        else
+            if skinConnection then
+                skinConnection:Disconnect()
+                skinConnection = nil
+            end
+        end
+    end
+})
+
+PassPresetBox:AddButton({
+    Text = "Rainbow preset",
+    Func = function()
+        CustomGradientEnabled = false
+        RainbowLoopEnabled = false
+        if game:GetService("ReplicatedStorage"):FindFirstChild("DataEvents") then
+            pcall(function()
+                game:GetService("ReplicatedStorage").DataEvents.UpdateLineColorsEvent:FireServer(ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.new(1,0,0)),
+                    ColorSequenceKeypoint.new(0.16, Color3.new(1,1,0)),
+                    ColorSequenceKeypoint.new(0.33, Color3.new(0,1,0)),
+                    ColorSequenceKeypoint.new(0.5, Color3.new(0,1,1)),
+                    ColorSequenceKeypoint.new(0.66, Color3.new(0,0,1)),
+                    ColorSequenceKeypoint.new(0.83, Color3.new(1,0,1)),
+                    ColorSequenceKeypoint.new(1, Color3.new(1,0,0))
+                }))
+            end)
+        end
+    end,
+    DoubleClick = false
+})
+
+PassPresetBox:AddButton({
+    Text = "fire preset",
+    Func = function()
+        CustomGradientEnabled = false
+        RainbowLoopEnabled = false
+        if game:GetService("ReplicatedStorage"):FindFirstChild("DataEvents") then
+            pcall(function()
+                game:GetService("ReplicatedStorage").DataEvents.UpdateLineColorsEvent:FireServer(ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.new(1,0,0)),
+                    ColorSequenceKeypoint.new(0.5, Color3.new(1,0.5,0)),
+                    ColorSequenceKeypoint.new(1, Color3.new(1,1,0))
+                }))
+            end)
+        end
+    end,
+    DoubleClick = false
+})
+
+PassPresetBox:AddButton({
+    Text = "Ocean preset",
+    Func = function()
+        CustomGradientEnabled = false
+        RainbowLoopEnabled = false
+        if game:GetService("ReplicatedStorage"):FindFirstChild("DataEvents") then
+            pcall(function()
+                game:GetService("ReplicatedStorage").DataEvents.UpdateLineColorsEvent:FireServer(ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.new(0,0,1)),
+                    ColorSequenceKeypoint.new(0.5, Color3.new(0,1,1)),
+                    ColorSequenceKeypoint.new(1, Color3.new(0,0.5,0.5))
+                }))
+            end)
+        end
+    end,
+    DoubleClick = false
+})
+
+PassPresetBox:AddButton({
+    Text = "sunset preset",
+    Func = function()
+        CustomGradientEnabled = false
+        RainbowLoopEnabled = false
+        if game:GetService("ReplicatedStorage"):FindFirstChild("DataEvents") then
+            pcall(function()
+                game:GetService("ReplicatedStorage").DataEvents.UpdateLineColorsEvent:FireServer(ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.new(0.5,0,0.5)),
+                    ColorSequenceKeypoint.new(0.5, Color3.new(1,0,0.5)),
+                    ColorSequenceKeypoint.new(1, Color3.new(1,0.5,0))
+                }))
+            end)
+        end
+    end,
+    DoubleClick = false
+})
+
+PassPresetBox:AddButton({
+    Text = "Neon preset",
+    Func = function()
+        CustomGradientEnabled = false
+        RainbowLoopEnabled = false
+        if game:GetService("ReplicatedStorage"):FindFirstChild("DataEvents") then
+            pcall(function()
+                game:GetService("ReplicatedStorage").DataEvents.UpdateLineColorsEvent:FireServer(ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.new(0,1,1)),
+                    ColorSequenceKeypoint.new(1, Color3.new(1,0,1))
+                }))
+            end)
+        end
+    end,
+    DoubleClick = false
+})
+
+PassRainbowBox:AddToggle("RainbowLoopToggle", {
+    Text = "Rainbow gradient",
+    Default = false,
+    Callback = function(val)
+        RainbowLoopEnabled = val
+        if val then
+            CustomGradientEnabled = false
+            task.spawn(function()
+                while RainbowLoopEnabled do
+                    for i = 0, 1, 0.01 do
+                        if not RainbowLoopEnabled then break end
+                        if game:GetService("ReplicatedStorage"):FindFirstChild("DataEvents") then
+                            pcall(function()
+                                game:GetService("ReplicatedStorage").DataEvents.UpdateLineColorsEvent:FireServer(ColorSequence.new({
+                                    ColorSequenceKeypoint.new(0, Color3.fromHSV(i, 1, 1)),
+                                    ColorSequenceKeypoint.new(1, Color3.fromHSV((i + 0.5) % 1, 1, 1))
+                                }))
+                            end)
+                        end
+                        task.wait(0.05)
+                    end
+                end
+            end)
+        end
+    end
+})
+
+PassUnlockBox:AddToggle("woucf", {
+    Text = "Pass unlock [bypassing]",
+    Default = false,
+    Callback = function(Value)
+        if not Value then
+            local Reach = game.Players.LocalPlayer:FindFirstChild("FartherReach")
+            if Reach then
+                Reach:Destroy()
+            end
+            return
+        end
+
+        local Reach = game.Players.LocalPlayer:FindFirstChild("FartherReach") or Instance.new("BoolValue")
+        Reach.Name = "FartherReach"
+        Reach.Value = true
+        Reach.Parent = game.Players.LocalPlayer
+
+        local GamepassEvents = game:GetService("ReplicatedStorage"):FindFirstChild("GamepassEvents")
+        local Notifier = GamepassEvents and GamepassEvents:FindFirstChild("FurtherReachBoughtNotifier")
+
+        if Notifier and getconnections then
+            local ran = false
+            for _, connection in ipairs(getconnections(Notifier.OnClientEvent)) do
+                pcall(connection.Function)
+                ran = true
+            end
+            if ran then
+                Library:Notify("Pass bypass completed.", 4)
+            else
+                Library:Notify("Pass unlock failed", 4)
+            end
+        else
+            Library:Notify("Pass unlock failure", 4)
+        end
+    end
+})
