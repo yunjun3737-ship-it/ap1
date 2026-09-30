@@ -2761,7 +2761,34 @@ function AntiGrabF(enable)
     end)
 end
 
+function masslessF()
+    function applyMassless(char)
+         hrp = char:WaitForChild("HumanoidRootPart")
+         hum = char:WaitForChild("Humanoid")
 
+        if masslessT then
+            task.spawn(function()
+                while masslessT and char.Parent do
+                    for i, e in ipairs(char:GetChildren()) do
+                        if e:IsA("BasePart") then
+                            e.Massless = false
+                        end
+                    end
+                    task.wait()
+                end
+            end)
+        end
+    end
+
+    if plr.Character then
+        applyMassless(plr.Character)
+    end
+
+    plr.CharacterAdded:Connect(function(char)
+        task.wait(1)
+        applyMassless(char)
+    end)
+end
 
 function antiPaintF(state)
     local function setParts(canTouch)
