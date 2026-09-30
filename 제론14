@@ -5002,7 +5002,17 @@ local Window = Library:CreateWindow({
 	SidebarCompacted = true,
 	CornerRadius = 15
 })
-
+local Tabs = {
+    Info = Window:AddTab("Information", "server"),
+    Player = Window:AddTab("Player", "user"),
+    pass = Window:AddTab("pass", "shield-x"),
+    Combat = Window:AddTab("Combat", "hand-metal"),
+    Invincibility = Window:AddTab("Invincibility", "scan-eye"),
+    View = Window:AddTab("View", "balloon"),
+    Loop = Window:AddTab("Loop", "locate-fixed"),
+    Keybind = Window:AddTab("Keybind", "palette"),
+    UISettings = Window:AddTab("UI Settings", "settings")
+}
 
 --[[
 local playerTab = Tabs.Player
@@ -5153,17 +5163,7 @@ ButtonBox:AddButton({
     Tooltip = "Copies HWID to clipboard"
 })
 
-local Tabs = {
-    Info = Window:AddTab("Information", "server"),
-    Player = Window:AddTab("Player", "user"),
-    pass = Window:AddTab("pass", "shield-x"),
-    Combat = Window:AddTab("Combat", "hand-metal"),
-    Invincibility = Window:AddTab("Invincibility", "scan-eye"),
-    View = Window:AddTab("View", "balloon"),
-    Loop = Window:AddTab("Loop", "locate-fixed"),
-    Keybind = Window:AddTab("Keybind", "palette"),
-    UISettings = Window:AddTab("UI Settings", "settings")
-}
+
 
 --local ViewTab = Tabs.View
 local ViewBox = ViewTab:AddLeftGroupbox("Others")
