@@ -8972,7 +8972,7 @@ AntiBox2:AddToggle("heyeue", {
         end
     end
 })
---[[
+
 local flyingResetConn = nil
 local resetProtectionConn = nil
 
@@ -9020,7 +9020,7 @@ resetProtectionConn = plr.CharacterAdded:Connect(function(char)
         end)
     end
 end)
-]]
+
 AntiBox3:AddToggle("su2iisiisi", {
     Text = "Anti kick [Part]",
     Default = false,
