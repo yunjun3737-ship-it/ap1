@@ -4525,7 +4525,6 @@ function AntiBlobUseF()
     end)
 end
 local Players = game:GetService("Players")
-local HttpService = game:GetService("HttpService")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 
 local LocalPlayer = Players.LocalPlayer
@@ -4553,18 +4552,15 @@ local function setClipboardText(text)
     end
 end
 
-
 local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+
 local Options = Library.Options
 local Toggles = Library.Toggles
 
---Library.ForceCheckbox =  flase 
-
-
-local Window = Obsidian:CreateWindow({
+local Window = Library:CreateWindow({
     Title = "Main Window",
     Center = true,
     AutoShow = true,
@@ -4579,47 +4575,7 @@ local Tabs = {
 local LeftBox = Tabs.Info:AddLeftGroupbox("Player Preview")
 local RightBox = Tabs.Info:AddRightGroupbox("User Information")
 
-local ViewportHolder = Instance.new("Frame")
-ViewportHolder.Size = UDim2.new(1, 0, 0, 240)
-ViewportHolder.BackgroundTransparency = 1
-ViewportHolder.Parent = LeftBox.Container
-
-local Viewport = Instance.new("ViewportFrame")
-Viewport.Size = UDim2.new(1, 0, 1, 0)
-Viewport.BackgroundTransparency = 1
-Viewport.Parent = ViewportHolder
-
-local ViewportCamera = Instance.new("Camera")
-ViewportCamera.FieldOfView = 50
-Viewport.CurrentCamera = ViewportCamera
-ViewportCamera.Parent = Viewport
-
-local function updatePreview()
-    Viewport:ClearAllChildren()
-    ViewportCamera = Instance.new("Camera")
-    ViewportCamera.FieldOfView = 50
-    Viewport.CurrentCamera = ViewportCamera
-    ViewportCamera.Parent = Viewport
-
-    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    Character.Archivable = true
-    local ClonedChar = Character:Clone()
-    Character.Archivable = false
-
-    local Root = ClonedChar:FindFirstChild("HumanoidRootPart") or ClonedChar:FindFirstChild("Torso") or ClonedChar:FindFirstChild("UpperTorso")
-    if Root then
-        ClonedChar.Parent = Viewport
-        ViewportCamera.CFrame = CFrame.new(Root.Position + (Root.CFrame.LookVector * 5) + Vector3.new(0, 0.5, 0), Root.Position)
-    end
-end
-
-task.spawn(function()
-    updatePreview()
-    LocalPlayer.CharacterAdded:Connect(function()
-        task.wait(1)
-        updatePreview()
-    end)
-end)
+LeftBox:AddCharacterPreview()
 
 local StartTime = os.time()
 local HWID = getExecutorHWID()
@@ -4658,3 +4614,12 @@ ButtonBox:AddButton({
     DoubleClick = false,
     Tooltip = "Copies HWID to clipboard"
 })
+
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+ThemeManager:SetFolder("ObsidianConfig")
+SaveManager:SetFolder("ObsidianConfig/Main")
+SaveManager:BuildConfigSection(Tabs.Info)
+ThemeManager:ApplyToTab(Tabs.Info)
