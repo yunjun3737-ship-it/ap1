@@ -5002,6 +5002,7 @@ local Tabs = {
     Invincibility = Window:AddTab("Invincibility"),
     View = Window:AddTab("View"),
     Loop = Window:AddTab("Loop"),
+    Keybind = Window:AddTab("Keybind"),
     Settings = Window:AddTab("Settings")
 }
 
@@ -5011,6 +5012,7 @@ local grabTab = Tabs.Combat
 local antiTab = Tabs.Invincibility
 local ListTab = Tabs.View
 local LoopTab = Tabs.Loop
+local keybindTab = Tabs.Keybind
 
 
 local LeftBox = Tabs.Info:AddLeftGroupbox("Player Preview")
@@ -10061,4 +10063,484 @@ PassUnlockBox:AddToggle("woucf", {
             Library:Notify("Pass unlock failure", 4)
         end
     end
+})
+local KeybindEspBox = keybindTab:AddLeftGroupbox("ESP")
+
+local PcldViewT = false
+local processed = {}
+local redBoxes = {}
+local descendantConn = nil
+
+function PcldViewF()
+    if descendantConn then
+        descendantConn:Disconnect()
+        descendantConn = nil
+        workspace:SetAttribute("PcldViewDescendantConn", false)
+    end
+    if rainbowConn then
+        rainbowConn:Disconnect()
+        rainbowConn = nil
+    end
+
+    if PcldViewT then
+        local function createESP(obj)
+            if not processed[obj] then
+                local box = Instance.new("SelectionBox")
+                box.Adornee = obj
+                box.LineThickness = 0.005
+                box.SurfaceTransparency = 1
+                box.SurfaceColor3 = Color3.fromRGB(255, 255, 255)
+                box.Color3 = Color3.fromHSV(0, 1, 1)
+                box.Parent = obj
+                processed[obj] = true
+                redBoxes[obj] = box
+            end
+        end
+
+        for _, obj in ipairs(workspace:GetChildren()) do
+            if (obj.Name == "PlayerCharacterLocationDetector" or obj.Name == "me") and obj:IsA("BasePart") then
+                createESP(obj)
+            end
+        end
+
+        descendantConn = workspace.DescendantAdded:Connect(function(obj)
+            if PcldViewT and (obj.Name == "PlayerCharacterLocationDetector" or obj.Name == "me") and obj:IsA("BasePart") then
+                createESP(obj)
+            end
+        end)
+
+        workspace.DescendantRemoving:Connect(function(obj)
+            if redBoxes[obj] then
+                redBoxes[obj]:Destroy()
+                redBoxes[obj] = nil
+                processed[obj] = nil
+            end
+        end)
+
+        rainbowConn = RunService.RenderStepped:Connect(function()
+            local hue = (tick() % 5) / 5 
+            local rainbowColor = Color3.fromHSV(hue, 1, 1)
+
+            for obj, box in pairs(redBoxes) do
+                if box and box.Parent then
+                    box.Color3 = rainbowColor
+                else
+                    redBoxes[obj] = nil
+                    processed[obj] = nil
+                end
+            end
+        end)
+    else
+        for obj, box in pairs(redBoxes) do
+            if box then box:Destroy() end
+        end
+        redBoxes = {}
+        processed = {}
+    end
+end
+
+KeybindEspBox:AddToggle("PCLDView", {
+    Text = "PCLD view",
+    Default = false,
+    Callback = function(Value)
+        PcldViewT = Value
+        PcldViewF()
+    end
+})
+
+KeybindEspBox:AddToggle("ViewTool", {
+    Text = "Part View",
+    Default = false,
+    Callback = function(Value)
+        ViewToolT = Value
+        ViewToolF()
+    end
+})
+local GrabMainBox = grabTab:AddLeftGroupbox("grab")
+local GrabLineBox = grabTab:AddLeftGroupbox("Line")
+local GrabKickBox = grabTab:AddLeftGroupbox("Kick")
+local GrabOtherBox = grabTab:AddRightGroupbox("Other")
+local GrabAnchorBox = grabTab:AddRightGroupbox("Anchor")
+
+local nageru = 800
+
+GrabMainBox:AddToggle("99999999", {
+    Text = "Super Throw V1   [Desktop]",
+    Default = false,
+    Callback = function(Value)
+        flingT = Value
+        flingF()
+    end
+})
+
+GrabMainBox:AddInput("20000", {
+    Default = "",
+    Numeric = true,
+    Finished = true,
+    Text = "Super Throw V1",
+    Placeholder = "Value",
+    Callback = function(Value)
+        strengthV = Value
+    end
+})
+
+GrabMainBox:AddToggle("SuperThrow", {
+    Text = "Super Throw V2   [Mobile]",
+    Default = false,
+    Callback = function(enabled)
+        if enabled then
+            if strengthConnection then strengthConnection:Disconnect() end
+
+            strengthConnection = workspace.ChildAdded:Connect(function(model)
+                if model.Name == "GrabParts" then
+                    local grabPart = model:FindFirstChild("GrabPart")
+                    if grabPart and grabPart:FindFirstChild("WeldConstraint") then
+                        local targetPart = grabPart.WeldConstraint.Part1
+                        if targetPart then
+                            local bv = Instance.new("BodyVelocity")
+                            bv.Name = "SuperThrowBV"
+                            bv.MaxForce = Vector3.new(0, 0, 0)
+                            bv.Velocity = Vector3.new(0, 0, 0)
+                            bv.Parent = targetPart
+
+                            local throwConn
+                            throwConn = model:GetPropertyChangedSignal("Parent"):Connect(function()
+                                if not model.Parent then
+                                    local currentTime = tick()
+                                    
+                                    if currentTime - lastThrowTime < 1.4 then
+                                        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                                        bv.Velocity = workspace.CurrentCamera.CFrame.LookVector * nageru
+                                        game:GetService("Debris"):AddItem(bv, 2)
+                                    else
+                                        bv:Destroy()
+                                    end
+                                    
+                                    if throwConn then throwConn:Disconnect() end
+                                end
+                            end)
+                        end
+                    end
+                end
+            end)
+        else
+            if strengthConnection then
+                strengthConnection:Disconnect()
+                strengthConnection = nil
+            end
+        end
+    end
+})
+
+GrabMainBox:AddInput("ieie", {
+    Default = "",
+    Numeric = true,
+    Finished = true,
+    Text = "Super Throw V2",
+    Placeholder = "Number input (default: 800)",
+    Callback = function(value)
+        local num = tonumber(value)
+        if num and num >= 0 then
+            nageru = num
+        end
+    end
+})
+
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.Touch then
+        lastThrowTime = tick()
+    end
+end)
+
+GrabLineBox:AddToggle("3uw", {
+    Text = "Infinite line  [Desktop]",
+    Default = false,
+    Callback = function(Value)
+        infLineExtendT = Value
+        infLineExtendF()
+    end
+})
+
+GrabLineBox:AddInput("4hdj", {
+    Default = "",
+    Numeric = true,
+    Finished = true,
+    Text = "line length [Desktop]",
+    Placeholder = "Value",
+    Callback = function(Value)
+        increaseLineExtendV = Value
+    end
+})
+
+GrabOtherBox:AddToggle("ty1", {
+    Text = "loop grab [Ownership]",
+    Default = false,
+    Callback = function(Value)
+        AntiStruggleGrabT = Value
+        if Value then
+            AntiStruggleGrabF()
+        end
+    end
+})
+
+GrabOtherBox:AddToggle("1ppp", {
+    Text = "Ragdoll grab  [Toy]",
+    Default = false,
+    Callback = function(Value)
+        RagdollGrabT = Value
+        if Value then
+            RagdollGrabF()
+        end
+    end
+})
+
+GrabOtherBox:AddToggle("1qty", {
+    Text = "massless grab",
+    Default = false,
+    Callback = function(Value)
+        MasslessGrabT = Value
+        if Value then
+            MasslessGrabF()
+        end
+    end
+})
+
+GrabOtherBox:AddToggle("1yriti", {
+    Text = "Noclip grab",
+    Default = false,
+    Callback = function(Value)
+        NoClipGrabT = Value
+        if Value then
+            NoClipGrabF()
+        end
+    end
+})
+
+GrabOtherBox:AddToggle("VoidGrabTo1ggle", {
+    Text = "Void grab",
+    Default = false,
+    Callback = function(Value)
+        getgenv().LoopGrabActive = Value
+        
+        if Value then
+            local Players = game:GetService("Players")
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local plr = Players.LocalPlayer
+
+            task.spawn(function()
+                while getgenv().LoopGrabActive do
+                    local grabParts = workspace:FindFirstChild("GrabParts")
+                    if not grabParts then
+                        task.wait()
+                        continue
+                    end
+
+                    local gp = grabParts:FindFirstChild("GrabPart")
+                    local weld = gp and gp:FindFirstChildOfClass("WeldConstraint")
+                    local part1 = weld and weld.Part1
+
+                    if part1 then
+                        local ownerPlayer = nil
+                        for _, pl in ipairs(Players:GetPlayers()) do
+                            if pl.Character and part1:IsDescendantOf(pl.Character) then
+                                ownerPlayer = pl
+                                break
+                            end
+                        end
+
+                        while getgenv().LoopGrabActive and workspace:FindFirstChild("GrabParts") do
+                            if not part1.Anchored then
+                                if ownerPlayer then
+                                    local tgtTorso = ownerPlayer.Character and ownerPlayer.Character:FindFirstChild("HumanoidRootPart") 
+                                    
+                                    if tgtTorso then
+                                        pcall(function()
+                                            tgtTorso.CFrame = CFrame.new(tgtTorso.Position.X, -5999, tgtTorso.Position.Z)
+                                        end)
+                                    end
+                                else
+                                    if part1.Parent then
+                                        pcall(function()
+                                            part1.CFrame = CFrame.new(part1.Position.X, -5999, part1.Position.Z)
+                                        end)
+                                    end
+                                end
+                            end
+                            task.wait()
+                        end
+                    end
+                    task.wait()
+                end
+            end)
+        end
+    end
+})
+
+GrabOtherBox:AddToggle("1mbmbmb", {
+    Text = "Kill Grab  [Ownership]   [grab]",
+    Default = false,
+    Callback = function(Value)
+        KillGrabT = Value
+        KillGrabF()
+    end
+})
+
+GrabOtherBox:AddToggle("TpKLGToggle", {
+    Text = "Void ",
+    Default = false,
+    Callback = function(Value)
+        TpKLG = Value
+    end
+})
+
+GrabKickBox:AddToggle("99999j", {
+    Text = "Kick grab  [Ownership]  [grab]",
+    Default = false,
+    Callback = function(Value)
+        KickGrabT = Value
+        if Value then KickGrabF() end
+    end
+})
+
+GrabKickBox:AddToggle("AnhKickToggle", {
+    Text = " Anchor",
+    Default = false,
+    Callback = function(Value)
+        AnhKick = Value
+    end
+})
+
+local function runAnchorLogic()
+    local original = workspace:FindFirstChild("GrabParts")
+    if not original then return end
+
+    local grabPart = original:FindFirstChild("GrabPart", true)
+    if not grabPart or not grabPart:IsA("BasePart") then return end
+
+    local wasCollide = grabPart.CanCollide
+    grabPart.CanCollide = true
+    task.wait(0.1)
+
+    local targetModel = nil
+    local touchingParts = grabPart:GetTouchingParts()
+
+    if #touchingParts > 0 then
+        for _, part in ipairs(touchingParts) do
+            if not part:IsDescendantOf(original) then
+                local current = part
+                while current and current ~= workspace do
+                    if current:IsA("Model") then
+                        targetModel = current
+                        break
+                    end
+                    current = current.Parent
+                end
+                if targetModel then break end
+            end
+        end
+    end
+
+    grabPart.CanCollide = wasCollide
+    if not targetModel then return end
+
+    if not targetModel.Parent then
+        local found = false
+        local connection
+        connection = targetModel.AncestryChanged:Connect(function(_, parent)
+            if parent then found = true connection:Disconnect() end
+        end)
+        local startTime = tick()
+        while not found and tick() - startTime < 2 do task.wait(0.1) end
+        if not found then return end
+    end
+
+    local existing = targetModel:FindFirstChild("Force")
+    if existing then
+        local existingHighlight = targetModel:FindFirstChild("AnchorHighlight")
+        if existingHighlight then existingHighlight:Destroy() end
+        existing:Destroy()
+        if colorConn then colorConn:Disconnect() colorConn = nil end
+        return
+    end
+
+    local clone = original:Clone()
+    clone.Name = "Force"
+
+    for _, desc in ipairs(clone:GetDescendants()) do
+        if desc:IsA("BasePart") then
+            desc.Transparency = 1
+            desc.CanCollide = false
+            local beam = desc:FindFirstChild("GrabBeam")
+            if beam then beam:Destroy() end
+            for _, sName in ipairs({"AttachSound1", "AttachSound", "BeamSound", "BeamSound1"}) do
+                local sound = desc:FindFirstChild(sName)
+                if sound then sound:Destroy() end
+            end
+        end
+    end
+
+    clone.Parent = targetModel
+
+    local hl = Instance.new("Highlight")
+    hl.Name = "AnchorHighlight"
+    hl.FillTransparency = 0.8
+    hl.OutlineTransparency = 0.3
+    hl.Adornee = targetModel
+    hl.Parent = targetModel
+
+    if colorConn then colorConn:Disconnect() end
+    colorConn = game:GetService("RunService").RenderStepped:Connect(function()
+        if hl and hl.Parent then
+            if hColor then
+                hl.FillColor = hColor
+                hl.OutlineColor = hColor
+            else
+                local hue = (tick() % 4) / 4
+                local color = Color3.fromHSV(hue, 1, 1)
+                hl.FillColor = color
+                hl.OutlineColor = color
+            end
+        else
+            if colorConn then colorConn:Disconnect() colorConn = nil end
+        end
+    end)
+
+    if currentConn then currentConn:Disconnect() end
+    currentConn = game:GetService("RunService").Heartbeat:Connect(function()
+        if not clone or not clone.Parent or not targetModel or not targetModel.Parent then
+            if currentConn then currentConn:Disconnect() currentConn = nil end
+            if colorConn then colorConn:Disconnect() colorConn = nil end
+            return
+        end
+        if hl and hl.Parent then
+            hl.Adornee = targetModel
+        else
+            if currentConn then currentConn:Disconnect() currentConn = nil end
+            if colorConn then colorConn:Disconnect() colorConn = nil end
+        end
+    end)
+end
+
+local function toggleAnchor(Value)
+    isAnchorState = Value
+    if isAnchorState then
+        task.spawn(runAnchorLogic)
+    end
+end
+
+GrabAnchorBox:AddToggle("qwer", {
+    Text = "object Anchor",
+    Default = false,
+    Callback = function(Value)
+        toggleAnchor(Value)
+    end
+})
+
+GrabAnchorBox:AddButton({
+    Text = "Anchor",
+    Func = function()
+        task.spawn(runAnchorLogic)
+    end,
+    DoubleClick = false
 })
