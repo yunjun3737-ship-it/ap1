@@ -5163,7 +5163,7 @@ ButtonBox:AddButton({
     Tooltip = "Copies HWID to clipboard"
 })
 
-local ListOthersBox = MainTab:AddLeftGroupbox("Others")
+local ListOthersBox = ListTab:AddLeftGroupbox("Others")
 
 local SelectedPlayer = nil
 local TargetLoopTP = false
