@@ -4571,6 +4571,7 @@ local Window = Library:CreateWindow({
 local Tabs = {
     Info = Window:AddTab("Information"),
     Player = Window:AddTab("Player"),
+    List = Window:AddTab("View"),
     Loop = Window:AddTab("Loop"),
     Invincibility = Window:AddTab("Invincibility"),
     Combat = Window:AddTab("Combat"),
@@ -4578,6 +4579,7 @@ local Tabs = {
 }
 
 local playerTab = Tabs.Player
+local ListTab = Tabs.view
 local LoopTab = Tabs.Loop
 local antiTab = Tabs.Invincibility
 local grabTab = Tabs.Combat
@@ -4688,7 +4690,7 @@ ButtonBox:AddButton({
     DoubleClick = false,
     Tooltip = "Copies HWID to clipboard"
 })
-
+local LoopTargetBox = LoopTab:AddLeftGroupbox("Target")
 local LoopBox1 = LoopTab:AddLeftGroupbox("Auto blob")
 local LoopBox2 = LoopTab:AddLeftGroupbox("Bring")
 local LoopBox3 = LoopTab:AddLeftGroupbox("destroy Gucci")
@@ -4699,9 +4701,7 @@ local LoopBox7 = LoopTab:AddLeftGroupbox("Blob Kick")
 local LoopBox8 = LoopTab:AddRightGroupbox("Silent kick")
 local LoopBox9 = LoopTab:AddRightGroupbox("loopkill")
 local LoopBox10 = LoopTab:AddLeftGroupbox("No Blob")
-local ListTab = Window:AddTab("List")
 
-local LoopTargetBox = LoopTab:AddLeftGroupbox("Target Management")
 local ListOthersBox = ListTab:AddLeftGroupbox("Others")
 
 local Players = game:GetService("Players")
