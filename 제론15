@@ -5014,7 +5014,7 @@ local Tabs = {
     UISettings = Window:AddTab("UI Settings", "settings")
 }
 
---[[
+
 local playerTab = Tabs.Player
 local passTab = Tabs.pass
 local grabTab = Tabs.Combat
@@ -5022,7 +5022,7 @@ local antiTab = Tabs.Invincibility
 local ListTab = Tabs.View
 local LoopTab = Tabs.Loop
 local keybindTab = Tabs.Keybind
-]]
+
 
 local LeftBox = Tabs.Info:AddLeftGroupbox("Player Preview")
 local RightBox = Tabs.Info:AddRightGroupbox("User Information")
@@ -5166,138 +5166,6 @@ ButtonBox:AddButton({
 
 
 --local ViewTab = Tabs.View
-local ViewBox = ViewTab:AddLeftGroupbox("Others")
-
-local SelectedPlayer = nil
-local TargetLoopTP = false
-local NetworkOwnerLoop = false
-local OriginalCFrame = nil
-
-local function GetPlayerList()
-    local list = {}
-    for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer then
-            table.insert(list, v.DisplayName .. " (@" .. v.Name .. ")")
-        end
-    end
-    return list
-end
-
-local PlayerDropdown = ViewBox:AddDropdown("PlayerSelectDropdown", {
-    Values = GetPlayerList(),
-    Default = 1,
-    Multi = false,
-    Text = "Player select",
-    Callback = function(Value)
-        for _, v in pairs(Players:GetPlayers()) do
-            local formatted = v.DisplayName .. " (@" .. v.Name .. ")"
-            if formatted == Value then
-                SelectedPlayer = v
-                break
-            end
-        end
-    end
-})
-
-ViewBox:AddButton({
-    Text = "List Remove",
-    Func = function()
-        PlayerDropdown:SetValues(GetPlayerList())
-    end,
-    DoubleClick = false
-})
-
-ViewBox:AddToggle("ViewToggle", {
-    Text = "View",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-            if SelectedPlayer and SelectedPlayer.Character then
-                workspace.CurrentCamera.CameraSubject = SelectedPlayer.Character:FindFirstChildOfClass("Humanoid")
-            end
-        else
-            if LocalPlayer.Character then
-                workspace.CurrentCamera.CameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            end
-        end
-    end
-})
-
-ViewBox:AddButton({
-    Text = "TP",
-    Func = function()
-        if SelectedPlayer and SelectedPlayer.Character and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                LocalPlayer.Character.HumanoidRootPart.CFrame = SelectedPlayer.Character.HumanoidRootPart.CFrame
-            end
-        end
-    end,
-    DoubleClick = false
-})
-
-ViewBox:AddToggle("LoopTpTargetToggle", {
-    Text = "loop tp Target",
-    Default = false,
-    Callback = function(Value)
-        TargetLoopTP = Value
-    end
-})
-
-RunService.RenderStepped:Connect(function()
-    if TargetLoopTP and SelectedPlayer and SelectedPlayer.Character and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            LocalPlayer.Character.HumanoidRootPart.CFrame = SelectedPlayer.Character.HumanoidRootPart.CFrame
-        end
-    end
-end)
-
-ViewBox:AddToggle("NetworkSpamToggle", {
-    Text = "Network spam",
-    Default = false,
-    Callback = function(Value)
-        NetworkOwnerLoop = Value
-        if Value then
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                OriginalCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
-            end
-            task.spawn(function()
-                while NetworkOwnerLoop do
-                    if SelectedPlayer and SelectedPlayer.Character and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                        local targetChar = SelectedPlayer.Character
-                        local targetRoot = targetChar.HumanoidRootPart
-                        local targetTorso = targetChar:FindFirstChild("Torso") or targetChar:FindFirstChild("UpperTorso") or targetRoot
-
-                        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                            LocalPlayer.Character.HumanoidRootPart.CFrame = targetRoot.CFrame * CFrame.new(0, -20, 0)
-
-                            local replicatedStorage = game:GetService("ReplicatedStorage")
-                            local grabEvents = replicatedStorage:FindFirstChild("GrabEvents")
-                            local setNetworkOwner = grabEvents and grabEvents:FindFirstChild("SetNetworkOwner")
-
-                            if setNetworkOwner then
-                                setNetworkOwner:FireServer(targetTorso, targetRoot.CFrame)
-                            else
-                                for _, v in pairs(replicatedStorage:GetDescendants()) do
-                                    if v:IsA("RemoteEvent") and string.find(string.lower(v.Name), "network") then
-                                        pcall(function()
-                                            v:FireServer(targetTorso, targetRoot.CFrame)
-                                        end)
-                                    end
-                                end
-                            end
-                        end
-                    end
-                    task.wait(0.06)
-                end
-            end)
-        else
-            if OriginalCFrame and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                LocalPlayer.Character.HumanoidRootPart.CFrame = OriginalCFrame
-            end
-        end
-    end
-})
-
 
 local LoopTargetBox = LoopTab:AddLeftGroupbox("Target Management")
 local LoopBox1 = LoopTab:AddLeftGroupbox("Auto blob")
