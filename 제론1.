@@ -4980,9 +4980,10 @@ local function setClipboardText(text)
         toclipboard(text)
     end
 end
+local response3 = game:HttpGet("https://api.dcus.pro/dcdian/lib.lua")
 
-local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
-local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+--local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
+--local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 
