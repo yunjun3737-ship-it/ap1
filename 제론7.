@@ -7202,7 +7202,7 @@ do
         end
     })
 end
-
+--[[
 ThemeManager:SetLibrary(Library)
 SaveManager:SetLibrary(Library)
 SaveManager:IgnoreThemeSettings()
@@ -7239,6 +7239,7 @@ task.spawn(function()
         end)
     end
 end)
+]] 
 local AntiBox1 = antiTab:AddLeftGroupbox("Invincibility")
 local AntiBox2 = antiTab:AddRightGroupbox("Other")
 local AntiBox3 = antiTab:AddRightGroupbox("Anti kick")
@@ -10553,6 +10554,75 @@ GrabAnchorBox:AddButton({
     end,
     DoubleClick = false
 })
+
+
+local MenuGroup = Tabs.UISettings:AddLeftGroupbox("Menu", "setting")
+
+MenuGroup:AddToggle("KeybindMenuOpen", {
+    Default = Library.KeybindFrame.Visible,
+    Text = "Open Keybind Menu",
+    Callback = function(value)
+        Library.KeybindFrame.Visible = value
+    end,
+})
+
+MenuGroup:AddToggle("ShowCustomCursor", {
+    Text = "Custom Cursor",
+    Default = true,
+    Callback = function(Value)
+        Library.ShowCustomCursor = Value
+    end,
+})
+
+MenuGroup:AddDropdown("NotificationSide", {
+    Values = { "Left", "Right" },
+    Default = "Right",
+    Text = "Notification Side",
+    Callback = function(Value)
+        Library:SetNotifySide(Value)
+    end,
+})
+
+MenuGroup:AddDropdown("DPIDropdown", {
+    Values = { "50%", "75%", "100%", "125%", "150%", "175%", "200%" },
+    Default = "100%",
+    Text = "DPI Scale",
+    Callback = function(Value)
+        Value = Value:gsub("%%", "")
+        local DPI = tonumber(Value)
+        Library:SetDPIScale(DPI)
+    end,
+})
+
+MenuGroup:AddDivider()
+
+MenuGroup:AddLabel("Menu bind"):AddKeyPicker("MenuKeybind", { 
+    Default = "RightShift", 
+    NoUI = true, 
+    Text = "Menu keybind" 
+})
+
+MenuGroup:AddButton({
+    Text = "Unload",
+    Func = function()
+        Library:Unload()
+    end,
+    DoubleClick = false
+})
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+-- ÑÐµÐ¹Ð²Ñ‹
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({ "MenuKeybind" })
+ThemeManager:SetFolder("XERON")
+SaveManager:SetFolder("Xeron/FTAP")
+SaveManager:SetSubFolder("game-config")
+
+ThemeManager:ApplyToTab(Tabs.UISettings)
+SaveManager:BuildConfigSection(Tabs.UISettings)
 Window:SetCornerRadius(20)
 Library.ShowCustomCursor = false
 local watermark = Library:AddDraggableLabel("XERON Premium | FPS | RN ms")
