@@ -4980,19 +4980,22 @@ local function setClipboardText(text)
         toclipboard(text)
     end
 end
-local response3 = game:HttpGet("https://api.dcus.pro/dcdian/lib.lua")
+--local response3 = game:HttpGet("https://api.dcus.pro/dcdian/lib.lua")
 
---local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
---local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
+local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 
 local Window = Library:CreateWindow({
-    Title = "Xeron P",
-    Center = true,
-    AutoShow = true,
-    TabPadding = 8,
-    MenuFadeTime = 0.2
+    Title = "LOLL",
+    Footer = "by alhpa",
+    Icon = 81999364699599,
+    NotifySide = "Right",
+    ShowCustomCursor = false,
+	EnableCompacting = true,
+	SidebarCompacted = true,
+	CornerRadius = 15
 })
 
 local Tabs = {
@@ -5006,7 +5009,7 @@ local Tabs = {
     Keybind = Window:AddTab("Keybind"),
     Settings = Window:AddTab("Settings")
 }
-
+--[[
 local playerTab = Tabs.Player
 local passTab = Tabs.pass
 local grabTab = Tabs.Combat
@@ -5014,7 +5017,7 @@ local antiTab = Tabs.Invincibility
 local ListTab = Tabs.View
 local LoopTab = Tabs.Loop
 local keybindTab = Tabs.Keybind
-
+]]
 
 local LeftBox = Tabs.Info:AddLeftGroupbox("Player Preview")
 local RightBox = Tabs.Info:AddRightGroupbox("User Information")
@@ -10545,3 +10548,16 @@ GrabAnchorBox:AddButton({
     end,
     DoubleClick = false
 })
+Window:SetCornerRadius(20)
+Library.ShowCustomCursor = false
+local watermark = Library:AddDraggableLabel("XERON Premium | FPS | RN ms")
+
+task.spawn(function()
+    while task.wait(0.5) do
+        local fps = math.floor(1 / R.RenderStepped:Wait())
+        local ping = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
+        watermark:SetText(string.format("XERON Premium  | %d FPS | %d ms", fps, ping))
+    end
+end)
+
+SaveManager:LoadAutoloadConfig()  
