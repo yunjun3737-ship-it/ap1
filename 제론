@@ -10484,7 +10484,7 @@ MenuGroup:AddButton({
 
 Library.ToggleKeybind = Options.MenuKeybind
 
--- ÑÐµÐ¹Ð²Ñ‹
+
 ThemeManager:SetLibrary(Library)
 SaveManager:SetLibrary(Library)
 SaveManager:IgnoreThemeSettings()
@@ -10498,7 +10498,17 @@ SaveManager:BuildConfigSection(Tabs.UISettings)
 Window:SetCornerRadius(20)
 Library.ShowCustomCursor = false
 local watermark = Library:AddDraggableLabel("XERON Premium | FPS | RN ms")
+Players.PlayerAdded:Connect(function()
+    task.wait(1)
+    local newList = updatePlayerList()
+    Options.TargetPlayer:SetValues(newList)
+end)
 
+Players.PlayerRemoving:Connect(function()
+    task.wait(0.5)
+    local newList = updatePlayerList()
+    Options.TargetPlayer:SetValues(newList)
+end)
 task.spawn(function()
     while task.wait(0.5) do
         local fps = math.floor(1 / R.RenderStepped:Wait())
