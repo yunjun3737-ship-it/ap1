@@ -5008,13 +5008,13 @@ local Tabs = {
     Player = Window:AddTab("Player", "player"),
     pass = Window:AddTab("pass", "shield-x"),
     Combat = Window:AddTab("Combat", "hand-metal"),
-    Invincibility = Window:AddTab("Invincibility, "scan-eye""),
+    Invincibility = Window:AddTab("Invincibility", "scan-eye"),
     View = Window:AddTab("View",  "balloon"),
     Loop = Window:AddTab("Loop", "locate-fixed"),
-    Keybind = Window:AddTab("Keybind, "palette""),
+    Keybind = Window:AddTab("Keybind", "palette"),
     UISettings = Window:AddTab("UI Settings", "settings")
 }
-
+--[[
 local playerTab = Tabs.Player
 local passTab = Tabs.pass
 local grabTab = Tabs.Combat
@@ -5022,7 +5022,7 @@ local antiTab = Tabs.Invincibility
 local ListTab = Tabs.View
 local LoopTab = Tabs.Loop
 local keybindTab = Tabs.Keybind
-
+]]
 
 local LeftBox = Tabs.Info:AddLeftGroupbox("Player Preview")
 local RightBox = Tabs.Info:AddRightGroupbox("User Information")
