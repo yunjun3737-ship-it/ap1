@@ -8025,7 +8025,7 @@ AntiBox1:AddToggle("1525", {
         end
     end
 })
-
+--[[
 if not AntiCheatStates then
     _G.AntiCheatStates = { blobConn = nil }
 end
@@ -8066,14 +8066,13 @@ AntiBox1:AddToggle("4597676", {
         SetAntiBlobman(Value)
     end
 })
-
 task.spawn(function()
     task.wait(0.5)
     if Toggles and Toggles["4597676"] then
         Toggles["4597676"]:SetValue(true)
     end
 end)
-
+]]
 local antiRagBlobConnections = {}
 
 AntiBox1:AddToggle("wupvt97tgw", {
@@ -8257,7 +8256,7 @@ function setupAntiExplosion(character)
         end
     end
 end
-
+--[[
 AntiBox1:AddToggle("AntiExplosion", {
     Text = "Anti explosion V2  [WWT]",
     Default = false,
@@ -8292,7 +8291,7 @@ task.spawn(function()
         Toggles["AntiExplosion"]:SetValue(true)
     end
 end)
-
+]]
 AntiBox1:AddToggle("twuwhshu", {
     Text = "Anti fire",
     Default = false,
@@ -8973,7 +8972,7 @@ AntiBox2:AddToggle("heyeue", {
         end
     end
 })
-
+--[[
 local flyingResetConn = nil
 local resetProtectionConn = nil
 
@@ -9021,7 +9020,7 @@ resetProtectionConn = plr.CharacterAdded:Connect(function(char)
         end)
     end
 end)
-
+]]
 AntiBox3:AddToggle("su2iisiisi", {
     Text = "Anti kick [Part]",
     Default = false,
