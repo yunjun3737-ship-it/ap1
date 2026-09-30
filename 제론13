@@ -5003,17 +5003,7 @@ local Window = Library:CreateWindow({
 	CornerRadius = 15
 })
 
-local Tabs = {
-    Info = Window:AddTab("Information", "server"),
-    Player = Window:AddTab("Player", "player"),
-    pass = Window:AddTab("pass", "shield-x"),
-    Combat = Window:AddTab("Combat", "hand-metal"),
-    Invincibility = Window:AddTab("Invincibility", "scan-eye"),
-    View = Window:AddTab("View",  "balloon"),
-    Loop = Window:AddTab("Loop", "locate-fixed"),
-    Keybind = Window:AddTab("Keybind", "palette"),
-    UISettings = Window:AddTab("UI Settings", "settings")
-}
+
 --[[
 local playerTab = Tabs.Player
 local passTab = Tabs.pass
@@ -5163,7 +5153,20 @@ ButtonBox:AddButton({
     Tooltip = "Copies HWID to clipboard"
 })
 
---local ListOthersBox = ViewTab:AddLeftGroupbox("Others")
+local Tabs = {
+    Info = Window:AddTab("Information", "server"),
+    Player = Window:AddTab("Player", "user"),
+    pass = Window:AddTab("pass", "shield-x"),
+    Combat = Window:AddTab("Combat", "hand-metal"),
+    Invincibility = Window:AddTab("Invincibility", "scan-eye"),
+    View = Window:AddTab("View", "balloon"),
+    Loop = Window:AddTab("Loop", "locate-fixed"),
+    Keybind = Window:AddTab("Keybind", "palette"),
+    UISettings = Window:AddTab("UI Settings", "settings")
+}
+
+--local ViewTab = Tabs.View
+local ViewBox = ViewTab:AddLeftGroupbox("Others")
 
 local SelectedPlayer = nil
 local TargetLoopTP = false
@@ -5196,7 +5199,7 @@ local PlayerDropdown = ViewBox:AddDropdown("PlayerSelectDropdown", {
     end
 })
 
-viewBox:AddButton({
+ViewBox:AddButton({
     Text = "List Remove",
     Func = function()
         PlayerDropdown:SetValues(GetPlayerList())
@@ -5204,7 +5207,7 @@ viewBox:AddButton({
     DoubleClick = false
 })
 
-viewBox:AddToggle("ViewToggle", {
+ViewBox:AddToggle("ViewToggle", {
     Text = "View",
     Default = false,
     Callback = function(Value)
@@ -5220,7 +5223,7 @@ viewBox:AddToggle("ViewToggle", {
     end
 })
 
-viewBox:AddButton({
+ViewBox:AddButton({
     Text = "TP",
     Func = function()
         if SelectedPlayer and SelectedPlayer.Character and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -5232,7 +5235,7 @@ viewBox:AddButton({
     DoubleClick = false
 })
 
-viewBox:AddToggle("LoopTpTargetToggle", {
+ViewBox:AddToggle("LoopTpTargetToggle", {
     Text = "loop tp Target",
     Default = false,
     Callback = function(Value)
@@ -5294,6 +5297,7 @@ ViewBox:AddToggle("NetworkSpamToggle", {
         end
     end
 })
+
 
 local LoopTargetBox = LoopTab:AddLeftGroupbox("Target Management")
 local LoopBox1 = LoopTab:AddLeftGroupbox("Auto blob")
