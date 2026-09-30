@@ -5163,7 +5163,7 @@ ButtonBox:AddButton({
     Tooltip = "Copies HWID to clipboard"
 })
 
-local ListOthersBox = ViewTab:AddLeftGroupbox("Others")
+--local ListOthersBox = ViewTab:AddLeftGroupbox("Others")
 
 local SelectedPlayer = nil
 local TargetLoopTP = false
@@ -5180,7 +5180,7 @@ local function GetPlayerList()
     return list
 end
 
-local PlayerDropdown = ListOthersBox:AddDropdown("PlayerSelectDropdown", {
+local PlayerDropdown = ViewBox:AddDropdown("PlayerSelectDropdown", {
     Values = GetPlayerList(),
     Default = 1,
     Multi = false,
@@ -5196,7 +5196,7 @@ local PlayerDropdown = ListOthersBox:AddDropdown("PlayerSelectDropdown", {
     end
 })
 
-ListOthersBox:AddButton({
+viewBox:AddButton({
     Text = "List Remove",
     Func = function()
         PlayerDropdown:SetValues(GetPlayerList())
@@ -5204,7 +5204,7 @@ ListOthersBox:AddButton({
     DoubleClick = false
 })
 
-ListOthersBox:AddToggle("ViewToggle", {
+viewBox:AddToggle("ViewToggle", {
     Text = "View",
     Default = false,
     Callback = function(Value)
@@ -5220,7 +5220,7 @@ ListOthersBox:AddToggle("ViewToggle", {
     end
 })
 
-ListOthersBox:AddButton({
+viewBox:AddButton({
     Text = "TP",
     Func = function()
         if SelectedPlayer and SelectedPlayer.Character and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -5232,7 +5232,7 @@ ListOthersBox:AddButton({
     DoubleClick = false
 })
 
-ListOthersBox:AddToggle("LoopTpTargetToggle", {
+viewBox:AddToggle("LoopTpTargetToggle", {
     Text = "loop tp Target",
     Default = false,
     Callback = function(Value)
@@ -5248,7 +5248,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-ListOthersBox:AddToggle("NetworkSpamToggle", {
+ViewBox:AddToggle("NetworkSpamToggle", {
     Text = "Network spam",
     Default = false,
     Callback = function(Value)
