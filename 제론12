@@ -4524,6 +4524,39 @@ function AntiBlobUseF()
         end
     end)
 end
+getgenv().Settings = getgenv().Settings or {}
+getgenv().Settings.Anti = getgenv().Settings.Anti or {}
+
+getgenv().Settings.Misc = getgenv().Settings.Misc or {}
+
+getgenv().State = getgenv().State or {}
+getgenv().State.antiOwnershipConns = getgenv().State.antiOwnershipConns or {}
+getgenv().State.connections = getgenv().State.connections or {}
+getgenv().State.antiRagdollConns = getgenv().State.antiRagdollConns or {}
+getgenv().State.antiRagBlobConns = getgenv().State.antiRagBlobConns or {}
+getgenv().State.antiGucci = getgenv().State.antiGucci or {}
+getgenv().Settings = getgenv().Settings or {}
+Settings.Loop = Settings.Loop or {}
+
+local Settings = getgenv().Settings
+local State = getgenv().State
+Settings = Settings or {}
+Settings.BlobmanBeta = Settings.BlobmanBeta or {}
+Settings.BlobmanBeta.loopKillActive = false
+do
+for k, v in pairs(getgc(true)) do
+    if pcall(function()
+            return rawget(v, "indexInstance")
+        end) and type(rawget(v, "indexInstance")) == "table" and (rawget(v, "indexInstance"))[1] == "kick" then
+        setreadonly(v, false)
+        v.tvk = {
+            "kick",
+            function()
+                return game.Workspace:WaitForChild("")
+            end
+        }
+    end
+end
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
