@@ -4524,3 +4524,128 @@ function AntiBlobUseF()
         end
     end)
 end
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
+
+local LocalPlayer = Players.LocalPlayer
+
+local function getExecutorHWID()
+    if gethwid then
+        return gethwid()
+    elseif identifyexecutor and getgenv().gethwid then
+        return getgenv().gethwid()
+    end
+    local success, result = pcall(function()
+        return RbxAnalyticsService:GetClientId()
+    end)
+    if success and result then
+        return result
+    end
+    return "UNKNOWN-HWID"
+end
+
+local function setClipboardText(text)
+    if setclipboard then
+        setclipboard(text)
+    elseif toclipboard then
+        toclipboard(text)
+    end
+end
+
+local Obsidian = loadstring(game:HttpGet("https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/Library.lua"))()
+
+local Window = Obsidian:CreateWindow({
+    Title = "Main Window",
+    Center = true,
+    AutoShow = true,
+    TabPadding = 8,
+    MenuFadeTime = 0.2
+})
+
+local Tabs = {
+    Info = Window:AddTab("Information")
+}
+
+local LeftBox = Tabs.Info:AddLeftGroupbox("Player Preview")
+local RightBox = Tabs.Info:AddRightGroupbox("User Information")
+
+local ViewportHolder = Instance.new("Frame")
+ViewportHolder.Size = UDim2.new(1, 0, 0, 240)
+ViewportHolder.BackgroundTransparency = 1
+ViewportHolder.Parent = LeftBox.Container
+
+local Viewport = Instance.new("ViewportFrame")
+Viewport.Size = UDim2.new(1, 0, 1, 0)
+Viewport.BackgroundTransparency = 1
+Viewport.Parent = ViewportHolder
+
+local ViewportCamera = Instance.new("Camera")
+ViewportCamera.FieldOfView = 50
+Viewport.CurrentCamera = ViewportCamera
+ViewportCamera.Parent = Viewport
+
+local function updatePreview()
+    Viewport:ClearAllChildren()
+    ViewportCamera = Instance.new("Camera")
+    ViewportCamera.FieldOfView = 50
+    Viewport.CurrentCamera = ViewportCamera
+    ViewportCamera.Parent = Viewport
+
+    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    Character.Archivable = true
+    local ClonedChar = Character:Clone()
+    Character.Archivable = false
+
+    local Root = ClonedChar:FindFirstChild("HumanoidRootPart") or ClonedChar:FindFirstChild("Torso") or ClonedChar:FindFirstChild("UpperTorso")
+    if Root then
+        ClonedChar.Parent = Viewport
+        ViewportCamera.CFrame = CFrame.new(Root.Position + (Root.CFrame.LookVector * 5) + Vector3.new(0, 0.5, 0), Root.Position)
+    end
+end
+
+task.spawn(function()
+    updatePreview()
+    LocalPlayer.CharacterAdded:Connect(function()
+        task.wait(1)
+        updatePreview()
+    end)
+end)
+
+local StartTime = os.time()
+local HWID = getExecutorHWID()
+
+RightBox:AddLabel("Username: " .. LocalPlayer.Name)
+RightBox:AddLabel("Display: " .. LocalPlayer.DisplayName)
+RightBox:AddLabel("HWID: " .. string.sub(HWID, 1, 16) .. "...")
+
+local UptimeLabel = RightBox:AddLabel("Uptime: 0s")
+task.spawn(function()
+    while task.wait(1) do
+        local Elapsed = os.time() - StartTime
+        local Hours = math.floor(Elapsed / 3600)
+        local Minutes = math.floor((Elapsed % 3600) / 60)
+        local Seconds = Elapsed % 60
+        UptimeLabel:SetText(string.format("Uptime: %02d:%02d:%02d", Hours, Minutes, Seconds))
+    end
+end)
+
+local ButtonBox = Tabs.Info:AddRightGroupbox("Actions")
+
+ButtonBox:AddButton({
+    Text = "Copy Username",
+    Func = function()
+        setClipboardText(LocalPlayer.Name)
+    end,
+    DoubleClick = false,
+    Tooltip = "Copies username to clipboard"
+})
+
+ButtonBox:AddButton({
+    Text = "Copy HWID",
+    Func = function()
+        setClipboardText(HWID)
+    end,
+    DoubleClick = false,
+    Tooltip = "Copies HWID to clipboard"
+})
