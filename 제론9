@@ -4702,7 +4702,7 @@ local LoopBox8 = LoopTab:AddRightGroupbox("Silent kick")
 local LoopBox9 = LoopTab:AddRightGroupbox("loopkill")
 local LoopBox10 = LoopTab:AddLeftGroupbox("No Blob")
 
-local ListOthersBox = ListTab:AddLeftGroupbox("Others")
+--local ListOthersBox = ListTab:AddLeftGroupbox("Others")
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
