@@ -4554,6 +4554,11 @@ local function setClipboardText(text)
 end
 
 local Obsidian = loadstring(game:HttpGet("https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/Library.lua"))()
+local Options = Library.Options
+local Toggles = Library.Toggles
+
+Library.ForceCheckbox =  flase 
+
 
 local Window = Obsidian:CreateWindow({
     Title = "Main Window",
