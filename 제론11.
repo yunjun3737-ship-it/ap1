@@ -4581,7 +4581,7 @@ local Tabs = {
 
 local playerTab = Tabs.Player
 local grabTab = Tabs.Combat
-local AntiTab = Tabs.Invincibility
+local antiTab = Tabs.Invincibility
 local ListTab = Tabs.View
 local LoopTab = Tabs.Loop
 
