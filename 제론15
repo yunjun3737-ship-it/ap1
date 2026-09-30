@@ -9002,6 +9002,8 @@ AntiBox2:AddToggle("heyeue", {
 
 local flyingResetConn = nil
 local resetProtectionConn = nil
+local healthProtectionConn = nil
+local isResetting = false
 
 AntiBox3:AddToggle("owiduxj", {
     Text = "Auto reset [Self kill]",
@@ -9011,22 +9013,37 @@ AntiBox3:AddToggle("owiduxj", {
             flyingResetConn:Disconnect()
             flyingResetConn = nil
         end
+
         if Value then
             flyingResetConn = rs.GameCorrectionEvents.GameCorrectionsNotify.OnClientEvent:Connect(function(Type)
-                if Type == "Flying" then
-                    local char = plr.Character
-                    if char then
-                        local hum = char:FindFirstChildOfClass("Humanoid")
-                        if hum then
-                            pcall(function()
-                                rs.CharacterEvents.Struggle:FireServer()
-                            end)
-                            hum.Health = 0
-                            hum:ChangeState(Enum.HumanoidStateType.Dead)
-                            char:BreakJoints()
-                        end
-                    end
+                if Type ~= "Flying" or isResetting then
+                    return
                 end
+
+                local char = plr.Character
+                if not char then
+                    return
+                end
+
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if not hum then
+                    return
+                end
+
+                isResetting = true
+
+                if healthProtectionConn then
+                    healthProtectionConn:Disconnect()
+                    healthProtectionConn = nil
+                end
+
+                pcall(function()
+                    rs.CharacterEvents.Struggle:FireServer()
+                end)
+
+                hum.Health = 0
+                hum:ChangeState(Enum.HumanoidStateType.Dead)
+                char:BreakJoints()
             end)
         end
     end
@@ -9034,20 +9051,34 @@ AntiBox3:AddToggle("owiduxj", {
 
 resetProtectionConn = plr.CharacterAdded:Connect(function(char)
     task.wait(0.2)
-    local hum = char:WaitForChild("Humanoid", 5)
-    if hum then
-        hum.MaxHealth = math.huge
-        hum.Health = math.huge
-        hum.BreakJointsOnDeath = false
-        hum.PlatformStand = false
-        hum.HealthChanged:Connect(function(health)
-            if health < hum.MaxHealth then
-                hum.Health = hum.MaxHealth
-            end
-        end)
-    end
-end)
 
+    local hum = char:WaitForChild("Humanoid", 5)
+    if not hum then
+        return
+    end
+
+    isResetting = false
+
+    hum.MaxHealth = math.huge
+    hum.Health = math.huge
+    hum.BreakJointsOnDeath = false
+    hum.PlatformStand = false
+
+    if healthProtectionConn then
+        healthProtectionConn:Disconnect()
+        healthProtectionConn = nil
+    end
+
+    healthProtectionConn = hum.HealthChanged:Connect(function(health)
+        if isResetting then
+            return
+        end
+
+        if health < hum.MaxHealth then
+            hum.Health = hum.MaxHealth
+        end
+    end)
+end)
 AntiBox3:AddToggle("su2iisiisi", {
     Text = "Anti kick [Part]",
     Default = false,
