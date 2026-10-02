@@ -17772,7 +17772,7 @@ SMTab:AddDropdown({
     end
 })
 
-SMTab:AddplayerDropdown({
+SMTab:AddDropdown({
     Name = "Select Player",
     Default = "Macaco (negro)",
     Options = {
