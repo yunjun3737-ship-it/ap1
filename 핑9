@@ -7795,7 +7795,7 @@ else
                     if (humanoidRootPart59.Position - stickyPart10.Position).Magnitude > 6 then
                       destroyToy6:FireServer(findFirstChild70.NinjaShuriken)
                     else
-                      ::L13730967::
+                    --  ::L13730967::
 
                       if stickyPart10 then
                         local partOwner21 = stickyPart10:FindFirstChild("PartOwner")
@@ -7803,7 +7803,7 @@ else
                         if partOwner21 and partOwner21.Value ~= localPlayer14.Name then
                           destroyToy6:FireServer(findFirstChild70.NinjaShuriken)
                         else
-                          ::L16651589::
+                     ---     ::L16651589::
 
                           if stickyPart10 and ragdollTouchedHitbox3 then
                             local stickyWeld8 = stickyPart10:FindFirstChild("StickyWeld")
@@ -7855,7 +7855,7 @@ else
 
                               if not v319 then
                               else
-                                ::L14790867::
+                               --- ::L14790867::
 
                                 if stickyWeld8 and stickyWeld8.Part1 == ragdollTouchedHitbox3 then
                                   while ragdollTouchedHitbox3.Parent and HouseAntiKickT do
@@ -7965,16 +7965,16 @@ else
                                 end
                               end
                             else
-                              goto L14790867
+                             -- goto L14790867
                             end
                           end
                         end
                       else
-                        goto L16651589
+                       -- goto L16651589
                       end
                     end
                   else
-                    goto L13730967
+                   -- goto L13730967
                   end
                 end
               end
