@@ -15678,7 +15678,7 @@ end
 gui2 = Instance.new("ScreenGui")
 gui2.ResetOnSpawn = false
 gui2.Name = "CAG2"
-if userInputService.TouchEnabled then
+--if userInputService.TouchEnabled then
     gui2.Parent = localPlayer.PlayerGui
 end
 imageButtonTeleport = Instance.new("ImageButton")
