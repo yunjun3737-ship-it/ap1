@@ -1726,18 +1726,22 @@ end)
 			Container.CanvasSize = UDim2.new(0, 0, 0, Container.UIListLayout.AbsoluteContentSize.Y + 30)
 		end)
 
-		if FirstTab then
+			if FirstTab then
 			FirstTab = false
 			TabFrame.Ico.ImageTransparency = 0
 			TabFrame.Title.TextTransparency = 0
 			Container.Visible = true
-			if OrionLib.TitleDescription then
+			
+			if OrionLib.TitleDescription and OrionLib.TitleDivider then
 				if TabConfig.Description ~= "" then
-					OrionLib.TitleDescription.Text = "|  " .. TabConfig.Description
+					OrionLib.TitleDescription.Text = TabConfig.Description
+					OrionLib.TitleDivider.Visible = true
 				else
 					OrionLib.TitleDescription.Text = ""
+					OrionLib.TitleDivider.Visible = false
 				end
 			end
+			
 		end    
 
 		AddConnection(TabFrame.MouseButton1Click, function()
@@ -1752,13 +1756,17 @@ end)
 					ItemContainer.Visible = false
 				end    
 			end  
-			if OrionLib.TitleDescription then
+			
+			if OrionLib.TitleDescription and OrionLib.TitleDivider then
 				if TabConfig.Description ~= "" then
-					OrionLib.TitleDescription.Text = "|  " .. TabConfig.Description
+					OrionLib.TitleDescription.Text = TabConfig.Description
+					OrionLib.TitleDivider.Visible = true
 				else
 					OrionLib.TitleDescription.Text = ""
+					OrionLib.TitleDivider.Visible = false
 				end
 			end
+		
 			TweenService:Create(TabFrame.Ico, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
 			TweenService:Create(TabFrame.Title, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
 			Container.Visible = true   
