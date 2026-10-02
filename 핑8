@@ -7184,11 +7184,11 @@ else
                 BACK(cframe18)
               end
 
-              ::L6926888::
+             -- ::L6926888::
               task.wait(0.1)
             end
           else
-            goto L6926888
+          --  goto L6926888
           end
         end
       end
