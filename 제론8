@@ -15735,7 +15735,7 @@ funTab:AddSection({
 	funTab:AddToggle({
     Name = "Control (C)",
     Default = false,
-  --  Flag= "wiuffwu9tfwtfou",
+  Flag= "wiuffwu9tfwtfou",
     Callback = function(isControlEnabled)
         imageButtonControl.Visible = isControlEnabled
         imageButtonControl.Active = isControlEnabled
@@ -15746,7 +15746,7 @@ funTab:AddSection({
         
     end
     Save = true,
-    Flag = "controlbind_toggle"
+    --Flag = "controlbind_toggle"
 })
 
 	
