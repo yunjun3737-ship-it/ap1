@@ -17346,9 +17346,6 @@ canExplode = false
 maxBombstoexplode = 8
 local toysLimitCapValue = toysLimitCapValue or workspace:WaitForChild("heox_13"):WaitForChild("ToysLimitCapValue")
 
-if toysLimitCapValue.Value == 200 then
-    maxBombstoexplode = 18
-end
 AimMissile = nil
 function GetAimMissile()
     if AimMissile and (AimMissile.Parent and AimMissile.PrimaryPart) then
