@@ -3130,7 +3130,7 @@ else
           if not wd then
             task.wait(0.1)
           else
-            ::L15347046::
+           -- ::L15347046::
             main = wd:FindFirstChild("Main")
 
             if main then
