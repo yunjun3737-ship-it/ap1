@@ -264,7 +264,7 @@ end
 
 end
 
-
+--[[
     local Window = OrionLib:MakeWindow({
         Name = "Xeron V4",
         HidePremium = false,
@@ -277,11 +277,10 @@ end
         IntroIcon = "rbxassetid://77989137998499",
         SearchBar = {Default = "Xeron"}
     })
-
-
+]]
 do
 do
-print("Xeron V4 ⚡️💎⚡️")
+print("Xeron V4")
 getgenv().Settings = getgenv().Settings or {}
 getgenv().Settings.Anti = getgenv().Settings.Anti or {}
 
@@ -587,9 +586,10 @@ pcall(function()
     end
 end)
 end
---local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/qwer123476/12345/main/Orion"))()
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion"))()
 
 
+local Window = OrionLib:MakeWindow({Name = "test", HidePremium = true, SaveConfig = false, IntroEnabled = false, FreeMouse = true})
 
 
 
