@@ -15180,7 +15180,7 @@ funTab:AddTextbox({
 
 
 funTab:AddButton({
-	Name = "neutralization",
+	Name = "Spawn kunai",
 	Callback = function()
 		local ReplicatedStorage = game:GetService("ReplicatedStorage")
 		local Players = game:GetService("Players")
