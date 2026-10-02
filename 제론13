@@ -17864,10 +17864,10 @@ Players.PlayerRemoving:Connect(function()
 end)
 
 refreshPlayerList()
-explosionexplanation:AddParagraph("How to use target mouse?", "Press/Hold the keybind (F) and then BOOM!")
-explosionexplanation:AddParagraph("How to target player?", "Select Target to Player and then select the player you want to target")
-explosionexplanation:AddParagraph("How to change the explosive", "Click on Explosive Type and select any type")
-explosionexplanation:AddParagraph("Is Trigger Mode useful?", "Yes! Trigger Mode is very useful for bothering other players.")
+SMTab:AddParagraph("How to use target mouse?", "Press/Hold the keybind (F) and then BOOM!")
+SMTab:AddParagraph("How to target player?", "Select Target to Player and then select the player you want to target")
+SMTab:AddParagraph("How to change the explosive", "Click on Explosive Type and select any type")
+SMTab:AddParagraph("Is Trigger Mode useful?", "Yes! Trigger Mode is very useful for bothering other players.")
 
 
                     
