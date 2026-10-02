@@ -4743,7 +4743,7 @@ else
 
                             if v219 then
                             else
-                              ::L11801099::
+                             -- ::L11801099::
 
                               if not partOwner17 or not partOwner17:IsA("StringValue")
                                 or partOwner17.Value ~= plr.Name then
