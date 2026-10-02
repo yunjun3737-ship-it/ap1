@@ -15747,7 +15747,7 @@ funTab:AddSection({
     
     Save = true,
     --Flag = "controlbind_toggle"
-end})
+})
 
 	
 	
