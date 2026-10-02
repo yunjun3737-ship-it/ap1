@@ -17344,6 +17344,8 @@ reachedrightammount = false
 explosionInterval = nil
 canExplode = false
 maxBombstoexplode = 8
+local toysLimitCapValue = toysLimitCapValue or workspace:WaitForChild("heox_13"):WaitForChild("ToysLimitCapValue")
+
 if toysLimitCapValue.Value == 200 then
     maxBombstoexplode = 18
 end
