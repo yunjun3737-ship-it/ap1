@@ -19031,7 +19031,7 @@ end
         Time = 3
     })
 
-
+Window:AddConfigTab()
 CreditsTab:AddButton({
     Name = "Save",
     Callback = function()
@@ -19050,4 +19050,3 @@ task.spawn(function()
     task.wait()
     LoadAll()
 end)
-
