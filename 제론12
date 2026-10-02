@@ -17744,7 +17744,7 @@ SMTab:AddDropdown({
 })
 
 SMTab:AddDropdown({
-    Name = "On Toggle Off",
+    Name = "on Toggle off",
     Default = "Destroy",
     Options = {
         "Destroy",
@@ -17806,7 +17806,7 @@ SMTab:AddDropdown({
     end
 })
 
-local PlayerToTarget = SMTab:AddDropdown({
+local PlayerToTarget = SMTab:AddPlayersDropdown({
     Name = "Player select",
     Default = "None",
     Options = {"None"},
