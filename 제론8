@@ -586,7 +586,7 @@ pcall(function()
     end
 end)
 end
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion1"))()
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion"))()
 
 
 local Window = OrionLib:MakeWindow({Name = "XERON V4", HidePremium = true, SaveConfig = false, IntroEnabled = false, FreeMouse = true})
@@ -12751,55 +12751,44 @@ antiTab:AddSection({
 })
 
 local flyingResetConn = nil
-local resetProtectionConn = nil
+
 antiTab:AddToggle({
-    Name = "Auto reset <font color='rgb(50,0,50)'>[Self kill]</font>",
-    
-    save = true,
+    Name = "Auto reset  <font color='rgb(155,146,132)'>[Self kill]</font> ",
+    Default = false,
     Flag = "owiduxj",
     Callback = function(Value)
         if flyingResetConn then
             flyingResetConn:Disconnect()
             flyingResetConn = nil
         end
+
         if Value then
             flyingResetConn = rs.GameCorrectionEvents.GameCorrectionsNotify.OnClientEvent:Connect(function(Type)
-                if Type == "Flying" then
-                    local char = plr.Character
-                    if char then
-                        local hum = char:FindFirstChildOfClass("Humanoid")
-                        if hum then
-                            pcall(function()
-                                rs.CharacterEvents.Struggle:FireServer()
-                            end)
-                            hum.Health = 0
-                            hum:ChangeState(Enum.HumanoidStateType.Dead)
-                            char:BreakJoints()
-                        end
-                    end
+                if Type ~= "Flying" then
+                    return
                 end
+
+                local char = plr.Character
+                if not char then
+                    return
+                end
+
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if not hum then
+                    return
+                end
+
+                pcall(function()
+                    rs.CharacterEvents.Struggle:FireServer()
+                end)
+
+                hum.Health = 0
+                hum:ChangeState(Enum.HumanoidStateType.Dead)
+                char:BreakJoints()
             end)
         end
     end
 })
-
-resetProtectionConn = plr.CharacterAdded:Connect(function(char)
-    task.wait(0.2)
-    local hum = char:WaitForChild("Humanoid", 5)
-    if hum then
-        hum.MaxHealth = math.huge
-        hum.Health = math.huge
-        hum.BreakJointsOnDeath = false
-        hum.PlatformStand = false
-        hum.HealthChanged:Connect(function(health)
-            if health < hum.MaxHealth then
-                hum.Health = hum.MaxHealth
-            end
-        end)
-    end
-end)
-
---FlyingReset:Set(true)
 
 antiTab:AddToggle({
     Name = "Anti kick <font color='rgb(255,146,132)'>[Part]</font>",
