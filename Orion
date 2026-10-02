@@ -1,3 +1,5 @@
+local ScriptLoadStartTime = os.clock()
+
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -43,7 +45,8 @@ local OrionLib = {
 	Toggles = {},
 	SelectedTheme = "Default",
 	Folder = nil,
-	SaveCfg = false
+	SaveCfg = false,
+	NotificationSound = true
 }
 
 --Feather Icons https://github.com/evoincorp/lucideblox/tree/master/src/modules/util - Created by 7kayoh
@@ -746,6 +749,7 @@ end
 function OrionLib:MakeNotification(NotificationConfig)
 	task.spawn(function()
         pcall(function()
+			if OrionLib.NotificationSound == false then return end
             local N_Sound = Instance.new("Sound")
             N_Sound.SoundId = "rbxassetid://139452805868562"
             N_Sound.Volume = 1
@@ -843,6 +847,13 @@ function OrionLib:GoToTab(tabName)
 		local container = data.Container
 
 		if name == tabName then
+			if OrionLib.TitleDescription then
+				if data.Description ~= "" then
+					OrionLib.TitleDescription.Text = "|  " .. data.Description
+				else
+					OrionLib.TitleDescription.Text = ""
+				end
+			end
 			tabFrame.Title.Font = Enum.Font.Code
 			TweenService:Create(tabFrame.Ico, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
 			TweenService:Create(tabFrame.Title, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
@@ -1145,6 +1156,11 @@ function OrionLib:MakeWindow(WindowConfig)
 		Size = UDim2.new(1, 0, 0, 50)
 	})
 
+	local ProfileClickBtn = SetProps(MakeElement("Button"), {
+		Size = UDim2.new(1, 0, 1, 0),
+		ZIndex = 10
+	})
+
 	local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 0), {
 		Size = UDim2.new(0, 150, 1, -50),
 		Position = UDim2.new(0, 0, 0, 50)
@@ -1181,7 +1197,8 @@ function OrionLib:MakeWindow(WindowConfig)
 				AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://4031889928"), {
 					Size = UDim2.new(1, 0, 1, 0),
 				}), "Second"),
-				MakeElement("Corner", 0, 0)
+				MakeElement("Corner", 0, 0),
+				ProfileClickBtn
 			}), "Divider"),
 			SetChildren(SetProps(MakeElement("TFrame"), {
 				AnchorPoint = Vector2.new(0, 0.5),
@@ -1305,6 +1322,79 @@ end)
 		DragPoint,
 		WindowStuff
 	}), "Main")
+
+	local MainUIScale = Instance.new("UIScale", MainWindow)
+	OrionLib.MainScale = MainUIScale
+
+	local TitleDescription = AddThemeObject(SetProps(MakeElement("Label", "", 13), {
+        Size = UDim2.new(1, -200, 2, 0),
+        Position = UDim2.new(0, WindowNameTBX.X + 60, 0, -23),
+        Font = Enum.Font.Code,
+        TextTransparency = 0.4
+    }), "Text")
+    TitleDescription.Parent = MainWindow.TopBar
+    OrionLib.TitleDescription = TitleDescription
+
+	local ProfilePopup = SetProps(MakeElement("RoundFrame", Color3.fromRGB(20, 20, 20), 0, 0), {
+        Size = UDim2.new(0, 180, 0, 80),
+        Position = UDim2.new(0, 10, 1, -140),
+        ZIndex = 50,
+        Visible = false,
+        Parent = MainWindow
+    })
+    AddThemeObject(ProfilePopup, "Second")
+    AddThemeObject(MakeElement("Stroke"), "Stroke").Parent = ProfilePopup
+
+    AddThemeObject(SetProps(MakeElement("Label", LocalPlayer.DisplayName, 13), {
+        Size = UDim2.new(1, -10, 0, 20),
+        Position = UDim2.new(0, 10, 0, 10),
+        Font = Enum.Font.Code,
+        ZIndex = 51
+    }), "Text").Parent = ProfilePopup
+
+    AddThemeObject(SetProps(MakeElement("Label", "@" .. LocalPlayer.Name, 12), {
+        Size = UDim2.new(1, -10, 0, 20),
+        Position = UDim2.new(0, 10, 0, 30),
+        Font = Enum.Font.Code,
+        ZIndex = 51
+    }), "TextDark").Parent = ProfilePopup
+    
+    local LoadTimeLabel = AddThemeObject(SetProps(MakeElement("Label", "Load Time: 0s", 12), {
+        Size = UDim2.new(1, -10, 0, 20),
+        Position = UDim2.new(0, 10, 0, 50),
+        Font = Enum.Font.Code,
+        ZIndex = 51
+    }), "TextDark")
+    LoadTimeLabel.Parent = ProfilePopup
+
+	local PopupToggled = false
+    ProfileClickBtn.MouseButton1Click:Connect(function()
+        PopupToggled = not PopupToggled
+        ProfilePopup.Visible = PopupToggled
+        if PopupToggled then
+            local timePassed = math.floor((os.clock() - ScriptLoadStartTime) * 10) / 10
+            LoadTimeLabel.Text = "Load Time: " .. tostring(timePassed) .. "s"
+        end
+    end)
+    UserInputService.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if PopupToggled then
+                local mx, my = UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y
+                local px, py = ProfilePopup.AbsolutePosition.X, ProfilePopup.AbsolutePosition.Y
+                local sx, sy = ProfilePopup.AbsoluteSize.X, ProfilePopup.AbsoluteSize.Y
+                local bx, by = ProfileClickBtn.AbsolutePosition.X, ProfileClickBtn.AbsolutePosition.Y
+                local bsx, bsy = ProfileClickBtn.AbsoluteSize.X, ProfileClickBtn.AbsoluteSize.Y
+                
+                local inPopup = mx >= px and mx <= px + sx and my >= py - 36 and my <= py + sy
+                local inBtn = mx >= bx and mx <= bx + bsx and my >= by - 36 and my <= by + bsy
+                
+                if not inPopup and not inBtn then
+                    PopupToggled = false
+                    ProfilePopup.Visible = false
+                end
+            end
+        end
+    end)
 
 	mainWindowStroke.Parent = MainWindow
     mainWindowStroke.Thickness = 2.5
@@ -1568,6 +1658,7 @@ end)
 		TabConfig.Name = TabConfig.Name or "Tab"
 		TabConfig.Icon = TabConfig.Icon or ""
 		TabConfig.PremiumOnly = TabConfig.PremiumOnly or false
+		TabConfig.Description = TabConfig.Description or ""
 
 		local TabFrame = SetChildren(SetProps(MakeElement("Button"), {
 			Size = UDim2.new(1, 0, 0, 30),
@@ -1608,7 +1699,8 @@ end)
 
 		Tabs[TabConfig.Name] = {
 			Frame = TabFrame,
-			Container = Container
+			Container = Container,
+			Description = TabConfig.Description
 		}
 
 		AddConnection(Container.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
@@ -1620,6 +1712,13 @@ end)
 			TabFrame.Ico.ImageTransparency = 0
 			TabFrame.Title.TextTransparency = 0
 			Container.Visible = true
+			if OrionLib.TitleDescription then
+				if TabConfig.Description ~= "" then
+					OrionLib.TitleDescription.Text = "|  " .. TabConfig.Description
+				else
+					OrionLib.TitleDescription.Text = ""
+				end
+			end
 		end    
 
 		AddConnection(TabFrame.MouseButton1Click, function()
@@ -1634,6 +1733,13 @@ end)
 					ItemContainer.Visible = false
 				end    
 			end  
+			if OrionLib.TitleDescription then
+				if TabConfig.Description ~= "" then
+					OrionLib.TitleDescription.Text = "|  " .. TabConfig.Description
+				else
+					OrionLib.TitleDescription.Text = ""
+				end
+			end
 			TweenService:Create(TabFrame.Ico, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
 			TweenService:Create(TabFrame.Title, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
 			Container.Visible = true   
@@ -3601,6 +3707,63 @@ end)
             PremiumOnly = false
         })
 
+		local ui_settings = config_tab:AddSection({
+			Name = "UI Settings"
+		})
+
+		ui_settings:AddDropdown({
+			Name = "UI Size",
+			Options = {"25%", "50%", "75%", "100%", "125%", "150%"},
+			Default = "100%",
+			Callback = function(Value)
+				if OrionLib.MainScale then
+					local num = tonumber(string.match(Value, "%d+"))
+					if num then
+						OrionLib.MainScale.Scale = num / 100
+					end
+				end
+			end
+		})
+
+		ui_settings:AddDropdown({
+			Name = "Notification Position",
+			Options = {"Bottom Right", "Bottom Left", "Top Right", "Top Left", "Center", "Bottom Center"},
+			Default = "Bottom Right",
+			Callback = function(Value)
+				if Value == "Bottom Right" then
+					NotificationHolder.Position = UDim2.new(1, -25, 1, -25)
+					NotificationHolder.AnchorPoint = Vector2.new(1, 1)
+					NotificationHolder.UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+					NotificationHolder.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+				elseif Value == "Bottom Left" then
+					NotificationHolder.Position = UDim2.new(0, 25, 1, -25)
+					NotificationHolder.AnchorPoint = Vector2.new(0, 1)
+					NotificationHolder.UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+					NotificationHolder.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+				elseif Value == "Top Right" then
+					NotificationHolder.Position = UDim2.new(1, -25, 0, 25)
+					NotificationHolder.AnchorPoint = Vector2.new(1, 0)
+					NotificationHolder.UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+					NotificationHolder.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+				elseif Value == "Top Left" then
+					NotificationHolder.Position = UDim2.new(0, 25, 0, 25)
+					NotificationHolder.AnchorPoint = Vector2.new(0, 0)
+					NotificationHolder.UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+					NotificationHolder.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+				elseif Value == "Center" then
+					NotificationHolder.Position = UDim2.new(0.5, 0, 0.5, 0)
+					NotificationHolder.AnchorPoint = Vector2.new(0.5, 0.5)
+					NotificationHolder.UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+					NotificationHolder.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+				elseif Value == "Bottom Center" then
+					NotificationHolder.Position = UDim2.new(0.5, 0, 1, -25)
+					NotificationHolder.AnchorPoint = Vector2.new(0.5, 1)
+					NotificationHolder.UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+					NotificationHolder.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+				end
+			end
+		})
+
 		local select_theme = config_tab:AddSection({
 			Name = "Theme Settings"
 		})
@@ -3655,6 +3818,26 @@ end)
 			end
 		})
 
+		local unload_state = 0
+		local unload_btn
+		unload_btn = config_tab:AddButton({
+			Name = "Unload UI",
+			Callback = function()
+				if unload_state == 0 then
+					unload_state = 1
+					unload_btn:Set("Are you Sure?")
+					task.delay(3, function()
+						if unload_state == 1 then
+							unload_state = 0
+							unload_btn:Set("Unload UI")
+						end
+					end)
+				elseif unload_state == 1 then
+					OrionLib:Destroy()
+				end
+			end
+		})
+
 		OrionLib.SelectedTheme = "Default"
 		OrionLib:SetTheme()
 		
@@ -3674,7 +3857,8 @@ local Window = OrionLib:MakeWindow({Name = "test", HidePremium = true, SaveConfi
 local Main_Tab = Window:MakeTab({
 	Name = "Combat",
 	Icon = "rbxassetid://124448418211665",
-	PremiumOnly = false
+	PremiumOnly = false,
+	Description = "Welcome to Combat Tab"
 })
 
 Main_Tab:AddDropdown({
