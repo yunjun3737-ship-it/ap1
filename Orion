@@ -1326,14 +1326,30 @@ end)
 	local MainUIScale = Instance.new("UIScale", MainWindow)
 	OrionLib.MainScale = MainUIScale
 
-	local TitleDescription = AddThemeObject(SetProps(MakeElement("Label", "", 13), {
-        Size = UDim2.new(1, -200, 2, 0),
-        Position = UDim2.new(0, WindowNameTBX.X + 60, 0, -23),
-        Font = Enum.Font.Code,
-        TextTransparency = 0.4
-    }), "Text")
-    TitleDescription.Parent = MainWindow.TopBar
-    OrionLib.TitleDescription = TitleDescription
+	
+	local TitleDivider = AddThemeObject(SetProps(MakeElement("Frame"), {
+		Size = UDim2.new(0, 2, 0, 24),
+		Position = UDim2.new(0, WindowNameTBX.X + 45, 0, 13),
+		BackgroundTransparency = 0.4,
+		Visible = false,
+		BorderSizePixel = 0
+	}), "Text")
+	TitleDivider.Parent = MainWindow.TopBar
+	OrionLib.TitleDivider = TitleDivider
+
+	local TitleDescription = AddThemeObject(SetProps(MakeElement("Label", "", 12), {
+		Size = UDim2.new(1, -(WindowNameTBX.X + 160), 0, 34), -- 우측 닫기 버튼을 침범하지 않게 여백을 160으로 고정
+		Position = UDim2.new(0, WindowNameTBX.X + 55, 0, 8),
+		Font = Enum.Font.Code,
+		TextTransparency = 0.4,
+		TextWrapped = true, 
+		TextYAlignment = Enum.TextYAlignment.Center,
+		TextXAlignment = Enum.TextXAlignment.Left
+	}), "Text")
+	TitleDescription.Parent = MainWindow.TopBar
+	OrionLib.TitleDescription = TitleDescription
+	
+
 
 	local ProfilePopup = SetProps(MakeElement("RoundFrame", Color3.fromRGB(20, 20, 20), 0, 0), {
         Size = UDim2.new(0, 180, 0, 80),
