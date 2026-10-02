@@ -15744,10 +15744,10 @@ funTab:AddSection({
         
             --contextActionService:UnbindAction("Control(C)")
         
-    end
+    
     Save = true,
     --Flag = "controlbind_toggle"
-})
+end})
 
 	
 	
