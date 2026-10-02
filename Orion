@@ -3609,6 +3609,17 @@ end)
 			Name = "Border"
 		})
 
+		local notification_settings = config_tab:AddSection({
+			Name = "Notification"
+		})
+
+		notification_settings:AddToggle({
+			Name = "Notification sound",
+			Default = true,
+			Callback = function(Value)
+				OrionLib.NotificationSound = Value
+			end
+		})
 
 		windowstroke:AddSlider({
 			Name = "Border Thickness",
@@ -3632,9 +3643,6 @@ end)
 				OrionLib.Themes.Custom = newTheme
 				OrionLib.SelectedTheme = "Custom"
 				OrionLib:SetTheme()
-				
-				-- others
-				
 			end
 		})
 
