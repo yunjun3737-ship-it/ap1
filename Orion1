@@ -755,11 +755,17 @@ function OrionLib:MakeNotification(NotificationConfig)
         end)
 
 		NotificationConfig.Name = NotificationConfig.Name or "Notification"
-		NotificationConfig.Content = NotificationConfig.Content or "Text"
-		NotificationConfig.Image = NotificationConfig.Image or "rbxassetid://4384403532"
-		game:GetService("ContentProvider"):PreloadAsync({NotificationConfig.Image})
-		NotificationConfig.Time = NotificationConfig.Time or 15
+NotificationConfig.Content = NotificationConfig.Content or "Text"
 
+if NotificationConfig.Image == nil then
+    NotificationConfig.Image = "rbxassetid://4384403532"
+elseif typeof(NotificationConfig.Image) == "number" then
+    NotificationConfig.Image = "rbxassetid://" .. tostring(NotificationConfig.Image)
+end
+
+game:GetService("ContentProvider"):PreloadAsync({NotificationConfig.Image})
+
+NotificationConfig.Time = NotificationConfig.Time or 15
 		local NotificationParent = SetProps(MakeElement("TFrame"), {
 			Size = UDim2.new(1, 0, 0, 0),
 			AutomaticSize = Enum.AutomaticSize.Y,
