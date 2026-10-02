@@ -15511,13 +15511,7 @@ function makeCharacterGrabbable(parentInstance2)
         end
     end
 end
-local camera = workspaceService.CurrentCamera or workspace.CurrentCamera
 
-if camera then
-    controltween1 = tweenService:Create(camera, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, true), {
-        FieldOfView = 120
-    })
-end
 controltween2 = tweenService:Create(controleffectsatur, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
     TintColor = Color3.fromRGB(210, 218, 255)
 })
