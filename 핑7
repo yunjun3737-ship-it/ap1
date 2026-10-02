@@ -5716,7 +5716,7 @@ else
 
               if v243 then
               else
-                ::L13102675::
+              --  ::L13102675::
                 findFirstChild59 = workspace:FindFirstChild(value101.Name .. "SpawnedInToys")
 
                 if findFirstChild59 then
@@ -5726,7 +5726,7 @@ else
                 end
               end
             else
-              goto L13102675
+             -- goto L13102675
             end
           end
 
