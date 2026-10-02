@@ -585,8 +585,15 @@ end
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion"))()
 
 
-local Window = OrionLib:MakeWindow({Name = "XERON V4", HidePremium = true, SaveConfig = false, IntroEnabled = false, FreeMouse = true})
-
+local Window = OrionLib:MakeWindow({
+    Name = "Xeron V4",
+    HidePremium = false,
+    SaveConfig = flase,
+    KeyToOpenWindow = "M",
+    ConfigFolder = "XeronV4",
+    IntroEnabled = flase,
+    IntroText = "Xeron V4"
+})
 
 
 local UDTab = Window:MakeTab({Name = "user information",Icon = "rbxassetid://77989137998499", PremiumOnly = false})
