@@ -15511,14 +15511,13 @@ function makeCharacterGrabbable(parentInstance2)
         end
     end
 end
-controlsoundeffect = Instance.new("Sound", workspaceService)
-controlsoundeffect.SoundId = "rbxassetid://9126228625"
-controlsoundeffect.PlaybackSpeed = 1.25
-controleffectsatur = Instance.new("ColorCorrectionEffect", lightingService)
-controleffectsatur.Enabled = false
-controltween1 = tweenService:Create(workspaceService.CurrentCamera, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, true), {
-    FieldOfView = 120
-})
+local camera = workspaceService.CurrentCamera or workspace.CurrentCamera
+
+if camera then
+    controltween1 = tweenService:Create(camera, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, true), {
+        FieldOfView = 120
+    })
+end
 controltween2 = tweenService:Create(controleffectsatur, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
     TintColor = Color3.fromRGB(210, 218, 255)
 })
