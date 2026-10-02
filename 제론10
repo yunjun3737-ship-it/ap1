@@ -17308,7 +17308,7 @@ local spamDelay = 0.00005
 
 
 lagTab:AddToggle({
-    Name = "time grab",
+    Name = "pro Line Lag ",
     Default = false,
     Callback = function(Value)
         isRunning = Value 
@@ -17335,62 +17335,25 @@ lagTab:AddToggle({
 })
 
 do
-local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
-local Workspace = game:GetService("Workspace")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 
-local spawnedInToysFolder = Workspace:WaitForChild(localPlayer.Name .. "SpawnedInToys", 5) or Workspace:FindFirstChild(localPlayer.Name .. "SpawnedInToys")
-if not spawnedInToysFolder then
-    return
+     
+spamexplosiontype = nil
+spamexplosiontarget = 0
+bombsammountoexplode = 1
+reachedrightammount = false
+explosionInterval = nil
+canExplode = false
+maxBombstoexplode = 8
+if toysLimitCapValue.Value == 200 then
+    maxBombstoexplode = 18
 end
-
-local toysLimitCapValue = localPlayer:FindFirstChild("ToysLimitCap") or localPlayer:WaitForChild("ToysLimitCap", 5)
-local usedToyPointsValue = localPlayer:FindFirstChild("UsedToyPoints") or localPlayer:WaitForChild("UsedToyPoints", 5)
-if not (toysLimitCapValue and usedToyPointsValue) then
-    return
+AimMissile = nil
+function GetAimMissile()
+    if AimMissile and (AimMissile.Parent and AimMissile.PrimaryPart) then
+        return AimMissile.PrimaryPart
+    end
 end
-
-local menuToys = ReplicatedStorage:FindFirstChild("MenuToys") or ReplicatedStorage:WaitForChild("MenuToys", 5)
-local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents") or ReplicatedStorage:WaitForChild("GrabEvents", 5)
-local BombEvents = ReplicatedStorage:FindFirstChild("BombEvents") or ReplicatedStorage:WaitForChild("BombEvents", 5)
-if not (menuToys and grabEvents and BombEvents) then
-    return
-end
-
-local SpawnToyRF = menuToys:FindFirstChild("SpawnToyRemoteFunction") or menuToys:WaitForChild("SpawnToyRemoteFunction", 5)
-local DeleteToyRE = menuToys:FindFirstChild("DestroyToy") or menuToys:WaitForChild("DestroyToy", 5)
-local setNetworkOwnerEvent = grabEvents:FindFirstChild("SetNetworkOwner") or grabEvents:WaitForChild("SetNetworkOwner", 5)
-if not (SpawnToyRF and DeleteToyRE and setNetworkOwnerEvent) then
-    return
-end
-
-local spamexplosiontype = "FireworkMissile"
-local spamexplosiontarget = 0
-local bombsammountoexplode = 1
-local explosionInterval = 0
-local FireworkEffectSpam = false
-local TriggerMode = 1
-local ExplodingBombs = false
-local PredictPlayer = false
-local TargetToBombPlayer = ""
-local FireBomb = false
-local OnDisableAction = "destroy"
-
-local heartbeatConnection = nil
-local spamCooldown = false
-local lastExplosionTime = 0
-
-local explosionTypeMap = {
-    ["Firecracker"] = "FireworkMissile",
-    ["Missile"] = "BombMissile",
-    ["Black hole"] = "BombDarkMatter",
-    ["balloon"] = "BombBalloon",
-    ["small gift"] = "PresentSmall",
-    ["big gift"] = "PresentBig"
-}
-
+contextActionService:BindAction("FireBomb", fireBombs, false, Enum.KeyCode.F)
 local bombHitboxMap = {
     BombMissile = "PartHitDetector",
     BombDarkMatter = "PartHitDetector",
@@ -17399,344 +17362,255 @@ local bombHitboxMap = {
     PresentBig = "Box",
     PresentSmall = "Box"
 }
-
-local cleanupTypes = {
-    "FireworkMissile",
-    "BombMissile",
-    "BombDarkMatter",
-    "BombBalloon",
-    "PresentSmall",
-    "PresentBig"
-}
-
- function DeleteAllBombs()
-    for _, bomb in pairs(spawnedInToysFolder:GetChildren()) do
-        for _, bombType in pairs(cleanupTypes) do
-            if bomb.Name == bombType then
-                pcall(function()
-                    DeleteToyRE:FireServer(bomb)
-                end)
-                break
-            end
-        end
-    end
-end
-
-function CleanupCurrentType()
-    local currentBombType = spamexplosiontype
-    for _, bomb in pairs(spawnedInToysFolder:GetChildren()) do
-        if bomb.Name == currentBombType then
-            pcall(function()
-                DeleteToyRE:FireServer(bomb)
-            end)
-        end
-    end
-end
-
-function GetPlayerCFrame()
-    if localPlayer and localPlayer.Character then
-        local hrp = localPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            return hrp.CFrame
-        end
-    end
-    return CFrame.new()
-end
-
-function CheckNetworkOwnerShipOnPart(potentialPart)
-    if potentialPart and potentialPart:FindFirstChild("PartOwner") then
-        return potentialPart.PartOwner.Value == localPlayer.Name
-    end
-    return false
-end
-
-function SNOWshipOnce(targetPart)
-    if not targetPart then return false end
-    local distanceFromCharacter = localPlayer:DistanceFromCharacter(targetPart.Position)
-    if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        if CheckNetworkOwnerShipOnPart(targetPart) then
-            return true
-        end
-        if distanceFromCharacter <= 30 then
-            setNetworkOwnerEvent:FireServer(targetPart, CFrame.new(localPlayer.Character.HumanoidRootPart.Position, targetPart.Position))
-        end
-    end
-    return false
-end
-
-function CheckToyLimit()
-    return (usedToyPointsValue.Value + 10) / toysLimitCapValue.Value > 1
-end
-
- function countToys(toyName)
-    local toyCount = 0
-    for _, child in pairs(spawnedInToysFolder:GetChildren()) do
-        if child.Name == toyName then
-            toyCount = toyCount + 1
-        end
-    end
-    return toyCount
-end
-
 function ExplodeBomb(bombInstance, positionPart, otherData)
-    local hitboxName = bombHitboxMap[bombInstance.Name] or "Hitbox"
-    local hitbox = bombInstance:FindFirstChild(hitboxName)
-    if hitbox then
-        local bombExplosionData = {
-            {
-                Hitbox = hitbox,
-                PositionPart = positionPart
-            },
-            otherData
-        }
-        BombEvents.BombExplode:FireServer(unpack(bombExplosionData))
-    end
+    local bombExplosionData = {
+        {
+            Hitbox = bombInstance:FindFirstChild(bombHitboxMap[bombInstance.Name]),
+            PositionPart = positionPart
+        },
+        otherData
+    }
+    BombEvents.BombExplode:FireServer(unpack(bombExplosionData))
 end
-
-local function ExplodeByTargetMode(bombInstance)
-    if spamexplosiontarget == 0 then
-        ExplodeBomb(bombInstance, workspace.SpawnLocation, Vector3.new(math.random(-10, 10), math.random(-10, 10), math.random(-10, 10)))
-    elseif spamexplosiontarget == 1 then
-        local targetPlayer = Players:FindFirstChild(TargetToBombPlayer)
-        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local hrp = targetPlayer.Character.HumanoidRootPart
-            if PredictPlayer then
-                ExplodeBomb(bombInstance, hrp, hrp.Position + hrp.Velocity / 1.93)
+function ExplodeByTargetMode(player)
+    if spamexplosiontarget ~= 0 then
+        if spamexplosiontarget ~= 1 then
+            if spamexplosiontarget == 2 then
+                local fakeAimPosition = GetFakeAim2()
+                local explosionPosition = nil
+                if localPlayer.Character and localPlayer.Character:FindFirstChild("CamPart") then
+                    ray = Ray.new(localPlayer.Character.CamPart.Position, localPlayer.Character.CamPart.CFrame.lookVector * 5000)
+                    local raycastHitPart, raycastHitPosition = workspaceService:FindPartOnRayWithIgnoreList(ray, {
+                        localPlayer.Character,
+                        spawnedInToysFolder
+                    })
+                    pos = raycastHitPosition
+                    hit = raycastHitPart
+                    if hit and pos then
+                        explosionPosition = pos
+                    end
+                end
+                if fakeAimPosition and explosionPosition then
+                    ExplodeBomb(player, fakeAimPosition, explosionPosition)
+                end
+            end
+        else
+            local targetPlayer
+            if _G.TargetToBombPlayer then
+                targetPlayer = playersService:FindFirstChild(_G.TargetToBombPlayer)
             else
-                ExplodeBomb(bombInstance, hrp, hrp.Position)
+                targetPlayer = nil
+            end
+            if targetPlayer and (not IsPlayerInsideSafeZone(targetPlayer) and targetPlayer.Character) and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local humanoidRootPart = targetPlayer.Character.HumanoidRootPart
+                if _G.PredictPlayer then
+                    local predictedPosition = GetFakeAim2()
+                    if predictedPosition then
+                        ExplodeBomb(player, predictedPosition, humanoidRootPart.Position + humanoidRootPart.Velocity / 1.93)
+                    end
+                else
+                    ExplodeBomb(player, humanoidRootPart, humanoidRootPart.Position)
+                end
             end
         end
+    else
+        ExplodeBomb(player, workspace.SpawnLocation, Vector3.new(math.random(- 10, 10), math.random(- 10, 10), math.random(- 10, 10)))
     end
 end
-
-function ExplodeFirstBomb()
-    local targetPart = spawnedInToysFolder:FindFirstChild(spamexplosiontype)
+function ExplodeFirstBomb(targetMode)
+    local targetPart = spawnedInToysFolder:FindFirstChild(targetMode)
     if targetPart then
         ExplodeByTargetMode(targetPart)
     end
 end
-
+_G.ExplodingBombs = false
 function ExplodeAllAtOnce()
-    if ExplodingBombs then return end
-    ExplodingBombs = true
-    
-    local currentTime = tick()
-    if currentTime - lastExplosionTime < 0.1 then
-        ExplodingBombs = false
-        return
-    end
-    
-    lastExplosionTime = currentTime
-    
-    local snapshot = {}
-    for _, targetInstance in pairs(spawnedInToysFolder:GetChildren()) do
+    _G.ExplodingBombs = true
+    local targetFolder = spawnedInToysFolder
+    local iterator, targetChild, index = pairs(targetFolder:GetChildren())
+    while true do
+        local targetInstance
+        index, targetInstance = iterator(targetChild, index)
+        if index == nil then
+            break
+        end
         if targetInstance.Name == spamexplosiontype then
-            table.insert(snapshot, targetInstance)
-        end
-    end
-    
-    for _, targetInstance in pairs(snapshot) do
-        if targetInstance.Parent then
             ExplodeByTargetMode(targetInstance)
-            if explosionInterval > 0 then
-                task.wait(explosionInterval)
-            end
+        end
+        if explosionInterval > 0 then
+            task.wait(explosionInterval)
         end
     end
-    
-    task.wait(0.1)
-    ExplodingBombs = false
+    _G.ExplodingBombs = false
 end
-
-function HandleSpamLogic()
-    if not FireworkEffectSpam or spamCooldown then return end
-    
-    local playerCFrame = GetPlayerCFrame()
-    if not playerCFrame then return end
-    
-    if not CheckToyLimit() and not ExplodingBombs then
-        local toyCount = countToys(spamexplosiontype)
-        
-        if toyCount < bombsammountoexplode then
-            SpawnToyRF:InvokeServer(spamexplosiontype, playerCFrame, Vector3.new(0, 97.69, 0))
-        end
-        
-        if TriggerMode == 1 and toyCount >= bombsammountoexplode then
-            spamCooldown = true
-            ExplodeAllAtOnce()
-            task.wait(0.2)
-            spamCooldown = false
-        end
-    end
-end
-
-function HandleCleanupLogic()
-    if not FireworkEffectSpam then return end
-    
-    for _, child in pairs(spawnedInToysFolder:GetChildren()) do
-        if child.Name == spamexplosiontype then
-            local hitboxPart = nil
-            if spamexplosiontype == "BombDarkMatter" then
-                hitboxPart = child:FindFirstChild("Pyramid")
-            elseif spamexplosiontype == "BombMissile" then
-                hitboxPart = child:FindFirstChild("Body")
-            elseif spamexplosiontype == "BombBalloon" then
-                hitboxPart = child:FindFirstChild("Balloon")
-            elseif spamexplosiontype == "FireworkMissile" then
-                hitboxPart = child:FindFirstChild("Hitbox")
-            elseif spamexplosiontype == "PresentBig" or spamexplosiontype == "PresentSmall" then
-                hitboxPart = child:FindFirstChild("Box")
-            end
-            
-            if hitboxPart then
-                if not SNOWshipOnce(hitboxPart) and localPlayer:DistanceFromCharacter(hitboxPart.Position) > 30 then
-                    DeleteToyRE:FireServer(child)
-                elseif CheckNetworkOwnerShipOnPart(hitboxPart) and not child:GetAttribute("MissileTeleported") then
-                    local stableBodyVelocity = Instance.new("BodyVelocity")
-                    stableBodyVelocity.Velocity = Vector3.new(0, 0, 0)
-                    stableBodyVelocity.MaxForce = Vector3.new(1, 1, 1) * math.huge
-                    stableBodyVelocity.Name = "Stable"
-                    stableBodyVelocity.Parent = child.PrimaryPart
-                    
-                    task.wait()
-                    child:PivotTo(CFrame.new(math.random(-1000, 1000), 10000, math.random(-1000, 1000)))
-                    child:SetAttribute("MissileTeleported", true)
-                    
-                    task.wait(0.1)
-                    if stableBodyVelocity then
-                        stableBodyVelocity:Destroy()
-                    end
-                end
-            end
-        end
-    end
-end
-function HandleExplosionLogic()
-    if not FireworkEffectSpam then return end
-    
-    if TriggerMode == 0 and FireBomb then
-        ExplodeFirstBomb()
-        FireBomb = false
-    end
-end
-
- function SetupHeartbeat()
-    if heartbeatConnection then
-        heartbeatConnection:Disconnect()
-        heartbeatConnection = nil
-    end
-    
-    heartbeatConnection = RunService.Heartbeat:Connect(function()
-        HandleSpamLogic()
-        HandleCleanupLogic()
-        HandleExplosionLogic()
-    end)
-end
- function refreshPlayerList(uiElement)
-    local playerNamesList = {}
-    for _, player in pairs(Players:GetPlayers()) do
-        if player.UserId ~= localPlayer.UserId then
-            table.insert(playerNamesList, player.Name .. " (@" .. player.DisplayName .. ")")
-        end
-    end
-    table.sort(playerNamesList, function(a, b) return a:lower() < b:lower() end)
-    --uiElement:Refresh(playerNamesList, true)
-end
-
-SMTab:AddSection({
-    Name = "Explosive spam"
+firework_section = SMTab:AddSection({
+    Name = "Explosions Spam"
 })
-
-SMTab:AddToggle({
-    Name = "Explosive ",
+explosionexplanation = SMTab:AddSection({
+    Name = "Explosions Spam"
+})
+firework_section:AddToggle({
+    Name = "Explode",
     Default = false,
-    Callback = function(fireworkEffectSpamToggle)
-        FireworkEffectSpam = fireworkEffectSpamToggle
-        spamCooldown = false
-        ExplodingBombs = false
-        
-        if FireworkEffectSpam then
-            if not heartbeatConnection then
-                SetupHeartbeat()
-            end
-        else
-            if heartbeatConnection then
-                heartbeatConnection:Disconnect()
-                heartbeatConnection = nil
-            end
-            
-            if OnDisableAction == "destroy" then
-                DeleteAllBombs()
-            end
+    Callback = function(fireworkEffectSpam)
+        _G.FireworkEffectSpam = fireworkEffectSpam
+        if fireworkEffectSpam then
+            task.spawn(function()
+                while _G.FireworkEffectSpam do
+                    local playerCFrame = GetPlayerCFrame()
+                    if countToys(spamexplosiontype) < bombsammountoexplode and (not CheckToyLimit(10) and (not _G.ExplodingBombs and playerCFrame)) then
+                        SpawnToy({
+                            spamexplosiontype,
+                            CFrame.new(playerCFrame.Position.X, playerCFrame.Position.Y, playerCFrame.Position.Z, - 0.3092496991157532, 0.2610282301902771, - 0.9144555330276489, 0, 0.9615919589996338, 0.2744831442832947, 0.9509809017181396, 0.08488383144140244, - 0.2973720133304596),
+                            Vector3.new(0, 97.69000244140625, 0)
+                        })
+                    end
+                    task.wait()
+                end
+            end)
+            task.spawn(function()
+                while _G.FireworkEffectSpam do
+                    local targetFolder2 = spawnedInToysFolder
+                    local iterator, targetChild2, index = pairs(targetFolder2:GetChildren())
+                    while true do
+                        local child
+                        index, child = iterator(targetChild2, index)
+                        if index == nil then
+                            break
+                        end
+                        if child.Name == spamexplosiontype then
+                            local hitboxPart = nil
+                            if spamexplosiontype ~= "BombDarkMatter" then
+                                if spamexplosiontype ~= "BombMissile" then
+                                    if spamexplosiontype ~= "BombBalloon" then
+                                        if spamexplosiontype ~= "FireworkMissile" then
+                                            if spamexplosiontype == "PresentBig" or spamexplosiontype == "PresentSmall" then
+                                                hitboxPart = child:FindFirstChild("Box")
+                                            end
+                                        else
+                                            hitboxPart = child:FindFirstChild("Hitbox")
+                                        end
+                                    else
+                                        hitboxPart = child:FindFirstChild("Balloon")
+                                    end
+                                else
+                                    hitboxPart = child:FindFirstChild("Body")
+                                end
+                            else
+                                hitboxPart = child:FindFirstChild("Pyramid")
+                            end
+                            if hitboxPart and not SNOWshipOnce(hitboxPart) and localPlayer:DistanceFromCharacter(hitboxPart.Position) > 30 then
+                                DeleteToyRE:FireServer(child)
+                                print("Deletado!")
+                            elseif hitboxPart and (CheckNetworkOwnerShipOnPart(hitboxPart) and not child:GetAttribute("MissileTeleported")) then
+                                local stableBodyVelocity = Instance.new("BodyVelocity", child.PrimaryPart)
+                                stableBodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                                stableBodyVelocity.MaxForce = Vector3.new(1, 1, 1) * math.huge
+                                stableBodyVelocity.Name = "Stable"
+                                wait()
+                                child:PivotTo(CFrame.new(math.random(- 1000, 1000), 10000, math.random(- 1000, 1000)))
+                                child:SetAttribute("MissileTeleported", true)
+                            end
+                        end
+                    end
+                    task.wait(0.1)
+                end
+            end)
+            task.spawn(function()
+                while _G.FireworkEffectSpam do
+                    if _G.TriggerMode ~= 1 or spamexplosiontarget ~= 0 and spamexplosiontarget ~= 1 then
+                        if (_G.TriggerMode == 0 or spamexplosiontarget == 2) and _G.FireBomb then
+                            ExplodeFirstBomb(spamexplosiontype)
+                        end
+                    elseif countToys(spamexplosiontype) >= bombsammountoexplode or CheckToyLimit(10) then
+                        ExplodeAllAtOnce()
+                    end
+                    task.wait()
+                end
+            end)
+            task.spawn(function()
+                while _G.FireworkEffectSpam do
+                    CheckToyLimit(10, true, {
+                        spamexplosiontype
+                    })
+                    task.wait()
+                end
+            end)
+            task.spawn(function()
+                while _G.FireworkEffectSpam do
+                    if spamexplosiontarget == 2 then
+                        GetAimMissile()
+                    end
+                    wait()
+                end
+            end)
         end
     end
 })
-
-SMTab:AddDropdown({
+firework_section:AddDropdown({
     Name = "Explosion Type",
     Default = "Firework",
     Options = {
         "Firework",
         "Missile",
-        "Blackhole",
-        "Balloon",
-        "Small Gift",
-        "Big Gift"
+        "Void",
+        "Ballon",
+        "Small Present",
+        "Big Present"
     },
-
     Callback = function(explosionType)
-        local oldType = spamexplosiontype
-        spamexplosiontype = explosionTypeMap[explosionType] or "FireworkMissile"
-        
-        if oldType ~= spamexplosiontype then
-            CleanupCurrentType()
+        if explosionType == "Firework" then
+            spamexplosiontype = "FireworkMissile"
+        elseif explosionType == "Missile" then
+            spamexplosiontype = "BombMissile"
+        elseif explosionType == "Void" then
+            spamexplosiontype = "BombDarkMatter"
+        elseif explosionType == "Ballon" then
+            spamexplosiontype = "BombBalloon"
+        elseif explosionType == "Small Present" then
+            spamexplosiontype = "PresentSmall"
+        elseif explosionType == "Big Present" then
+            spamexplosiontype = "PresentBig"
         end
     end
 })
-
-SMTab:AddDropdown({
-    Name = "On Toggle Off",
-    Default = "Destroy",
-    Options = {
-        "Destroy",
-        "Keep"
-    },
-
-    Callback = function(action)
-        OnDisableAction = action
+firework_section:AddBind({
+    Name = "Trigger Bombs",
+    Default = Enum.KeyCode.F,
+    Hold = true,
+    Callback = function(fireBombValue)
+        _G.FireBomb = fireBombValue
     end
 })
-
-
-
-SMTab:AddDropdown({
-    Name = "trigger mode",
-    Default = "auto",
+firework_section:AddDropdown({
+    Name = "Trigger Mode",
+    Default = "Automatic",
     Options = {
         "Key",
-        "auto"
+        "Automatic"
     },
     Callback = function(triggerMode)
-        TriggerMode = (triggerMode == "Key") and 0 or 1
-        FireBomb = false
+        if triggerMode == "Key" then
+            _G.TriggerMode = 0
+        elseif triggerMode == "Automatic" then
+            _G.TriggerMode = 1
+        end
     end
 })
-
-SMTab:AddSlider({
-    Name = "Delay (trigger)",
+firework_section:AddSlider({
+    Name = "Delay (Automatic Trigger Mode)",
     Min = 0,
     Max = 0.5,
     Default = 0,
     Color = Color3.fromRGB(255, 255, 255),
     Increment = 0.015,
     ValueName = "interval between every explosion in automatic trigger mode!",
-    Callback = function(delayValue)
-        explosionInterval = delayValue
+    Callback = function(explosionInterval)
+        explosionInterval = explosionInterval
     end
 })
-
-SMTab:AddSlider({
-    Name = "explosion amount",
+firework_section:AddSlider({
+    Name = "Ammount to Explode",
     Min = 1,
     Max = 20,
     Default = 1,
@@ -17747,50 +17621,47 @@ SMTab:AddSlider({
         bombsammountoexplode = bombsAmountToExplode
     end
 })
-
-SMTab:AddDropdown({
+firework_section:AddDropdown({
     Name = "Target",
-    Default = "spawn point",
+    Default = "Spawn",
     Options = {
-        "spawn point",
-        "Player"
+        "Spawn",
+        "Player",
+        "Mouse"
     },
     Callback = function(explosionTarget)
-        spamexplosiontarget = (explosionTarget == "스폰지점") and 0 or 1
-    end
-})
-
-SMTab:AddDropdown({
-    Name = "Player select",
-    Default = "",
-    Options = {""},
-    Callback = function(targetPlayerNameString)
-        if targetPlayerNameString ~= "" then
-            TargetToBombPlayer = targetPlayerNameString:match("^[^(]+"):gsub("%s+$", "")
-        else
-            TargetToBombPlayer = ""
+        if explosionTarget == "Spawn" then
+            spamexplosiontarget = 0
+        elseif explosionTarget == "Player" then
+            spamexplosiontarget = 1
+        elseif explosionTarget == "Mouse" then
+            spamexplosiontarget = 2
         end
     end
 })
-
-SMTab:AddToggle({
-    Name = "movement prediction",
-    Default = false,
-    Callback = function(predictPlayer)
-        PredictPlayer = predictPlayer
+PlayerToTarget = firework_section:AddDropdown({
+    Name = "Select Player",
+    Default = "Macaco (negro)",
+    Options = {
+        ""
+    },
+    Callback = function(targetPlayerNameString)
+        local targetPlayerNameSplit = string.split(targetPlayerNameString, " ")
+        _G.TargetToBombPlayer = targetPlayerNameSplit[1]
     end
 })
-
-Players.PlayerAdded:Connect(function()
-    refreshPlayerList(PlayerToTarget)
-end)
-
-Players.PlayerRemoving:Connect(function()
-    refreshPlayerList(PlayerToTarget)
-end)
-
-refreshPlayerList(PlayerToTarget)
-
+firework_section:AddToggle({
+    Name = "Predict Player Movement",
+    Default = false,
+    Callback = function(predictPlayer)
+        _G.PredictPlayer = predictPlayer
+    end,
+    Save = true,
+    Flag = "SilentAim_toggle"
+})
+explosionexplanation:AddParagraph("How to use target mouse?", "Press/Hold the keybind (F) and then BOOM!")
+explosionexplanation:AddParagraph("How to target player?", "Select Target to Player and then select the player you want to target")
+explosionexplanation:AddParagraph("How to change the explosive", "Click on Explosive Type and select any type")
 
 
 
