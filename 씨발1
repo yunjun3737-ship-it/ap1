@@ -1,52 +1,4 @@
-local character = plr.Character or plr.CharacterAdded:Wait()
-local rootPart = character:WaitForChild("HumanoidRootPart", 5)
-
-_G.CameraLoopID = (_G.CameraLoopID or 0) + 1
-local currentLoopID = _G.CameraLoopID
-
-task.spawn(function()
-    plr.CameraMode = Enum.CameraMode.Classic
-    task.wait(0.05)
-
-    local success = false
-    local attempts = 0
-
-    while _G.CameraLoopID == currentLoopID and not success and attempts < 80 do
-        plr.CameraMinZoomDistance = 12
-        plr.CameraMaxZoomDistance = 12
-
-        task.wait(0.05)
-        attempts = attempts + 1
-
-        if plr:GetAttribute("CameraZoomDistance") == 12
-        or (workspace.CurrentCamera
-        and rootPart
-        and (workspace.CurrentCamera.CFrame.Position - rootPart.Position).Magnitude >= 11.5) then
-            success = true
-        end
-    end
-
-    if _G.CameraLoopID == currentLoopID then
-        plr.CameraMinZoomDistance = 0.5
-        plr.CameraMaxZoomDistance = 100000
-    end
-end)
-
-task.spawn(function()
-    if not game:IsLoaded() then
-        game.Loaded:Wait()
-    end
-
-    task.wait(0.3)
-
-    if Tper then
-        if Tper.Set then
-            Tper:Set(true)
-        elseif Tper.SetValue then
-            Tper:SetValue(true)
-        end
-    end
-end)
+ 
 
 
 do
@@ -877,7 +829,55 @@ function BlobMassless(blob, target, side)
 		blob.BlobmanSeatAndOwnerScript.CreatureGrab:FireServer(unpack(args))
 		blob.BlobmanSeatAndOwnerScript.CreatureDrop:FireServer(unpack(args3))
 end
+local character = plr.Character or plr.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart", 5)
 
+_G.CameraLoopID = (_G.CameraLoopID or 0) + 1
+local currentLoopID = _G.CameraLoopID
+
+task.spawn(function()
+    plr.CameraMode = Enum.CameraMode.Classic
+    task.wait(0.05)
+
+    local success = false
+    local attempts = 0
+
+    while _G.CameraLoopID == currentLoopID and not success and attempts < 80 do
+        plr.CameraMinZoomDistance = 12
+        plr.CameraMaxZoomDistance = 12
+
+        task.wait(0.05)
+        attempts = attempts + 1
+
+        if plr:GetAttribute("CameraZoomDistance") == 12
+        or (workspace.CurrentCamera
+        and rootPart
+        and (workspace.CurrentCamera.CFrame.Position - rootPart.Position).Magnitude >= 11.5) then
+            success = true
+        end
+    end
+
+    if _G.CameraLoopID == currentLoopID then
+        plr.CameraMinZoomDistance = 0.5
+        plr.CameraMaxZoomDistance = 100000
+    end
+end)
+
+task.spawn(function()
+    if not game:IsLoaded() then
+        game.Loaded:Wait()
+    end
+
+    task.wait(0.3)
+
+    if Tper then
+        if Tper.Set then
+            Tper:Set(true)
+        elseif Tper.SetValue then
+            Tper:SetValue(true)
+        end
+    end
+end)
 function GfLogger()
     id = {
         [1] = true,
