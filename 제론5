@@ -15741,7 +15741,7 @@ funTab:AddSection({
         imageButtonControl.Active = isControlEnabled
         if isControlEnabled then
             contextActionService:BindAction("Control(C)", controlBind, false, Enum.KeyCode.C)
-        else
+        
             --contextActionService:UnbindAction("Control(C)")
         
     end,
