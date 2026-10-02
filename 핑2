@@ -3167,7 +3167,7 @@ else
                 if not partOwner7 or partOwner7.Value ~= plr.Name then
                   task.wait(0.1)
                 else
-                  ::L13835280::
+                 -- ::L13835280::
                   stickyRemoverPart = wd:FindFirstChild("StickyRemoverPart")
 
                   if not stickyRemoverPart then
@@ -3344,7 +3344,7 @@ else
 
                       if ragdolled2 and ragdolled2:IsA("BoolValue") and ragdolled2.Value then
                       else
-                        ::L3284920::
+                        --::L3284920::
                         humanoidRootPart27 = value47.Character:FindFirstChild("HumanoidRootPart")
 
                         if humanoidRootPart27 then
