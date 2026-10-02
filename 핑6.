@@ -5657,7 +5657,7 @@ else
 
         if not character80 then
         else
-          ::L2866146::
+          --::L2866146::
           v239 = nil
           plots2 = workspace:FindFirstChild("Plots")
 
@@ -5787,7 +5787,7 @@ else
           task.wait()
         end
       else
-        goto L2866146
+       -- goto L2866146
       end
     end
   end
