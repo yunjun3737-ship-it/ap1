@@ -840,20 +840,23 @@ end
 local Tabs = {}
 local TabsOrder = {}
 local Sections = {}
-
 function OrionLib:GoToTab(tabName)
 	for name, data in pairs(Tabs) do
 		local tabFrame = data.Frame
 		local container = data.Container
 
 		if name == tabName then
-			if OrionLib.TitleDescription then
+			
+			if OrionLib.TitleDescription and OrionLib.TitleDivider then
 				if data.Description ~= "" then
-					OrionLib.TitleDescription.Text = "|  " .. data.Description
+					OrionLib.TitleDescription.Text = data.Description
+					OrionLib.TitleDivider.Visible = true
 				else
 					OrionLib.TitleDescription.Text = ""
+					OrionLib.TitleDivider.Visible = false
 				end
 			end
+		
 			tabFrame.Title.Font = Enum.Font.Code
 			TweenService:Create(tabFrame.Ico, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
 			TweenService:Create(tabFrame.Title, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
