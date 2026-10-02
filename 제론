@@ -17335,15 +17335,83 @@ lagTab:AddToggle({
 })
 
 do
+local playersService = game:GetService("Players")
+local contextActionService = game:GetService("ContextActionService")
+local workspaceService = game:GetService("Workspace")
+local localPlayer = playersService.LocalPlayer
 
-     
+local spawnedInToysFolder = workspace:FindFirstChild("SpawnedToys") or workspace
+local BombEvents = game:GetService("ReplicatedStorage"):FindFirstChild("BombEvents") or { BombExplode = { FireServer = function(...) end } }
+local DeleteToyRE = game:GetService("ReplicatedStorage"):FindFirstChild("DeleteToyRE") or { FireServer = function(...) end }
+
+local SMTab = SMTab or {
+    AddSection = function(self, args)
+        local section = {}
+        function section:AddToggle(args) end
+        function section:AddDropdown(args) return args end
+        function section:AddBind(args) end
+        function section:AddSlider(args) end
+        function section:AddParagraph(args1, args2) end
+        return section
+    end
+}
+
+local function GetFakeAim2()
+    return localPlayer:GetMouse().Hit.Position
+end
+
+local function IsPlayerInsideSafeZone(player)
+    return false
+end
+
+local function countToys(toyType)
+    local count = 0
+    if spawnedInToysFolder then
+        for _, child in pairs(spawnedInToysFolder:GetChildren()) do
+            if child.Name == toyType then
+                count = count + 1
+            end
+        end
+    end
+    return count
+end
+
+local function CheckToyLimit(limit, arg2, arg3)
+    return false
+end
+
+local function SpawnToy(args)
+end
+
+local function GetPlayerCFrame()
+    if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        return localPlayer.Character.HumanoidRootPart.CFrame
+    end
+    return CFrame.new()
+end
+
+local function SNOWshipOnce(part)
+    return false
+end
+
+local function CheckNetworkOwnerShipOnPart(part)
+    return true
+end
+
+local function fireBombs(actionName, inputState, inputObject)
+    _G.FireBomb = (inputState == Enum.UserInputState.Begin)
+end
+
+local ray, pos, hit
+
 spamexplosiontype = nil
 spamexplosiontarget = 0
 bombsammountoexplode = 1
 reachedrightammount = false
-explosionInterval = nil
+explosionInterval = 0
 canExplode = false
 maxBombstoexplode = 8
+
 local toysLimitCapValue = toysLimitCapValue or workspace:WaitForChild("heox_13"):WaitForChild("ToysLimitCapValue")
 
 AimMissile = nil
@@ -17352,7 +17420,9 @@ function GetAimMissile()
         return AimMissile.PrimaryPart
     end
 end
+
 contextActionService:BindAction("FireBomb", fireBombs, false, Enum.KeyCode.F)
+
 local bombHitboxMap = {
     BombMissile = "PartHitDetector",
     BombDarkMatter = "PartHitDetector",
@@ -17361,6 +17431,7 @@ local bombHitboxMap = {
     PresentBig = "Box",
     PresentSmall = "Box"
 }
+
 function ExplodeBomb(bombInstance, positionPart, otherData)
     local bombExplosionData = {
         {
@@ -17371,6 +17442,7 @@ function ExplodeBomb(bombInstance, positionPart, otherData)
     }
     BombEvents.BombExplode:FireServer(unpack(bombExplosionData))
 end
+
 function ExplodeByTargetMode(player)
     if spamexplosiontarget ~= 0 then
         if spamexplosiontarget ~= 1 then
@@ -17416,13 +17488,16 @@ function ExplodeByTargetMode(player)
         ExplodeBomb(player, workspace.SpawnLocation, Vector3.new(math.random(- 10, 10), math.random(- 10, 10), math.random(- 10, 10)))
     end
 end
+
 function ExplodeFirstBomb(targetMode)
     local targetPart = spawnedInToysFolder:FindFirstChild(targetMode)
     if targetPart then
         ExplodeByTargetMode(targetPart)
     end
 end
+
 _G.ExplodingBombs = false
+
 function ExplodeAllAtOnce()
     _G.ExplodingBombs = true
     local targetFolder = spawnedInToysFolder
@@ -17442,12 +17517,15 @@ function ExplodeAllAtOnce()
     end
     _G.ExplodingBombs = false
 end
+
 firework_section = SMTab:AddSection({
     Name = "Explosions Spam"
 })
+
 explosionexplanation = SMTab:AddSection({
     Name = "Explosions Spam"
 })
+
 firework_section:AddToggle({
     Name = "Explode",
     Default = false,
@@ -17500,7 +17578,6 @@ firework_section:AddToggle({
                             end
                             if hitboxPart and not SNOWshipOnce(hitboxPart) and localPlayer:DistanceFromCharacter(hitboxPart.Position) > 30 then
                                 DeleteToyRE:FireServer(child)
-                                print("Deletado!")
                             elseif hitboxPart and (CheckNetworkOwnerShipOnPart(hitboxPart) and not child:GetAttribute("MissileTeleported")) then
                                 local stableBodyVelocity = Instance.new("BodyVelocity", child.PrimaryPart)
                                 stableBodyVelocity.Velocity = Vector3.new(0, 0, 0)
@@ -17546,6 +17623,7 @@ firework_section:AddToggle({
         end
     end
 })
+
 firework_section:AddDropdown({
     Name = "Explosion Type",
     Default = "Firework",
@@ -17573,6 +17651,7 @@ firework_section:AddDropdown({
         end
     end
 })
+
 firework_section:AddBind({
     Name = "Trigger Bombs",
     Default = Enum.KeyCode.F,
@@ -17581,6 +17660,7 @@ firework_section:AddBind({
         _G.FireBomb = fireBombValue
     end
 })
+
 firework_section:AddDropdown({
     Name = "Trigger Mode",
     Default = "Automatic",
@@ -17596,6 +17676,7 @@ firework_section:AddDropdown({
         end
     end
 })
+
 firework_section:AddSlider({
     Name = "Delay (Automatic Trigger Mode)",
     Min = 0,
@@ -17604,10 +17685,11 @@ firework_section:AddSlider({
     Color = Color3.fromRGB(255, 255, 255),
     Increment = 0.015,
     ValueName = "interval between every explosion in automatic trigger mode!",
-    Callback = function(explosionInterval)
-        explosionInterval = explosionInterval
+    Callback = function(newExplosionInterval)
+        explosionInterval = newExplosionInterval
     end
 })
+
 firework_section:AddSlider({
     Name = "Ammount to Explode",
     Min = 1,
@@ -17620,6 +17702,7 @@ firework_section:AddSlider({
         bombsammountoexplode = bombsAmountToExplode
     end
 })
+
 firework_section:AddDropdown({
     Name = "Target",
     Default = "Spawn",
@@ -17638,6 +17721,7 @@ firework_section:AddDropdown({
         end
     end
 })
+
 PlayerToTarget = firework_section:AddDropdown({
     Name = "Select Player",
     Default = "Macaco (negro)",
@@ -17649,6 +17733,7 @@ PlayerToTarget = firework_section:AddDropdown({
         _G.TargetToBombPlayer = targetPlayerNameSplit[1]
     end
 })
+
 firework_section:AddToggle({
     Name = "Predict Player Movement",
     Default = false,
@@ -17658,6 +17743,7 @@ firework_section:AddToggle({
     Save = true,
     Flag = "SilentAim_toggle"
 })
+
 explosionexplanation:AddParagraph("How to use target mouse?", "Press/Hold the keybind (F) and then BOOM!")
 explosionexplanation:AddParagraph("How to target player?", "Select Target to Player and then select the player you want to target")
 explosionexplanation:AddParagraph("How to change the explosive", "Click on Explosive Type and select any type")
