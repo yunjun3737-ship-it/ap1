@@ -15680,7 +15680,7 @@ gui2.ResetOnSpawn = false
 gui2.Name = "CAG2"
 --if userInputService.TouchEnabled then
     gui2.Parent = localPlayer.PlayerGui
-end
+
 imageButtonTeleport = Instance.new("ImageButton")
 imageButtonTeleport.Size = UDim2.new(0, 70, 0, 70)
 imageButtonTeleport.Position = UDim2.new(1, - 267, 1, - 90)
