@@ -4008,7 +4008,7 @@ else
 
                   if not stickyPart7 then
                   else
-                    ::L94167::
+                    --::L94167::
 
                     pcall(function()
                       setNetworkOwner3:FireServer(stickyPart7, stickyPart7.CFrame)
@@ -4020,7 +4020,7 @@ else
                       if (humanoidRootPart32.Position - stickyPart7.Position).Magnitude > 6 then
                         v193:FireServer(waitForChild4[v198])
                       else
-                        ::L3249468::
+                      --  ::L3249468::
 
                         if stickyPart7 then
                           local partOwner14 = stickyPart7:FindFirstChild("PartOwner")
@@ -4028,7 +4028,7 @@ else
                           if partOwner14 and partOwner14.Value ~= localPlayer6.Name then
                             v193:FireServer(waitForChild4[v198])
                           else
-                            ::L9891647::
+                          --  ::L9891647::
 
                             if stickyPart7 and ragdollLimbPart3 then
                               local stickyWeld6 = stickyPart7:FindFirstChild("StickyWeld")
@@ -4078,15 +4078,15 @@ else
                             end
                           end
                         else
-                          goto L9891647
+                          
                         end
                       end
                     else
-                      goto L3249468
+                      
                     end
                   end
                 else
-                  goto L94167
+                  
                 end
               end
             end
