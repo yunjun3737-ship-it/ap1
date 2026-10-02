@@ -6197,14 +6197,14 @@ UtilityTab:AddButton({
 
 
 
---[[
+
 passTab:AddSection({
-    Name = "라인"
+    Name = "Line"
 })
 passTab:AddTextbox({
-   Name = "그라데이션 레이어 수 설정 (2 ~ 4)",
+   Name = "number of gradient layers (2 ~ 4)",
    
-   PlaceholderText = "기본값: 2",
+   PlaceholderText = "default : 2",
    TextDisappear = false,
    Callback = function(text)
       local num = tonumber(text)
@@ -6235,7 +6235,7 @@ passTab:AddTextbox({
 })
 
 passTab:AddColorpicker({
-    Name = "색상 1",
+    Name = "color 1",
     
     save = true,
     Flag = "5",
@@ -6254,7 +6254,7 @@ passTab:AddColorpicker({
 })
 
 passTab:AddColorpicker({
-    Name = "색상 2",
+    Name = "color 2",
     
     save = true,
     Flag = "6",
@@ -6273,7 +6273,7 @@ passTab:AddColorpicker({
 })
 
 passTab:AddColorpicker({
-    Name = "색상 3",
+    Name = "color 3",
     save = true,
     Flag = "7",
     Callback = function(color)
@@ -6291,7 +6291,7 @@ passTab:AddColorpicker({
 })
 
 passTab:AddColorpicker({
-    Name = "색상 4",
+    Name = "color 4",
     
     save = true,
     Flag = "8",
@@ -6310,7 +6310,7 @@ passTab:AddColorpicker({
 })
 
 passTab:AddToggle({
-   Name = "커스텀 그라데이션 적용  <font color='rgb(255,0,0)'>[오너]</font>",
+   Name = "Custom gradient <font color='rgb(255,0,0)'>[hooking]</font>",
    
     save = true,
    Flag = "CustomGradientToggle",
@@ -6331,7 +6331,7 @@ passTab:AddToggle({
    end,
 
 })
-]]
+
 --[[
 passTab:AddSection({
 	Name = ""
@@ -7460,7 +7460,15 @@ grabTab:AddToggle({
         TpKLG = Value
     end
 })
-
+grabTab:AddToggle({
+    Name = "Invisible Line grab",
+    Default = false,
+    Callback = function(invisibleLineEnabled)
+        _G.InvisibleLine = invisibleLineEnabled
+    end,
+    Save = true,
+    Flag = "invisLine_toggle"
+})
 grabTab:AddSection({
 	Name = "Kick"
 })
@@ -17856,7 +17864,10 @@ Players.PlayerRemoving:Connect(function()
 end)
 
 refreshPlayerList()
-
+explosionexplanation:AddParagraph("How to use target mouse?", "Press/Hold the keybind (F) and then BOOM!")
+explosionexplanation:AddParagraph("How to target player?", "Select Target to Player and then select the player you want to target")
+explosionexplanation:AddParagraph("How to change the explosive", "Click on Explosive Type and select any type")
+explosionexplanation:AddParagraph("Is Trigger Mode useful?", "Yes! Trigger Mode is very useful for bothering other players.")
 
 
                     
