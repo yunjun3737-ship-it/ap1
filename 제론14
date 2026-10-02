@@ -17386,6 +17386,8 @@ lagTab:AddToggle({
 })
 
 do
+
+
 local playersService = game:GetService("Players")
 local contextActionService = game:GetService("ContextActionService")
 local workspaceService = game:GetService("Workspace")
@@ -17772,19 +17774,47 @@ SMTab:AddDropdown({
     end
 })
 
-SMTab:AddDropdown({
+local playerList = {}
+for _, p in ipairs(playersService:GetPlayers()) do
+    if p ~= localPlayer then
+        table.insert(playerList, p.Name .. " (" .. p.DisplayName .. ")")
+    end
+end
+if #playerList == 0 then
+    table.insert(playerList, "None")
+end
+
+local playerDropdown = SMTab:AddDropdown({
     Name = "Select Player",
-    Default = "Macaco (negro)",
-    Options = {
-        ""
-    },
+    Default = playerList[1],
+    Options = playerList,
     Callback = function(targetPlayerNameString)
-        if targetPlayerNameString and typeof(targetPlayerNameString) == "string" then
+        if targetPlayerNameString and typeof(targetPlayerNameString) == "string" and targetPlayerNameString ~= "None" then
             local targetPlayerNameSplit = string.split(targetPlayerNameString, " ")
             _G.TargetToBombPlayer = targetPlayerNameSplit[1]
         end
     end
 })
+
+local function updatePlayerList()
+    if not playerDropdown then return end
+    local newPlayerList = {}
+    for _, p in ipairs(playersService:GetPlayers()) do
+        if p ~= localPlayer then
+            table.insert(newPlayerList, p.Name .. " (" .. p.DisplayName .. ")")
+        end
+    end
+    if #newPlayerList == 0 then
+        table.insert(newPlayerList, "None")
+    end
+    
+    pcall(function()
+        playerDropdown:Refresh(newPlayerList, true)
+    end)
+end
+
+playersService.PlayerAdded:Connect(updatePlayerList)
+playersService.PlayerRemoving:Connect(updatePlayerList)
 
 SMTab:AddToggle({
     Name = "Predict Player Movement",
@@ -17799,22 +17829,7 @@ SMTab:AddToggle({
 SMTab:AddParagraph("How to use target mouse?", "Press/Hold the keybind (F) and then BOOM!")
 SMTab:AddParagraph("How to target player?", "Select Target to Player and then select the player you want to target")
 SMTab:AddParagraph("How to change the explosive", "Click on Explosive Type and select any type")
-
-             end
-Window:AddConfigTab()
-
-
-
-
---function OrionLib:Destroy()
-	--Orion:Destroy()
---end
-
-
-
-
---local loader = loadstring(game:HttpGet("https://raw.githubusercontent.com/qwer123476/Xeron/main/웹"))
-
+end
 
 
 do
