@@ -16344,7 +16344,7 @@ do
     local plotsBroken = false
 
     plotTab:AddToggle({
-        Name = "Destroy Barrier (Boombox)",
+        Name = "Destroy Barrier (FoodMayonnaise)",
         Default = false,
         Callback = function(Value)
             if Value and plotsBroken then
@@ -16368,7 +16368,7 @@ do
                 local spawnedToysFolder = workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
                 if spawnedToysFolder then
                     for _, item in ipairs(spawnedToysFolder:GetChildren())do
-                        if item.Name == "Boombox" then
+                        if item.Name == "FoodMayonnaise" then
                             ReplicatedStorage.MenuToys.DestroyToy:FireServer(item)
                         end
                     end
@@ -16384,31 +16384,31 @@ do
                     
                     local targetCFrame = CFrame.new(264.5792541503906, - 5.477070331573486, 433.4557800292969)
 
-                    local function getBoomboxes()
-                        local boomboxes = {}
+                    local function getMayo()
+                        local mayoList = {}
                         local spawnedToysFolder = workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
                         if spawnedToysFolder then
                             for _, toy in ipairs(spawnedToysFolder:GetChildren())do
-                                if toy.Name == "Boombox" then
-                                    table.insert(boomboxes, toy)
+                                if toy.Name == "FoodMayonnaise" then
+                                    table.insert(mayoList, toy)
                                 end
                             end
                         end
-                        return boomboxes
+                        return mayoList
                     end
 
-                    local function spawnBoombox()
+                    local function spawnMayo()
                         if not destroyBarrierActive then return end
                         local playerPosition = LocalPlayer.Character and LocalPlayer.Character.PrimaryPart.Position or Vector3.new(0, 0, 0)
                         local initialCFrame = CFrame.new(playerPosition) * CFrame.Angles( - 0.807, - 0.884, - 0.679)
                         task.spawn(function()
-                            MenuToys.SpawnToyRemoteFunction:InvokeServer("Boombox", initialCFrame, Vector3.new(0, - 120.21099853515625, 0))
+                            MenuToys.SpawnToyRemoteFunction:InvokeServer("FoodMayonnaise", initialCFrame, Vector3.new(0, - 120.21099853515625, 0))
                         end)
                     end
 
-                    local function processBoombox(boombox)
+                    local function processMayo(mayo)
                         if not destroyBarrierActive then return end
-                        local soundPart = boombox:FindFirstChild("SoundPart")
+                        local soundPart = mayo:FindFirstChild("SoundPart")
                         if soundPart then
                             task.spawn(function()
                                 SetNetworkOwner:FireServer(soundPart, soundPart.CFrame)
@@ -16416,11 +16416,11 @@ do
                         end
                     end
 
-                    local function teleportBoomboxes(boomboxes)
+                    local function teleportMayo(mayoList)
                         if not destroyBarrierActive then return end
-                        for _, boombox in ipairs(boomboxes)do
+                        for _, mayo in ipairs(mayoList)do
                             task.spawn(function()
-                                for _, part in ipairs(boombox:GetDescendants())do
+                                for _, part in ipairs(mayo:GetDescendants())do
                                     if part:IsA("BasePart")then
                                         part.CFrame = targetCFrame
                                     end
@@ -16465,24 +16465,24 @@ do
                     end
 
                     while destroyBarrierActive do
-                        local boomboxes = getBoomboxes()
+                        local mayoList = getMayo()
 
-                        if #boomboxes < 2 then
-                            if #boomboxes < 1 then
-                                spawnBoombox()
+                        if #mayoList < 2 then
+                            if #mayoList < 1 then
+                                spawnMayo()
                                 task.wait(0.02)
                             end
-                            spawnBoombox()
+                            spawnMayo()
                             task.wait(0.02)
-                            boomboxes = getBoomboxes()
+                            mayoList = getMayo()
                         end
 
-                        if #boomboxes == 2 then
-                            for _, boombox in ipairs(boomboxes)do
-                                processBoombox(boombox)
+                        if #mayoList == 2 then
+                            for _, mayo in ipairs(mayoList)do
+                                processMayo(mayo)
                             end
 
-                            teleportBoomboxes(boomboxes)
+                            teleportMayo(mayoList)
 
                             local ovenResult = testWithOven()
                             if ovenResult then
@@ -16499,7 +16499,7 @@ do
                 local spawnedToysFolder = workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
                 if spawnedToysFolder then
                     for _, item in ipairs(spawnedToysFolder:GetChildren())do
-                        if item.Name == "Boombox" or item.Name == "OvenDarkGray" then
+                        if item.Name == "FoodMayonnaise" or item.Name == "OvenDarkGray" then
                             ReplicatedStorage.MenuToys.DestroyToy:FireServer(item)
                         end
                     end
@@ -16512,7 +16512,6 @@ do
     })
 end
 
-    
 
 plotTab:AddSection({
 	Name = "Breake V2"
