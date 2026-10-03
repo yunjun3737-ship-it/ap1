@@ -13357,8 +13357,8 @@ antiTab:AddToggle({
 })
 
 local BreakPCLDConnection = nil
-local BreakPCLDDeaths = 0
 local BreakPCLDEnabled = false
+local BreakPCLDRunning = false
 
 antiTab:AddToggle({
     Name = "Break Pcld",
@@ -13372,14 +13372,12 @@ antiTab:AddToggle({
         end
 
         if not Value then
-            BreakPCLDDeaths = 0
+            BreakPCLDRunning = false
             return
         end
 
-        BreakPCLDDeaths = 2
-
         BreakPCLDConnection = LocalPlayer.CharacterAdded:Connect(function(char)
-            if not BreakPCLDEnabled or BreakPCLDDeaths <= 0 then
+            if not BreakPCLDEnabled or not BreakPCLDRunning then
                 return
             end
 
@@ -13390,21 +13388,26 @@ antiTab:AddToggle({
 
             task.wait(0.1)
 
-            if not BreakPCLDEnabled or BreakPCLDDeaths <= 0 then
-                return
+            if BreakPCLDEnabled and BreakPCLDRunning then
+                hum.Health = 0
             end
 
-            BreakPCLDDeaths -= 1
-            hum.Health = 0
+            BreakPCLDRunning = false
         end)
 
-        local char = LocalPlayer.Character
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        task.spawn(function()
+            while BreakPCLDEnabled do
+                local char = LocalPlayer.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
 
-        if hum and BreakPCLDDeaths > 0 then
-            BreakPCLDDeaths -= 1
-            hum.Health = 0
-        end
+                if hum and not BreakPCLDRunning then
+                    BreakPCLDRunning = true
+                    hum.Health = 0
+                end
+
+                task.wait(0.2)
+            end
+        end)
     end
 })
 
