@@ -10979,84 +10979,69 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
-local Settings = {
-    Anti = {
-        AntiRagdoll = false,
-        LoopRagdoll = false
-    },
-    Misc = {
-        fakeDeath = false
-    }
-}
+local connections = {}
 
-local State = {
-    antiRagdollConns = {},
-    connections = {}
-}
-
-local Utility = {
-    isLocalAlive = function()
-        return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health > 0
+local function cleanConnections()
+    for _, c in pairs(connections) do
+        if c then c:Disconnect() end
     end
-}
+    connections = {}
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.BreakJointsOnDeath = true
+    end
+end
 
 antiTab:AddToggle({
-    Name = "Anti grab (Ragdoll)",
+    Name = "Anti Ragdoll",
     Default = false,
-    Flag = "c8tu22t97f",
-    Callback = function(v)
-        Settings.Anti.AntiRagdoll = v
-        if v then
-            State.antiRagdollConns = {}
-            local function applyProtection(char)
-                if not Settings.Anti.AntiRagdoll then return end
-                if not char then return end
-                if State.antiRagdollConns then
-                    for _, c in ipairs(State.antiRagdollConns) do pcall(function() c:Disconnect() end) end
+    Flag = "9w7gr0uwgt",
+    Callback = function(Value)
+        cleanConnections()
+        if not Value then return end
+
+        local function applyProtection(char)
+            if not char then return end
+            local hum = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid", 5)
+            if not hum or hum.Health <= 0 then return end
+
+            hum.BreakJointsOnDeath = false
+            hum.AutoRotate = true
+            if hum.PlatformStand then hum.PlatformStand = false end
+
+            table.insert(connections, hum:GetPropertyChangedSignal("AutoRotate"):Connect(function()
+                if hum.Health > 0 and hum.AutoRotate == false and not (type(getgenv) == "function" and getgenv().FTAP_SpinbotActive) then
+                    hum.AutoRotate = true
                 end
-                State.antiRagdollConns = {}
-                local hum = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid", 5)
-                if not hum or hum.Health <= 0 then return end
-                hum.BreakJointsOnDeath = false
-                hum.AutoRotate = true
-                if hum.PlatformStand and not Settings.Misc.fakeDeath and not Settings.Anti.LoopRagdoll then hum.PlatformStand = false end
-                table.insert(State.antiRagdollConns, hum:GetPropertyChangedSignal("AutoRotate"):Connect(function()
-                    if Settings.Anti.AntiRagdoll and Utility.isLocalAlive() and hum.AutoRotate == false and not (type(getgenv) == "function" and getgenv().FTAP_SpinbotActive) then hum.AutoRotate = true end
-                end))
-                table.insert(State.antiRagdollConns, hum:GetPropertyChangedSignal("PlatformStand"):Connect(function()
-                    if Settings.Anti.AntiRagdoll and Utility.isLocalAlive() and not Settings.Misc.fakeDeath and not Settings.Anti.LoopRagdoll and hum.PlatformStand == true then hum.PlatformStand = false end
-                end))
-                table.insert(State.antiRagdollConns, RunService.RenderStepped:Connect(function()
-                    if Settings.Anti.AntiRagdoll and Utility.isLocalAlive() and hum.Sit and hum.SeatPart == nil then hum.Sit = false end
-                end))
-                table.insert(State.antiRagdollConns, hum.Died:Connect(function()
-                    hum.BreakJointsOnDeath = true
-                    if State.antiRagdollConns then
-                        for _, c in ipairs(State.antiRagdollConns) do pcall(function() c:Disconnect() end) end
-                        State.antiRagdollConns = {}
-                    end
-                end))
-            end
-            if Utility.isLocalAlive() and LocalPlayer.Character then applyProtection(LocalPlayer.Character) end
-            State.connections.antiRagdoll = LocalPlayer.CharacterAdded:Connect(function(char)
-                task.wait(0.6)
-                if Utility.isLocalAlive() then applyProtection(char) end
-            end)
-        else
-            if State.connections.antiRagdoll then 
-                State.connections.antiRagdoll:Disconnect() 
-                State.connections.antiRagdoll = nil 
-            end
-            if State.antiRagdollConns then
-                for _, c in ipairs(State.antiRagdollConns) do c:Disconnect() end
-                State.antiRagdollConns = nil
-            end
-            local char = LocalPlayer.Character
-            local hum = char and char:FindFirstChildOfClass("Humanoid")
-            if hum then hum.BreakJointsOnDeath = true end
+            end))
+
+            table.insert(connections, hum:GetPropertyChangedSignal("PlatformStand"):Connect(function()
+                if hum.Health > 0 and hum.PlatformStand == true then
+                    hum.PlatformStand = false
+                end
+            end))
+
+            table.insert(connections, RunService.RenderStepped:Connect(function()
+                if hum.Health > 0 and hum.Sit and hum.SeatPart == nil then
+                    hum.Sit = false
+                end
+            end))
+
+            table.insert(connections, hum.Died:Connect(function()
+                hum.BreakJointsOnDeath = true
+                cleanConnections()
+            end))
         end
+
+        if LocalPlayer.Character then applyProtection(LocalPlayer.Character) end
+        table.insert(connections, LocalPlayer.CharacterAdded:Connect(function(char)
+            task.wait(0.6)
+            applyProtection(char)
+        end))
     end
 })
+
 end
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -11608,22 +11593,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
-local Settings = {Anti = {AntiHoldHamburger = false}}
-local State = {antiHoldSpamConnection = nil}
-
-local RemoteDispatcher = {
-    Flush = function(self) end,
-    Invoke = function(self, rf, ...)
-        if rf and rf:IsA("RemoteFunction") then
-            return rf:InvokeServer(...)
-        end
-    end,
-    Fire = function(self, re, ...)
-        if re and re:IsA("RemoteEvent") then
-            re:FireServer(...)
-        end
-    end
-}
+local connection = nil
 
 local function findOwnBurger(folder, markerName)
     for _, item in pairs(folder:GetChildren()) do
@@ -11661,67 +11631,73 @@ end
 antiTab:AddToggle({
     Name = "Anti Hold Hamburger",
     Default = false,
-    Flag = "971frqpigt",
-    Callback = function(v)
-        Settings.Anti.AntiHoldHamburger = v
-        if not v then RemoteDispatcher:Flush() end
-        if v then
-            if State.antiHoldSpamConnection then 
-                State.antiHoldSpamConnection:Disconnect() 
-                State.antiHoldSpamConnection = nil 
+    Flag = "gyw80qt8f",
+    Callback = function(Value)
+        if not Value then
+            if connection then
+                connection:Disconnect()
+                connection = nil
             end
-            local lastHold = 0
-            local HOLD_INTERVAL = 0.05
-            State.antiHoldSpamConnection = RunService.Heartbeat:Connect(function()
-                if not Settings.Anti.AntiHoldHamburger then return end
-                local now = tick()
-                if now - lastHold < HOLD_INTERVAL then return end
-                lastHold = now
-                local character = LocalPlayer.Character
-                if not character or not character:FindFirstChild("Humanoid") or character.Humanoid.Health <= 0 then return end
-                local spawnedFolder = Workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
-                local hamburger = spawnedFolder and findOwnBurger(spawnedFolder, "AntiHoldBurgerMarker")
-                if hamburger and not claimBurger(hamburger, "AntiHoldBurgerMarker") then
-                    hamburger = nil
-                end
-                if hamburger and hamburger.Name == "FoodHamburger" then
-                    hamburger.Name = "FoodHamburger_Hold"
-                end
-                if not hamburger or not hamburger:FindFirstChild("HoldPart") then
-                    pcall(function()
-                        RemoteDispatcher:Invoke(
-                            ReplicatedStorage.MenuToys.SpawnToyRemoteFunction,
-                            "FoodHamburger",
-                            CFrame.new(0, 300, 0),
-                            Vector3.new(0, 0, 0)
-                        )
-                    end)
-                    return
-                end
-                local holder = getBurgerHolder(hamburger)
-                if holder and holder ~= character then
-                    pcall(function()
-                        RemoteDispatcher:Fire(ReplicatedStorage.MenuToys.DestroyToy, hamburger)
-                    end)
-                    return
-                elseif holder == character then
-                    return
-                end
-                for _, part in hamburger:GetDescendants() do
-                    if part:IsA("BasePart") then part.CanCollide = false end
-                end
-                pcall(function()
-                    RemoteDispatcher:Invoke(hamburger.HoldPart.HoldItemRemoteFunction, hamburger, character)
-                end)
-            end)
-        else
-            if State.antiHoldSpamConnection then 
-                State.antiHoldSpamConnection:Disconnect() 
-                State.antiHoldSpamConnection = nil 
-            end
+            return
         end
+
+        if connection then
+            connection:Disconnect()
+            connection = nil
+        end
+
+        local lastHold = 0
+        local HOLD_INTERVAL = 0.05
+
+        connection = RunService.Heartbeat:Connect(function()
+            local now = tick()
+            if now - lastHold < HOLD_INTERVAL then return end
+            lastHold = now
+
+            local character = LocalPlayer.Character
+            if not character or not character:FindFirstChild("Humanoid") or character.Humanoid.Health <= 0 then return end
+
+            local spawnedFolder = Workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+            local hamburger = spawnedFolder and findOwnBurger(spawnedFolder, "AntiHoldBurgerMarker")
+            if hamburger and not claimBurger(hamburger, "AntiHoldBurgerMarker") then
+                hamburger = nil
+            end
+            if hamburger and hamburger.Name == "FoodHamburger" then
+                hamburger.Name = "FoodHamburger_Hold"
+            end
+
+            if not hamburger or not hamburger:FindFirstChild("HoldPart") then
+                pcall(function()
+                    ReplicatedStorage.MenuToys.SpawnToyRemoteFunction:InvokeServer(
+                        "FoodHamburger",
+                        CFrame.new(0, 300, 0),
+                        Vector3.new(0, 0, 0)
+                    )
+                end)
+                return
+            end
+
+            local holder = getBurgerHolder(hamburger)
+            if holder and holder ~= character then
+                pcall(function()
+                    ReplicatedStorage.MenuToys.DestroyToy:FireServer(hamburger)
+                end)
+                return
+            elseif holder == character then
+                return
+            end
+
+            for _, part in pairs(hamburger:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = false end
+            end
+
+            pcall(function()
+                hamburger.HoldPart.HoldItemRemoteFunction:InvokeServer(hamburger, character)
+            end)
+        end)
     end
 })
+
 
 end
 local Players = game:GetService("Players")
@@ -11938,54 +11914,41 @@ antiTab:AddToggle({
         end
     end
 })
-local Settings = {Anti = {AntiSticky = false}}
-local AntiFeature = {
-    setTouchQuery = function(state)
-        local player = game:GetService("Players").LocalPlayer
-        if player and player.Character then
-            for _, part in pairs(player.Character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanTouch = state
-                end
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function setTouch(state)
+    local char = LocalPlayer.Character
+    if char then
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanTouch = state
             end
         end
     end
-}
+end
 
 antiTab:AddToggle({
     Name = "Anti Sticky",
     Default = false,
-    Flag = "86drqfut81",
-    Callback = function(v)
-        Settings.Anti.AntiSticky = v
-        if v then 
-            AntiFeature.setTouchQuery(false) 
-        else 
-            AntiFeature.setTouchQuery(true) 
+    Flag = "dw8yicogq",
+    Callback = function(Value)
+        if Value then
+            setTouch(false)
+        else
+            setTouch(true)
         end
     end
 })
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+
 local Workspace = game:GetService("Workspace")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Settings = {Anti = {AntiBlobBring = false}}
-local RemoteDispatcher = {
-    Fire = function(self, remote, ...)
-        if remote and remote:IsA("RemoteEvent") then
-            remote:FireServer(...)
-        end
-    end
-}
-local workspace = game:GetService("Workspace")
-local Settings = {Anti = {AntiPoison = false}}
 
 antiTab:AddToggle({
     Name = "Anti Poison",
     Default = false,
-    Callback = function(v)
-        Settings.Anti.AntiPoison = v
-        local map = workspace:FindFirstChild("Map")
+    Flag = "f7t11v7t92yu9v",
+    Callback = function(Value)
+        local map = Workspace:FindFirstChild("Map")
         local hole = map and map:FindFirstChild("Hole")
         local poisonFolders = {}
         if hole then
@@ -11996,16 +11959,15 @@ antiTab:AddToggle({
                 table.insert(poisonFolders, hole.PoisonSmallHole)
             end
         end
+
         for _, folder in pairs(poisonFolders) do
-            if not folder then
-                continue
-            end
+            if not folder then continue end
             for _, obj in pairs(folder:GetDescendants()) do
                 if obj:IsA("Script") or obj:IsA("LocalScript") then
-                    obj.Disabled = v
+                    obj.Disabled = Value
                 end
                 if obj:IsA("BasePart") then
-                    if v then
+                    if Value then
                         obj.CanTouch = false
                         obj.CanCollide = false
                     else
@@ -12017,72 +11979,296 @@ antiTab:AddToggle({
         end
     end
 })
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local isRunning = false
+local thread = nil
+
+antiTab:AddToggle({
+    Name = "Anti Onwer Kick",
+    Default = false,
+    Flag = "v2t872giv9wvti9",
+    Callback = function(Value)
+        isRunning = Value
+        if not Value then
+            if thread then
+                task.cancel(thread)
+                thread = nil
+            end
+            return
+        end
+
+        thread = task.spawn(function()
+            local struggleRemote = ReplicatedStorage:WaitForChild("CharacterEvents"):WaitForChild("Struggle")
+            local tpland = {
+                Spawn = Vector3.new(0, -7.35, 0),
+                SpawnCave = Vector3.new(-90, 14.6, -314.3),
+                GreenHouse = Vector3.new(-538, -7, 74),
+                PinkHouse = Vector3.new(-478, -7, -147),
+                Barn = Vector3.new(-228, 82, -318),
+                BlueHouse = Vector3.new(496, 83, -350),
+                ChineseHouse = Vector3.new(542, 123, -93),
+                PurpleHouse = Vector3.new(270, -7, 448),
+                Factory = Vector3.new(134, 347, 352),
+                OtherGreenHouse = Vector3.new(-359, 98, 357),
+                BigCave = Vector3.new(-245, 80, 485),
+                GoodPrison = Vector3.new(569.6, -7, 176.3),
+                RuhubsDogAhhPrison = Vector3.new(564, 82.5, 210),
+                ExtremelyGoodPrison = Vector3.new(525, 76, 56),
+                TrainCave = Vector3.new(536.6, 87.5, -169.5),
+                IslanCave = Vector3.new(75.8, 323, 368.5),
+                ChineseRoof = Vector3.new(592, 153, -100),
+                UfoCave = Vector3.new(29.6, 10.5, -225.8),
+                Prison = Vector3.new(195, -7, -561),
+                BlueHouseSlot = Vector3.new(562.2, 85.38, -212.56),
+                SpawnSlot = Vector3.new(51.75, -5.3, -121.64),
+                HauntedSlot = Vector3.new(164.57, -5.43, 530.97),
+                RandomSlot = Vector3.new(-211.65, 85.7, 426.72),
+                BeachSlot = Vector3.new(-546.97, -5.3, -41.09)
+            }
+            local SL = tpland["Spawn"]
+
+            local antiSetownLastSafePosition = nil
+            local antiSetownPositionHistory = {}
+            local antiSetownHeldSpamDetected = false
+            local antiSetownHeldChangeTimes = {}
+            local antiSetownLastHeldValue = false
+            local antiSetownStruggling = false
+            local antiSetownLastStruggleTime = 0
+
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                antiSetownLastSafePosition = LocalPlayer.Character.HumanoidRootPart.Position
+                for i = 1, 10 do
+                    table.insert(antiSetownPositionHistory, antiSetownLastSafePosition)
+                end
+            end
+
+            if LocalPlayer:FindFirstChild("IsHeld") then
+                antiSetownLastHeldValue = LocalPlayer.IsHeld.Value
+            end
+
+            while isRunning do
+                task.wait(0.05)
+                local char = LocalPlayer.Character
+                local hum = char and char:FindFirstChild("Humanoid")
+                if not hum or hum.Health <= 0 then
+                    antiSetownLastSafePosition = nil
+                    antiSetownPositionHistory = {}
+                    antiSetownHeldSpamDetected = false
+                    continue
+                end
+
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if not hrp then continue end
+
+                local currentPos = hrp.Position
+                if not antiSetownLastSafePosition then
+                    antiSetownLastSafePosition = currentPos
+                    antiSetownPositionHistory = {currentPos}
+                    continue
+                end
+
+                local currentTime = tick()
+                local isHeld = false
+                if LocalPlayer:FindFirstChild("IsHeld") then
+                    isHeld = LocalPlayer.IsHeld.Value
+                    if isHeld ~= antiSetownLastHeldValue then
+                        table.insert(antiSetownHeldChangeTimes, currentTime)
+                        antiSetownLastHeldValue = isHeld
+                        for i = #antiSetownHeldChangeTimes, 1, -1 do
+                            if currentTime - antiSetownHeldChangeTimes[i] > 2 then
+                                table.remove(antiSetownHeldChangeTimes, i)
+                            end
+                        end
+                        if #antiSetownHeldChangeTimes >= 8 then
+                            antiSetownHeldSpamDetected = true
+                        end
+                    end
+                end
+
+                if isHeld and not antiSetownStruggling and (currentTime - antiSetownLastStruggleTime > 0.5) then
+                    antiSetownStruggling = true
+                    antiSetownLastStruggleTime = currentTime
+                    task.spawn(function()
+                        for i = 1, 5 do
+                            if not isRunning then break end
+                            pcall(function() struggleRemote:FireServer(LocalPlayer) end)
+                            task.wait(0.05)
+                        end
+                        antiSetownStruggling = false
+                    end)
+                end
+
+                table.insert(antiSetownPositionHistory, 1, currentPos)
+                if #antiSetownPositionHistory > 10 then
+                    table.remove(antiSetownPositionHistory, 11)
+                end
+
+                local avgDistance = 0
+                if #antiSetownPositionHistory >= 2 then
+                    for i = 2, #antiSetownPositionHistory do
+                        avgDistance = avgDistance + (antiSetownPositionHistory[i - 1] - antiSetownPositionHistory[i]).Magnitude
+                    end
+                    avgDistance = avgDistance / (#antiSetownPositionHistory - 1)
+                end
+
+                local velocity = hrp.AssemblyLinearVelocity.Magnitude
+                local movedDistance = (currentPos - antiSetownLastSafePosition).Magnitude
+                local abnormalTeleport = false
+
+                if antiSetownHeldSpamDetected then
+                    abnormalTeleport = true
+                elseif currentPos.Magnitude > 1000000 then
+                    abnormalTeleport = true
+                elseif movedDistance > 100 and velocity < 50 and avgDistance < 10 then
+                    abnormalTeleport = true
+                elseif currentPos.Y > 10000 or currentPos.Y < -1000 then
+                    abnormalTeleport = true
+                elseif velocity > 500 then
+                    abnormalTeleport = true
+                end
+
+                if abnormalTeleport then
+                    antiSetownHeldSpamDetected = false
+                    antiSetownHeldChangeTimes = {}
+                    hrp.AssemblyLinearVelocity = Vector3.zero
+                    hrp.AssemblyAngularVelocity = Vector3.zero
+
+                    for i = 1, 3 do
+                        pcall(function() struggleRemote:FireServer(LocalPlayer) end)
+                        task.wait(0.05)
+                    end
+
+                    local teleported = false
+                    if SL ~= "off" and SL then
+                        hrp.CFrame = CFrame.new(SL)
+                        teleported = true
+                    else
+                        local plots = Workspace:FindFirstChild("Plots")
+                        local foundSafe = false
+                        if plots then
+                            for i = 1, 5 do
+                                local plot = plots:FindFirstChild("Plot" .. i)
+                                if plot then
+                                    local sign = plot:FindFirstChild("PlotSign")
+                                    local ownersFolder = sign and sign:FindFirstChild("ThisPlotsOwners")
+                                    local valueObj = ownersFolder and ownersFolder:FindFirstChild("Value")
+                                    if valueObj and valueObj.Value == LocalPlayer.Name then
+                                        local grabPart = plot:FindFirstChild("PlusGrabPart", true)
+                                        if grabPart then
+                                            hrp.CFrame = grabPart.CFrame
+                                            foundSafe = true
+                                            teleported = true
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                        if not foundSafe then
+                            hrp.CFrame = CFrame.new(tpland["Spawn"])
+                            teleported = true
+                        end
+                    end
+
+                    if teleported then
+                        hrp.AssemblyLinearVelocity = Vector3.zero
+                        hrp.AssemblyAngularVelocity = Vector3.zero
+                        if char:FindFirstChild("Humanoid") then
+                            char.Humanoid.PlatformStand = false
+                            char.Humanoid.Sit = false
+                        end
+                        task.wait(0.2)
+                        antiSetownLastSafePosition = hrp.Position
+                        antiSetownPositionHistory = {}
+                        for i = 1, 10 do
+                            table.insert(antiSetownPositionHistory, antiSetownLastSafePosition)
+                        end
+                    end
+                else
+                    if movedDistance < 50 then
+                        antiSetownLastSafePosition = currentPos
+                    end
+                end
+                antiSetownLastStruggleTime = currentTime
+            end
+        end)
+    end
+})
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local isRunning = false
+local thread = nil
+
+local function cleanup()
+    local char = LocalPlayer.Character
+    if char then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local truePosPart = char:FindFirstChild("TruePositionPart")
+        if hrp and truePosPart then
+            local rootAttachment = truePosPart:FindFirstChild("RootAttachment")
+            if rootAttachment then
+                rootAttachment.Parent = hrp
+            end
+        end
+        if truePosPart then
+            truePosPart:Destroy()
+        end
+    end
+end
 
 antiTab:AddToggle({
     Name = "Anti Bring",
     Default = false,
-    Flag = "g9t71up2",
+    Flag = "octuwg2pitf179t",
     Callback = function(Value)
-        Settings.Anti.AntiBlobBring = Value
-        if Value then
-            if LocalPlayer.Character and not LocalPlayer.Character:FindFirstChild("TruePositionPart") then
-                local truePosPart = Instance.new("Part")
-                truePosPart.Parent = LocalPlayer.Character
-                truePosPart.Name = "TruePositionPart"
-                truePosPart.Anchored = true
-                truePosPart.Transparency = 1
-                truePosPart.CanCollide = false
-                truePosPart.Size = Vector3.new(0.1, 0.1, 0.1)
-                truePosPart.CFrame = CFrame.new(0, -1E4, 0)
+        isRunning = Value
+        if not Value then
+            if thread then
+                task.cancel(thread)
+                thread = nil
             end
+            cleanup()
+            return
         end
-        task.spawn(function()
-            while Settings.Anti.AntiBlobBring and task.wait() do
-                if LocalPlayer.Character then
-                    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                    local truePosPart = LocalPlayer.Character:FindFirstChild("TruePositionPart")
+
+        local char = LocalPlayer.Character
+        if char and not char:FindFirstChild("TruePositionPart") then
+            local truePosPart = Instance.new("Part")
+            truePosPart.Parent = char
+            truePosPart.Name = "TruePositionPart"
+            truePosPart.Anchored = true
+            truePosPart.Transparency = 1
+            truePosPart.CanCollide = false
+            truePosPart.Size = Vector3.new(0.1, 0.1, 0.1)
+            truePosPart.CFrame = CFrame.new(0, -1E4, 0)
+        end
+
+        thread = task.spawn(function()
+            while isRunning do
+                local c = LocalPlayer.Character
+                if c then
+                    local hrp = c:FindFirstChild("HumanoidRootPart")
+                    local truePosPart = c:FindFirstChild("TruePositionPart")
                     if hrp and truePosPart then
                         local rootAttachment = hrp:FindFirstChild("RootAttachment")
                         if rootAttachment and rootAttachment.Parent == hrp then
                             rootAttachment.Parent = truePosPart
                         end
-                        for _, part in pairs(LocalPlayer.Character:GetChildren()) do
+                        for _, part in pairs(c:GetChildren()) do
                             if part:IsA("Part") and part.Massless then
                                 part.Massless = false
-                                local function kickFromBlob()
-                                    local plotItems = Workspace:FindFirstChild("PlotItems")
-                                    if plotItems then
-                                        for _, plot in pairs(plotItems:GetChildren()) do
-                                            if plot.Name ~= "PlayersInPlots" then
-                                                for _, item in pairs(plot:GetChildren()) do
-                                                    if item.Name == "CreatureBlobman" then
-                                                        local blobScript = item:FindFirstChild("BlobmanSeatAndOwnerScript")
-                                                        local rightDetector = item:FindFirstChild("RightDetector")
-                                                        local leftDetector = item:FindFirstChild("LeftDetector")
-                                                        if blobScript and rightDetector and leftDetector then
-                                                            local dropEvent = blobScript:FindFirstChild("CreatureDrop")
-                                                            local rightWeld = rightDetector:FindFirstChild("RightWeld")
-                                                            local leftWeld = leftDetector:FindFirstChild("LeftWeld")
-                                                            if dropEvent and rightWeld and hrp then
-                                                                RemoteDispatcher:Fire(dropEvent, rightWeld, hrp)
-                                                            end
-                                                            if dropEvent and leftWeld and hrp then
-                                                                RemoteDispatcher:Fire(dropEvent, leftWeld, hrp)
-                                                            end
-                                                            local struggleEvent = ReplicatedStorage:FindFirstChild("CharacterEvents") and ReplicatedStorage.CharacterEvents:FindFirstChild("Struggle")
-                                                            if struggleEvent then
-                                                                RemoteDispatcher:Fire(struggleEvent, LocalPlayer)
-                                                            end
-                                                        end
-                                                    end
-                                                end
-                                            end
-                                        end
-                                    end
-                                    for _, plr in pairs(Players:GetPlayers()) do
-                                        local toyFolder = Workspace:FindFirstChild(plr.Name .. "SpawnedInToys")
-                                        if toyFolder then
-                                            for _, item in pairs(toyFolder:GetChildren()) do
+                                local plotItems = Workspace:FindFirstChild("PlotItems")
+                                if plotItems then
+                                    for _, plot in pairs(plotItems:GetChildren()) do
+                                        if plot.Name ~= "PlayersInPlots" then
+                                            for _, item in pairs(plot:GetChildren()) do
                                                 if item.Name == "CreatureBlobman" then
                                                     local blobScript = item:FindFirstChild("BlobmanSeatAndOwnerScript")
                                                     local rightDetector = item:FindFirstChild("RightDetector")
@@ -12092,14 +12278,14 @@ antiTab:AddToggle({
                                                         local rightWeld = rightDetector:FindFirstChild("RightWeld")
                                                         local leftWeld = leftDetector:FindFirstChild("LeftWeld")
                                                         if dropEvent and rightWeld and hrp then
-                                                            RemoteDispatcher:Fire(dropEvent, rightWeld, hrp)
+                                                            dropEvent:FireServer(rightWeld, hrp)
                                                         end
                                                         if dropEvent and leftWeld and hrp then
-                                                            RemoteDispatcher:Fire(dropEvent, leftWeld, hrp)
+                                                            dropEvent:FireServer(leftWeld, hrp)
                                                         end
                                                         local struggleEvent = ReplicatedStorage:FindFirstChild("CharacterEvents") and ReplicatedStorage.CharacterEvents:FindFirstChild("Struggle")
                                                         if struggleEvent then
-                                                            RemoteDispatcher:Fire(struggleEvent, LocalPlayer)
+                                                            struggleEvent:FireServer(LocalPlayer)
                                                         end
                                                     end
                                                 end
@@ -12107,280 +12293,43 @@ antiTab:AddToggle({
                                         end
                                     end
                                 end
-                                kickFromBlob()
-                            end
-                        end
-                    end
-                end
-            end
-            if not Settings.Anti.AntiBlobBring and LocalPlayer.Character then
-                local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                local truePosPart = LocalPlayer.Character:FindFirstChild("TruePositionPart")
-                if hrp and truePosPart then
-                    local rootAttachment = truePosPart:FindFirstChild("RootAttachment")
-                    if rootAttachment then
-                        rootAttachment.Parent = hrp
-                    end
-                    truePosPart:Destroy()
-                end
-            end
-        end)
-    end
-})
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Workspace = game:GetService("Workspace")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Settings = {Anti = {AntiSetownKick = false}}
-local RemoteDispatcher = {
-    Fire = function(self, remote, ...)
-        if remote and remote:IsA("RemoteEvent") then
-            remote:FireServer(...)
-        end
-    end
-}
-local Utility = {
-    isLocalAlive = function()
-        return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health > 0
-    end
-}
-
-local antiSetownKick = false
-local antiSetownLastSafePosition = nil
-local antiSetownTeleportDetected = false
-local antiSetownPositionHistory = {}
-local antiSetownMaxHistory = 10
-local antiSetownHeldSpamDetected = false
-local antiSetownHeldChangeTimes = {}
-local antiSetownHeldSpamThreshold = 8
-local antiSetownLastHeldValue = false
-local antiSetownStruggling = false
-local antiSetownLastStruggleTime = 0
-local antiSetownStruggleCooldown = 0.5
-
-antiTab:AddToggle({
-    Name = "Anti Onwer Kick",
-    Default = false,
-    Flag = "81yrdut9fqutw",
-    Callback = function(Value)
-        Settings.Anti.AntiSetownKick = Value
-        antiSetownKick = Value
-        if Value then
-            task.spawn(function()
-                local player = LocalPlayer
-                local struggleRemote = ReplicatedStorage:WaitForChild("CharacterEvents"):WaitForChild("Struggle")
-                local tpland = {
-                    Spawn = Vector3.new(0, -7.35, 0),
-                    SpawnCave = Vector3.new(-90, 14.6, -314.3),
-                    GreenHouse = Vector3.new(-538, -7, 74),
-                    PinkHouse = Vector3.new(-478, -7, -147),
-                    Barn = Vector3.new(-228, 82, -318),
-                    BlueHouse = Vector3.new(496, 83, -350),
-                    ChineseHouse = Vector3.new(542, 123, -93),
-                    PurpleHouse = Vector3.new(270, -7, 448),
-                    Factory = Vector3.new(134, 347, 352),
-                    OtherGreenHouse = Vector3.new(-359, 98, 357),
-                    BigCave = Vector3.new(-245, 80, 485),
-                    GoodPrison = Vector3.new(569.6, -7, 176.3),
-                    RuhubsDogAhhPrison = Vector3.new(564, 82.5, 210),
-                    ExtremelyGoodPrison = Vector3.new(525, 76, 56),
-                    TrainCave = Vector3.new(536.6, 87.5, -169.5),
-                    IslanCave = Vector3.new(75.8, 323, 368.5),
-                    ChineseRoof = Vector3.new(592, 153, -100),
-                    UfoCave = Vector3.new(29.6, 10.5, -225.8),
-                    Prison = Vector3.new(195, -7, -561),
-                    BlueHouseSlot = Vector3.new(562.2, 85.38, -212.56),
-                    SpawnSlot = Vector3.new(51.75, -5.3, -121.64),
-                    HauntedSlot = Vector3.new(164.57, -5.43, 530.97),
-                    RandomSlot = Vector3.new(-211.65, 85.7, 426.72),
-                    BeachSlot = Vector3.new(-546.97, -5.3, -41.09)
-                }
-                local SL = tpland["Spawn"]
-                
-                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                    antiSetownLastSafePosition = player.Character.HumanoidRootPart.Position
-                    for i = 1, antiSetownMaxHistory do
-                        table.insert(antiSetownPositionHistory, antiSetownLastSafePosition)
-                    end
-                end
-                
-                if player:FindFirstChild("IsHeld") then
-                    antiSetownLastHeldValue = player.IsHeld.Value
-                end
-                
-                while antiSetownKick and task.wait(0.05) do
-                    if not Utility.isLocalAlive() then
-                        antiSetownLastSafePosition = nil
-                        antiSetownPositionHistory = {}
-                        antiSetownHeldSpamDetected = false
-                        antiSetownTeleportDetected = false
-                        continue
-                    end
-                    
-                    local char = player.Character
-                    if not char then continue end
-                    
-                    local hrp = char:FindFirstChild("HumanoidRootPart")
-                    if not hrp then continue end
-                    
-                    local currentPos = hrp.Position
-                    if not antiSetownLastSafePosition then
-                        antiSetownLastSafePosition = currentPos
-                        antiSetownPositionHistory = {currentPos}
-                        continue
-                    end
-                    
-                    local currentTime = tick()
-                    local isHeld = false
-                    
-                    if player:FindFirstChild("IsHeld") then
-                        isHeld = player.IsHeld.Value
-                        if isHeld ~= antiSetownLastHeldValue then
-                            table.insert(antiSetownHeldChangeTimes, currentTime)
-                            antiSetownLastHeldValue = isHeld
-                            for i = #antiSetownHeldChangeTimes, 1, -1 do
-                                if currentTime - antiSetownHeldChangeTimes[i] > 2 then
-                                    table.remove(antiSetownHeldChangeTimes, i)
-                                end
-                            end
-                            if #antiSetownHeldChangeTimes >= antiSetownHeldSpamThreshold then
-                                antiSetownHeldSpamDetected = true
-                            end
-                        end
-                    end
-                    
-                    if isHeld and not antiSetownStruggling and (currentTime - antiSetownLastStruggleTime > antiSetownStruggleCooldown) then
-                        antiSetownStruggling = true
-                        antiSetownLastStruggleTime = currentTime
-                        task.spawn(function()
-                            for i = 1, 5 do
-                                pcall(function()
-                                    RemoteDispatcher:Fire(struggleRemote, player)
-                                end)
-                                task.wait(0.05)
-                            end
-                            antiSetownStruggling = false
-                        end)
-                    end
-                    
-                    table.insert(antiSetownPositionHistory, 1, currentPos)
-                    if #antiSetownPositionHistory > antiSetownMaxHistory then
-                        table.remove(antiSetownPositionHistory, antiSetownMaxHistory + 1)
-                    end
-                    
-                    local avgDistance = 0
-                    if #antiSetownPositionHistory >= 2 then
-                        for i = 2, #antiSetownPositionHistory do
-                            avgDistance = avgDistance + (antiSetownPositionHistory[i - 1] - antiSetownPositionHistory[i]).Magnitude
-                        end
-                        avgDistance = avgDistance / (#antiSetownPositionHistory - 1)
-                    end
-                    
-                    local velocity = hrp.AssemblyLinearVelocity.Magnitude
-                    local movedDistance = (currentPos - antiSetownLastSafePosition).Magnitude
-                    local abnormalTeleport = false
-                    
-                    if antiSetownHeldSpamDetected then
-                        abnormalTeleport = true
-                    elseif currentPos.Magnitude > 1000000 then
-                        abnormalTeleport = true
-                        antiSetownTeleportDetected = true
-                    elseif movedDistance > 100 and velocity < 50 and avgDistance < 10 then
-                        abnormalTeleport = true
-                        antiSetownTeleportDetected = true
-                    elseif currentPos.Y > 10000 or currentPos.Y < -1000 then
-                        abnormalTeleport = true
-                        antiSetownTeleportDetected = true
-                    elseif velocity > 500 then
-                        abnormalTeleport = true
-                        antiSetownTeleportDetected = true
-                    end
-                    
-                    if abnormalTeleport then
-                        antiSetownHeldSpamDetected = false
-                        antiSetownHeldChangeTimes = {}
-                        hrp.AssemblyLinearVelocity = Vector3.zero
-                        hrp.AssemblyAngularVelocity = Vector3.zero
-                        
-                        for i = 1, 3 do
-                            pcall(function()
-                                RemoteDispatcher:Fire(struggleRemote, player)
-                            end)
-                            task.wait(0.05)
-                        end
-                        
-                        local teleported = false
-                        if SL ~= 'off' and SL then
-                            hrp.CFrame = CFrame.new(SL)
-                            teleported = true
-                        else
-                            local plots = Workspace:FindFirstChild("Plots")
-                            local foundSafe = false
-                            if plots then
-                                for i = 1, 5 do
-                                    local plot = plots:FindFirstChild("Plot" .. i)
-                                    if plot then
-                                        local sign = plot:FindFirstChild("PlotSign")
-                                        local ownersFolder = sign and sign:FindFirstChild("ThisPlotsOwners")
-                                        local valueObj = ownersFolder and ownersFolder:FindFirstChild("Value")
-                                        if valueObj and valueObj.Value == player.Name then
-                                            local grabPart = plot:FindFirstChild("PlusGrabPart", true)
-                                            if grabPart then
-                                                hrp.CFrame = grabPart.CFrame
-                                                foundSafe = true
-                                                teleported = true
-                                                break
+                                for _, plr in pairs(Players:GetPlayers()) do
+                                    local toyFolder = Workspace:FindFirstChild(plr.Name .. "SpawnedInToys")
+                                    if toyFolder then
+                                        for _, item in pairs(toyFolder:GetChildren()) do
+                                            if item.Name == "CreatureBlobman" then
+                                                local blobScript = item:FindFirstChild("BlobmanSeatAndOwnerScript")
+                                                local rightDetector = item:FindFirstChild("RightDetector")
+                                                local leftDetector = item:FindFirstChild("LeftDetector")
+                                                if blobScript and rightDetector and leftDetector then
+                                                    local dropEvent = blobScript:FindFirstChild("CreatureDrop")
+                                                    local rightWeld = rightDetector:FindFirstChild("RightWeld")
+                                                    local leftWeld = leftDetector:FindFirstChild("LeftWeld")
+                                                    if dropEvent and rightWeld and hrp then
+                                                        dropEvent:FireServer(rightWeld, hrp)
+                                                    end
+                                                    if dropEvent and leftWeld and hrp then
+                                                        dropEvent:FireServer(leftWeld, hrp)
+                                                    end
+                                                    local struggleEvent = ReplicatedStorage:FindFirstChild("CharacterEvents") and ReplicatedStorage.CharacterEvents:FindFirstChild("Struggle")
+                                                    if struggleEvent then
+                                                        struggleEvent:FireServer(LocalPlayer)
+                                                    end
+                                                end
                                             end
                                         end
                                     end
                                 end
                             end
-                            if not foundSafe then
-                                hrp.CFrame = CFrame.new(tpland["Spawn"])
-                                teleported = true
-                            end
-                        end
-                        
-                        if teleported then
-                            hrp.AssemblyLinearVelocity = Vector3.zero
-                            hrp.AssemblyAngularVelocity = Vector3.zero
-                            if char:FindFirstChild("Humanoid") then
-                                char.Humanoid.PlatformStand = false
-                                char.Humanoid.Sit = false
-                            end
-                            task.wait(0.2)
-                            antiSetownTeleportDetected = false
-                            antiSetownLastSafePosition = hrp.Position
-                            antiSetownPositionHistory = {}
-                            for i = 1, antiSetownMaxHistory do
-                                table.insert(antiSetownPositionHistory, antiSetownLastSafePosition)
-                            end
-                            task.spawn(function()
-                                for i = 1, 5 do
-                                    pcall(function()
-                                        RemoteDispatcher:Fire(struggleRemote, player)
-                                    end)
-                                    task.wait(0.1)
-                                end
-                            end)
-                        end
-                    else
-                        if not antiSetownTeleportDetected and movedDistance < 50 then
-                            antiSetownLastSafePosition = currentPos
                         end
                     end
-                    antiSetownLastStruggleTime = currentTime
                 end
-            end)
-        else
-            antiSetownKick = false
-            antiSetownPositionHistory = {}
-            antiSetownTeleportDetected = false
-            antiSetownHeldSpamDetected = false
-            antiSetownHeldChangeTimes = {}
-        end
+                task.wait()
+            end
+        end)
     end
 })
+
 
 end
 
@@ -12450,95 +12399,74 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
-local Settings = {Anti = {AntiRagBlob = false}}
-local State = {antiRagBlobConns = {}}
-
-local Utility = {
-    isLocalAlive = function()
-        return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health > 0
-    end
-}
-
-local RemoteDispatcher = {
-    Flush = function(self) end,
-    Fire = function(self, remote, ...)
-        if remote and remote:IsA("RemoteEvent") then
-            remote:FireServer(...)
-        end
-    end
-}
+local connections = {}
 
 local function isGucciBlobman(model)
     return model and (model.Name:lower():find("gucci") ~= nil)
 end
 
+local function cleanConnections()
+    for _, c in pairs(connections) do
+        if c then c:Disconnect() end
+    end
+    connections = {}
+end
+
 antiTab:AddToggle({
     Name = "Anti Ragdoll on Blob",
     Default = false,
-    Flag = "f997tqqt9fu",
-    Callback = function(v)
-        Settings.Anti.AntiRagBlob = v
-        if not v then RemoteDispatcher:Flush() end
-        if v then
-            local RagdollRemote = ReplicatedStorage:FindFirstChild("RagdollRemote")
-            local RagdolledSit = false
-            local function DiscAR(key)
-                if State.antiRagBlobConns[key] then 
-                    State.antiRagBlobConns[key]:Disconnect() 
-                    State.antiRagBlobConns[key] = nil 
-                end
-            end
-            local function setupCharacter(char)
-                if not Utility.isLocalAlive() then return end
-                local hum = char and char:FindFirstChild("Humanoid")
-                local HRP = char and char:FindFirstChild("HumanoidRootPart")
-                if hum and HRP and RagdollRemote then
-                    DiscAR("ARSeat")
-                    State.antiRagBlobConns["ARSeat"] = hum:GetPropertyChangedSignal("SeatPart"):Connect(function()
-                        if not Utility.isLocalAlive() then return end
-                        if hum.SeatPart and hum.SeatPart.Parent and hum.SeatPart.Parent.Name == "CreatureBlobman" and not isGucciBlobman(hum.SeatPart.Parent) and not RagdolledSit then
-                            RagdolledSit = true
-                            local Seat = hum.SeatPart
-                            local waitStart = tick()
-                            while not hum.Sit do
-                                if not Utility.isLocalAlive() or tick() - waitStart > 3 then RagdolledSit = false return end
-                                task.wait(0.05)
+    Flag = "g997wtwt08g",
+    Callback = function(Value)
+        cleanConnections()
+        if not Value then return end
+
+        local RagdollRemote = ReplicatedStorage:FindFirstChild("RagdollRemote")
+        local RagdolledSit = false
+
+        local function setupCharacter(char)
+            local hum = char and char:WaitForChild("Humanoid", 3)
+            local HRP = char and char:WaitForChild("HumanoidRootPart", 3)
+            if not hum or not HRP or not RagdollRemote then return end
+
+            if connections["Seat"] then connections["Seat"]:Disconnect() end
+            connections["Seat"] = hum:GetPropertyChangedSignal("SeatPart"):Connect(function()
+                if not hum or hum.Health <= 0 then return end
+                if hum.SeatPart and hum.SeatPart.Parent and hum.SeatPart.Parent.Name == "CreatureBlobman" and not isGucciBlobman(hum.SeatPart.Parent) and not RagdolledSit then
+                    RagdolledSit = true
+                    local Seat = hum.SeatPart
+                    local waitStart = tick()
+                    while not hum.Sit do
+                        if hum.Health <= 0 or tick() - waitStart > 3 then RagdolledSit = false return end
+                        task.wait(0.05)
+                    end
+                    RagdollRemote:FireServer(HRP, 3)
+                    waitStart = tick()
+                    while not (hum:FindFirstChild("Ragdolled") and hum.Ragdolled.Value) and not hum.Sit do
+                        if hum.Health <= 0 or tick() - waitStart > 3 then RagdolledSit = false return end
+                        task.wait(0.05)
+                    end
+                    task.wait(0.4)
+                    if hum.Health <= 0 then RagdolledSit = false return end
+                    hum.Sit = false
+                    if Seat and Seat:IsA("Part") then Seat:Sit(hum) end
+                    task.delay(0.25, function()
+                        while hum and hum.SeatPart and hum.Health > 0 do
+                            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                RagdollRemote:FireServer(LocalPlayer.Character.HumanoidRootPart, 1)
                             end
-                            RemoteDispatcher:Fire(RagdollRemote, HRP, 3)
-                            waitStart = tick()
-                            while not (hum:FindFirstChild("Ragdolled") and hum.Ragdolled.Value) and not hum.Sit do
-                                if not Utility.isLocalAlive() or tick() - waitStart > 3 then RagdolledSit = false return end
-                                task.wait(0.05)
-                            end
-                            task.wait(0.4)
-                            if not Utility.isLocalAlive() then RagdolledSit = false return end
-                            hum.Sit = false
-                            if Seat and Seat:IsA("Part") then Seat:Sit(hum) end
-                            task.delay(0.25, function()
-                                while hum and hum.SeatPart and Utility.isLocalAlive() do
-                                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                                        RemoteDispatcher:Fire(RagdollRemote, LocalPlayer.Character.HumanoidRootPart, 1)
-                                    end
-                                    task.wait(0.05)
-                                end
-                                RagdolledSit = false
-                            end)
+                            task.wait(0.05)
                         end
+                        RagdolledSit = false
                     end)
                 end
-            end
-            if Utility.isLocalAlive() and LocalPlayer.Character then setupCharacter(LocalPlayer.Character) end
-            DiscAR("ARChar")
-            State.antiRagBlobConns["ARChar"] = LocalPlayer.CharacterAdded:Connect(function(newChar)
-                task.wait(0.6)
-                if Utility.isLocalAlive() then setupCharacter(newChar) end
             end)
-        else
-            for _, conn in pairs(State.antiRagBlobConns) do 
-                if conn then conn:Disconnect() end 
-            end
-            State.antiRagBlobConns = {}
         end
+
+        if LocalPlayer.Character then setupCharacter(LocalPlayer.Character) end
+        connections["Char"] = LocalPlayer.CharacterAdded:Connect(function(newChar)
+            task.wait(0.6)
+            setupCharacter(newChar)
+        end)
     end
 })
 
