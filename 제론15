@@ -13355,61 +13355,56 @@ antiTab:AddToggle({
         end
     end
 })
-function AntiPCLDF()
-    targetValueName = "[ " .. plr.DisplayName .. " ] ( @" .. plr.Name .. " )"
 
-    while AntiPCLDT do
-        task.wait()
-
-        if not hasDetectedFirstTime and AntiPCLDT then
-            for _, item in ipairs(workspace:GetChildren()) do
-                if item.Name == "PlayerCharacterLocationDetector" then
-                    for _, child in ipairs(item:GetChildren()) do
-                        if child:IsA("BoolValue") and child.Name == targetValueName then
-                            local character = plr.Character
-                            local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-
-                            if character then
-                                character:BreakJoints()
-                            end
-
-                            if humanoid then
-                                humanoid.Health = 0
-                            end
-
-                            hasDetectedFirstTime = true
-                            break
-                        end
-                    end
-                end
-            end
-        elseif AntiPCLDT and hasDetectedFirstTime then
-            local character = plr.Character or plr.CharacterAdded:Wait()
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-
-            if humanoid then
-                humanoid.Health = 0
-            end
-
-            character:BreakJoints()
-
-            task.wait(5)
-
-            if not AntiPCLDT then
-                hasDetectedFirstTime = false
-            end
-        end
-    end
-end
-
+local BreakPCLDConnection = nil
+local BreakPCLDDeaths = 0
+local BreakPCLDEnabled = false
 
 antiTab:AddToggle({
-    Name = "pcld Break ",
-    default   = false,
-    Flag = "12nkwo6",
+    Name = "Break Pcld",
+    Default = false,
     Callback = function(Value)
-        AntiPCLDT = Value
-        task.spawn(AntiPCLDF)
+        BreakPCLDEnabled = Value
+
+        if BreakPCLDConnection then
+            BreakPCLDConnection:Disconnect()
+            BreakPCLDConnection = nil
+        end
+
+        if not Value then
+            BreakPCLDDeaths = 0
+            return
+        end
+
+        BreakPCLDDeaths = 2
+
+        BreakPCLDConnection = LocalPlayer.CharacterAdded:Connect(function(char)
+            if not BreakPCLDEnabled or BreakPCLDDeaths <= 0 then
+                return
+            end
+
+            local hum = char:WaitForChild("Humanoid", 5)
+            if not hum then
+                return
+            end
+
+            task.wait(0.1)
+
+            if not BreakPCLDEnabled or BreakPCLDDeaths <= 0 then
+                return
+            end
+
+            BreakPCLDDeaths -= 1
+            hum.Health = 0
+        end)
+
+        local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+        if hum and BreakPCLDDeaths > 0 then
+            BreakPCLDDeaths -= 1
+            hum.Health = 0
+        end
     end
 })
 
