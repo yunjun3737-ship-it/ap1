@@ -9504,7 +9504,7 @@ do
 LoopTab:AddSection({
     Name = "SetOwner kick"
 })
-         local ownershipKick = ownershipKick or {}
+local ownershipKick = ownershipKick or {}
 local Settings = Settings or { Loop = {} }
 local playersInLoop1V = playersInLoop1V or {}
 local playersInLoop2V = playersInLoop2V or {}
@@ -9581,6 +9581,11 @@ ownershipKick["Loop Kick V7"] = function(v)
         local currentTargetRoot = nil
         local bodyPos = nil
         local bodyGyro = nil
+        local currentFPS = 60
+
+        loopKickV7FpsConn = RunService.RenderStepped:Connect(function(dt)
+            currentFPS = 1 / dt
+        end)
 
         local function cleanupBodies()
             pcall(function()
@@ -9757,13 +9762,24 @@ ownershipKick["Loop Kick V7"] = function(v)
 
                 if not _isMyCharacterPart(targetRoot) then
                     pcall(function()
-                        if GE:FindFirstChild("SetNetworkOwner") then
-                            for _ = 1, 30 do
-                                GE.SetNetworkOwner:FireServer(targetRoot, lockPos)
+                        local setOwner = GE:FindFirstChild("SetNetworkOwner")
+                        local destroyLine = GE:FindFirstChild("DestroyGrabLine")
+                        
+                        if setOwner and destroyLine then
+                            if currentFPS > 200 then
+                                setOwner:FireServer(targetRoot, lockPos)
+                                setOwner:FireServer(targetRoot, lockPos)
+                            elseif currentFPS >= 155 and currentFPS <= 200 then
+                                setOwner:FireServer(targetRoot, lockPos)
+                                setOwner:FireServer(targetRoot, lockPos)
+                                setOwner:FireServer(targetRoot, lockPos)
+                            else
+                                setOwner:FireServer(targetRoot, lockPos)
+                                setOwner:FireServer(targetRoot, lockPos)
+                                setOwner:FireServer(targetRoot, lockPos)
+                                setOwner:FireServer(targetRoot, lockPos)
                             end
-                        end
-                        if GE:FindFirstChild("DestroyGrabLine") then
-                            GE.DestroyGrabLine:FireServer(targetRoot)
+                            destroyLine:FireServer(targetRoot)
                         end
                     end)
                 end
@@ -9771,6 +9787,10 @@ ownershipKick["Loop Kick V7"] = function(v)
         end
 
         cleanupBodies()
+        if loopKickV7FpsConn then
+            loopKickV7FpsConn:Disconnect()
+            loopKickV7FpsConn = nil
+        end
         if ownershipKick.posLocked and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and savedPos then
             LocalPlayer.Character.HumanoidRootPart.CFrame = savedPos
         end
@@ -9781,7 +9801,7 @@ end
 
 if LoopTab and type(LoopTab.AddToggle) == "function" then
     LoopTab:AddToggle({
-        Name = "Loop Kick SET    <font color='rgb(255,150,0)'>[Onwer kick]</font>",
+        Name = "Loop Kick SET   <font color='rgb(255,150,0)'>[Onwer kick]</font>",
         Default = false,
         Callback = function(Value)
             if Value then
@@ -9799,6 +9819,7 @@ if LoopTab and type(LoopTab.AddToggle) == "function" then
     })
 end
 
+ 
 local loopKickV5Task = nil
 local palletRagdollV5Task = nil
 local loopKickV5FrameCount = 0
