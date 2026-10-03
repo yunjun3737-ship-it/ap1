@@ -17257,7 +17257,7 @@ DDTab:AddSection({
 	Name = "Dance"
 })
 
-
+do
 local activeTracks = activeTracks or {}
 local currentTrack = currentTrack or nil
 local stopLoopFn = nil
@@ -17429,7 +17429,7 @@ DDTab:AddSlider({
     end
 })
 
-
+end
 
 --local LineLagT = false
 --local LineLagV = 50
