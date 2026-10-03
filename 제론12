@@ -16331,13 +16331,13 @@ end
 plotTab:AddSection({
 	Name = "Barrier Breaker V2 "
 })
-   do
+do
     local Players = game:GetService("Players")
     local LocalPlayer = Players.LocalPlayer
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local Workspace = game:GetService("Workspace")
 
-    local StatusLabel = BarrierGroup:AddLabel("Broken: False")
+    local StatusLabel = plotTab:AddLabel("Broken: False")
 
     local destroyBarrierActive = false
     local destroyBarrierThread = nil
@@ -16381,8 +16381,7 @@ plotTab:AddSection({
                 destroyBarrierThread = task.spawn(function()
                     local MenuToys = ReplicatedStorage:WaitForChild("MenuToys")
                     local SetNetworkOwner = ReplicatedStorage:WaitForChild("GrabEvents"):WaitForChild("SetNetworkOwner")
-                    local DestroyGrabLine = ReplicatedStorage:WaitForChild("GrabEvents"):WaitForChild("DestroyGrabLine")
-
+                    
                     local targetCFrame = CFrame.new(264.5792541503906, - 5.477070331573486, 433.4557800292969)
 
                     local function getBoomboxes()
@@ -16468,8 +16467,8 @@ plotTab:AddSection({
                     while destroyBarrierActive do
                         local boomboxes = getBoomboxes()
 
-                        if#boomboxes < 2 then
-                            if#boomboxes < 1 then
+                        if #boomboxes < 2 then
+                            if #boomboxes < 1 then
                                 spawnBoombox()
                                 task.wait(0.02)
                             end
@@ -16478,7 +16477,7 @@ plotTab:AddSection({
                             boomboxes = getBoomboxes()
                         end
 
-                        if#boomboxes == 2 then
+                        if #boomboxes == 2 then
                             for _, boombox in ipairs(boomboxes)do
                                 processBoombox(boombox)
                             end
@@ -16512,6 +16511,7 @@ plotTab:AddSection({
         end
     })
 end
+
     
 
 plotTab:AddSection({
