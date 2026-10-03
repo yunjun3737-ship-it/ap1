@@ -9504,6 +9504,9 @@ do
 LoopTab:AddSection({
     Name = "SetOwner kick"
 })
+local ownershipKick = ownershipKick or {}
+local Settings = Settings or { Loop = {} } 
+
 local loopKickV7Task = nil
 local loopKickV7FpsConn = nil
 
