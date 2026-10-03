@@ -10974,7 +10974,7 @@ antiTab:AddToggle({
         end
     end
 })
---[[
+
 do
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -11044,7 +11044,7 @@ antiTab:AddToggle({
 })
 
 end
-]]
+
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
