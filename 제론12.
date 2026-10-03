@@ -10974,7 +10974,90 @@ antiTab:AddToggle({
         end
     end
 })
+do
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 
+local Settings = {
+    Anti = {
+        AntiRagdoll = false,
+        LoopRagdoll = false
+    },
+    Misc = {
+        fakeDeath = false
+    }
+}
+
+local State = {
+    antiRagdollConns = {},
+    connections = {}
+}
+
+local Utility = {
+    isLocalAlive = function()
+        return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health > 0
+    end
+}
+
+antiTab:AddToggle({
+    Name = "Anti grab (Ragdoll)",
+    Default = false,
+    Flag = "c8tu22t97f",
+    Callback = function(v)
+        Settings.Anti.AntiRagdoll = v
+        if v then
+            State.antiRagdollConns = {}
+            local function applyProtection(char)
+                if not Settings.Anti.AntiRagdoll then return end
+                if not char then return end
+                if State.antiRagdollConns then
+                    for _, c in ipairs(State.antiRagdollConns) do pcall(function() c:Disconnect() end) end
+                end
+                State.antiRagdollConns = {}
+                local hum = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid", 5)
+                if not hum or hum.Health <= 0 then return end
+                hum.BreakJointsOnDeath = false
+                hum.AutoRotate = true
+                if hum.PlatformStand and not Settings.Misc.fakeDeath and not Settings.Anti.LoopRagdoll then hum.PlatformStand = false end
+                table.insert(State.antiRagdollConns, hum:GetPropertyChangedSignal("AutoRotate"):Connect(function()
+                    if Settings.Anti.AntiRagdoll and Utility.isLocalAlive() and hum.AutoRotate == false and not (type(getgenv) == "function" and getgenv().FTAP_SpinbotActive) then hum.AutoRotate = true end
+                end))
+                table.insert(State.antiRagdollConns, hum:GetPropertyChangedSignal("PlatformStand"):Connect(function()
+                    if Settings.Anti.AntiRagdoll and Utility.isLocalAlive() and not Settings.Misc.fakeDeath and not Settings.Anti.LoopRagdoll and hum.PlatformStand == true then hum.PlatformStand = false end
+                end))
+                table.insert(State.antiRagdollConns, RunService.RenderStepped:Connect(function()
+                    if Settings.Anti.AntiRagdoll and Utility.isLocalAlive() and hum.Sit and hum.SeatPart == nil then hum.Sit = false end
+                end))
+                table.insert(State.antiRagdollConns, hum.Died:Connect(function()
+                    hum.BreakJointsOnDeath = true
+                    if State.antiRagdollConns then
+                        for _, c in ipairs(State.antiRagdollConns) do pcall(function() c:Disconnect() end) end
+                        State.antiRagdollConns = {}
+                    end
+                end))
+            end
+            if Utility.isLocalAlive() and LocalPlayer.Character then applyProtection(LocalPlayer.Character) end
+            State.connections.antiRagdoll = LocalPlayer.CharacterAdded:Connect(function(char)
+                task.wait(0.6)
+                if Utility.isLocalAlive() then applyProtection(char) end
+            end)
+        else
+            if State.connections.antiRagdoll then 
+                State.connections.antiRagdoll:Disconnect() 
+                State.connections.antiRagdoll = nil 
+            end
+            if State.antiRagdollConns then
+                for _, c in ipairs(State.antiRagdollConns) do c:Disconnect() end
+                State.antiRagdollConns = nil
+            end
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum then hum.BreakJointsOnDeath = true end
+        end
+    end
+})
+end
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -11350,7 +11433,7 @@ antiTab:AddToggle({
     end
 })
 antiTab:AddToggle({
-    Name = "Anti Blobkill",
+    Name = "Anti Blobkill (no blobsit)",
     Default = false,
     Flag = "AntiBlobiwiwmanKill",
     Callback = function(v)
@@ -11518,7 +11601,129 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 
+do
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 
+local Settings = {Anti = {AntiHoldHamburger = false}}
+local State = {antiHoldSpamConnection = nil}
+
+local RemoteDispatcher = {
+    Flush = function(self) end,
+    Invoke = function(self, rf, ...)
+        if rf and rf:IsA("RemoteFunction") then
+            return rf:InvokeServer(...)
+        end
+    end,
+    Fire = function(self, re, ...)
+        if re and re:IsA("RemoteEvent") then
+            re:FireServer(...)
+        end
+    end
+}
+
+local function findOwnBurger(folder, markerName)
+    for _, item in pairs(folder:GetChildren()) do
+        if item.Name == "FoodHamburger" or item.Name == "FoodHamburger_Hold" or item:FindFirstChild(markerName) then
+            return item
+        end
+    end
+    return nil
+end
+
+local function claimBurger(burger, markerName)
+    if not burger:FindFirstChild(markerName) then
+        local marker = Instance.new("BoolValue")
+        marker.Name = markerName
+        marker.Parent = burger
+    end
+    return true
+end
+
+local function getBurgerHolder(burger)
+    local holdPart = burger:FindFirstChild("HoldPart")
+    if holdPart then
+        for _, child in pairs(holdPart:GetChildren()) do
+            if child:IsA("Weld") or child:IsA("Motor6D") or child:IsA("WeldConstraint") then
+                local part = child.Part1 or child.Part0
+                if part and part.Parent and part.Parent:FindFirstChild("Humanoid") then
+                    return part.Parent
+                end
+            end
+        end
+    end
+    return nil
+end
+
+antiTab:AddToggle({
+    Name = "Anti Hold Hamburger",
+    Default = false,
+    Flag = "971frqpigt",
+    Callback = function(v)
+        Settings.Anti.AntiHoldHamburger = v
+        if not v then RemoteDispatcher:Flush() end
+        if v then
+            if State.antiHoldSpamConnection then 
+                State.antiHoldSpamConnection:Disconnect() 
+                State.antiHoldSpamConnection = nil 
+            end
+            local lastHold = 0
+            local HOLD_INTERVAL = 0.05
+            State.antiHoldSpamConnection = RunService.Heartbeat:Connect(function()
+                if not Settings.Anti.AntiHoldHamburger then return end
+                local now = tick()
+                if now - lastHold < HOLD_INTERVAL then return end
+                lastHold = now
+                local character = LocalPlayer.Character
+                if not character or not character:FindFirstChild("Humanoid") or character.Humanoid.Health <= 0 then return end
+                local spawnedFolder = Workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+                local hamburger = spawnedFolder and findOwnBurger(spawnedFolder, "AntiHoldBurgerMarker")
+                if hamburger and not claimBurger(hamburger, "AntiHoldBurgerMarker") then
+                    hamburger = nil
+                end
+                if hamburger and hamburger.Name == "FoodHamburger" then
+                    hamburger.Name = "FoodHamburger_Hold"
+                end
+                if not hamburger or not hamburger:FindFirstChild("HoldPart") then
+                    pcall(function()
+                        RemoteDispatcher:Invoke(
+                            ReplicatedStorage.MenuToys.SpawnToyRemoteFunction,
+                            "FoodHamburger",
+                            CFrame.new(0, 300, 0),
+                            Vector3.new(0, 0, 0)
+                        )
+                    end)
+                    return
+                end
+                local holder = getBurgerHolder(hamburger)
+                if holder and holder ~= character then
+                    pcall(function()
+                        RemoteDispatcher:Fire(ReplicatedStorage.MenuToys.DestroyToy, hamburger)
+                    end)
+                    return
+                elseif holder == character then
+                    return
+                end
+                for _, part in hamburger:GetDescendants() do
+                    if part:IsA("BasePart") then part.CanCollide = false end
+                end
+                pcall(function()
+                    RemoteDispatcher:Invoke(hamburger.HoldPart.HoldItemRemoteFunction, hamburger, character)
+                end)
+            end)
+        else
+            if State.antiHoldSpamConnection then 
+                State.antiHoldSpamConnection:Disconnect() 
+                State.antiHoldSpamConnection = nil 
+            end
+        end
+    end
+})
+
+end
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
@@ -11772,6 +11977,46 @@ local RemoteDispatcher = {
         end
     end
 }
+local workspace = game:GetService("Workspace")
+local Settings = {Anti = {AntiPoison = false}}
+
+antiTab:AddToggle({
+    Name = "Anti Poison",
+    Default = false,
+    Callback = function(v)
+        Settings.Anti.AntiPoison = v
+        local map = workspace:FindFirstChild("Map")
+        local hole = map and map:FindFirstChild("Hole")
+        local poisonFolders = {}
+        if hole then
+            if hole:FindFirstChild("PoisonBigHole") then
+                table.insert(poisonFolders, hole.PoisonBigHole)
+            end
+            if hole:FindFirstChild("PoisonSmallHole") then
+                table.insert(poisonFolders, hole.PoisonSmallHole)
+            end
+        end
+        for _, folder in pairs(poisonFolders) do
+            if not folder then
+                continue
+            end
+            for _, obj in pairs(folder:GetDescendants()) do
+                if obj:IsA("Script") or obj:IsA("LocalScript") then
+                    obj.Disabled = v
+                end
+                if obj:IsA("BasePart") then
+                    if v then
+                        obj.CanTouch = false
+                        obj.CanCollide = false
+                    else
+                        obj.CanTouch = true
+                        obj.CanCollide = true
+                    end
+                end
+            end
+        end
+    end
+})
 
 antiTab:AddToggle({
     Name = "Anti Bring",
@@ -12200,35 +12445,104 @@ task.spawn(function()
         AntiBlobmanToggle:Set(true)
     end
 end)
-local antiRagBlobConnections = {}
+do
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+local Settings = {Anti = {AntiRagBlob = false}}
+local State = {antiRagBlobConns = {}}
+
+local Utility = {
+    isLocalAlive = function()
+        return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health > 0
+    end
+}
+
+local RemoteDispatcher = {
+    Flush = function(self) end,
+    Fire = function(self, remote, ...)
+        if remote and remote:IsA("RemoteEvent") then
+            remote:FireServer(...)
+        end
+    end
+}
+
+local function isGucciBlobman(model)
+    return model and (model.Name:lower():find("gucci") ~= nil)
+end
 
 antiTab:AddToggle({
-    Name = "Anti Ragdoll blob",
-    Flag = "wupvt97tgw",
+    Name = "Anti Ragdoll on Blob",
     Default = false,
-    Callback = function(Value)
-        if Value then
-            local RagdollRemote = game:GetService("ReplicatedStorage"):FindFirstChild("RagdollRemote")
-            local LocalPlayer = game:GetService("Players").LocalPlayer
-            
-            antiRagBlobConnections["RagdollCheck"] = game:GetService("RunService").Heartbeat:Connect(function()
-                local character = LocalPlayer.Character
-                local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    if humanoid.Sit then
-                        humanoid.Sit = false
-                    end
+    Flag = "f997tqqt9fu",
+    Callback = function(v)
+        Settings.Anti.AntiRagBlob = v
+        if not v then RemoteDispatcher:Flush() end
+        if v then
+            local RagdollRemote = ReplicatedStorage:FindFirstChild("RagdollRemote")
+            local RagdolledSit = false
+            local function DiscAR(key)
+                if State.antiRagBlobConns[key] then 
+                    State.antiRagBlobConns[key]:Disconnect() 
+                    State.antiRagBlobConns[key] = nil 
                 end
+            end
+            local function setupCharacter(char)
+                if not Utility.isLocalAlive() then return end
+                local hum = char and char:FindFirstChild("Humanoid")
+                local HRP = char and char:FindFirstChild("HumanoidRootPart")
+                if hum and HRP and RagdollRemote then
+                    DiscAR("ARSeat")
+                    State.antiRagBlobConns["ARSeat"] = hum:GetPropertyChangedSignal("SeatPart"):Connect(function()
+                        if not Utility.isLocalAlive() then return end
+                        if hum.SeatPart and hum.SeatPart.Parent and hum.SeatPart.Parent.Name == "CreatureBlobman" and not isGucciBlobman(hum.SeatPart.Parent) and not RagdolledSit then
+                            RagdolledSit = true
+                            local Seat = hum.SeatPart
+                            local waitStart = tick()
+                            while not hum.Sit do
+                                if not Utility.isLocalAlive() or tick() - waitStart > 3 then RagdolledSit = false return end
+                                task.wait(0.05)
+                            end
+                            RemoteDispatcher:Fire(RagdollRemote, HRP, 3)
+                            waitStart = tick()
+                            while not (hum:FindFirstChild("Ragdolled") and hum.Ragdolled.Value) and not hum.Sit do
+                                if not Utility.isLocalAlive() or tick() - waitStart > 3 then RagdolledSit = false return end
+                                task.wait(0.05)
+                            end
+                            task.wait(0.4)
+                            if not Utility.isLocalAlive() then RagdolledSit = false return end
+                            hum.Sit = false
+                            if Seat and Seat:IsA("Part") then Seat:Sit(hum) end
+                            task.delay(0.25, function()
+                                while hum and hum.SeatPart and Utility.isLocalAlive() do
+                                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                        RemoteDispatcher:Fire(RagdollRemote, LocalPlayer.Character.HumanoidRootPart, 1)
+                                    end
+                                    task.wait(0.05)
+                                end
+                                RagdolledSit = false
+                            end)
+                        end
+                    end)
+                end
+            end
+            if Utility.isLocalAlive() and LocalPlayer.Character then setupCharacter(LocalPlayer.Character) end
+            DiscAR("ARChar")
+            State.antiRagBlobConns["ARChar"] = LocalPlayer.CharacterAdded:Connect(function(newChar)
+                task.wait(0.6)
+                if Utility.isLocalAlive() then setupCharacter(newChar) end
             end)
         else
-            if antiRagBlobConnections["RagdollCheck"] then
-                antiRagBlobConnections["RagdollCheck"]:Disconnect()
-                antiRagBlobConnections["RagdollCheck"] = nil
+            for _, conn in pairs(State.antiRagBlobConns) do 
+                if conn then conn:Disconnect() end 
             end
+            State.antiRagBlobConns = {}
         end
-    end    
+    end
 })
 
+end
 
 antiTab:AddToggle({
     Name = "Anti massless <font color='rgb(0,0,255)'>[massless]</font>",
