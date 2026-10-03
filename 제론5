@@ -9505,10 +9505,25 @@ LoopTab:AddSection({
     Name = "SetOwner kick"
 })
 local ownershipKick = ownershipKick or {}
-local Settings = Settings or { Loop = {} } 
+local Settings = Settings or { Loop = {} }
+local playersInLoop1V = playersInLoop1V or {}
+local playersInLoop2V = playersInLoop2V or {}
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 
 local loopKickV7Task = nil
 local loopKickV7FpsConn = nil
+
+local function _isMyCharacterPart(part)
+    if type(isMyCharacterPart) == "function" then
+        local s, r = pcall(isMyCharacterPart, part)
+        if s then return r end
+    end
+    return false
+end
 
 local function cleanupOwnershipKickV7Target()
     local targetName = playersInLoop2V[1]
@@ -9556,7 +9571,7 @@ ownershipKick["Loop Kick V7"] = function(v)
             return
         end
         local savedPos = myRoot.CFrame
-        rememberOwnershipSavedPos(savedPos)
+        if type(rememberOwnershipSavedPos) == "function" then pcall(rememberOwnershipSavedPos, savedPos) end
         local dragging = false
         local grabStartTime = 0
         local checkStartTime = 0
@@ -9606,22 +9621,22 @@ ownershipKick["Loop Kick V7"] = function(v)
                 if not dragging then
                     if (targetRoot.Position - myRoot.Position).Magnitude > 29 then
                         if ownershipKick.bring then
-                            executeBring(targetRoot, savedPos)
+                            if type(executeBring) == "function" then pcall(executeBring, targetRoot, savedPos) end
                         else
                             task.wait(0.1)
                             continue
                         end
                     end
-                    pauseOwnershipPosLock()
+                    if type(pauseOwnershipPosLock) == "function" then pcall(pauseOwnershipPosLock) end
                     cleanupBodies()
                     checkStartTime = 0
-                    if not isMyCharacterPart(targetRoot) then
+                    if not _isMyCharacterPart(targetRoot) then
                         pcall(function()
                             targetHum.PlatformStand = true
                             targetHum.Sit = true
-                            if GE.SetNetworkOwner then GE.SetNetworkOwner:FireServer(targetRoot, targetRoot.CFrame) end
-                            if GE.SetNetworkOwner then GE.SetNetworkOwner:FireServer(targetRoot, targetRoot.CFrame) end
-                            if GE.DestroyGrabLine then GE.DestroyGrabLine:FireServer(targetRoot) end
+                            if GE:FindFirstChild("SetNetworkOwner") then GE.SetNetworkOwner:FireServer(targetRoot, targetRoot.CFrame) end
+                            if GE:FindFirstChild("SetNetworkOwner") then GE.SetNetworkOwner:FireServer(targetRoot, targetRoot.CFrame) end
+                            if GE:FindFirstChild("DestroyGrabLine") then GE.DestroyGrabLine:FireServer(targetRoot) end
                         end)
                     end
                     myRoot.AssemblyLinearVelocity = Vector3.zero
@@ -9640,7 +9655,7 @@ ownershipKick["Loop Kick V7"] = function(v)
                         myRoot.AssemblyLinearVelocity = Vector3.zero
                         myRoot.AssemblyAngularVelocity = Vector3.zero
                     end
-                    resumeOwnershipPosLock()
+                    if type(resumeOwnershipPosLock) == "function" then pcall(resumeOwnershipPosLock) end
                     local lockPos = savedPos * CFrame.new(5, 20, 4)
                     if bodyPos and bodyPos.Parent then
                         bodyPos.Position = lockPos.Position
@@ -9649,9 +9664,9 @@ ownershipKick["Loop Kick V7"] = function(v)
                         createBodies(targetRoot, lockPos.Position)
                     end
                     targetHum.PlatformStand = true
-                    if not isMyCharacterPart(targetRoot) then
+                    if not _isMyCharacterPart(targetRoot) then
                     pcall(function()
-                        if GE.SetNetworkOwner and GE.DestroyGrabLine then
+                        if GE:FindFirstChild("SetNetworkOwner") and GE:FindFirstChild("DestroyGrabLine") then
                             if currentFPS > 200 then
                                 GE.SetNetworkOwner:FireServer(targetRoot, lockPos)
                                 GE.SetNetworkOwner:FireServer(targetRoot, lockPos)
@@ -9679,7 +9694,7 @@ ownershipKick["Loop Kick V7"] = function(v)
                             checkStartTime = 0
                             cleanupBodies()
                             if ownershipKick.bring then
-                                executeBring(targetRoot, savedPos)
+                                if type(executeBring) == "function" then pcall(executeBring, targetRoot, savedPos) end
                             end
                         else
                             checkStartTime = tick()
@@ -9700,49 +9715,78 @@ ownershipKick["Loop Kick V7"] = function(v)
         end
         cleanupBodies()
         if ownershipKick.posLocked and myRoot and myRoot.Parent then myRoot.CFrame = savedPos end
-        resumeOwnershipPosLock()
+        if type(resumeOwnershipPosLock) == "function" then pcall(resumeOwnershipPosLock) end
         loopKickV7Task = nil
     end)
 end
 
-LoopTab:AddToggle({
-    Name = "Loop Kick SET  <font color='rgb(255,150,0)'>[OP kick]</font>",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-            table.clear(playersInLoop2V)
-            for i, e in ipairs(playersInLoop1V) do
-                local nameOnly = e:match("^(.-) %(") or e
-                table.insert(playersInLoop2V, nameOnly)
+if LoopTab and type(LoopTab.AddToggle) == "function" then
+    LoopTab:AddToggle({
+        Name = "Loop Kick SET    <font color='rgb(255,150,0)'>[Onwer kick]</font>",
+        Default = false,
+        Callback = function(Value)
+            if Value then
+                table.clear(playersInLoop2V)
+                for i, e in ipairs(playersInLoop1V) do
+                    local nameOnly = e:match("^(.-) %(") or e
+                    table.insert(playersInLoop2V, nameOnly)
+                end
+                if type(ownershipKick["Loop Kick V7"]) == "function" then ownershipKick["Loop Kick V7"](Value) end
+            else
+                table.clear(playersInLoop2V)
+                if type(ownershipKick["Loop Kick V7"]) == "function" then ownershipKick["Loop Kick V7"](Value) end
             end
-            ownershipKick["Loop Kick V7"](Value)
-        else
-            table.clear(playersInLoop2V)
-            ownershipKick["Loop Kick V7"](Value)
         end
-    end
-})
+    })
+end
+
 local loopKickV5Task = nil
 local palletRagdollV5Task = nil
 local loopKickV5FrameCount = 0
 local KICK_V5_OFFSET = CFrame.new(5, 16, 2)
 
+local function _isLocalAlive()
+    if type(Utility) == "table" and type(Utility.isLocalAlive) == "function" then
+        local s, r = pcall(Utility.isLocalAlive)
+        if s then return r end
+    end
+    return true
+end
+
+local function _checkDesync(t)
+    if type(TargetPCLDManager) == "table" and type(TargetPCLDManager.checkDesync) == "function" then
+        local s, r = pcall(TargetPCLDManager.checkDesync, t)
+        if s then return r end
+    end
+    return false
+end
+
+local function _fireDispatcher(...)
+    if type(RemoteDispatcher) == "table" and type(RemoteDispatcher.Fire) == "function" then
+        pcall(RemoteDispatcher.Fire, RemoteDispatcher, ...)
+    end
+end
+
 ownershipKick["Loop Kick V5"] = function(v)
     Settings.Loop.ownershipKickV5Active = v
     if not v then
         Settings.Loop.palletRagdollV5Active = false
-        destroyTargetIndicator()
+        if type(destroyTargetIndicator) == "function" then pcall(destroyTargetIndicator) end
         if loopKickV5Task then task.cancel(loopKickV5Task) loopKickV5Task = nil end
         if palletRagdollV5Task then task.cancel(palletRagdollV5Task) palletRagdollV5Task = nil end
         task.spawn(function()
             pcall(function()
-                local inv = BlobmanBetaFeature.getInv()
-                if inv then
-                    local pallet = inv:FindFirstChild("PalletForRagdollV5")
-                    if pallet then RemoteDispatcher:Fire(DeleteToyRE, pallet) end
+                if type(BlobmanBetaFeature) == "table" and type(BlobmanBetaFeature.getInv) == "function" then
+                    local inv = BlobmanBetaFeature.getInv()
+                    if inv then
+                        local pallet = inv:FindFirstChild("PalletForRagdollV5")
+                        if pallet and type(DeleteToyRE) ~= "nil" then 
+                            _fireDispatcher(DeleteToyRE, pallet) 
+                        end
+                    end
                 end
             end)
-            pcall(cleanupOwnershipKickTarget)
+            if type(cleanupOwnershipKickTarget) == "function" then pcall(cleanupOwnershipKickTarget) end
         end)
         return
     end
@@ -9754,8 +9798,10 @@ ownershipKick["Loop Kick V5"] = function(v)
                 return Settings.Loop.palletRagdollV5Active and Settings.Loop.ownershipKickV5Active
             end
             while isOn() do
-                if State.isRespawning then task.wait(0.3) continue end
-                pcall(startOwnershipPalletHammer, isOn, "PalletForRagdollV5")
+                if type(State) == "table" and State.isRespawning then task.wait(0.3) continue end
+                if type(startOwnershipPalletHammer) == "function" then 
+                    pcall(startOwnershipPalletHammer, isOn, "PalletForRagdollV5")
+                end
                 if not isOn() then break end
                 task.wait(0.1)
             end
@@ -9779,8 +9825,8 @@ ownershipKick["Loop Kick V5"] = function(v)
         local function cleanupPhysicsObjects()
             isGrabbing = false
             currentTargetRoot = nil
-            for _, v in pairs(attachments) do
-                if v then pcall(function() v:Destroy() end) end
+            for _, attach in pairs(attachments) do
+                if attach then pcall(function() attach:Destroy() end) end
             end
             attachments = {}
         end
@@ -9802,11 +9848,11 @@ ownershipKick["Loop Kick V5"] = function(v)
         local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
         if not myRoot then Settings.Loop.ownershipKickV5Active = false return end
         local savedPos = myRoot.CFrame
-        rememberOwnershipSavedPos(savedPos)
+        if type(rememberOwnershipSavedPos) == "function" then pcall(rememberOwnershipSavedPos, savedPos) end
         local lastMyRoot = myRoot
 
         local function pausedRespawn()
-            return not Utility.isLocalAlive()
+            return not _isLocalAlive()
         end
 
         while isOn() do
@@ -9877,19 +9923,26 @@ ownershipKick["Loop Kick V5"] = function(v)
                 isGrabbing = false
                 startTime = nil
                 checkStartTime = nil
-                if ownershipKick.bring and not isAntiGucciActive() and myRoot and myRoot.Parent then
+                local antiGucci = false
+                if type(isAntiGucciActive) == "function" then
+                    local s, r = pcall(isAntiGucciActive)
+                    if s then antiGucci = r end
+                end
+                if ownershipKick.bring and not antiGucci and myRoot and myRoot.Parent then
                     myRoot.CFrame = tRoot.CFrame * CFrame.new(0, 0, 3)
                     myRoot.AssemblyLinearVelocity = ZERO_VECTOR
                     myRoot.AssemblyAngularVelocity = ZERO_VECTOR
                 end
                 for _ = 1, 3 do
-                    pcall(function() RemoteDispatcher:Fire(setNetworkOwnerEvent, tRoot, tRoot.CFrame) end)
+                    if type(setNetworkOwnerEvent) ~= "nil" then
+                        _fireDispatcher(setNetworkOwnerEvent, tRoot, tRoot.CFrame)
+                    end
                 end
                 task.wait(0.05)
                 continue
             end
 
-            if TargetPCLDManager.checkDesync(target) then
+            if _checkDesync(target) then
                 cleanupPhysicsObjects()
                 isGrabbing = false
                 startTime = nil
@@ -9903,8 +9956,13 @@ ownershipKick["Loop Kick V5"] = function(v)
                     task.wait(0.05)
                     continue
                 end
-                pauseOwnershipPosLock()
-                if ownershipKick.bring and not isAntiGucciActive() and Utility.isLocalAlive() and myRoot and myRoot.Parent then
+                if type(pauseOwnershipPosLock) == "function" then pcall(pauseOwnershipPosLock) end
+                local antiGucci = false
+                if type(isAntiGucciActive) == "function" then
+                    local s, r = pcall(isAntiGucciActive)
+                    if s then antiGucci = r end
+                end
+                if ownershipKick.bring and not antiGucci and _isLocalAlive() and myRoot and myRoot.Parent then
                     myRoot.CFrame = tRoot.CFrame * CFrame.new(0, -6, -10)
                     myRoot.AssemblyLinearVelocity = ZERO_VECTOR
                     myRoot.AssemblyAngularVelocity = ZERO_VECTOR
@@ -9915,13 +9973,13 @@ ownershipKick["Loop Kick V5"] = function(v)
                 if tick() - startTime > GRAB_TIMEOUT then
                     isGrabbing = true
                     startTime = nil
-                    if ownershipKick.bring and not isAntiGucciActive() and myRoot and myRoot.Parent and savedPos then
+                    if ownershipKick.bring and not antiGucci and myRoot and myRoot.Parent and savedPos then
                         myRoot.CFrame = savedPos
                         myRoot.AssemblyLinearVelocity = ZERO_VECTOR
                     end
-                    for _, v in pairs(tRoot:GetChildren()) do
-                        if v:IsA("BodyPosition") or v:IsA("BodyGyro") or v:IsA("BodyVelocity") or v:IsA("BodyForce") then
-                            pcall(function() v:Destroy() end)
+                    for _, v_ch in pairs(tRoot:GetChildren()) do
+                        if v_ch:IsA("BodyPosition") or v_ch:IsA("BodyGyro") or v_ch:IsA("BodyVelocity") or v_ch:IsA("BodyForce") then
+                            pcall(function() v_ch:Destroy() end)
                         end
                     end
                     local bp = Instance.new("BodyPosition", tRoot)
@@ -9939,20 +9997,24 @@ ownershipKick["Loop Kick V5"] = function(v)
                     tHum:ChangeState(Enum.HumanoidStateType.Physics)
                 end
             else
-                resumeOwnershipPosLock()
+                if type(resumeOwnershipPosLock) == "function" then pcall(resumeOwnershipPosLock) end
                 tHum.Sit = true
                 tHum.AutoRotate = false
                 pcall(function() tHum:ChangeState(Enum.HumanoidStateType.Physics) end)
-                ensureTargetIndicator(target)
+                if type(ensureTargetIndicator) == "function" then pcall(ensureTargetIndicator, target) end
                 local v5Rag = tHum:FindFirstChild("Ragdolled")
-                setTargetIndicator(v5Rag and v5Rag.Value == true)
+                if type(setTargetIndicator) == "function" then pcall(setTargetIndicator, v5Rag and v5Rag.Value == true) end
 
                 if not pausedRespawn() then
-                    pcall(function() RemoteDispatcher:Fire(setNetworkOwnerEvent, tRoot, tRoot.CFrame) end)
+                    if type(setNetworkOwnerEvent) ~= "nil" then
+                        _fireDispatcher(setNetworkOwnerEvent, tRoot, tRoot.CFrame)
+                    end
                     loopKickV5FrameCount = loopKickV5FrameCount + 1
                     if loopKickV5FrameCount >= 5 then
                         loopKickV5FrameCount = 0
-                        pcall(function() RemoteDispatcher:Fire(destroyGrabLineEvent, tRoot) end)
+                        if type(destroyGrabLineEvent) ~= "nil" then
+                            _fireDispatcher(destroyGrabLineEvent, tRoot)
+                        end
                     end
                 end
 
@@ -9977,7 +10039,7 @@ ownershipKick["Loop Kick V5"] = function(v)
                         startTime = tick()
                         checkStartTime = nil
                         loopKickV5FrameCount = 0
-                        executeBring(tRoot, savedPos)
+                        if type(executeBring) == "function" then pcall(executeBring, tRoot, savedPos) end
                         continue
                     end
                 end
@@ -9985,7 +10047,7 @@ ownershipKick["Loop Kick V5"] = function(v)
         end
 
         cleanupPhysicsObjects()
-        destroyTargetIndicator()
+        if type(destroyTargetIndicator) == "function" then pcall(destroyTargetIndicator) end
         if myRoot and myRoot.Parent and savedPos then
             pcall(function()
                 myRoot.CFrame = savedPos
@@ -9993,29 +10055,30 @@ ownershipKick["Loop Kick V5"] = function(v)
                 myRoot.AssemblyAngularVelocity = ZERO_VECTOR
             end)
         end
-        resumeOwnershipPosLock()
+        if type(resumeOwnershipPosLock) == "function" then pcall(resumeOwnershipPosLock) end
         Settings.Loop.ownershipKickV5Active = false
     end)
 end
 
-LoopTab:AddToggle({
-    Name = "Loop Kick SET V2   <font color='rgb(0,255,150)'>[ragdoll KICK]</font>",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-            table.clear(playersInLoop2V)
-            for i, e in ipairs(playersInLoop1V) do
-                local nameOnly = e:match("^(.-) %(") or e
-                table.insert(playersInLoop2V, nameOnly)
+if LoopTab and type(LoopTab.AddToggle) == "function" then
+    LoopTab:AddToggle({
+        Name = "Loop Kick SET   <font color='rgb(0,255,150)'>[kick + ragdoll]</font>",
+        Default = false,
+        Callback = function(Value)
+            if Value then
+                table.clear(playersInLoop2V)
+                for i, e in ipairs(playersInLoop1V) do
+                    local nameOnly = e:match("^(.-) %(") or e
+                    table.insert(playersInLoop2V, nameOnly)
+                end
+                if type(ownershipKick["Loop Kick V5"]) == "function" then ownershipKick["Loop Kick V5"](Value) end
+            else
+                table.clear(playersInLoop2V)
+                if type(ownershipKick["Loop Kick V5"]) == "function" then ownershipKick["Loop Kick V5"](Value) end
             end
-            ownershipKick["Loop Kick V5"](Value)
-        else
-            table.clear(playersInLoop2V)
-            ownershipKick["Loop Kick V5"](Value)
         end
-    end
-})
-
+    })
+end
 
 end
 LoopTab:AddSection({
