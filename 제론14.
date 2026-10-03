@@ -13356,43 +13356,41 @@ antiTab:AddToggle({
     end
 })
 
-local BreakPCLDConnection = nil
-local BreakPCLDEnabled = false
 
 antiTab:AddToggle({
     Name = "Break Pcld",
     Default = false,
     Callback = function(Value)
-        BreakPCLDEnabled = Value
+        local hkExpectDeath = false
+        local hkSalmonList = {}
+        hkSalmonList[LocalPlayer.UserId] = true
+        
+        local function hkApplySalmon(char)
+            if not char then return end
+            local newHum = char:WaitForChild("Humanoid", 5)
+            if not newHum then return end
 
-        if BreakPCLDConnection then
-            BreakPCLDConnection:Disconnect()
-            BreakPCLDConnection = nil
-        end
-
-        if not Value then
-            return
-        end
-
-        local function KillCharacter(char)
-            if not BreakPCLDEnabled then
-                return
+            if hkSalmonList[LocalPlayer.UserId] and not hkExpectDeath then
+                hkExpectDeath = true
+                newHum:ChangeState(Enum.HumanoidStateType.Dead)
+            else
+                hkExpectDeath = false
             end
+        end
+        
+        LocalPlayer.CharacterAdded:Connect(function(char)
+            hkApplySalmon(char)
+        end)
+        
+        hkSalmonList[LocalPlayer.UserId] = Value and true or nil
 
-            local hum = char:WaitForChild("Humanoid", 5)
-
+        if Value then
+            hkExpectDeath = false
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
             if hum then
                 hum.Health = 0
             end
-        end
-
-        BreakPCLDConnection = LocalPlayer.CharacterAdded:Connect(function(char)
-            task.wait(0.1)
-            KillCharacter(char)
-        end)
-
-        if LocalPlayer.Character then
-            KillCharacter(LocalPlayer.Character)
         end
     end
 })
