@@ -13389,7 +13389,7 @@ function AntiPCLDF()
     end
 end
 
-antiTab:CreateToggle({
+antiTab:AddToggle({
     Name = "pcld Break ",
     CurrentValue = false,
     Flag = "16",
