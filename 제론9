@@ -579,7 +579,7 @@ pcall(function()
     end
 end)
 end
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion"))()
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/qwerqwerg1u/RRTS/main/Orion.txt"))()
 
 
 local Window = OrionLib:MakeWindow({
