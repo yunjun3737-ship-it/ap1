@@ -17257,6 +17257,14 @@ DDTab:AddSection({
 	Name = "Dance"
 })
 
+
+local activeTracks = activeTracks or {}
+local currentTrack = currentTrack or nil
+local stopLoopFn = nil
+local stopDanceLoopFn = nil
+local AnimSpeedMultiplier = 1
+local CurrentFTAPTrack = CurrentFTAPTrack or nil
+
 local emoteList = {
     {name = "Head Throw", id = 35154961, speed = 1, weight = 1, loopSpeed = 1} ,
     {name = "Floating Head", id = 121572214, speed = 1, weight = 1} ,
@@ -17305,9 +17313,18 @@ local danceList = {
     {name = "Jump Dance", id = 52155728, speed = 1, weight = 1, loopSpeed = 1} ,
 }
 
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+local animator = humanoid:WaitForChild("Animator")
+
 function stopAllTracks()
-    for _, track in ipairs(activeTracks)do
-        pcall(function()track:Stop()track:Destroy()end)
+    
+    if type(activeTracks) == "table" then
+        for _, track in ipairs(activeTracks) do
+            pcall(function() track:Stop() track:Destroy() end)
+        end
     end
     activeTracks = {}
     currentTrack = nil
@@ -17326,9 +17343,12 @@ function playAnimation(data)
     anim.AnimationId = "rbxassetid://" .. data.id
     local track = animator:LoadAnimation(anim)
     currentTrack = track
-    table.insert(activeTracks, track)
+    
+    if type(activeTracks) == "table" then
+        table.insert(activeTracks, track)
+    end
 
-    function playOnce()
+    local function playOnce()
         if not active or currentTrack ~= track then return end
         if not track.IsPlaying then
             track:Play(0.1, data.weight or 1, (data.speed or 1) * AnimSpeedMultiplier)
@@ -17350,26 +17370,26 @@ function playAnimation(data)
     return function()
         active = false
         if currentTrack == track then currentTrack = nil end
-        pcall(function()track:Stop()track:Destroy()end)
+        pcall(function() track:Stop() track:Destroy() end)
     end
 end
 
 local emoteNames = {"None"}
 local danceNames = {"None"}
-for _, d in ipairs(emoteList)do table.insert(emoteNames, d.name)end
-for _, d in ipairs(danceList)do table.insert(danceNames, d.name)end
+for _, d in ipairs(emoteList) do table.insert(emoteNames, d.name) end
+for _, d in ipairs(danceList) do table.insert(danceNames, d.name) end
 
 DDTab:AddDropdown({
     Name = "Emote",
     Default = "None",
-    Flag = "fxuiwofuxw",
+    Flag = "8vug2oihbqg",
     Options = emoteNames,
     Callback = function(Value)
         local sel = Value
         stopEverything()
         if sel == "None" then return end
-        for _, data in ipairs(emoteList)do
-            if data.name == sel then stopLoopFn = playAnimation(data)return end
+        for _, data in ipairs(emoteList) do
+            if data.name == sel then stopLoopFn = playAnimation(data) return end
         end
     end
 })
@@ -17377,14 +17397,14 @@ DDTab:AddDropdown({
 DDTab:AddDropdown({
     Name = "Dance",
     Default = "None",
-    Flag = "i61rd68c2pigs",
+    Flag = "97g2t97gqpd",
     Options = danceNames,
     Callback = function(Value)
         local sel = Value
         stopEverything()
         if sel == "None" then return end
-        for _, data in ipairs(danceList)do
-            if data.name == sel then stopDanceLoopFn = playAnimation(data)return end
+        for _, data in ipairs(danceList) do
+            if data.name == sel then stopDanceLoopFn = playAnimation(data) return end
         end
     end
 })
@@ -17392,9 +17412,9 @@ DDTab:AddDropdown({
 DDTab:AddSlider({
     Name = "Animation Speed",
     Min = 0.1,
-    Max = 20,
+    Max = 10,
     Default = 1,
-    Flag = "9f97rqo9fyr2",
+    Flag = "8yxr168ft1",
     Color = Color3.fromRGB(255, 255, 255),
     Increment = 0.1,
     ValueName = "x",
@@ -17409,15 +17429,8 @@ DDTab:AddSlider({
     end
 })
 
-LocalPlayer.CharacterAdded:Connect(function(character)
-    if AnimationToggle then
-        local humanoid = character:WaitForChild("Humanoid", 10)
-        if humanoid then
-            task.wait(1)
-            playSelectedAnimation()
-        end
-    end
-end)
+
+
 --local LineLagT = false
 --local LineLagV = 50
 
