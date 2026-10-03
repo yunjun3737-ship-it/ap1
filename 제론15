@@ -13357,13 +13357,16 @@ antiTab:AddToggle({
 })
 
 
+local hkExpectDeath = false
+local hkSalmonList = {} 
+local breakPcldConnection = nil
+
 antiTab:AddToggle({
     Name = "Break Pcld",
     Default = false,
     Callback = function(Value)
-        local hkExpectDeath = false
-        local hkSalmonList = {}
-        hkSalmonList[LocalPlayer.UserId] = true
+        
+        hkSalmonList[LocalPlayer.UserId] = Value and true or nil
         
         local function hkApplySalmon(char)
             if not char then return end
@@ -13378,14 +13381,32 @@ antiTab:AddToggle({
             end
         end
         
-        LocalPlayer.CharacterAdded:Connect(function(char)
-            hkApplySalmon(char)
-        end)
-        
-        hkSalmonList[LocalPlayer.UserId] = Value and true or nil
-
         if Value then
             hkExpectDeath = false
+            
+        
+            if breakPcldConnection then
+                breakPcldConnection:Disconnect()
+            end
+            
+            
+            breakPcldConnection = LocalPlayer.CharacterAdded:Connect(function(char)
+                hkApplySalmon(char)
+            end)
+
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum.Health = 0
+            end
+        else
+            
+            if breakPcldConnection then
+                breakPcldConnection:Disconnect()
+                breakPcldConnection = nil
+            end
+            
+            
             local char = LocalPlayer.Character
             local hum = char and char:FindFirstChildOfClass("Humanoid")
             if hum then
@@ -13394,6 +13415,7 @@ antiTab:AddToggle({
         end
     end
 })
+
 antiTab:AddToggle({
     Name = "ragdoll",
     
