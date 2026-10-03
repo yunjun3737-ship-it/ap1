@@ -11948,11 +11948,12 @@ local Workspace = game:GetService("Workspace")
 antiTab:AddToggle({
     Name = "Anti Poison",
     Default = false,
-    Flag = "f7t11v7t92yu9v",
+    Flag = "cout229tf7",
     Callback = function(Value)
         local map = Workspace:FindFirstChild("Map")
         local hole = map and map:FindFirstChild("Hole")
         local poisonFolders = {}
+        
         if hole then
             if hole:FindFirstChild("PoisonBigHole") then
                 table.insert(poisonFolders, hole.PoisonBigHole)
@@ -11971,16 +11972,15 @@ antiTab:AddToggle({
                 if obj:IsA("BasePart") then
                     if Value then
                         obj.CanTouch = false
-                        obj.CanCollide = false
                     else
                         obj.CanTouch = true
-                        obj.CanCollide = true
                     end
                 end
             end
         end
     end
 })
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Workspace = game:GetService("Workspace")
