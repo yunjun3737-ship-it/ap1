@@ -1,14 +1,53 @@
-G = game.ReplicatedStorage.GrabEvents G.EndGrabEarly:Destroy()
-Instance.new('RemoteEvent' , G).Name = 'EndGrabEarly'if _G.DEX then
-loadstring(game:HttpGet'https://github.com/AZYsGithub/DexPlusPlus/releases/latest/download/out.lua')()
+G = game.ReplicatedStorage.GrabEvents
+G.EndGrabEarly:Destroy()
+Instance.new('RemoteEvent', G).Name = 'EndGrabEarly'
+
+if _G.DEX then
+    loadstring(game:HttpGet('https://github.com/AZYsGithub/DexPlusPlus/releases/latest/download/out.lua'))()
 end
-local a = loadstring(game:HttpGet'https://sirius.menu/rayfield')()
+
+local a = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 Whitelist = {}
 playersInLoop1V = {}
 playersInLoop2V = {}
-local b , c = game:GetService'Players' , game:GetService'CoreGui'local d = b.LocalPlayer
-local e , f , g , h , i , j , k , l = d:GetMouse() , workspace.CurrentCamera , game:GetService'ReplicatedStorage' , game:GetService'UserInputService' , game:GetService'TextChatService' , game:GetService'TweenService' , game:GetService'RunService' , game:GetService'Debris'Auto = queue_on_teleport inv = workspace[d.Name..'SpawnedInToys']
-inPlot = workspace.PlotItems.PlayersInPlots Explode = g.BombEvents.BombExplode CharacterEvents = g.CharacterEvents Typing = CharacterEvents.ChatTyping Look = CharacterEvents.Look Ragdoll = CharacterEvents.RagdollRemote Struggle = CharacterEvents.Struggle Gamepass = g.GamepassEvents Reach = Gamepass.FurtherReachBoughtNotifier Color = Gamepass.MulticolorLineBoughtNotifier Grab = g.GrabEvents EndGrabEarly = Grab.EndGrabEarly CreateLine = Grab.CreateGrabLine ExtendLine = Grab.ExtendGrabLine SetOwner = Grab.SetNetworkOwner UnOwner = Grab.DestroyGrabLine HoldEvents = g.HoldEvents Drop = HoldEvents.Drop Hold = HoldEvents.Hold Use = HoldEvents.Use MenuToys = g.MenuToys LimitedTime = g.MenuToys.LimitedTimeToyEvent BuyToy = MenuToys.BuyToyRemoteFunction SpawnToy = MenuToys.SpawnToyRemoteFunction DestroyToy = MenuToys.DestroyToy StickyPartEvent = g.PlayerEvents.StickyPartEvent RepStorage = game:GetService'ReplicatedStorage'SetNetworkOwner = g.GrabEvents.SetNetworkOwner DestroyGrabLine = g.GrabEvents.DestroyGrabLine PPs = workspace.PlotItems.PlayersInPlots
+
+local b, c = game:GetService('Players'), game:GetService('CoreGui')
+local d = b.LocalPlayer
+local e, f, g, h, i, j, k, l = d:GetMouse(), workspace.CurrentCamera, game:GetService('ReplicatedStorage'), game:GetService('UserInputService'), game:GetService('TextChatService'), game:GetService('TweenService'), game:GetService('RunService'), game:GetService('Debris')
+
+Auto = queue_on_teleport
+inv = workspace[d.Name .. 'SpawnedInToys']
+inPlot = workspace.PlotItems.PlayersInPlots
+Explode = g.BombEvents.BombExplode
+CharacterEvents = g.CharacterEvents
+Typing = CharacterEvents.ChatTyping
+Look = CharacterEvents.Look
+Ragdoll = CharacterEvents.RagdollRemote
+Struggle = CharacterEvents.Struggle
+Gamepass = g.GamepassEvents
+Reach = Gamepass.FurtherReachBoughtNotifier
+Color = Gamepass.MulticolorLineBoughtNotifier
+Grab = g.GrabEvents
+EndGrabEarly = Grab.EndGrabEarly
+CreateLine = Grab.CreateGrabLine
+ExtendLine = Grab.ExtendGrabLine
+SetOwner = Grab.SetNetworkOwner
+UnOwner = Grab.DestroyGrabLine
+HoldEvents = g.HoldEvents
+Drop = HoldEvents.Drop
+Hold = HoldEvents.Hold
+Use = HoldEvents.Use
+MenuToys = g.MenuToys
+LimitedTime = g.MenuToys.LimitedTimeToyEvent
+BuyToy = MenuToys.BuyToyRemoteFunction
+SpawnToy = MenuToys.SpawnToyRemoteFunction
+DestroyToy = MenuToys.DestroyToy
+StickyPartEvent = g.PlayerEvents.StickyPartEvent
+RepStorage = game:GetService('ReplicatedStorage')
+SetNetworkOwner = g.GrabEvents.SetNetworkOwner
+DestroyGrabLine = g.GrabEvents.DestroyGrabLine
+PPs = workspace.PlotItems.PlayersInPlots
+
 function PcldOwner()
     task.spawn(
     function ()
