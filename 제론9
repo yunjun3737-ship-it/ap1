@@ -9504,8 +9504,7 @@ do
 LoopTab:AddSection({
     Name = "SetOwner kick"
 })
-
-   local ownershipKick = ownershipKick or {}
+local ownershipKick = ownershipKick or {}
 local Settings = Settings or { Loop = {} }
 local playersInLoop1V = playersInLoop1V or {}
 local playersInLoop2V = playersInLoop2V or {}
@@ -9525,28 +9524,30 @@ local function _safeCall(func, ...)
     return nil
 end
 
-local function _isMyCharacterPart(part)
-    if type(isMyCharacterPart) == "function" then
-        local s, r = pcall(isMyCharacterPart, part)
-        if s then return r end
-    end
-    return false
-end
-
 local function cleanupOwnershipKickV7Target(targetName)
     local target = targetName and Players:FindFirstChild(targetName)
     if not target or not target.Character then return end
     local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
-    if not targetRoot then return end
-    for _, child in pairs(targetRoot:GetChildren()) do
-        if child:IsA("BodyPosition") or child:IsA("BodyGyro") then
-            pcall(function() child:Destroy() end)
-        end
+    local targetHum = target.Character:FindFirstChildOfClass("Humanoid")
+    
+    if targetHum then
+        pcall(function()
+            targetHum.PlatformStand = false
+            targetHum.Sit = false
+        end)
     end
-    pcall(function()
-        targetRoot.AssemblyLinearVelocity = Vector3.zero
-        targetRoot.AssemblyAngularVelocity = Vector3.zero
-    end)
+    
+    if targetRoot then
+        for _, child in pairs(targetRoot:GetChildren()) do
+            if child:IsA("BodyPosition") or child:IsA("BodyGyro") then
+                pcall(function() child:Destroy() end)
+            end
+        end
+        pcall(function()
+            targetRoot.AssemblyLinearVelocity = Vector3.zero
+            targetRoot.AssemblyAngularVelocity = Vector3.zero
+        end)
+    end
 end
 
 ownershipKick["Loop Kick V7"] = function(v)
@@ -9572,12 +9573,12 @@ ownershipKick["Loop Kick V7"] = function(v)
             return
         end
 
-        local savedPos = nil
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            savedPos = LocalPlayer.Character.HumanoidRootPart.CFrame
-            _safeCall(rememberOwnershipSavedPos, savedPos)
-        end
+        local myInitChar = LocalPlayer.Character
+        local myInitRoot = myInitChar and myInitChar:FindFirstChild("HumanoidRootPart")
+        if not myInitRoot then return end
 
+        local lockWorldPos = myInitRoot.CFrame * CFrame.new(5, 20, 4)
+        
         local currentTargetName = nil
         local currentTargetRoot = nil
         local bodyPos = nil
@@ -9654,12 +9655,6 @@ ownershipKick["Loop Kick V7"] = function(v)
                 continue
             end
 
-            if not savedPos then
-                savedPos = myRoot.CFrame
-                _safeCall(rememberOwnershipSavedPos, savedPos)
-            end
-
-            local lockPos = savedPos * CFrame.new(5, 20, 4)
             local isRespawned = false
             if currentTargetRoot ~= targetRoot then
                 currentTargetRoot = targetRoot
@@ -9667,11 +9662,9 @@ ownershipKick["Loop Kick V7"] = function(v)
                 cleanupBodies()
             end
 
-            local distFromPlayer = (targetRoot.Position - myRoot.Position).Magnitude
-            local distFromLock = (targetRoot.Position - lockPos.Position).Magnitude
+            local distFromLock = (targetRoot.Position - lockWorldPos.Position).Magnitude
             
-            if distFromPlayer > 30 or distFromLock > 15 or isRespawned then
-                _safeCall(pauseOwnershipPosLock)
+            if distFromLock > 30 or isRespawned then
                 cleanupBodies()
 
                 local targetParts = {}
@@ -9681,6 +9674,8 @@ ownershipKick["Loop Kick V7"] = function(v)
                     local part = targetChar:FindFirstChild(name)
                     if part then table.insert(targetParts, part) end
                 end
+
+                local preTpPos = myRoot.CFrame
 
                 local tpRunning = true
                 local tpThread = task.spawn(function()
@@ -9725,38 +9720,23 @@ ownershipKick["Loop Kick V7"] = function(v)
                 tpRunning = false
                 if tpThread then pcall(task.cancel, tpThread) end
 
-                if myRoot and myRoot.Parent and savedPos then
-                    myRoot.CFrame = savedPos
-                    task.wait()
-                end
-
                 if grabSuccess or (tick() - startTime >= 10) then
                     for _, part in ipairs(targetParts) do
-                        if part and part.Parent and myRoot and myRoot.Parent then
-                            part.CFrame = myRoot.CFrame
+                        if part and part.Parent then
+                            part.CFrame = lockWorldPos
                         end
                     end
                 end
 
-                if savedPos and myRoot and myRoot.Parent then
-                    _safeCall(BACK, savedPos)
+                if myRoot and myRoot.Parent then
+                    myRoot.CFrame = preTpPos
                 end
-                
-                _safeCall(resumeOwnershipPosLock)
             else
-                if ownershipKick.posLocked and myRoot then
-                    myRoot.CFrame = savedPos
-                    myRoot.AssemblyLinearVelocity = Vector3.zero
-                    myRoot.AssemblyAngularVelocity = Vector3.zero
-                end
-
-                _safeCall(resumeOwnershipPosLock)
-
-                if bodyPos and bodyPos.Parent then
-                    bodyPos.Position = lockPos.Position
-                    if bodyGyro then bodyGyro.CFrame = lockPos end
+                if not bodyPos or not bodyPos.Parent then
+                    createBodies(targetRoot, lockWorldPos.Position)
                 else
-                    createBodies(targetRoot, lockPos.Position)
+                    bodyPos.Position = lockWorldPos.Position
+                    if bodyGyro then bodyGyro.CFrame = lockWorldPos end
                 end
 
                 targetHum.PlatformStand = true
@@ -9765,34 +9745,28 @@ ownershipKick["Loop Kick V7"] = function(v)
                 pcall(function()
                     targetRoot.AssemblyLinearVelocity = Vector3.zero
                     targetRoot.AssemblyAngularVelocity = Vector3.zero
-                    if distFromLock > 1 then
-                        targetRoot.CFrame = lockPos
-                    end
+                    targetRoot.CFrame = lockWorldPos
                 end)
 
-                if not _isMyCharacterPart(targetRoot) then
-                    pcall(function()
-                        local setOwner = GE:FindFirstChild("SetNetworkOwner")
-                        local destroyLine = GE:FindFirstChild("DestroyGrabLine")
-                        
-                        if setOwner and destroyLine then
-                            if currentFPS > 200 then
-                                setOwner:FireServer(targetRoot, lockPos)
-                                setOwner:FireServer(targetRoot, lockPos)
-                            elseif currentFPS >= 155 and currentFPS <= 200 then
-                                setOwner:FireServer(targetRoot, lockPos)
-                                setOwner:FireServer(targetRoot, lockPos)
-                                setOwner:FireServer(targetRoot, lockPos)
-                            else
-                                setOwner:FireServer(targetRoot, lockPos)
-                                setOwner:FireServer(targetRoot, lockPos)
-                                setOwner:FireServer(targetRoot, lockPos)
-                                setOwner:FireServer(targetRoot, lockPos)
-                            end
-                            destroyLine:FireServer(targetRoot)
+                pcall(function()
+                    local setOwner = GE:FindFirstChild("SetNetworkOwner")
+                    local destroyLine = GE:FindFirstChild("DestroyGrabLine")
+                    
+                    if setOwner and destroyLine then
+                        if currentFPS > 150 then
+                            setOwner:FireServer(targetRoot, lockWorldPos)
+                            setOwner:FireServer(targetRoot, lockWorldPos)
+                            setOwner:FireServer(targetRoot, lockWorldPos)
+                        else
+                            setOwner:FireServer(targetRoot, lockWorldPos)
+                            setOwner:FireServer(targetRoot, lockWorldPos)
+                            setOwner:FireServer(targetRoot, lockWorldPos)
+                            setOwner:FireServer(targetRoot, lockWorldPos)
+                            setOwner:FireServer(targetRoot, lockWorldPos)
                         end
-                    end)
-                end
+                        destroyLine:FireServer(targetRoot)
+                    end
+                end)
             end
         end
 
@@ -9801,17 +9775,13 @@ ownershipKick["Loop Kick V7"] = function(v)
             loopKickV7FpsConn:Disconnect()
             loopKickV7FpsConn = nil
         end
-        if ownershipKick.posLocked and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and savedPos then
-            LocalPlayer.Character.HumanoidRootPart.CFrame = savedPos
-        end
-        _safeCall(resumeOwnershipPosLock)
         loopKickV7Task = nil
     end)
 end
 
 if LoopTab and type(LoopTab.AddToggle) == "function" then
     LoopTab:AddToggle({
-        Name = "Loop Kick SET    <font color='rgb(255,150,0)'>[Onwer kick]</font>",
+        Name = "Loop Kick SET    <font color='rgb(255,150,0)'>[ Onwerkick]</font>",
         Default = false,
         Callback = function(Value)
             if Value then
@@ -9828,6 +9798,7 @@ if LoopTab and type(LoopTab.AddToggle) == "function" then
         end
     })
 end
+
 
  
 local loopKickV5Task = nil
