@@ -9504,7 +9504,8 @@ do
 LoopTab:AddSection({
     Name = "SetOwner kick"
 })
-local ownershipKick = ownershipKick or {}
+
+   local ownershipKick = ownershipKick or {}
 local Settings = Settings or { Loop = {} }
 local playersInLoop1V = playersInLoop1V or {}
 local playersInLoop2V = playersInLoop2V or {}
@@ -9658,6 +9659,7 @@ ownershipKick["Loop Kick V7"] = function(v)
                 _safeCall(rememberOwnershipSavedPos, savedPos)
             end
 
+            local lockPos = savedPos * CFrame.new(5, 20, 4)
             local isRespawned = false
             if currentTargetRoot ~= targetRoot then
                 currentTargetRoot = targetRoot
@@ -9665,9 +9667,10 @@ ownershipKick["Loop Kick V7"] = function(v)
                 cleanupBodies()
             end
 
-            local dist = (targetRoot.Position - myRoot.Position).Magnitude
+            local distFromPlayer = (targetRoot.Position - myRoot.Position).Magnitude
+            local distFromLock = (targetRoot.Position - lockPos.Position).Magnitude
             
-            if dist > 30 or isRespawned then
+            if distFromPlayer > 30 or distFromLock > 15 or isRespawned then
                 _safeCall(pauseOwnershipPosLock)
                 cleanupBodies()
 
@@ -9749,7 +9752,6 @@ ownershipKick["Loop Kick V7"] = function(v)
 
                 _safeCall(resumeOwnershipPosLock)
 
-                local lockPos = savedPos * CFrame.new(5, 20, 4)
                 if bodyPos and bodyPos.Parent then
                     bodyPos.Position = lockPos.Position
                     if bodyGyro then bodyGyro.CFrame = lockPos end
@@ -9759,6 +9761,14 @@ ownershipKick["Loop Kick V7"] = function(v)
 
                 targetHum.PlatformStand = true
                 targetHum.Sit = true
+
+                pcall(function()
+                    targetRoot.AssemblyLinearVelocity = Vector3.zero
+                    targetRoot.AssemblyAngularVelocity = Vector3.zero
+                    if distFromLock > 1 then
+                        targetRoot.CFrame = lockPos
+                    end
+                end)
 
                 if not _isMyCharacterPart(targetRoot) then
                     pcall(function()
@@ -9801,7 +9811,7 @@ end
 
 if LoopTab and type(LoopTab.AddToggle) == "function" then
     LoopTab:AddToggle({
-        Name = "Loop Kick SET   <font color='rgb(255,150,0)'>[Onwer kick]</font>",
+        Name = "Loop Kick SET    <font color='rgb(255,150,0)'>[Onwer kick]</font>",
         Default = false,
         Callback = function(Value)
             if Value then
