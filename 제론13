@@ -17359,7 +17359,7 @@ local danceNames = {"None"}
 for _, d in ipairs(emoteList)do table.insert(emoteNames, d.name)end
 for _, d in ipairs(danceList)do table.insert(danceNames, d.name)end
 
-DD:AddDropdown({
+DDTab:AddDropdown({
     Name = "Emote",
     Default = "None",
     Flag = "fxuiwofuxw",
@@ -17374,7 +17374,7 @@ DD:AddDropdown({
     end
 })
 
-DD:AddDropdown({
+DDTab:AddDropdown({
     Name = "Dance",
     Default = "None",
     Flag = "i61rd68c2pigs",
@@ -17389,7 +17389,7 @@ DD:AddDropdown({
     end
 })
 
-DD:AddSlider({
+DDTab:AddSlider({
     Name = "Animation Speed",
     Min = 0.1,
     Max = 20,
