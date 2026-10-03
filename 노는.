@@ -17,7 +17,7 @@ function PcldOwner()
             usedNames = {}
             for m , n in pairs(workspace:GetChildren())
                 do
-                if n.Name = = 'PlayerCharacterLocationDetector'then
+                if n.Name then = 'PlayerCharacterLocationDetector'then
                     if n.CFrame = = CFrame.new(0 , 0 , 0 , 1 , 0 , 0 , 0 , 1 , 0 , 0 , 0 , 1)
                         then
                         continue end
