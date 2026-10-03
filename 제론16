@@ -16329,30 +16329,191 @@ local function ExecuteOriginalNoClip(tt, overrideCF)
 end
 
 plotTab:AddSection({
-	Name = "Barrier Breaker"
+	Name = "Barrier Breaker V2 "
 })
+   do
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Workspace = game:GetService("Workspace")
 
-plotTab:AddDropdown({
-	Name = "Select House",
-	Default = "Green House",
-	Options = {"Green House", "Pink House", "Blue House", "Red House", "Witch House"},
-	Callback = function(Value)
-		SelectedHouse = Value
-	end    
-})
+    local StatusLabel = BarrierGroup:AddLabel("Broken: False")
 
-plotTab:AddButton({
-	Name = "barrier breaker",
-	Callback = function()
-		local data = HouseData[SelectedHouse]
-		if data then
-			local part = data.GetPart()
-			if part then
-				ExecuteOriginalNoClip(part, data.CF)
-			end
-		end
-	end
-})
+    local destroyBarrierActive = false
+    local destroyBarrierThread = nil
+    local plotsBroken = false
+
+    plotTab:AddToggle({
+        Name = "Destroy Barrier (Boombox)",
+        Default = false,
+        Callback = function(Value)
+            if Value and plotsBroken then
+                OrionLib:MakeNotification({
+                    Name = "Already Broken",
+                    Content = "Plots are already broken!",
+                    Image = "rbxassetid://4483345998",
+                    Time = 5
+                })
+                return
+            end
+
+            destroyBarrierActive = Value
+
+            if destroyBarrierThread then
+                task.cancel(destroyBarrierThread)
+                destroyBarrierThread = nil
+            end
+
+            if Value then
+                local spawnedToysFolder = workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+                if spawnedToysFolder then
+                    for _, item in ipairs(spawnedToysFolder:GetChildren())do
+                        if item.Name == "Boombox" then
+                            ReplicatedStorage.MenuToys.DestroyToy:FireServer(item)
+                        end
+                    end
+                end
+
+                if not plotsBroken then
+                    StatusLabel:Set("Broken: False")
+                end
+
+                destroyBarrierThread = task.spawn(function()
+                    local MenuToys = ReplicatedStorage:WaitForChild("MenuToys")
+                    local SetNetworkOwner = ReplicatedStorage:WaitForChild("GrabEvents"):WaitForChild("SetNetworkOwner")
+                    local DestroyGrabLine = ReplicatedStorage:WaitForChild("GrabEvents"):WaitForChild("DestroyGrabLine")
+
+                    local targetCFrame = CFrame.new(264.5792541503906, - 5.477070331573486, 433.4557800292969)
+
+                    local function getBoomboxes()
+                        local boomboxes = {}
+                        local spawnedToysFolder = workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+                        if spawnedToysFolder then
+                            for _, toy in ipairs(spawnedToysFolder:GetChildren())do
+                                if toy.Name == "Boombox" then
+                                    table.insert(boomboxes, toy)
+                                end
+                            end
+                        end
+                        return boomboxes
+                    end
+
+                    local function spawnBoombox()
+                        if not destroyBarrierActive then return end
+                        local playerPosition = LocalPlayer.Character and LocalPlayer.Character.PrimaryPart.Position or Vector3.new(0, 0, 0)
+                        local initialCFrame = CFrame.new(playerPosition) * CFrame.Angles( - 0.807, - 0.884, - 0.679)
+                        task.spawn(function()
+                            MenuToys.SpawnToyRemoteFunction:InvokeServer("Boombox", initialCFrame, Vector3.new(0, - 120.21099853515625, 0))
+                        end)
+                    end
+
+                    local function processBoombox(boombox)
+                        if not destroyBarrierActive then return end
+                        local soundPart = boombox:FindFirstChild("SoundPart")
+                        if soundPart then
+                            task.spawn(function()
+                                SetNetworkOwner:FireServer(soundPart, soundPart.CFrame)
+                            end)
+                        end
+                    end
+
+                    local function teleportBoomboxes(boomboxes)
+                        if not destroyBarrierActive then return end
+                        for _, boombox in ipairs(boomboxes)do
+                            task.spawn(function()
+                                for _, part in ipairs(boombox:GetDescendants())do
+                                    if part:IsA("BasePart")then
+                                        part.CFrame = targetCFrame
+                                    end
+                                end
+                            end)
+                        end
+                    end
+
+                    local function testWithOven()
+                        if not destroyBarrierActive then return false end
+
+                        local targetPosition = CFrame.new(242.66055297851562, - 9.196549415588379, 444.3758850097656)
+                        MenuToys.SpawnToyRemoteFunction:InvokeServer("OvenDarkGray", targetPosition, Vector3.new(0, - 74.0790023803711, 0))
+
+                        task.wait(0.5)
+                        local spawnedToysFolder = workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+                        local oven
+
+                        if spawnedToysFolder then
+                            for _, child in ipairs(spawnedToysFolder:GetChildren())do
+                                if child.Name == "OvenDarkGray" and child:GetAttribute("AtSpawned") == nil then
+                                    oven = child
+                                    break
+                                end
+                            end
+                        end
+
+                        local stillExists = oven ~= nil
+
+                        if stillExists then
+                            StatusLabel:Set("Broken: True")
+                            plotsBroken = true
+                            OrionLib:MakeNotification({
+                                Name = "Success!",
+                                Content = "The plots have been broken successfully!",
+                                Image = "rbxassetid://4483345998",
+                                Time = 5
+                            })
+                        end
+
+                        return stillExists
+                    end
+
+                    while destroyBarrierActive do
+                        local boomboxes = getBoomboxes()
+
+                        if#boomboxes < 2 then
+                            if#boomboxes < 1 then
+                                spawnBoombox()
+                                task.wait(0.02)
+                            end
+                            spawnBoombox()
+                            task.wait(0.02)
+                            boomboxes = getBoomboxes()
+                        end
+
+                        if#boomboxes == 2 then
+                            for _, boombox in ipairs(boomboxes)do
+                                processBoombox(boombox)
+                            end
+
+                            teleportBoomboxes(boomboxes)
+
+                            local ovenResult = testWithOven()
+                            if ovenResult then
+                                break
+                            else
+                                task.wait(0.05)
+                            end
+                        end
+
+                        task.wait(0.05)
+                    end
+                end)
+            else
+                local spawnedToysFolder = workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+                if spawnedToysFolder then
+                    for _, item in ipairs(spawnedToysFolder:GetChildren())do
+                        if item.Name == "Boombox" or item.Name == "OvenDarkGray" then
+                            ReplicatedStorage.MenuToys.DestroyToy:FireServer(item)
+                        end
+                    end
+                end
+                if not plotsBroken then
+                    StatusLabel:Set("Broken: False")
+                end
+            end
+        end
+    })
+end
+    
+
 plotTab:AddSection({
 	Name = "Breake V2"
 })
