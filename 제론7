@@ -9504,7 +9504,7 @@ do
 LoopTab:AddSection({
     Name = "SetOwner kick"
 })
-local ownershipKick = ownershipKick or {}
+         local ownershipKick = ownershipKick or {}
 local Settings = Settings or { Loop = {} }
 local playersInLoop1V = playersInLoop1V or {}
 local playersInLoop2V = playersInLoop2V or {}
@@ -9512,10 +9512,17 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
 
 local loopKickV7Task = nil
 local loopKickV7FpsConn = nil
+
+local function _safeCall(func, ...)
+    if type(func) == "function" then
+        local s, r = pcall(func, ...)
+        if s then return r end
+    end
+    return nil
+end
 
 local function _isMyCharacterPart(part)
     if type(isMyCharacterPart) == "function" then
@@ -9525,8 +9532,7 @@ local function _isMyCharacterPart(part)
     return false
 end
 
-local function cleanupOwnershipKickV7Target()
-    local targetName = playersInLoop2V[1]
+local function cleanupOwnershipKickV7Target(targetName)
     local target = targetName and Players:FindFirstChild(targetName)
     if not target or not target.Character then return end
     local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
@@ -9554,7 +9560,7 @@ ownershipKick["Loop Kick V7"] = function(v)
             loopKickV7FpsConn:Disconnect()
             loopKickV7FpsConn = nil
         end
-        cleanupOwnershipKickV7Target()
+        cleanupOwnershipKickV7Target(playersInLoop2V[1])
         return
     end
 
@@ -9564,32 +9570,28 @@ ownershipKick["Loop Kick V7"] = function(v)
             Settings.Loop.ownershipKickV7Active = false
             return
         end
-        local myChar = LocalPlayer.Character
-        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-        if not myRoot then
-            Settings.Loop.ownershipKickV7Active = false
-            return
+
+        local savedPos = nil
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            savedPos = LocalPlayer.Character.HumanoidRootPart.CFrame
+            _safeCall(rememberOwnershipSavedPos, savedPos)
         end
-        local savedPos = myRoot.CFrame
-        if type(rememberOwnershipSavedPos) == "function" then pcall(rememberOwnershipSavedPos, savedPos) end
-        local dragging = false
-        local grabStartTime = 0
-        local checkStartTime = 0
-        local currentFPS = 60
+
+        local currentTargetName = nil
+        local currentTargetRoot = nil
         local bodyPos = nil
         local bodyGyro = nil
-        loopKickV7FpsConn = RunService.RenderStepped:Connect(function(dt)
-            currentFPS = 1 / dt
-        end)
+
         local function cleanupBodies()
             pcall(function()
                 if bodyPos then bodyPos:Destroy() bodyPos = nil end
                 if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
             end)
         end
-        local function createBodies(targetRoot, pos)
+
+        local function createBodies(root, pos)
             cleanupBodies()
-            for _, child in pairs(targetRoot:GetChildren()) do
+            for _, child in pairs(root:GetChildren()) do
                 if child:IsA("BodyPosition") or child:IsA("BodyGyro") then
                     pcall(function() child:Destroy() end)
                 end
@@ -9598,124 +9600,181 @@ ownershipKick["Loop Kick V7"] = function(v)
             bodyPos.MaxForce = Vector3.new(9e9, 9e9, 9e9)
             bodyPos.D = 100
             bodyPos.Position = pos
-            bodyPos.Parent = targetRoot
+            bodyPos.Parent = root
             bodyGyro = Instance.new("BodyGyro")
             bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
             bodyGyro.D = 100
             bodyGyro.CFrame = CFrame.new(pos)
-            bodyGyro.Parent = targetRoot
+            bodyGyro.Parent = root
         end
+
         while Settings.Loop.ownershipKickV7Active do
+            RunService.Heartbeat:Wait()
+
             local targetName = playersInLoop2V[1]
-            local target = targetName and Players:FindFirstChild(targetName)
-            if not target or not target.Parent then
+            if not targetName then
                 cleanupBodies()
-                break
+                currentTargetName = nil
+                currentTargetRoot = nil
+                continue
             end
-            myChar = LocalPlayer.Character
-            myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+
+            if currentTargetName ~= targetName then
+                if currentTargetName then
+                    cleanupOwnershipKickV7Target(currentTargetName)
+                end
+                cleanupBodies()
+                currentTargetName = targetName
+                currentTargetRoot = nil
+            end
+
+            local target = Players:FindFirstChild(targetName)
+            if not target or not target.Character then
+                cleanupBodies()
+                continue
+            end
+
             local targetChar = target.Character
-            local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
-            local targetHum = targetChar and targetChar:FindFirstChild("Humanoid")
-            if targetRoot and targetHum and targetHum.Health > 0 and myRoot then
-                if not dragging then
-                    if (targetRoot.Position - myRoot.Position).Magnitude > 29 then
-                        if ownershipKick.bring then
-                            if type(executeBring) == "function" then pcall(executeBring, targetRoot, savedPos) end
-                        else
-                            task.wait(0.1)
-                            continue
-                        end
-                    end
-                    if type(pauseOwnershipPosLock) == "function" then pcall(pauseOwnershipPosLock) end
-                    cleanupBodies()
-                    checkStartTime = 0
-                    if not _isMyCharacterPart(targetRoot) then
-                        pcall(function()
-                            targetHum.PlatformStand = true
-                            targetHum.Sit = true
-                            if GE:FindFirstChild("SetNetworkOwner") then GE.SetNetworkOwner:FireServer(targetRoot, targetRoot.CFrame) end
-                            if GE:FindFirstChild("SetNetworkOwner") then GE.SetNetworkOwner:FireServer(targetRoot, targetRoot.CFrame) end
-                            if GE:FindFirstChild("DestroyGrabLine") then GE.DestroyGrabLine:FireServer(targetRoot) end
-                        end)
-                    end
-                    myRoot.AssemblyLinearVelocity = Vector3.zero
-                    myRoot.AssemblyAngularVelocity = Vector3.zero
-                    if grabStartTime == 0 then grabStartTime = tick() end
-                    if tick() - grabStartTime > 0.35 then
-                        dragging = true
-                        grabStartTime = 0
-                        checkStartTime = tick()
-                        local lockPos = savedPos * CFrame.new(5, 20, 4)
-                        createBodies(targetRoot, lockPos.Position)
-                    end
-                else
-                    if ownershipKick.posLocked then
-                        myRoot.CFrame = savedPos
-                        myRoot.AssemblyLinearVelocity = Vector3.zero
-                        myRoot.AssemblyAngularVelocity = Vector3.zero
-                    end
-                    if type(resumeOwnershipPosLock) == "function" then pcall(resumeOwnershipPosLock) end
-                    local lockPos = savedPos * CFrame.new(5, 20, 4)
-                    if bodyPos and bodyPos.Parent then
-                        bodyPos.Position = lockPos.Position
-                        if bodyGyro then bodyGyro.CFrame = lockPos end
-                    else
-                        createBodies(targetRoot, lockPos.Position)
-                    end
-                    targetHum.PlatformStand = true
-                    if not _isMyCharacterPart(targetRoot) then
-                    pcall(function()
-                        if GE:FindFirstChild("SetNetworkOwner") and GE:FindFirstChild("DestroyGrabLine") then
-                            if currentFPS > 200 then
-                                GE.SetNetworkOwner:FireServer(targetRoot, lockPos)
-                                GE.SetNetworkOwner:FireServer(targetRoot, lockPos)
-                                GE.DestroyGrabLine:FireServer(targetRoot)
-                            elseif currentFPS >= 155 and currentFPS <= 200 then
-                                GE.SetNetworkOwner:FireServer(targetRoot, lockPos)
-                                GE.SetNetworkOwner:FireServer(targetRoot, lockPos)
-                                GE.SetNetworkOwner:FireServer(targetRoot, lockPos)
-                                GE.DestroyGrabLine:FireServer(targetRoot)
-                            else
-                                GE.SetNetworkOwner:FireServer(targetRoot, lockPos)
-                                GE.SetNetworkOwner:FireServer(targetRoot, lockPos)
-                                GE.SetNetworkOwner:FireServer(targetRoot, lockPos)
-                                GE.SetNetworkOwner:FireServer(targetRoot, lockPos)
-                                GE.DestroyGrabLine:FireServer(targetRoot)
-                            end
-                        end
-                    end)
-                    end
-                    if checkStartTime > 0 and tick() - checkStartTime > 0.30 then
-                        local currentDist = (targetRoot.Position - lockPos.Position).Magnitude
-                        if currentDist > 10 then
-                            dragging = false
-                            grabStartTime = 0
-                            checkStartTime = 0
-                            cleanupBodies()
-                            if ownershipKick.bring then
-                                if type(executeBring) == "function" then pcall(executeBring, targetRoot, savedPos) end
+            local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+            local targetHum = targetChar:FindFirstChildOfClass("Humanoid")
+            local targetHead = targetChar:FindFirstChild("Head")
+            
+            local myChar = LocalPlayer.Character
+            local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
+
+            if not targetRoot or not targetHum or targetHum.Health <= 0 or not myRoot or not myHum or myHum.Health <= 0 then
+                cleanupBodies()
+                continue
+            end
+
+            if not savedPos then
+                savedPos = myRoot.CFrame
+                _safeCall(rememberOwnershipSavedPos, savedPos)
+            end
+
+            local isRespawned = false
+            if currentTargetRoot ~= targetRoot then
+                currentTargetRoot = targetRoot
+                isRespawned = true
+                cleanupBodies()
+            end
+
+            local dist = (targetRoot.Position - myRoot.Position).Magnitude
+            
+            if dist > 30 or isRespawned then
+                _safeCall(pauseOwnershipPosLock)
+                cleanupBodies()
+
+                local targetParts = {}
+                table.insert(targetParts, targetRoot)
+                if targetHead then table.insert(targetParts, targetHead) end
+                for _, name in ipairs({"Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}) do
+                    local part = targetChar:FindFirstChild(name)
+                    if part then table.insert(targetParts, part) end
+                end
+
+                local tpRunning = true
+                local tpThread = task.spawn(function()
+                    while tpRunning do
+                        if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then break end
+                        if type(TP) == "function" then
+                            local s, cf = pcall(TP, target)
+                            if s and cf and typeof(cf) == "CFrame" and type(CF) ~= "nil" then
+                                CF = cf
                             end
                         else
-                            checkStartTime = tick()
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = targetRoot.CFrame
+                        end
+                        task.wait()
+                    end
+                end)
+
+                local grabSuccess = false
+                local startTime = tick()
+                while tpRunning and tick() - startTime < 10 do
+                    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then break end
+                    if not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then break end
+                    
+                    if GE:FindFirstChild("SetNetworkOwner") then
+                        for _, part in ipairs(targetParts) do
+                            if part and part.Parent then
+                                GE.SetNetworkOwner:FireServer(part, part.CFrame)
+                            end
+                        end
+                    end
+                    
+                    if targetHead then
+                        local ownerTag = targetHead:FindFirstChild("PartOwner")
+                        if ownerTag and ownerTag:IsA("StringValue") and ownerTag.Value == LocalPlayer.Name then
+                            grabSuccess = true
+                            break
+                        end
+                    end
+                    task.wait()
+                end
+
+                tpRunning = false
+                if tpThread then pcall(task.cancel, tpThread) end
+
+                if myRoot and myRoot.Parent and savedPos then
+                    myRoot.CFrame = savedPos
+                    task.wait()
+                end
+
+                if grabSuccess or (tick() - startTime >= 10) then
+                    for _, part in ipairs(targetParts) do
+                        if part and part.Parent and myRoot and myRoot.Parent then
+                            part.CFrame = myRoot.CFrame
                         end
                     end
                 end
+
+                if savedPos and myRoot and myRoot.Parent then
+                    _safeCall(BACK, savedPos)
+                end
+                
+                _safeCall(resumeOwnershipPosLock)
             else
-                dragging = false
-                grabStartTime = 0
-                checkStartTime = 0
-                cleanupBodies()
+                if ownershipKick.posLocked and myRoot then
+                    myRoot.CFrame = savedPos
+                    myRoot.AssemblyLinearVelocity = Vector3.zero
+                    myRoot.AssemblyAngularVelocity = Vector3.zero
+                end
+
+                _safeCall(resumeOwnershipPosLock)
+
+                local lockPos = savedPos * CFrame.new(5, 20, 4)
+                if bodyPos and bodyPos.Parent then
+                    bodyPos.Position = lockPos.Position
+                    if bodyGyro then bodyGyro.CFrame = lockPos end
+                else
+                    createBodies(targetRoot, lockPos.Position)
+                end
+
+                targetHum.PlatformStand = true
+                targetHum.Sit = true
+
+                if not _isMyCharacterPart(targetRoot) then
+                    pcall(function()
+                        if GE:FindFirstChild("SetNetworkOwner") then
+                            for _ = 1, 30 do
+                                GE.SetNetworkOwner:FireServer(targetRoot, lockPos)
+                            end
+                        end
+                        if GE:FindFirstChild("DestroyGrabLine") then
+                            GE.DestroyGrabLine:FireServer(targetRoot)
+                        end
+                    end)
+                end
             end
-            RunService.Heartbeat:Wait()
         end
-        if loopKickV7FpsConn then
-            loopKickV7FpsConn:Disconnect()
-            loopKickV7FpsConn = nil
-        end
+
         cleanupBodies()
-        if ownershipKick.posLocked and myRoot and myRoot.Parent then myRoot.CFrame = savedPos end
-        if type(resumeOwnershipPosLock) == "function" then pcall(resumeOwnershipPosLock) end
+        if ownershipKick.posLocked and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and savedPos then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = savedPos
+        end
+        _safeCall(resumeOwnershipPosLock)
         loopKickV7Task = nil
     end)
 end
