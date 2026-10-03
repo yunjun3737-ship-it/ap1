@@ -13358,7 +13358,7 @@ antiTab:AddToggle({
 
 local BreakPCLDConnection = nil
 local BreakPCLDEnabled = false
-local BreakPCLDCount = 0
+local BreakPCLDInitialDeaths = 0
 local BreakPCLDLock = false
 
 antiTab:AddToggle({
@@ -13366,34 +13366,43 @@ antiTab:AddToggle({
     Default = false,
     Callback = function(Value)
         BreakPCLDEnabled = Value
+        BreakPCLDLock = false
+        BreakPCLDInitialDeaths = 0
 
         if BreakPCLDConnection then
             BreakPCLDConnection:Disconnect()
             BreakPCLDConnection = nil
         end
 
-        BreakPCLDCount = 0
-        BreakPCLDLock = false
-
         if not Value then
             return
         end
 
-        local function KillCharacter(char)
+        local function handleCharacter(char)
             if not BreakPCLDEnabled or BreakPCLDLock then
                 return
             end
 
             local hum = char:WaitForChild("Humanoid", 5)
-            if not hum then
+            if not hum or not BreakPCLDEnabled or BreakPCLDLock then
                 return
             end
 
-            BreakPCLDCount += 1
             hum.Health = 0
 
-            if BreakPCLDCount >= 2 then
-                BreakPCLDCount = 0
+            if BreakPCLDInitialDeaths < 2 then
+                BreakPCLDInitialDeaths += 1
+
+                if BreakPCLDInitialDeaths >= 2 then
+                    BreakPCLDLock = true
+
+                    task.delay(1, function()
+                        if BreakPCLDEnabled then
+                            BreakPCLDLock = false
+                        end
+                    end)
+                end
+            else
                 BreakPCLDLock = true
 
                 task.delay(1, function()
@@ -13406,21 +13415,15 @@ antiTab:AddToggle({
 
         BreakPCLDConnection = LocalPlayer.CharacterAdded:Connect(function(char)
             task.wait(0.1)
-
-            if not BreakPCLDEnabled or BreakPCLDLock then
-                return
-            end
-
-            KillCharacter(char)
+            handleCharacter(char)
         end)
 
         local char = LocalPlayer.Character
         if char then
-            KillCharacter(char)
+            handleCharacter(char)
         end
     end
 })
-
 antiTab:AddToggle({
     Name = "ragdoll",
     
