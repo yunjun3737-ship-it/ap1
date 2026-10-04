@@ -252,7 +252,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 
 
-loadstring(game:HttpGet('https://raw.githubusercontent.com/dosi1100-cmyk/script/refs/heads/main/kk'))()
+--loadstring(game:HttpGet('https://raw.githubusercontent.com/dosi1100-cmyk/script/refs/heads/main/kk'))()
 
 G = rs.GrabEvents
 G:WaitForChild("EndGrabEarly"):Destroy()
