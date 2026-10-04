@@ -248,7 +248,7 @@ end
 SpawnCFrame()
  SCF = workspace.SpawnCF
 
-local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/NP01223/NP/refs/heads/main/RayField'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 
 
