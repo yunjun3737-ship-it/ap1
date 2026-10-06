@@ -1,4 +1,915 @@
 
+
+--- == // Universal Multi-Executor Compatibility Layer (Solara, Delta, Xeno, Wave, Potassium, Codex, Hydrogen)
+local cloneref = (type(cloneref) == "function" and cloneref) or function(obj) return obj end
+
+-- Safe GUI Container fetcher for free executors (Solara, Xeno, Delta, Wave, etc.)
+local gethui = function()
+    local plr = game:GetService("Players").LocalPlayer
+    local pg = plr and (plr:FindFirstChild("PlayerGui") or plr:WaitForChild("PlayerGui", 2))
+    if pg then return pg end
+    local ok, cg = pcall(function() return game:GetService("CoreGui") end)
+    return (ok and cg) or game:GetService("StarterGui")
+end
+
+pcall(function()
+    local raw_gethui = (type(gethui) == "function" and gethui) or (type(gethiddengui) == "function" and gethiddengui)
+    if raw_gethui then
+        local ok, res = pcall(raw_gethui)
+        if ok and res and typeof(res) == "Instance" then
+            gethui = function() return res end
+        end
+    end
+end)
+
+-- Safe Hidden Property manipulators
+local sethiddenproperty = (type(sethiddenproperty) == "function" and sethiddenproperty) or (type(set_hidden_property) == "function" and set_hidden_property) or function(inst, prop, val)
+    pcall(function() inst[prop] = val end)
+end
+
+local gethiddenproperty = (type(gethiddenproperty) == "function" and gethiddenproperty) or (type(get_hidden_property) == "function" and get_hidden_property) or function(inst, prop)
+    local ok, res = pcall(function() return inst[prop] end)
+    return ok and res or nil
+end
+
+-- Safe Touch Interest Trigger
+local firetouchinterest = (type(firetouchinterest) == "function" and firetouchinterest) or function(part1, part2, toggle)
+    pcall(function()
+        if part1 and part2 and part1:IsA("BasePart") and part2:IsA("BasePart") then
+            part1.CFrame = part2.CFrame
+        end
+    end)
+end
+
+-- Safe Executor Identification
+local identifyexecutor = (type(identifyexecutor) == "function" and identifyexecutor) or (type(getexecutorname) == "function" and getexecutorname) or function()
+    if Solara then return "Solara" end
+    if Delta then return "Delta" end
+    if Xeno then return "Xeno" end
+    if Wave then return "Wave" end
+    if KRAMPUS then return "Krampus" end
+    return "Executor"
+end
+
+-- Safe File System & Global Stubs for Free Executors
+local isfile = (type(isfile) == "function" and isfile) or function() return false end
+local readfile = (type(readfile) == "function" and readfile) or function() return nil end
+local writefile = (type(writefile) == "function" and writefile) or function() return false end
+local makefolder = (type(makefolder) == "function" and makefolder) or function() end
+local isfolder = (type(isfolder) == "function" and isfolder) or function() return false end
+local listfiles = (type(listfiles) == "function" and listfiles) or function() return {} end
+local delfile = (type(delfile) == "function" and delfile) or function() end
+local getcustomasset = (type(getcustomasset) == "function" and getcustomasset) or (type(getsynasset) == "function" and getsynasset) or function(path) return path end
+
+setfpscap = (type(setfpscap) == "function" and setfpscap) or function() end
+getconnections = (type(getconnections) == "function" and getconnections) or function() return {} end
+isnetworkowner = (type(isnetworkowner) == "function" and isnetworkowner) or function(part)
+    if not part then return false end
+    local ok, res = pcall(function() return part.ReceiveAge == 0 end)
+    if ok and res then return true end
+    return true
+end
+
+local Debris = cloneref(game:GetService("Debris"))
+local CoreGui = cloneref(game:GetService("CoreGui"))
+local Players = cloneref(game:GetService("Players"))
+local VRService = cloneref(game:GetService("VRService"))
+local RunService = cloneref(game:GetService("RunService"))
+local StarterGui = cloneref(game:GetService("StarterGui"))
+local GuiService = cloneref(game:GetService("GuiService"))
+local HttpService = cloneref(game:GetService("HttpService"))
+local TextService = cloneref(game:GetService("TextService"))
+local TweenService = cloneref(game:GetService("TweenService"))
+local TextChatService = cloneref(game:GetService("TextChatService"))
+local UserInputService = cloneref(game:GetService("UserInputService"))
+local AvatarEditorService = cloneref(game:GetService("AvatarEditorService"))
+local ContextActionService = cloneref(game:GetService("ContextActionService"))
+
+local Util = {}
+
+Util.RandomString = function(length)
+	length = length or math.random(32, 256)
+	local str = ""
+	for _=1, length do
+		str ..= string.char(math.random(32, 126))
+	end
+	return str
+end
+Util.DeepcopyTable = function(t)
+	local c = {}
+	for k, v in pairs(t) do
+		if type(v) == "table" then
+			v = Util.DeepcopyTable(v)
+		end
+		c[k] = v
+	end
+	return c
+end
+Util.Notify = function(text)
+	StarterGui:SetCore("SendNotification", {
+		Title = "ware.",
+		Text = text,
+		Duration = 5
+	})
+end
+
+cloneref = cloneref or function(o) return o end
+getcustomasset = getcustomasset or getsynasset
+gethiddengui = get_hidden_gui or gethui
+request = request or (http and http.request)
+
+local function ismissing(func)
+	return not func or type(func) ~= "function"
+end
+do
+	local function diefatal(msg)
+		-- Neutralized for multi-executor compatibility (Solara, Xeno, Delta, Wave, Potassium, etc.)
+		pcall(function() print("[ovitar Compatibility Mode]: " .. tostring(msg)) end)
+	end
+	if ismissing(request) then
+		diefatal("Missing `request` or `http.request` function!")
+	end
+	if ismissing(getcustomasset) then
+		diefatal("Missing `getcustomasset` or `getsynasset` function!")
+	end
+	if ismissing(readfile)
+		or ismissing(writefile)
+		or ismissing(delfile)
+		or ismissing(isfile)
+		or ismissing(isfolder)
+		or ismissing(makefolder)
+		or ismissing(listfiles) then
+		diefatal("Missing some filesystem functions!")
+	end
+	if ismissing(firetouchinterest) then
+		diefatal("Missing `firetouchinterest` function!")
+	end
+	--if ismissing(replicatesignal) then
+	--	diefatal("Missing `replicatesignal` function!")
+	--end
+	if ismissing(gethiddenproperty) then
+		if ismissing(setscriptable) then
+			diefatal("Missing `gethiddenproperty` and `setscriptable` function!")
+		elseif ismissing(isscriptable) then
+			gethiddenproperty = function(inst, prop, val)
+				setscriptable(inst, prop, true)
+				local val = inst[prop]
+				setscriptable(inst, prop, false)
+				return val
+			end
+		else
+			gethiddenproperty = function(inst, prop, val)
+				local was = isscriptable(inst, prop)
+				if not was then setscriptable(inst, prop, true) end
+				local val = inst[prop]
+				if not was then setscriptable(inst, prop, false) end
+				return val
+			end
+		end
+	end
+	if ismissing(sethiddenproperty) then
+		if ismissing(setscriptable) then
+			diefatal("Missing `sethiddenproperty` and `setscriptable` function!")
+		elseif ismissing(isscriptable) then
+			sethiddenproperty = function(inst, prop, val)
+				setscriptable(inst, prop, true)
+				inst[prop] = val
+				setscriptable(inst, prop, false)
+			end
+		else
+			gethiddenproperty = function(inst, prop, val)
+				local was = isscriptable(inst, prop)
+				if not was then setscriptable(inst, prop, true) end
+				inst[prop] = val
+				if not was then setscriptable(inst, prop, false) end
+			end
+		end
+	end
+	--if ismissing(hookmetamethod) or ismissing(hookfunction) then
+	--	diefatal("Missing `hookmetamethod` and `hookfunction` function!")
+	--end
+	local loadstringreturn = false
+	local val = math.random(-65536, 65536)
+	local _, func = pcall(loadstring, "return " .. val)
+	if func then
+		local s, val2 = pcall(func)
+		if s and val == val2 then
+			loadstringreturn = true
+		end
+	end
+	if not loadstringreturn then
+		diefatal("`loadstring` makes a function that does not return values!")
+	end
+	if not ismissing(isfile) then
+		local s, e = pcall(isfile, Util.RandomString(32))
+		if s and e then
+			-- stupid executor
+			isfile = function(path)
+				local s, e = pcall(readfile, path)
+				return not not (s and e)
+			end
+		end
+	else
+		-- THIS LITERALLY SHOULDNT HAPPEN
+		diefatal("T-this one shouldn't happen!")
+	end
+end
+
+-- WILL THIS FIX CRASHES IDK ????????
+local pcall = function(func, ...)
+	return pcall(function(...)
+		return func(...)
+	end, ...)
+end
+local xpcall = function(func, ...)
+	return xpcall(function(...)
+		return func(...)
+	end, ...)
+end
+local b_getfenv = getfenv
+
+local hiddenParts = setmetatable({}, { __mode = "k" })
+local oldIndex
+
+local function getRealPosition(part)
+	if oldIndex and typeof(part) == "Instance" then
+		return oldIndex(part, "Position")
+	end
+	return part.Position
+end
+
+local function getRealCFrame(part)
+	if oldIndex and typeof(part) == "Instance" then
+		return oldIndex(part, "CFrame")
+	end
+	return part.CFrame
+end
+
+local hookSuccess, hookError = pcall(function()
+	if hookmetamethod then
+		oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, key)
+			if typeof(self) == "Instance" and hiddenParts[self] then
+				if key == "Position" or key == "CFrame" then
+					return (key == "CFrame" and CFrame.new(0, -99999, 0) or Vector3.new(0, -99999, 0))
+				elseif key == "GetPivot" then
+					return newcclosure(function()
+						return CFrame.new(0, -99999, 0)
+					end)
+				end
+			end
+			return oldIndex(self, key)
+		end))
+	elseif getrawmetatable then
+		local mt = getrawmetatable(game)
+		local oldIdx = mt.__index
+		setreadonly(mt, false)
+		mt.__index = newcclosure(function(self, key)
+			if typeof(self) == "Instance" and hiddenParts[self] then
+				if key == "Position" or key == "CFrame" then
+					return (key == "CFrame" and CFrame.new(0, -99999, 0) or Vector3.new(0, -99999, 0))
+				elseif key == "GetPivot" then
+					return newcclosure(function()
+						return CFrame.new(0, -99999, 0)
+					end)
+				end
+			end
+			return oldIdx(self, key)
+		end)
+		setreadonly(mt, true)
+		oldIndex = oldIdx
+	end
+end)
+
+local hookSuccess2, hookError2 = pcall(function()
+	if hookfunction and gethiddenproperty then
+		local oldGHP
+		oldGHP = hookfunction(gethiddenproperty, newcclosure(function(self, prop)
+			if typeof(self) == "Instance" and hiddenParts[self] then
+				if prop == "Position" or prop == "CFrame" then
+					return (prop == "CFrame" and CFrame.new(0, -99999, 0) or Vector3.new(0, -99999, 0))
+				end
+			end
+			return oldGHP(self, prop)
+		end))
+	end
+end)
+
+
+local Player = Players.LocalPlayer
+
+if not game:IsLoaded() then
+	local notLoaded = Instance.new("Message")
+	xpcall(function()
+		notLoaded.Parent = CoreGui
+	end, function()
+		notLoaded.Parent = workspace
+	end)
+	notLoaded.Text = "Uhhhhhh is waiting for the game to load"
+	game.Loaded:Wait()
+	for i=1, 60 do
+		while task.wait() > 1 / 10 do end
+	end
+	notLoaded:Destroy()
+end
+
+local Camera = workspace.CurrentCamera
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+	local newCamera = workspace.CurrentCamera
+	if newCamera ~= nil then
+		Camera = newCamera
+	end
+end)
+Util._scrsiz = Vector2.new(512, 512)
+Util.GetScreenSize = function()
+	if Camera ~= nil then
+		Util._scrsiz = Camera.ViewportSize
+	end
+	return Util._scrsiz
+end
+Util.LoopedHSV = function(h, s, v)
+	h %= 1
+	s = math.clamp(s, 0, 1)
+	v = math.clamp(v, 0, 1)
+	return Color3.fromHSV(h, s, v)
+end
+Util.Instance = function(cl, p)
+	local i = Instance.new(cl)
+	i.Name = Util.RandomString()
+	i.Parent = p
+	return i
+end
+Util.LinkDestroyI2C = function(a, b)
+	a.Destroying:Once(function()
+		b:Disconnect()
+	end)
+end
+Util.LinkDestroyI2I = function(a, b)
+	Util.LinkDestroyI2C(b, a.Destroying:Once(function()
+		task.defer(b.Destroy, b)
+	end))
+end
+Util.ClearAllChildrenGui = function(a)
+	for _,v in a:GetChildren() do
+		if v:IsA("GuiObject") then
+			v:Destroy()
+		end
+	end
+end
+Util.GetTransparency = function(part)
+	return 1 - (1 - part.Transparency) * (1 - part.LocalTransparencyModifier)
+end
+Util.ScaleCFrame = function(cf, scale)
+	return cf + cf.Position * (scale - 1)
+end
+Util.IsGuiVisible = function(guiObject)
+	if not guiObject or not guiObject:IsA("GuiObject") then return false end
+	while guiObject do
+		if not guiObject.Visible then
+			return false
+		end
+		guiObject = guiObject:FindFirstAncestorWhichIsA("GuiObject")
+	end
+	return true
+end
+Util.IsGuiInteractable = function(guiObject)
+	if not guiObject or not guiObject:IsA("GuiObject") then return false end
+	while guiObject do
+		if not guiObject.Visible or not guiObject.Interactable then
+			return false
+		end
+		guiObject = guiObject:FindFirstAncestorWhichIsA("GuiObject")
+	end
+	return true
+end
+Util.WillGuiSinkInput = function(guiObject)
+	return Util.IsGuiInteractable(guiObject) and (guiObject.Active or guiObject:IsA("GuiButton"))
+end
+Util.UDim2ToVector2Scale = function(x)
+	return Vector2.new(x.X.Scale, x.Y.Scale)
+end
+Util.UDim2ToVector2Offset = function(x)
+	return Vector2.new(x.X.Offset, x.Y.Offset)
+end
+Util.Vector2ToUDim2Scale = function(x)
+	return UDim2.fromScale(x.X, x.Y)
+end
+Util.Vector2ToUDim2Offset = function(x)
+	return UDim2.fromOffset(x.X, x.Y)
+end
+Util.ForceTextSize = function(inst)
+	if inst:IsA("TextLabel") then
+		local original = inst.TextSize
+		local conn conn = RunService.PreRender:Connect(function()
+			local size = GuiService.PreferredTextSize.Name
+			if size == "Medium" then
+				inst.TextSize = original
+			elseif size == "Large" then
+				inst.TextSize = original - 4
+			elseif size == "Larger" then
+				inst.TextSize = original - 9
+			elseif size == "Largest" then
+				inst.TextSize = original - 14
+			end
+		end)
+		Util.LinkDestroyI2C(inst, conn)
+	end
+end
+Util.QueryPlayerSelector = function(query, excludespeaker)
+	if #query == 0 then return end
+	query = query:lower()
+	local t = {}
+	for _,player in Players:GetPlayers() do
+		if player ~= Player or not excludespeaker then
+			local a = player.DisplayName:lower():find(query)
+			local b = player.Name:lower():find(query)
+			if a then table.insert(t, {player, 1, a}) end
+			if b then table.insert(t, {player, 0, b}) end
+		end
+	end
+	table.sort(t, function(a, b)
+		if a[2] == b[2] then
+			return a[3] < b[3]
+		end
+		return a[2] < b[2]
+	end)
+	if t[1] then
+		return t[1][1]
+	end
+	return nil
+end
+
+local IsUhhhhhhFullyLoaded = true
+
+local SCREENGUI = Util.Instance("ScreenGui")
+SCREENGUI.IgnoreGuiInset = true
+SCREENGUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+SCREENGUI.ClipToDeviceSafeArea = false
+SCREENGUI.ResetOnSpawn = false
+SCREENGUI.ScreenInsets = Enum.ScreenInsets.None
+SCREENGUI.DisplayOrder = 2147483646
+
+pcall(function()
+	local container = (gethui and gethui()) or (gethiddengui and gethiddengui())
+	if container then
+		SCREENGUI.Parent = container
+	else
+		pcall(function() SCREENGUI.Parent = CoreGui end)
+	end
+end)
+
+local UIMainFrame = Util.Instance("Frame", SCREENGUI)
+UIMainFrame.AnchorPoint = Vector2.new(0, 0)
+UIMainFrame.Position = UDim2.new(0, 0, 0, 0)
+UIMainFrame.Size = UDim2.new(1, 0, 1, 0)
+UIMainFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+UIMainFrame.BackgroundTransparency = 1
+UIMainFrame.BorderSizePixel = 0
+UIMainFrame.ZIndex = 2147483647
+
+
+
+-- if _G.UhhhhhhLoaded then return end
+-- _G.UhhhhhhLoaded = true
+-- workspace.Gravity = 0
+local UhhhhhhVersion = "FTAP ovitar [FTAP BETA]"
+
+--- == // Universal Multi-Executor Compatibility Layer (Solara, Delta, Xeno, Wave, Potassium, Codex, Hydrogen)
+local cloneref = (type(cloneref) == "function" and cloneref) or function(obj) return obj end
+
+-- Safe GUI Container fetcher for free executors (Solara, Xeno, Delta, Wave, etc.)
+local gethui = function()
+    local plr = game:GetService("Players").LocalPlayer
+    local pg = plr and (plr:FindFirstChild("PlayerGui") or plr:WaitForChild("PlayerGui", 2))
+    if pg then return pg end
+    local ok, cg = pcall(function() return game:GetService("CoreGui") end)
+    return (ok and cg) or game:GetService("StarterGui")
+end
+
+pcall(function()
+    local raw_gethui = (type(gethui) == "function" and gethui) or (type(gethiddengui) == "function" and gethiddengui)
+    if raw_gethui then
+        local ok, res = pcall(raw_gethui)
+        if ok and res and typeof(res) == "Instance" then
+            gethui = function() return res end
+        end
+    end
+end)
+
+-- Safe Hidden Property manipulators
+local sethiddenproperty = (type(sethiddenproperty) == "function" and sethiddenproperty) or (type(set_hidden_property) == "function" and set_hidden_property) or function(inst, prop, val)
+    pcall(function() inst[prop] = val end)
+end
+
+local gethiddenproperty = (type(gethiddenproperty) == "function" and gethiddenproperty) or (type(get_hidden_property) == "function" and get_hidden_property) or function(inst, prop)
+    local ok, res = pcall(function() return inst[prop] end)
+    return ok and res or nil
+end
+
+-- Safe Touch Interest Trigger
+local firetouchinterest = (type(firetouchinterest) == "function" and firetouchinterest) or function(part1, part2, toggle)
+    pcall(function()
+        if part1 and part2 and part1:IsA("BasePart") and part2:IsA("BasePart") then
+            part1.CFrame = part2.CFrame
+        end
+    end)
+end
+
+-- Safe Executor Identification
+local identifyexecutor = (type(identifyexecutor) == "function" and identifyexecutor) or (type(getexecutorname) == "function" and getexecutorname) or function()
+    if Solara then return "Solara" end
+    if Delta then return "Delta" end
+    if Xeno then return "Xeno" end
+    if Wave then return "Wave" end
+    if KRAMPUS then return "Krampus" end
+    return "Executor"
+end
+
+-- Safe File System & Global Stubs for Free Executors
+local isfile = (type(isfile) == "function" and isfile) or function() return false end
+local readfile = (type(readfile) == "function" and readfile) or function() return nil end
+local writefile = (type(writefile) == "function" and writefile) or function() return false end
+local makefolder = (type(makefolder) == "function" and makefolder) or function() end
+local isfolder = (type(isfolder) == "function" and isfolder) or function() return false end
+local listfiles = (type(listfiles) == "function" and listfiles) or function() return {} end
+local delfile = (type(delfile) == "function" and delfile) or function() end
+local getcustomasset = (type(getcustomasset) == "function" and getcustomasset) or (type(getsynasset) == "function" and getsynasset) or function(path) return path end
+
+setfpscap = (type(setfpscap) == "function" and setfpscap) or function() end
+getconnections = (type(getconnections) == "function" and getconnections) or function() return {} end
+isnetworkowner = (type(isnetworkowner) == "function" and isnetworkowner) or function(part)
+    if not part then return false end
+    local ok, res = pcall(function() return part.ReceiveAge == 0 end)
+    if ok and res then return true end
+    return true
+end
+
+local Debris = cloneref(game:GetService("Debris"))
+local CoreGui = cloneref(game:GetService("CoreGui"))
+local Players = cloneref(game:GetService("Players"))
+local VRService = cloneref(game:GetService("VRService"))
+local RunService = cloneref(game:GetService("RunService"))
+local StarterGui = cloneref(game:GetService("StarterGui"))
+local GuiService = cloneref(game:GetService("GuiService"))
+local HttpService = cloneref(game:GetService("HttpService"))
+local TextService = cloneref(game:GetService("TextService"))
+local TweenService = cloneref(game:GetService("TweenService"))
+local TextChatService = cloneref(game:GetService("TextChatService"))
+local UserInputService = cloneref(game:GetService("UserInputService"))
+local AvatarEditorService = cloneref(game:GetService("AvatarEditorService"))
+local ContextActionService = cloneref(game:GetService("ContextActionService"))
+
+local Util = {}
+
+Util.RandomString = function(length)
+	length = length or math.random(32, 256)
+	local str = ""
+	for _=1, length do
+		str ..= string.char(math.random(32, 126))
+	end
+	return str
+end
+Util.DeepcopyTable = function(t)
+	local c = {}
+	for k, v in pairs(t) do
+		if type(v) == "table" then
+			v = Util.DeepcopyTable(v)
+		end
+		c[k] = v
+	end
+	return c
+end
+Util.Notify = function(text)
+	StarterGui:SetCore("SendNotification", {
+		Title = "ware.",
+		Text = text,
+		Duration = 5
+	})
+end
+
+cloneref = cloneref or function(o) return o end
+getcustomasset = getcustomasset or getsynasset
+gethiddengui = get_hidden_gui or gethui
+request = request or (http and http.request)
+
+local function ismissing(func)
+	return not func or type(func) ~= "function"
+end
+do
+	local function diefatal(msg)
+		-- Neutralized for multi-executor compatibility (Solara, Xeno, Delta, Wave, Potassium, etc.)
+		pcall(function() print("[ovitar Compatibility Mode]: " .. tostring(msg)) end)
+	end
+	if ismissing(request) then
+		diefatal("Missing `request` or `http.request` function!")
+	end
+	if ismissing(getcustomasset) then
+		diefatal("Missing `getcustomasset` or `getsynasset` function!")
+	end
+	if ismissing(readfile)
+		or ismissing(writefile)
+		or ismissing(delfile)
+		or ismissing(isfile)
+		or ismissing(isfolder)
+		or ismissing(makefolder)
+		or ismissing(listfiles) then
+		diefatal("Missing some filesystem functions!")
+	end
+	if ismissing(firetouchinterest) then
+		diefatal("Missing `firetouchinterest` function!")
+	end
+	--if ismissing(replicatesignal) then
+	--	diefatal("Missing `replicatesignal` function!")
+	--end
+	if ismissing(gethiddenproperty) then
+		if ismissing(setscriptable) then
+			diefatal("Missing `gethiddenproperty` and `setscriptable` function!")
+		elseif ismissing(isscriptable) then
+			gethiddenproperty = function(inst, prop, val)
+				setscriptable(inst, prop, true)
+				local val = inst[prop]
+				setscriptable(inst, prop, false)
+				return val
+			end
+		else
+			gethiddenproperty = function(inst, prop, val)
+				local was = isscriptable(inst, prop)
+				if not was then setscriptable(inst, prop, true) end
+				local val = inst[prop]
+				if not was then setscriptable(inst, prop, false) end
+				return val
+			end
+		end
+	end
+	if ismissing(sethiddenproperty) then
+		if ismissing(setscriptable) then
+			diefatal("Missing `sethiddenproperty` and `setscriptable` function!")
+		elseif ismissing(isscriptable) then
+			sethiddenproperty = function(inst, prop, val)
+				setscriptable(inst, prop, true)
+				inst[prop] = val
+				setscriptable(inst, prop, false)
+			end
+		else
+			gethiddenproperty = function(inst, prop, val)
+				local was = isscriptable(inst, prop)
+				if not was then setscriptable(inst, prop, true) end
+				inst[prop] = val
+				if not was then setscriptable(inst, prop, false) end
+			end
+		end
+	end
+	--if ismissing(hookmetamethod) or ismissing(hookfunction) then
+	--	diefatal("Missing `hookmetamethod` and `hookfunction` function!")
+	--end
+	local loadstringreturn = false
+	local val = math.random(-65536, 65536)
+	local _, func = pcall(loadstring, "return " .. val)
+	if func then
+		local s, val2 = pcall(func)
+		if s and val == val2 then
+			loadstringreturn = true
+		end
+	end
+	if not loadstringreturn then
+		diefatal("`loadstring` makes a function that does not return values!")
+	end
+	if not ismissing(isfile) then
+		local s, e = pcall(isfile, Util.RandomString(32))
+		if s and e then
+			-- stupid executor
+			isfile = function(path)
+				local s, e = pcall(readfile, path)
+				return not not (s and e)
+			end
+		end
+	else
+		-- THIS LITERALLY SHOULDNT HAPPEN
+		diefatal("T-this one shouldn't happen!")
+	end
+end
+
+-- WILL THIS FIX CRASHES IDK ????????
+local pcall = function(func, ...)
+	return pcall(function(...)
+		return func(...)
+	end, ...)
+end
+local xpcall = function(func, ...)
+	return xpcall(function(...)
+		return func(...)
+	end, ...)
+end
+local b_getfenv = getfenv
+
+local hiddenParts = setmetatable({}, { __mode = "k" })
+local oldIndex
+
+local function getRealPosition(part)
+	if oldIndex and typeof(part) == "Instance" then
+		return oldIndex(part, "Position")
+	end
+	return part.Position
+end
+
+local function getRealCFrame(part)
+	if oldIndex and typeof(part) == "Instance" then
+		return oldIndex(part, "CFrame")
+	end
+	return part.CFrame
+end
+
+local hookSuccess, hookError = pcall(function()
+	if hookmetamethod then
+		oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, key)
+			if typeof(self) == "Instance" and hiddenParts[self] then
+				if key == "Position" or key == "CFrame" then
+					return (key == "CFrame" and CFrame.new(0, -99999, 0) or Vector3.new(0, -99999, 0))
+				elseif key == "GetPivot" then
+					return newcclosure(function()
+						return CFrame.new(0, -99999, 0)
+					end)
+				end
+			end
+			return oldIndex(self, key)
+		end))
+	elseif getrawmetatable then
+		local mt = getrawmetatable(game)
+		local oldIdx = mt.__index
+		setreadonly(mt, false)
+		mt.__index = newcclosure(function(self, key)
+			if typeof(self) == "Instance" and hiddenParts[self] then
+				if key == "Position" or key == "CFrame" then
+					return (key == "CFrame" and CFrame.new(0, -99999, 0) or Vector3.new(0, -99999, 0))
+				elseif key == "GetPivot" then
+					return newcclosure(function()
+						return CFrame.new(0, -99999, 0)
+					end)
+				end
+			end
+			return oldIdx(self, key)
+		end)
+		setreadonly(mt, true)
+		oldIndex = oldIdx
+	end
+end)
+
+local hookSuccess2, hookError2 = pcall(function()
+	if hookfunction and gethiddenproperty then
+		local oldGHP
+		oldGHP = hookfunction(gethiddenproperty, newcclosure(function(self, prop)
+			if typeof(self) == "Instance" and hiddenParts[self] then
+				if prop == "Position" or prop == "CFrame" then
+					return (prop == "CFrame" and CFrame.new(0, -99999, 0) or Vector3.new(0, -99999, 0))
+				end
+			end
+			return oldGHP(self, prop)
+		end))
+	end
+end)
+
+
+local Player = Players.LocalPlayer
+
+if not game:IsLoaded() then
+	local notLoaded = Instance.new("Message")
+	xpcall(function()
+		notLoaded.Parent = CoreGui
+	end, function()
+		notLoaded.Parent = workspace
+	end)
+	notLoaded.Text = "Uhhhhhh is waiting for the game to load"
+	game.Loaded:Wait()
+	for i=1, 60 do
+		while task.wait() > 1 / 10 do end
+	end
+	notLoaded:Destroy()
+end
+
+local Camera = workspace.CurrentCamera
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+	local newCamera = workspace.CurrentCamera
+	if newCamera ~= nil then
+		Camera = newCamera
+	end
+end)
+Util._scrsiz = Vector2.new(512, 512)
+Util.GetScreenSize = function()
+	if Camera ~= nil then
+		Util._scrsiz = Camera.ViewportSize
+	end
+	return Util._scrsiz
+end
+Util.LoopedHSV = function(h, s, v)
+	h %= 1
+	s = math.clamp(s, 0, 1)
+	v = math.clamp(v, 0, 1)
+	return Color3.fromHSV(h, s, v)
+end
+Util.Instance = function(cl, p)
+	local i = Instance.new(cl)
+	i.Name = Util.RandomString()
+	i.Parent = p
+	return i
+end
+Util.LinkDestroyI2C = function(a, b)
+	a.Destroying:Once(function()
+		b:Disconnect()
+	end)
+end
+Util.LinkDestroyI2I = function(a, b)
+	Util.LinkDestroyI2C(b, a.Destroying:Once(function()
+		task.defer(b.Destroy, b)
+	end))
+end
+Util.ClearAllChildrenGui = function(a)
+	for _,v in a:GetChildren() do
+		if v:IsA("GuiObject") then
+			v:Destroy()
+		end
+	end
+end
+Util.GetTransparency = function(part)
+	return 1 - (1 - part.Transparency) * (1 - part.LocalTransparencyModifier)
+end
+Util.ScaleCFrame = function(cf, scale)
+	return cf + cf.Position * (scale - 1)
+end
+Util.IsGuiVisible = function(guiObject)
+	if not guiObject or not guiObject:IsA("GuiObject") then return false end
+	while guiObject do
+		if not guiObject.Visible then
+			return false
+		end
+		guiObject = guiObject:FindFirstAncestorWhichIsA("GuiObject")
+	end
+	return true
+end
+Util.IsGuiInteractable = function(guiObject)
+	if not guiObject or not guiObject:IsA("GuiObject") then return false end
+	while guiObject do
+		if not guiObject.Visible or not guiObject.Interactable then
+			return false
+		end
+		guiObject = guiObject:FindFirstAncestorWhichIsA("GuiObject")
+	end
+	return true
+end
+Util.WillGuiSinkInput = function(guiObject)
+	return Util.IsGuiInteractable(guiObject) and (guiObject.Active or guiObject:IsA("GuiButton"))
+end
+Util.UDim2ToVector2Scale = function(x)
+	return Vector2.new(x.X.Scale, x.Y.Scale)
+end
+Util.UDim2ToVector2Offset = function(x)
+	return Vector2.new(x.X.Offset, x.Y.Offset)
+end
+Util.Vector2ToUDim2Scale = function(x)
+	return UDim2.fromScale(x.X, x.Y)
+end
+Util.Vector2ToUDim2Offset = function(x)
+	return UDim2.fromOffset(x.X, x.Y)
+end
+Util.ForceTextSize = function(inst)
+	if inst:IsA("TextLabel") then
+		local original = inst.TextSize
+		local conn conn = RunService.PreRender:Connect(function()
+			local size = GuiService.PreferredTextSize.Name
+			if size == "Medium" then
+				inst.TextSize = original
+			elseif size == "Large" then
+				inst.TextSize = original - 4
+			elseif size == "Larger" then
+				inst.TextSize = original - 9
+			elseif size == "Largest" then
+				inst.TextSize = original - 14
+			end
+		end)
+		Util.LinkDestroyI2C(inst, conn)
+	end
+end
+Util.QueryPlayerSelector = function(query, excludespeaker)
+	if #query == 0 then return end
+	query = query:lower()
+	local t = {}
+	for _,player in Players:GetPlayers() do
+		if player ~= Player or not excludespeaker then
+			local a = player.DisplayName:lower():find(query)
+			local b = player.Name:lower():find(query)
+			if a then table.insert(t, {player, 1, a}) end
+			if b then table.insert(t, {player, 0, b}) end
+		end
+	end
+	table.sort(t, function(a, b)
+		if a[2] == b[2] then
+			return a[3] < b[3]
+		end
+		return a[2] < b[2]
+	end)
+	if t[1] then
+		return t[1][1]
+	end
+	return nil
+end
 --- == // Library Ui
 local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
