@@ -3444,6 +3444,7 @@ CracktroFrame.InputEnded:Connect(function(input)
 		
 		-- Start the actual script
 		task.spawn(function()
+end
 --𝐕𝐢𝐛𝐞 𝐂𝐨𝐝𝐢𝐧𝐠.
 
 -- _G.FN_HideIP
