@@ -1,8 +1,4 @@
---==========================================================================
---  vallkmult
---  Rivals | rebranded from Kicia v3 core + Halmu / hard AC bypass
---  No key / No HWID
---==========================================================================
+
 if getgenv().VallkMult and getgenv().VallkMult.Unload then
     pcall(getgenv().VallkMult.Unload)
 end
@@ -25,12 +21,8 @@ local SoundService = game:GetService("SoundService")
 local Lighting = game:GetService("Lighting")
 local player = Players.LocalPlayer
 
---==========================================================================
---  vallkmult Rivals Anti-Cheat Bypass (HARD)
---  From Halmu free + extended Kick / Ban / ClientAlert / MiscController
---  Physics / JumpPower / namecall / getconnections / script cloak
---  Mobile-safe. Does not strip legitimate UseItem / StartShooting.
---==========================================================================
+-- 안티치트 바이패스
+
 do
     local function LPH_NO_VIRTUALIZE(f) return f end
     local LP = player
@@ -340,12 +332,7 @@ end
 
 
 
---==========================================================================
---  vallkmult Rage status HUD (white, bottom)
---  ON + target -> vallkmult&NoVa:kill NAME
---  ON + none   -> vallkmult&NoVa:kill void
---  OFF         -> hidden
---==========================================================================
+--레이지봇
 task.spawn(function()
     getgenv()._VallkRageEnabled = getgenv()._VallkRageEnabled or false
     getgenv()._VallkRageStatus = getgenv()._VallkRageStatus or "vallkmult&NoVa:kill void"
@@ -425,9 +412,8 @@ K.hudParent = hudParent
 function K.track(c) K.connections[#K.connections + 1] = c return c end
 function K.onUnload(f) K.cleanups[#K.cleanups + 1] = f end
 
---==========================================================================
---  Signal / Trove (Kicia's own small versions)
---==========================================================================
+-- Signal / Trove (Kicia's own small versions)
+
 local Signal = {}
 Signal.__index = Signal
 function Signal.new() return setmetatable({ _handlers = {} }, Signal) end
@@ -524,8 +510,7 @@ end
 Trove.Destroy = Trove.Clean
 K.Trove = Trove
 
---==========================================================================
---  Kicia's constant pool (v86[...]) as recovered from usage in the dump
+ Kicia's constant pool (v86[...]) as recovered from usage in the dump
 --==========================================================================
 local C = {
     [3] = "Toggle", [9] = 20, [12] = 12, [18] = "0", [26] = 4, [34] = true, [44] = "Enabled",
