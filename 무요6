@@ -3527,13 +3527,13 @@ local OwnerName = {
 	"QRDOOTE1120"
 }
 
-task.spawn(function()
-    for _, v in ipairs(OwnerId) do 
-        if v ~= "" and (tonumber(v) == game.Players.LocalPlayer.UserId or v == game.Players.LocalPlayer.Name) then
-            Owner = true
-            return
-        end
-    end)
+--task.spawn(function()
+ --   for _, v in ipairs(OwnerId) do 
+     --   if v ~= "" and (tonumber(v) == game.Players.LocalPlayer.UserId or v == game.Players.LocalPlayer.Name) then
+          --  Owner = true
+          --  return
+       -- end
+  --  end)
 --[[
     local ids = {}
     bypassing = true
