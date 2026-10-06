@@ -1203,7 +1203,7 @@ local FrameTimer = tick()
 local FrameCounter = 0
 local FPS = 60
 
-local WatermarkConnection = rs2.Heartbeat:Connect(function()
+--local WatermarkConnection = rs2.Heartbeat:Connect(function()
     FrameCounter += 1
 
     if (tick() - FrameTimer) >= 1 then
