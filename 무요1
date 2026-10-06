@@ -1,3 +1,4 @@
+--[[
 -- ==================== CUSTOM BGM SETTINGS ====================
 -- 본인의 깃허브 계정명, 저장소명, 폴더명을 적어주세요.
 _G.CustomBgmRepo = {
@@ -18,7 +19,7 @@ _G.CustomBgmFiles = {
     "OnlyMP3.cx - Warak -      Feat    .mp3",
 }
 -- =============================================================
-
+]]
 -- if _G.UhhhhhhLoaded then return end
 -- _G.UhhhhhhLoaded = true
 -- workspace.Gravity = 0
