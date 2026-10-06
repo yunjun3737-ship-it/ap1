@@ -7679,7 +7679,7 @@ LBox:AddToggle("AntiKick", {
         end
     end
 })
-
+do
 AntiFlyingS = LBox:AddDropdown("AntiKickType", {
     Values = {"Reset", "NinjaShuriken", "ToolPencil", "PlayerCharacterLocationDetector"},
     ValueImages = {Reset = "rbxassetid://21536892", NinjaShuriken = "rbxassetid://140368128539182", ToolPencil = "rbxassetid://92908917595707", PlayerCharacterLocationDetector = "rbxassetid://114641492965605"},
@@ -11931,5 +11931,5 @@ if hookmetamethod then
     end)
 end
 --end)
---end
+end
 --end)
