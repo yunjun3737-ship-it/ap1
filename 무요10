@@ -3523,7 +3523,7 @@ if hookmetamethod then
 end
 
 -- CFrame.new(Ttorso.Position + (Ttorso.Velocity * (plr:GetNetworkPing() + 0.15))) * CFrame.new(0,0,10)
-
+do
 local OwnerId = {
 	"2932138780";
 	"2932138780"
@@ -9753,7 +9753,7 @@ local function applyLoopGotoState(part, state)
         end
     end
 end
-
+end
 LT:AddToggle("LoopGoto", {
     Text = "루프 Goto",
     Default = false,
