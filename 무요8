@@ -3521,7 +3521,7 @@ if hookmetamethod then
         return oldIndex(self, key)
     end)
 end
-]]
+
 -- CFrame.new(Ttorso.Position + (Ttorso.Velocity * (plr:GetNetworkPing() + 0.15))) * CFrame.new(0,0,10)
 
 local OwnerId = {
