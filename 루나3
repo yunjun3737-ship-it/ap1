@@ -1135,7 +1135,7 @@ Pill2Pad.PaddingRight = UDim.new(0, 16)
 local AvatarImg = Instance.new("ImageLabel", Pill2)
 AvatarImg.Size = UDim2.new(0, 24, 0, 24)
 AvatarImg.BackgroundTransparency = 1
-AvatarImg.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. plr.UserId .. "&width=420&height=420&format=png"
+--AvatarImg.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. plr.UserId .. "&width=420&height=420&format=png"
 local AvatarCorner = Instance.new("UICorner", AvatarImg)
 AvatarCorner.CornerRadius = UDim.new(1, 0)
 local AvatarStroke = Instance.new("UIStroke", AvatarImg)
