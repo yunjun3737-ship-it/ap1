@@ -1,4 +1,4 @@
--- This file was Deobfuscated & Cleaned using SigmaBot V4 | .gg/Zame2JAGDr
+
 
 local players = game:GetService("Players")
 local userInputService = game:GetService("UserInputService")
@@ -20,7 +20,7 @@ killGrabT = nil
 infLineExtendT = nil
 
 local window = rayfield:CreateWindow({
-Name = "반물사 스크립트", LoadingTitle = "반물사(부정행위 제작)", LoadingSubtitle = "by 부정행위", ConfigurationSaving = { Enabled = true, FileName = "MyHubConfig" }, ToggleUIKeybind = Enum.KeyCode.M, KeySystem = true, KeySettings = {
+Name = "반물사 스크립트", LoadingTitle = "반물사(부정행위 제작)", LoadingSubtitle = "by 부정행위", ConfigurationSaving = { Enabled = true, FileName = "MyHubConfig" }, ToggleUIKeybind = Enum.KeyCode.M, KeySystem = flase, KeySettings = {
 Title = "키 시스템", Subtitle = "디스코드 서버 와서 키 받아가세요.", Note = "디스코드 링크 https://discord.gg/83nWJbuQmP", FileName = "KeyrayFile", SaveKey = false, GrabKeyFromSite = false, Key = { "cheating" }, Actions = {
 {
 Text = "디스코드 링크", OnPress = function()
