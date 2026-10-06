@@ -3533,7 +3533,7 @@ task.spawn(function()
             Owner = true
             return
         end
-    end
+    end)
 --[[
     local ids = {}
     bypassing = true
@@ -11927,4 +11927,3 @@ end
 --end)
 end
 --end)
-end
