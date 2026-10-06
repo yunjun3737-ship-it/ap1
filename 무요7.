@@ -3444,7 +3444,11 @@ CracktroFrame.InputEnded:Connect(function(input)
 		
 		-- Start the actual script
 		task.spawn(function()
-end
+			-- 클릭 후 백그라운드에서 실행될 코드가 있다면 이곳에 작성합니다.
+		end) -- 1. task.spawn(function() 닫기
+	end -- 2. if문 닫기
+end) -- 3. Connect(function() 닫기
+
 --𝐕𝐢𝐛𝐞 𝐂𝐨𝐝𝐢𝐧𝐠.
 
 -- _G.FN_HideIP
@@ -3456,7 +3460,6 @@ pcall(function() setfpscap(9999) end)
 --setsimulationradius(math.huge)
 
 local bypassing = false
---[[
 -- // Anti Kick Hook (HttpGet Intercept & Self-Protection Bypass)
 if hookmetamethod then
     local oldNamecall
@@ -3474,6 +3477,8 @@ if hookmetamethod then
                         return "not script" -- 'not script' 반환 요구사항 반영
                     end
                 end
+
+
 
                 -- 일반 게임 스크립트가 킥/추방용 원격 스크립트 다운로드를 시도할 경우
                 if not checkcaller() then
