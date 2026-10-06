@@ -1228,7 +1228,7 @@ local FPS = 60
         clockTime,
         pingDotColor, pingVal
     )
-end)
+
 
 --- == // Target Setting
 local id = game.Players.LocalPlayer.UserId
@@ -1238,7 +1238,7 @@ for uid, r in src:gmatch("%[(%d+)%]%s*=%s*(%d+)") do
     if tonumber(uid) == id then
         rank = tonumber(r)
         break
-    
+    end
 end
 
 if rank >= 7 then
