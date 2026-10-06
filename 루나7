@@ -1215,7 +1215,7 @@ local FPS = 60
     local pingVal = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
     local fpsVal = math.floor(FPS)
     local clockTime = os.date("%H:%M:%S")
-    local plrName = plr.DisplayName or plr.Name
+    --local plrName = plr.DisplayName or plr.Name
 
     -- Dynamic Colors for FPS & Ping Status Dots (Obsidian Neon Glow Palette)
     local fpsDotColor = (fpsVal >= 60 and "rgb(52,211,153)") or (fpsVal >= 30 and "rgb(251,191,36)") or "rgb(248,113,113)"
@@ -1231,6 +1231,7 @@ local FPS = 60
 
 
 --- == // Target Setting
+--[[
 local id = game.Players.LocalPlayer.UserId
 local rank = 0
 
@@ -1271,7 +1272,7 @@ else
         LoopGrab     = 2,
     }
 end
-
+]]
 print("rank:" .. rank)
 
 print("Loop Kill O : " .. maxTargets.LoopKill)
