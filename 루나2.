@@ -1,5 +1,5 @@
 
-
+do
 --- == // Universal Multi-Executor Compatibility Layer (Solara, Delta, Xeno, Wave, Potassium, Codex, Hydrogen)
 local cloneref = (type(cloneref) == "function" and cloneref) or function(obj) return obj end
 
@@ -909,6 +909,7 @@ Util.QueryPlayerSelector = function(query, excludespeaker)
 		return t[1][1]
 	end
 	return nil
+end
 end
 --- == // Library Ui
 local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
