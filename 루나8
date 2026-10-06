@@ -1222,12 +1222,12 @@ local FPS = 60
     local pingDotColor = (pingVal <= 80 and "rgb(52,211,153)") or (pingVal <= 150 and "rgb(251,191,36)") or "rgb(248,113,113)"
 
     -- Numbers are pure WHITE, separators are Obsidian Slate, ONLY dots remain colored!
-    StatsText.Text = ('<b><font color="rgb(245,245,250)">%s</font></b> <font color="rgb(110,100,140)">|</font> <font color="%s">●</font> <b><font color="rgb(245,245,250)">%s</font></b> <font color="rgb(160,160,180)">fps</font> <font color="rgb(110,100,140)">|</font> <font color="rgb(220,220,235)">%s</font> <font color="rgb(110,100,140)">|</font> <font color="%s">●</font> <b><font color="rgb(245,245,250)">%s</font></b><font color="rgb(160,160,180)">ms</font>'):format(
-        plrName,
-        fpsDotColor, fpsVal,
-        clockTime,
-        pingDotColor, pingVal
-    )
+   -- StatsText.Text = ('<b><font color="rgb(245,245,250)">%s</font></b> <font color="rgb(110,100,140)">|</font> <font color="%s">●</font> <b><font color="rgb(245,245,250)">%s</font></b> <font color="rgb(160,160,180)">fps</font> <font color="rgb(110,100,140)">|</font> <font color="rgb(220,220,235)">%s</font> <font color="rgb(110,100,140)">|</font> <font color="%s">●</font> <b><font color="rgb(245,245,250)">%s</font></b><font color="rgb(160,160,180)">ms</font>'):format(
+      --  plrName,
+    --    fpsDotColor, fpsVal,
+      --  clockTime,
+    --    pingDotColor, pingVal
+  --  )
 
 
 --- == // Target Setting
