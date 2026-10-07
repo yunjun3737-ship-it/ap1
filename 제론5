@@ -11522,7 +11522,7 @@ local function fetch(parent, name, key)
 end
 local AntiGrabTypeValues = {Struggle = false, Ragdoll = false, Sit = false, Anchored = false}
 
-Tab:AddToggle({
+antiTab:AddToggle({
     Name = "안티 그랩",
     Default = false,
     Flag = "AntiGrabToggle",
