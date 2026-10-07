@@ -8208,7 +8208,7 @@ do
 LoopTab:AddSection({
     Name = "onwer kick best"
 })
-do
+
 local oatsKickActive = false
 local oatsKickTask = nil
 
