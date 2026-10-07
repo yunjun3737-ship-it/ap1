@@ -8212,6 +8212,7 @@ local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local workspace = game:GetService("Workspace")
 
 local function getPlayer(name)
     if not name or name == "" then return nil end
@@ -8226,6 +8227,43 @@ end
 
 local oatsKickActive = false
 local oatsKickTask = nil
+local oatsKickRagdollOpt = false
+local oatsKickLagOpt = false
+local lagTask = nil
+
+local function manageLag()
+    if oatsKickActive and oatsKickLagOpt then
+        if not lagTask then
+            lagTask = task.spawn(function()
+                local Event = ReplicatedStorage:FindFirstChild("GrabEvents") and ReplicatedStorage.GrabEvents:FindFirstChild("CreateGrabLine")
+                local SpawnLocation = workspace:FindFirstChild("SpawnLocation")
+                while oatsKickActive and oatsKickLagOpt do
+                    task.wait(0.05)
+                    if Event and SpawnLocation then
+                        pcall(function()
+                            Event:FireServer(SpawnLocation, CFrame.new(2000000000, 0, 2000000000, 1, 0, 0, 0, 1, 0, 0, 0, 1))
+                        end)
+                    end
+                end
+            end)
+        end
+    else
+        if lagTask then task.cancel(lagTask) lagTask = nil end
+    end
+end
+
+local function cleanupRagdoll()
+    local inv = Player:FindFirstChild("Backpack")
+    if inv then
+        local deskToRemove = inv:FindFirstChild("RB")
+        if deskToRemove then
+            local rsToys = ReplicatedStorage:FindFirstChild("MenuToys")
+            if rsToys and rsToys:FindFirstChild("DestroyToy") then
+                rsToys.DestroyToy:FireServer(deskToRemove)
+            end
+        end
+    end
+end
 
 local function loopBestKickF()
     if oatsKickTask then task.cancel(oatsKickTask) oatsKickTask = nil end
@@ -8235,6 +8273,7 @@ local function loopBestKickF()
         local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
         if not (myChar and myHRP) then
             oatsKickActive = false
+            manageLag()
             return
         end
 
@@ -8284,9 +8323,90 @@ local function loopBestKickF()
             myChar = Player.Character
             myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
             local myHead = myChar and myChar:FindFirstChild("Head")
+            local inv = Player:FindFirstChild("Backpack")
 
-            if not (myChar and myHRP and myHead) then
+            if not (myChar and myHRP and myHead and inv) then
                 continue
+            end
+
+            if oatsKickRagdollOpt then
+                local desk = inv:FindFirstChild("RB")
+                if not desk then
+                    local rsToys = ReplicatedStorage:FindFirstChild("MenuToys")
+                    local spawnRemote = rsToys and rsToys:FindFirstChild("SpawnToyRemoteFunction")
+                    if spawnRemote then
+                        local offset = myHRP.CFrame.LookVector * -24
+                        local spawnCF = myHRP.CFrame + offset
+                        task.spawn(function()
+                            pcall(function()
+                                spawnRemote:InvokeServer("PalletLightBrown", spawnCF, spawnCF.Position)
+                            end)
+                            task.wait(0.1)
+                            for attempt = 1, 3 do
+                                for _, item in pairs(inv:GetChildren()) do
+                                    if item.Name == "PalletLightBrown" then
+                                        local soundPart = item:FindFirstChild("SoundPart")
+                                        if soundPart then
+                                            for i = 1, 3 do
+                                                pcall(function()
+                                                    local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
+                                                    if grabEvents and grabEvents:FindFirstChild("SetNetworkOwner") then
+                                                        grabEvents.SetNetworkOwner:FireServer(soundPart, soundPart.CFrame)
+                                                        grabEvents.SetNetworkOwner:FireServer(soundPart, myHRP.CFrame)
+                                                    end
+                                                end)
+                                            end
+                                            local partOwner = soundPart:FindFirstChild("PartOwner")
+                                            if partOwner and partOwner.Value == Player.Name then
+                                                item.Name = "RB"
+                                                return
+                                            end
+                                        end
+                                    end
+                                end
+                                task.wait()
+                            end
+                        end)
+                    end
+                end
+
+                if desk then
+                    pcall(function()
+                        for _, part in ipairs(desk:GetDescendants()) do
+                            if part:IsA("BasePart") then
+                                part.CanCollide = false
+                            end
+                        end
+                    end)
+
+                    local soundPart = desk:FindFirstChild("SoundPart")
+                    local main = desk:FindFirstChild("Main")
+                    
+                    if soundPart and main then
+                        local partOwner = soundPart:FindFirstChild("PartOwner")
+                        if partOwner and partOwner.Value == Player.Name then
+                            local bp = main:FindFirstChildOfClass("BodyPosition")
+                            if not bp then
+                                bp = Instance.new("BodyPosition")
+                                bp.MaxForce = Vector3.new(999999, 999999, 999999)
+                                bp.P = 500000
+                                bp.D = 5000
+                                bp.Parent = main
+                            end
+
+                            soundPart.CFrame = CFrame.new(0, 9999, 0)
+                            task.wait(0.01)
+                            soundPart.CFrame = tHRP.CFrame * CFrame.Angles(math.rad(-90), 0, 0)
+                            bp.Position = soundPart.Position
+                        else
+                            cleanupRagdoll()
+                        end
+                    else
+                        cleanupRagdoll()
+                    end
+                end
+            else
+                cleanupRagdoll()
             end
 
             local dist = (tHRP.Position - myHRP.Position).Magnitude
@@ -8440,16 +8560,20 @@ local function loopBestKickF()
                 end
             end
         end
-
+        
+        cleanupRagdoll()
         oatsKickActive = false
+        manageLag()
     end)
 end
 
 LoopTab:AddToggle({
-    Name = "Best kick loop   <font color='rgb(255,154,123)'>[Kick]</font>",
+    Name = "Set Onwer Kick TOP1<font color='rgb(255,154,123)'>[Kick]</font>",
     Default = false,
     Callback = function(Value)
         oatsKickActive = Value
+        manageLag()
+        
         if oatsKickActive then
             table.clear(playersInLoop2V)
             if playersInLoop1V then
@@ -8462,6 +8586,7 @@ LoopTab:AddToggle({
             loopBestKickF()
         else
             oatsKickActive = false
+            manageLag()
             if oatsKickTask then
                 task.cancel(oatsKickTask)
                 oatsKickTask = nil
@@ -8497,9 +8622,36 @@ LoopTab:AddToggle({
                 end
                 table.clear(playersInLoop2V)
             end
+            cleanupRagdoll()
         end
     end
 })
+
+LoopTab:AddToggle({
+    Name = " ┗ Options: Ragdoll",
+    Default = false,
+    Callback = function(Value)
+        oatsKickRagdollOpt = Value
+        if not Value then
+            cleanupRagdoll()
+        end
+    end
+})
+
+LoopTab:AddToggle({
+    Name = " ┗ Options: Line Lag",
+    Default = false,
+    Callback = function(Value)
+        oatsKickLagOpt = Value
+        manageLag()
+    end
+})
+
+
+
+            
+                
+                             
 end
              
 LoopTab:AddSection({                         
