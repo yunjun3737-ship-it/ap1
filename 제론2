@@ -11495,6 +11495,31 @@ antiTab:AddToggle({
 antiGrabV2Active = false
 antiGrabV2Task = nil
 do
+local pp = {}
+local PARTS = {
+    {"Humanoid",         "hum"},
+    {"HumanoidRootPart", "hrp"},
+    {"Head",             "head"},
+    {"Torso",            "torso"},
+    {"Left Arm",         "la"},
+    {"Right Arm",        "ra"},
+    {"Left Leg",         "ll"},
+    {"Right Leg",        "rl"},
+}
+
+local LIMB_CHILDREN = {
+    {"Left Arm",  "la"},
+    {"Right Arm", "ra"},
+    {"Left Leg",  "ll"},
+    {"Right Leg", "rl"},
+}
+
+local function fetch(parent, name, key)
+    task.spawn(function()
+        repeat rs2.PreSimulation:Wait() until parent:FindFirstChild(name)
+        pp[key] = parent[name]
+    end)
+end
 local AntiGrabTypeValues = {Struggle = false, Ragdoll = false, Sit = false, Anchored = false}
 
 antiTab:AddToggle({
