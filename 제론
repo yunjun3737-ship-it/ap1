@@ -8238,7 +8238,6 @@ local function loopBestKickF()
             return
         end
 
-        local savedPos = myHRP.CFrame
         local lastRemoteFire = tick()
 
         local function sno(part)
@@ -8255,15 +8254,30 @@ local function loopBestKickF()
             if playersInLoop1V then
                 table.clear(playersInLoop2V)
                 for i, e in ipairs(playersInLoop1V) do
-                    local nameOnly = e:match("^(.-) %(") or e
+                    local nameOnly = tostring(e):match("^(.-) %(") or tostring(e)
                     table.insert(playersInLoop2V, nameOnly)
                 end
             end
 
-            local currentTargetName = playersInLoop2V and playersInLoop2V[1]
-            local targetPlayer = currentTargetName and getPlayer(currentTargetName)
+            local targetPlayer, tChar, tHRP, tHum
+            if playersInLoop2V then
+                for _, name in ipairs(playersInLoop2V) do
+                    local p = getPlayer(name)
+                    if p and p.Character then
+                        local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                        local hum = p.Character:FindFirstChild("Humanoid")
+                        if hrp and hum and hum.Health > 0 then
+                            targetPlayer = p
+                            tChar = p.Character
+                            tHRP = hrp
+                            tHum = hum
+                            break
+                        end
+                    end
+                end
+            end
             
-            if not targetPlayer or not targetPlayer.Character then
+            if not targetPlayer then
                 continue
             end
 
@@ -8271,17 +8285,15 @@ local function loopBestKickF()
             myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
             local myHead = myChar and myChar:FindFirstChild("Head")
 
-            local tChar = targetPlayer.Character
-            local tHRP = tChar and tChar:FindFirstChild("HumanoidRootPart")
-            local tHum = tChar and tChar:FindFirstChild("Humanoid")
-
-            if not (myChar and myHRP and myHead) or not (tHRP and tHum) or tHum.Health <= 0 then
+            if not (myChar and myHRP and myHead) then
                 continue
             end
 
             local dist = (tHRP.Position - myHRP.Position).Magnitude
 
             if dist > 30 then
+                local currentSavedPos = myHRP.CFrame
+
                 pcall(function()
                     myChar:PivotTo(tHRP.CFrame * CFrame.new(0, 2, 4))
                 end)
@@ -8338,8 +8350,8 @@ local function loopBestKickF()
 
                 if oatsKickActive then
                     pcall(function()
-                        myChar:PivotTo(savedPos)
-                        tHRP.CFrame = savedPos * CFrame.new(0, 15, 0)
+                        myChar:PivotTo(currentSavedPos)
+                        tHRP.CFrame = currentSavedPos * CFrame.new(0, 15, 0)
                     end)
                 end
                 
@@ -8400,63 +8412,9 @@ local function loopBestKickF()
             end
         end
 
-        local finalTargetName = playersInLoop2V and playersInLoop2V[1]
-        local finalTarget = finalTargetName and getPlayer(finalTargetName)
-        
-        if finalTarget and finalTarget.Character then
-            local tH = finalTarget.Character:FindFirstChild("HumanoidRootPart")
-            if tH then
-                local align = tH:FindFirstChild("KickAlign")
-                local rot = tH:FindFirstChild("KickRot")
-                local att0 = tH:FindFirstChild("KickAtt0")
-                
-                if align then 
-                    if align.Attachment1 then align.Attachment1:Destroy() end
-                    align:Destroy() 
-                end
-                if rot then rot:Destroy() end
-                if att0 then att0:Destroy() end
-
-                pcall(function()
-                    local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
-                    local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
-                    if destroyLine then
-                        destroyLine:FireServer(tH)
-                    end
-                end)
-            end
-        end
-
-        oatsKickActive = false
-    end)
-end
-
-LoopTab:AddToggle({
-    Name = "Set Onwer Kick TOP1  <font color='rgb(255,154,123)'>[Kick]</font>",
-    Default = false,
-    Callback = function(Value)
-        oatsKickActive = Value
-        if oatsKickActive then
-            table.clear(playersInLoop2V)
-            if playersInLoop1V then
-                for i, e in ipairs(playersInLoop1V) do
-                    local nameOnly = e:match("^(.-) %(") or e
-                    table.insert(playersInLoop2V, nameOnly)
-                end
-            end
-            
-            loopBestKickF()
-        else
-            oatsKickActive = false
-            if oatsKickTask then
-                task.cancel(oatsKickTask)
-                oatsKickTask = nil
-            end
-            
-            if playersInLoop2V then
-                local currentTargetName = playersInLoop2V[1]
-                local targetPlayer = currentTargetName and getPlayer(currentTargetName)
-                
+        if playersInLoop2V then
+            for _, currentTargetName in ipairs(playersInLoop2V) do
+                local targetPlayer = getPlayer(currentTargetName)
                 if targetPlayer and targetPlayer.Character then
                     local tH = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
                     if tH then
@@ -8472,12 +8430,69 @@ LoopTab:AddToggle({
                         if att0 then att0:Destroy() end
 
                         pcall(function()
-                            local grabEvents = game:GetService("ReplicatedStorage"):FindFirstChild("GrabEvents")
+                            local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
                             local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
                             if destroyLine then
                                 destroyLine:FireServer(tH)
                             end
                         end)
+                    end
+                end
+            end
+        end
+
+        oatsKickActive = false
+    end)
+end
+
+LoopTab:AddToggle({
+    Name = "Best kick loop   <font color='rgb(255,154,123)'>[Kick]</font>",
+    Default = false,
+    Callback = function(Value)
+        oatsKickActive = Value
+        if oatsKickActive then
+            table.clear(playersInLoop2V)
+            if playersInLoop1V then
+                for i, e in ipairs(playersInLoop1V) do
+                    local nameOnly = tostring(e):match("^(.-) %(") or tostring(e)
+                    table.insert(playersInLoop2V, nameOnly)
+                end
+            end
+            
+            loopBestKickF()
+        else
+            oatsKickActive = false
+            if oatsKickTask then
+                task.cancel(oatsKickTask)
+                oatsKickTask = nil
+            end
+            
+            if playersInLoop2V then
+                for _, currentTargetName in ipairs(playersInLoop2V) do
+                    local targetPlayer = getPlayer(currentTargetName)
+                    
+                    if targetPlayer and targetPlayer.Character then
+                        local tH = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if tH then
+                            local align = tH:FindFirstChild("KickAlign")
+                            local rot = tH:FindFirstChild("KickRot")
+                            local att0 = tH:FindFirstChild("KickAtt0")
+                            
+                            if align then 
+                                if align.Attachment1 then align.Attachment1:Destroy() end
+                                align:Destroy() 
+                            end
+                            if rot then rot:Destroy() end
+                            if att0 then att0:Destroy() end
+
+                            pcall(function()
+                                local grabEvents = game:GetService("ReplicatedStorage"):FindFirstChild("GrabEvents")
+                                local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
+                                if destroyLine then
+                                    destroyLine:FireServer(tH)
+                                end
+                            end)
+                        end
                     end
                 end
                 table.clear(playersInLoop2V)
@@ -8486,10 +8501,8 @@ LoopTab:AddToggle({
     end
 })
 
-
-                        
-end
-LoopTab:AddSection({
+             
+LoopTab:AddSection({                         
     Name = "destroy Gucci"
 })
 
