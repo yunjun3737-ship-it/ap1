@@ -8500,7 +8500,7 @@ LoopTab:AddToggle({
         end
     end
 })
-
+end
              
 LoopTab:AddSection({                         
     Name = "destroy Gucci"
