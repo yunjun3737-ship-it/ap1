@@ -11522,7 +11522,7 @@ local function fetch(parent, name, key)
 end
 local AntiGrabTypeValues = {Struggle = false, Ragdoll = false, Sit = false, Anchored = false}
 
-antiTab:AddToggle({
+Tab:AddToggle({
     Name = "안티 그랩",
     Default = false,
     Flag = "AntiGrabToggle",
@@ -11607,7 +11607,7 @@ antiTab:AddToggle({
     end
 })
 
-antiTab:AddDropdown({
+Tab:AddDropdown({
     Name = "AntiGrabType",
     Default = {},
     Options = {"Struggle", "Ragdoll", "Sit", "Anchored"},
@@ -11622,8 +11622,9 @@ antiTab:AddDropdown({
     end
 })
 
+
 antiTab:AddToggle({
-    Name = "카운터 킬 (셋오너/블룹맨 반격)",
+    Name = "Counter kill",
     Default = false,
     Flag = "AntiGrabCounterKillToggle",
     Save = true,
