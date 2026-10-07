@@ -8204,6 +8204,256 @@ LoopTab:AddButton({
         end
     end
 })
+do
+LoopTab:AddSection({
+    Name = "onwer kick best"
+})
+local oatsKickActive = false
+local oatsKickTask = nil
+
+local function loopBestKickF()
+    oatsKickTask = task.spawn(function()
+        local RunService = game:GetService("RunService")
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        
+        local myChar = Player.Character
+        local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+        if not (myChar and myHRP) then
+            oatsKickActive = false
+            return
+        end
+
+        local savedPos = myHRP.CFrame
+        local lastRemoteFire = tick()
+
+        local function sno(part)
+            pcall(function()
+                local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
+                local setNetOwner = grabEvents and grabEvents:FindFirstChild("SetNetworkOwner")
+                if setNetOwner then
+                    setNetOwner:FireServer(part, part.CFrame)
+                end
+            end)
+        end
+
+        while oatsKickActive and RunService.Heartbeat:Wait() do
+            local currentTargetName = playersInLoop2V[1]
+            local targetPlayer = currentTargetName and getPlayer(currentTargetName)
+            
+            if not targetPlayer or not targetPlayer.Character then
+                break
+            end
+
+            myChar = Player.Character
+            myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            local myHead = myChar and myChar:FindFirstChild("Head")
+
+            local tChar = targetPlayer.Character
+            local tHRP = tChar and tChar:FindFirstChild("HumanoidRootPart")
+            local tHum = tChar and tChar:FindFirstChild("Humanoid")
+
+            if not (myChar and myHRP and myHead) or not (tHRP and tHum) or tHum.Health <= 0 then
+                continue
+            end
+
+            local dist = (tHRP.Position - myHRP.Position).Magnitude
+
+            if dist > 30 then
+                pcall(function()
+                    myChar:PivotTo(tHRP.CFrame * CFrame.new(0, 2, 4))
+                end)
+                
+                sno(tHRP)
+
+                if not tHRP:FindFirstChild("KickAlign") then
+                    local oldBp = tHRP:FindFirstChildOfClass("BodyPosition")
+                    if oldBp then oldBp:Destroy() end
+
+                    local att0 = Instance.new("Attachment", tHRP)
+                    att0.Name = "KickAtt0"
+                    
+                    local att1 = Instance.new("Attachment", workspace.Terrain)
+                    att1.Name = "KickAtt1"
+
+                    local alignPos = Instance.new("AlignPosition")
+                    alignPos.Name = "KickAlign"
+                    alignPos.Attachment0 = att0
+                    alignPos.Attachment1 = att1
+                    alignPos.MaxForce = math.huge
+                    alignPos.Responsiveness = 200
+                    alignPos.Parent = tHRP
+
+                    local alignRot = Instance.new("AlignOrientation")
+                    alignRot.Name = "KickRot"
+                    alignRot.Attachment0 = att0
+                    alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment
+                    alignRot.CFrame = CFrame.new() 
+                    alignRot.MaxTorque = math.huge
+                    alignRot.Responsiveness = 200
+                    alignRot.Parent = tHRP
+                end
+
+                local grabStartTime = tick()
+                while (tick() - grabStartTime) < 0.3 and oatsKickActive do
+                    task.wait(0.05)
+                    sno(tHRP)
+                    pcall(function()
+                        local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
+                        local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
+                        if destroyLine then
+                            destroyLine:FireServer(tHRP)
+                        end
+                    end)
+                    
+                    local align = tHRP:FindFirstChild("KickAlign")
+                    if myHead and align and align.Attachment1 then
+                        align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, 15, 0)
+                    end
+                end
+
+                if oatsKickActive then
+                    pcall(function()
+                        myChar:PivotTo(savedPos)
+                        tHRP.CFrame = savedPos * CFrame.new(0, 15, 0)
+                    end)
+                end
+                
+                continue
+            end
+
+            if not tHRP:FindFirstChild("KickAlign") then
+                local oldBp = tHRP:FindFirstChildOfClass("BodyPosition")
+                if oldBp then oldBp:Destroy() end
+
+                local att0 = Instance.new("Attachment", tHRP)
+                att0.Name = "KickAtt0"
+                
+                local att1 = Instance.new("Attachment", workspace.Terrain)
+                att1.Name = "KickAtt1"
+
+                local alignPos = Instance.new("AlignPosition")
+                alignPos.Name = "KickAlign"
+                alignPos.Attachment0 = att0
+                alignPos.Attachment1 = att1
+                alignPos.MaxForce = math.huge
+                alignPos.Responsiveness = 200
+                alignPos.Parent = tHRP
+
+                local alignRot = Instance.new("AlignOrientation")
+                alignRot.Name = "KickRot"
+                alignRot.Attachment0 = att0
+                alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment
+                alignRot.CFrame = CFrame.new() 
+                alignRot.MaxTorque = math.huge
+                alignRot.Responsiveness = 200
+                alignRot.Parent = tHRP
+            end
+
+            sno(tHRP)
+
+            local align = tHRP:FindFirstChild("KickAlign")
+            if align and align.Attachment1 and oatsKickActive then
+                align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, 20, 0)
+            end
+
+            local rot = tHRP:FindFirstChild("KickRot")
+            if rot then 
+                rot.CFrame = CFrame.Angles(0, 0, 0) 
+            end
+
+            if tick() - lastRemoteFire > 0.05 and oatsKickActive then
+                pcall(function()
+                    local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
+                    local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
+                    if destroyLine then
+                        destroyLine:FireServer(tHRP)
+                    end
+                end)
+                lastRemoteFire = tick()
+            end
+        end
+
+        local finalTargetName = playersInLoop2V[1]
+        local finalTarget = finalTargetName and getPlayer(finalTargetName)
+        
+        if finalTarget and finalTarget.Character then
+            local tH = finalTarget.Character:FindFirstChild("HumanoidRootPart")
+            if tH then
+                local align = tH:FindFirstChild("KickAlign")
+                local rot = tH:FindFirstChild("KickRot")
+                local att0 = tH:FindFirstChild("KickAtt0")
+                
+                if align then 
+                    if align.Attachment1 then align.Attachment1:Destroy() end
+                    align:Destroy() 
+                end
+                if rot then rot:Destroy() end
+                if att0 then att0:Destroy() end
+
+                pcall(function()
+                    local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
+                    local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
+                    if destroyLine then
+                        destroyLine:FireServer(tH)
+                    end
+                end)
+            end
+        end
+
+        oatsKickActive = false
+    end)
+end
+
+LoopTab:AddToggle({
+    Name = "Best kick loop   <font color='rgb(255,154,123)'>[Kick]</font>",
+    Default = false,
+    Callback = function(Value)
+        oatsKickActive = Value
+        if oatsKickActive then
+            table.clear(playersInLoop2V)
+            for i, e in ipairs(playersInLoop1V) do
+                local nameOnly = e:match("^(.-) %(") or e
+                table.insert(playersInLoop2V, nameOnly)
+            end
+            loopBestKickF()
+        else
+            oatsKickActive = false
+            if oatsKickTask then
+                task.cancel(oatsKickTask)
+                oatsKickTask = nil
+            end
+            
+            local currentTargetName = playersInLoop2V[1]
+            local targetPlayer = currentTargetName and getPlayer(currentTargetName)
+            
+            if targetPlayer and targetPlayer.Character then
+                local tH = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if tH then
+                    local align = tH:FindFirstChild("KickAlign")
+                    local rot = tH:FindFirstChild("KickRot")
+                    local att0 = tH:FindFirstChild("KickAtt0")
+                    
+                    if align then 
+                        if align.Attachment1 then align.Attachment1:Destroy() end
+                        align:Destroy() 
+                    end
+                    if rot then rot:Destroy() end
+                    if att0 then att0:Destroy() end
+
+                    pcall(function()
+                        local grabEvents = game:GetService("ReplicatedStorage"):FindFirstChild("GrabEvents")
+                        local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
+                        if destroyLine then
+                            destroyLine:FireServer(tH)
+                        end
+                    end)
+                end
+            end
+            table.clear(playersInLoop2V)
+        end
+    end
+})
+end
 LoopTab:AddSection({
     Name = "destroy Gucci"
 })
