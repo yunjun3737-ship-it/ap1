@@ -8252,11 +8252,19 @@ local function loopBestKickF()
         end
 
         while oatsKickActive and RunService.Heartbeat:Wait() do
+            if playersInLoop1V then
+                table.clear(playersInLoop2V)
+                for i, e in ipairs(playersInLoop1V) do
+                    local nameOnly = e:match("^(.-) %(") or e
+                    table.insert(playersInLoop2V, nameOnly)
+                end
+            end
+
             local currentTargetName = playersInLoop2V and playersInLoop2V[1]
             local targetPlayer = currentTargetName and getPlayer(currentTargetName)
             
             if not targetPlayer or not targetPlayer.Character then
-                break
+                continue
             end
 
             myChar = Player.Character
@@ -8424,7 +8432,7 @@ local function loopBestKickF()
 end
 
 LoopTab:AddToggle({
-    Name = "Best kick loop   <font color='rgb(255,154,123)'>[Kick]</font>",
+    Name = "Set Onwer Kick TOP1  <font color='rgb(255,154,123)'>[Kick]</font>",
     Default = false,
     Callback = function(Value)
         oatsKickActive = Value
@@ -8437,11 +8445,7 @@ LoopTab:AddToggle({
                 end
             end
             
-            if playersInLoop2V and #playersInLoop2V > 0 then
-                loopBestKickF()
-            else
-                oatsKickActive = false
-            end
+            loopBestKickF()
         else
             oatsKickActive = false
             if oatsKickTask then
@@ -8481,7 +8485,6 @@ LoopTab:AddToggle({
         end
     end
 })
-
 
 
                         
