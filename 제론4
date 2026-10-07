@@ -8213,11 +8213,6 @@ local Player = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-getgenv().playersInLoop1V = getgenv().playersInLoop1V or {}
-getgenv().playersInLoop2V = getgenv().playersInLoop2V or {}
-local playersInLoop1V = getgenv().playersInLoop1V
-local playersInLoop2V = getgenv().playersInLoop2V
-
 local function getPlayer(name)
     if not name or name == "" then return nil end
     name = string.lower(name)
@@ -8257,7 +8252,7 @@ local function loopBestKickF()
         end
 
         while oatsKickActive and RunService.Heartbeat:Wait() do
-            local currentTargetName = playersInLoop2V[1]
+            local currentTargetName = playersInLoop2V and playersInLoop2V[1]
             local targetPlayer = currentTargetName and getPlayer(currentTargetName)
             
             if not targetPlayer or not targetPlayer.Character then
@@ -8397,7 +8392,7 @@ local function loopBestKickF()
             end
         end
 
-        local finalTargetName = playersInLoop2V[1]
+        local finalTargetName = playersInLoop2V and playersInLoop2V[1]
         local finalTarget = finalTargetName and getPlayer(finalTargetName)
         
         if finalTarget and finalTarget.Character then
@@ -8442,7 +8437,7 @@ LoopTab:AddToggle({
                 end
             end
             
-            if #playersInLoop2V > 0 then
+            if playersInLoop2V and #playersInLoop2V > 0 then
                 loopBestKickF()
             else
                 oatsKickActive = false
@@ -8454,36 +8449,40 @@ LoopTab:AddToggle({
                 oatsKickTask = nil
             end
             
-            local currentTargetName = playersInLoop2V[1]
-            local targetPlayer = currentTargetName and getPlayer(currentTargetName)
-            
-            if targetPlayer and targetPlayer.Character then
-                local tH = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if tH then
-                    local align = tH:FindFirstChild("KickAlign")
-                    local rot = tH:FindFirstChild("KickRot")
-                    local att0 = tH:FindFirstChild("KickAtt0")
-                    
-                    if align then 
-                        if align.Attachment1 then align.Attachment1:Destroy() end
-                        align:Destroy() 
-                    end
-                    if rot then rot:Destroy() end
-                    if att0 then att0:Destroy() end
-
-                    pcall(function()
-                        local grabEvents = game:GetService("ReplicatedStorage"):FindFirstChild("GrabEvents")
-                        local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
-                        if destroyLine then
-                            destroyLine:FireServer(tH)
+            if playersInLoop2V then
+                local currentTargetName = playersInLoop2V[1]
+                local targetPlayer = currentTargetName and getPlayer(currentTargetName)
+                
+                if targetPlayer and targetPlayer.Character then
+                    local tH = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if tH then
+                        local align = tH:FindFirstChild("KickAlign")
+                        local rot = tH:FindFirstChild("KickRot")
+                        local att0 = tH:FindFirstChild("KickAtt0")
+                        
+                        if align then 
+                            if align.Attachment1 then align.Attachment1:Destroy() end
+                            align:Destroy() 
                         end
-                    end)
+                        if rot then rot:Destroy() end
+                        if att0 then att0:Destroy() end
+
+                        pcall(function()
+                            local grabEvents = game:GetService("ReplicatedStorage"):FindFirstChild("GrabEvents")
+                            local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
+                            if destroyLine then
+                                destroyLine:FireServer(tH)
+                            end
+                        end)
+                    end
                 end
+                table.clear(playersInLoop2V)
             end
-            table.clear(playersInLoop2V)
         end
     end
 })
+
+
 
                         
 end
