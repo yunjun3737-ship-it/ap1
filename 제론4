@@ -11607,7 +11607,7 @@ Tab:AddToggle({
     end
 })
 
-Tab:AddDropdown({
+antiTab:AddDropdown({
     Name = "AntiGrabType",
     Default = {},
     Options = {"Struggle", "Ragdoll", "Sit", "Anchored"},
