@@ -11492,9 +11492,284 @@ antiTab:AddToggle({
 	end    
 })
 
---antiGrabV2Active = false
---antiGrabV2Task = nil
+antiGrabV2Active = false
+antiGrabV2Task = nil
+do
+local AntiGrabTypeValues = {Struggle = false, Ragdoll = false, Sit = false, Anchored = false}
 
+Tab:AddToggle({
+    Name = "안티 그랩",
+    Default = false,
+    Flag = "AntiGrabToggle",
+    Save = true,
+    Callback = function(Value)
+        if Value then
+            AntiGrabC = rs2.PreSimulation:Connect(function(deltaTime)
+                if not pp.char then return end
+                pp.hum.AutoRotate = true
+                
+                local grabParts = workspace:FindFirstChild("GrabParts")
+                if grabParts then
+                    local grabPart = grabParts:FindFirstChild("GrabPart")
+                    local weld = grabPart and grabPart:FindFirstChild("WeldConstraint")
+                    if weld and weld.Part1 and weld.Part1.Parent == pp.char then
+                        weld.Part1 = nil
+                        pcall(function() weld:Destroy() end)
+                    end
+                end
+
+                if isHeld.Value then
+                    task.spawn(function()
+                        repeat rs2.PreSimulation:Wait() until isHeld.Value or not Value
+                        repeat rs2.PreSimulation:Wait() until not isHeld.Value or not Value
+                        if AntiGrabTypeValues["Anchored"] then pp.hrp.Massless = false end
+                        repeat rs2.PreSimulation:Wait()
+                        if pp.rag.Value and isHeld.Value then
+                            if pp.head then pp.head.CFrame = pp.hrp.CFrame * CFrame.new(0,1.5,0) pp.head.AssemblyAngularVelocity = Vector3.zero pp.head_c.MaxFrictionTorque = math.huge end
+                            if pp.la then pp.la.CFrame = pp.hrp.CFrame * CFrame.new(-1.5,0,0) pp.la.AssemblyAngularVelocity = Vector3.zero pp.la_p.CanCollide = false pp.la.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                            if pp.ra then pp.ra.CFrame = pp.hrp.CFrame * CFrame.new(1.5,0,0) pp.ra.AssemblyAngularVelocity = Vector3.zero pp.ra_p.CanCollide = false pp.ra.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                            if pp.ll then pp.ll.CFrame = pp.hrp.CFrame * CFrame.new(-0.5,-2,0) pp.ll.AssemblyAngularVelocity = Vector3.zero pp.ll_p.CanCollide = false pp.ll.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                            if pp.rl then pp.rl.CFrame = pp.hrp.CFrame * CFrame.new(0.5,-2,0) pp.rl.AssemblyAngularVelocity = Vector3.zero pp.rl_p.CanCollide = false pp.rl.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                        end
+                        until not isHeld.Value and not pp.rag.Value or not Value
+                        task.wait(0.3)
+                        if pp.head then
+                            if pp.head_c then pp.head_c.MaxFrictionTorque = 20 end
+                            pp.head.CustomPhysicalProperties = nil
+                        end
+                        if pp.la then pp.la.CustomPhysicalProperties = nil end
+                        if pp.ra then pp.ra.CustomPhysicalProperties = nil end
+                        if pp.ll then pp.ll.CustomPhysicalProperties = nil end
+                        if pp.rl then pp.rl.CustomPhysicalProperties = nil end
+                        if not isHeld.Value and AntiGrabTypeValues["Sit"] and not pp.rag.Value then pp.hum:ChangeState(Enum.HumanoidStateType.GettingUp) end
+                    end)
+                end
+                if not pp.hrp and pp.rag.Value then
+                    pp.hum:ChangeState(Enum.HumanoidStateType.Dead)
+                    pp.hum.Health = 0
+                    rs.CharacterEvents.Struggle:FireServer()
+                    return
+                end
+                if Owner and AntiGrabTypeValues["Struggle"] then rs.CharacterEvents.Struggle:FireServer() end
+                if isHeld.Value then
+                    if AntiGrabTypeValues["Anchored"] then pp.hrp.Massless = true end
+                    if AntiGrabTypeValues["Struggle"] and not Owner then rs.CharacterEvents.Struggle:FireServer() end
+                    if AntiGrabTypeValues["Sit"] then pp.hum:ChangeState(Enum.HumanoidStateType.StrafingNoPhysics) end
+                end
+                if isHeld.Value then
+                    if AntiGrabTypeValues["Ragdoll"] then rs.CharacterEvents.RagdollRemote:FireServer(pp.hrp, 0.8) end
+                    if not AntiGrabTypeValues["Sit"] then if not pp.hum.SeatPart then pp.hum.Sit = false end end
+                    if AntiGrabTypeValues["Sit"] then pp.hum.Sit = true end
+                end
+
+                if pp.rag.Value and isHeld.Value then
+                    if pp.head then pp.head.CFrame = pp.hrp.CFrame * CFrame.new(0,1.5,0) pp.head.AssemblyAngularVelocity = Vector3.zero pp.head_c.MaxFrictionTorque = math.huge end
+                    if pp.la then pp.la.CFrame = pp.hrp.CFrame * CFrame.new(-1.5,0,0) pp.la.AssemblyAngularVelocity = Vector3.zero pp.la_p.CanCollide = false pp.la.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                    if pp.ra then pp.ra.CFrame = pp.hrp.CFrame * CFrame.new(1.5,0,0) pp.ra.AssemblyAngularVelocity = Vector3.zero pp.ra_p.CanCollide = false pp.ra.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                    if pp.ll then pp.ll.CFrame = pp.hrp.CFrame * CFrame.new(-0.5,-2,0) pp.ll.AssemblyAngularVelocity = Vector3.zero pp.ll_p.CanCollide = false pp.ll.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                    if pp.rl then pp.rl.CFrame = pp.hrp.CFrame * CFrame.new(0.5,-2,0) pp.rl.AssemblyAngularVelocity = Vector3.zero pp.rl_p.CanCollide = false pp.rl.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                end
+            end)
+        else
+            if pp.hrp then pp.hrp.Massless = false end
+            if pp.head then pp.head.CustomPhysicalProperties = nil end
+            if pp.la then pp.la.CustomPhysicalProperties = nil end
+            if pp.ra then pp.ra.CustomPhysicalProperties = nil end
+            if pp.ll then pp.ll.CustomPhysicalProperties = nil end
+            if pp.rl then pp.rl.CustomPhysicalProperties = nil end
+            if AntiGrabC then AntiGrabC:Disconnect() AntiGrabC = nil end
+        end
+    end
+})
+
+antiTab:AddDropdown({
+    Name = "AntiGrabType",
+    Default = {},
+    Options = {"Struggle", "Ragdoll", "Sit", "Anchored"},
+    Multiple = true,
+    Flag = "AntiGrabTypeDropdown",
+    Save = true,
+    Callback = function(Value)
+        AntiGrabTypeValues = {Struggle = false, Ragdoll = false, Sit = false, Anchored = false}
+        for _, v in pairs(Value) do
+            AntiGrabTypeValues[v] = true
+        end
+    end
+})
+
+antiTab:AddToggle({
+    Name = "카운터 킬 (셋오너/블룹맨 반격)",
+    Default = false,
+    Flag = "AntiGrabCounterKillToggle",
+    Save = true,
+    Callback = function(Value)
+        AntiGrabCounterKillT = Value
+        if Value then
+            local counterDebounce = 0
+
+            local function ExecuteCounterKill(attacker)
+                if not attacker or attacker == plr then return end
+                if tick() - counterDebounce < 1.0 then return end
+                counterDebounce = tick()
+
+                pcall(function() rs.GrabEvents.DestroyGrabLine:FireServer(pp.torso) end)
+
+                task.spawn(function()
+                    local safeCF = pp.torso and pp.torso.CFrame
+                    local Tchar = attacker.Character
+                    local Ttorso = Tchar and (Tchar:FindFirstChild("Torso") or Tchar:FindFirstChild("UpperTorso") or Tchar:FindFirstChild("HumanoidRootPart"))
+                    local Thrp = Tchar and Tchar:FindFirstChild("HumanoidRootPart")
+                    local Thum = Tchar and Tchar:FindFirstChildOfClass("Humanoid")
+
+                    if Tchar and Ttorso and Thum and Thum.Health > 0 then
+                        Fake(true, Ttorso)
+                        local ping = (plr.GetNetworkPing and plr:GetNetworkPing() or 0.1)
+                        ServerHrp = CFrame.new(Ttorso.Position + (Ttorso.Velocity * (ping + 0.22))) * CFrame.new(0, 0, 10)
+                        
+                        if Thrp then pcall(function() rs.CharacterEvents.RagdollRemote:FireServer(Thrp, 99999) end) end
+                        pcall(function() rs.CharacterEvents.Struggle:FireServer() end)
+
+                        for _ = 1, 5 do
+                            rs.GrabEvents.SetNetworkOwner:FireServer(Ttorso, CFrame.lookAt(ServerHrp.Position, Ttorso.Position))
+                            if Thrp then rs.GrabEvents.SetNetworkOwner:FireServer(Thrp, CFrame.lookAt(ServerHrp.Position, Thrp.Position)) end
+                            task.wait(0.01)
+                        end
+
+                        local voidCF = CFrame.new(0, -99999, 0)
+                        local infVel = Vector3.new(9e9, 9e9, 9e9)
+                        local voidVel = Vector3.new(0, -99999999, 0)
+
+                        for i = 1, 20 do
+                            Ttorso.AssemblyAngularVelocity = infVel
+                            Ttorso.AssemblyLinearVelocity = voidVel
+                            Ttorso.CFrame = voidCF
+                            if Thrp then
+                                Thrp.AssemblyAngularVelocity = infVel
+                                Thrp.AssemblyLinearVelocity = voidVel
+                                Thrp.CFrame = voidCF
+                            end
+                            rs.GrabEvents.SetNetworkOwner:FireServer(Ttorso, CFrame.lookAt(voidCF.Position, voidCF.Position))
+                            task.wait(0.02)
+                        end
+
+                        pcall(function()
+                            local snowball = (toys and toys:FindFirstChild("BallSnowball")) or (inv and inv:FindFirstChild("BallSnowball"))
+                            if snowball then
+                                local soundP = snowball:FindFirstChild("SoundPart") or Ttorso
+                                rs.BombEvents.BombExplode:FireServer({Radius = 999, Color = Color3.new(1,0,0), TimeLength = 0, Model = snowball, Type = "SnowPoof", ExplodesByFire = false, MaxForcePerStudSquared = 0, Hitbox = soundP, ImpactSpeed = 0, ExplodesByPointy = false, DestroysModel = true, PositionPart = soundP}, Ttorso.Position)
+                            end
+                        end)
+
+                        pcall(function() rs.GrabEvents.DestroyGrabLine:FireServer(Ttorso) end)
+
+                        task.wait(0.15)
+                        Fake(false)
+                        if pp.torso and safeCF then
+                            pp.torso.CFrame = safeCF
+                            pp.torso.AssemblyLinearVelocity = Vector3.zero
+                            pp.torso.AssemblyAngularVelocity = Vector3.zero
+                        end
+                    end
+                end)
+            end
+
+            if AntiGrabCounterKillConn then AntiGrabCounterKillConn:Disconnect() end
+            AntiGrabCounterKillConn = rs.GrabEvents.CreateGrabLine.OnClientEvent:Connect(function(fromPlr, targetPart)
+                if not AntiGrabCounterKillT then return end
+                if fromPlr and fromPlr ~= plr then
+                    if not targetPart or targetPart:IsDescendantOf(pp.char) or targetPart == pp.torso or targetPart == pp.hrp then
+                        ExecuteCounterKill(fromPlr)
+                    end
+                end
+            end)
+
+            if AntiGrabCounterKillHeldConn then AntiGrabCounterKillHeldConn:Disconnect() end
+            AntiGrabCounterKillHeldConn = isHeld.Changed:Connect(function(heldState)
+                if not AntiGrabCounterKillT then return end
+                if heldState then
+                    local closestDist = 40
+                    local target = nil
+                    for _, p in ipairs(Players:GetPlayers()) do
+                        if p ~= plr and p.Character then
+                            local pTorso = p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
+                            if pTorso and pp.torso then
+                                local dist = (pTorso.Position - pp.torso.Position).Magnitude
+                                if dist < closestDist then
+                                    closestDist = dist
+                                    target = p
+                                end
+                            end
+                        end
+                    end
+                    if target then ExecuteCounterKill(target) end
+                end
+            end)
+
+            task.spawn(function()
+                while AntiGrabCounterKillT do
+                    task.wait(0.08)
+                    if not pp.char or not pp.torso or not pp.hrp then continue end
+                    if tick() - counterDebounce < 1.0 then continue end
+
+                    local attacker = nil
+
+                    for _, part in ipairs(pp.char:GetChildren()) do
+                        if part:IsA("BasePart") then
+                            local po = part:FindFirstChild("PartOwner") or part:FindFirstChildOfClass("StringValue")
+                            if po and po.Value and po.Value ~= plr.Name then
+                                attacker = Players:FindFirstChild(po.Value)
+                                if attacker then break end
+                            end
+                        end
+                    end
+
+                    if not attacker then
+                        local grabParts = workspace:FindFirstChild("GrabParts")
+                        if grabParts then
+                            for _, gPart in ipairs(grabParts:GetChildren()) do
+                                local weld = gPart:FindFirstChildOfClass("WeldConstraint") or gPart:FindFirstChildOfClass("Weld")
+                                if weld and ((weld.Part0 and weld.Part0:IsDescendantOf(pp.char)) or (weld.Part1 and weld.Part1:IsDescendantOf(pp.char))) then
+                                    local po = gPart:FindFirstChild("PartOwner") or gPart:FindFirstChildOfClass("StringValue")
+                                    if po and po.Value and po.Value ~= plr.Name then
+                                        attacker = Players:FindFirstChild(po.Value)
+                                        if attacker then break end
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    if not attacker then
+                        for _, obj in ipairs(workspace:GetChildren()) do
+                            if obj:IsA("Model") and (obj.Name:find("Blobman") or obj.Name:find("Tractor") or obj.Name:find("Sleigh")) then
+                                local seat = obj:FindFirstChildWhichIsA("VehicleSeat") or obj:FindFirstChild("Seat")
+                                local driverChar = seat and seat.Occupant and seat.Occupant.Parent
+                                local driverPlr = driverChar and Players:GetPlayerFromCharacter(driverChar)
+
+                                if driverPlr and driverPlr ~= plr then
+                                    local lDet = obj:FindFirstChild("LeftDetector")
+                                    local rDet = obj:FindFirstChild("RightDetector")
+                                    local lWeld = lDet and lDet:FindFirstChild("LeftWeld")
+                                    local rWeld = rDet and rDet:FindFirstChild("RightWeld")
+                                    if (lWeld and lWeld.Part1 and lWeld.Part1:IsDescendantOf(pp.char)) or (rWeld and rWeld.Part1 and rWeld.Part1:IsDescendantOf(pp.char)) then
+                                        attacker = driverPlr
+                                        break
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    if attacker then ExecuteCounterKill(attacker) end
+                end
+            end)
+        else
+            if AntiGrabCounterKillConn then AntiGrabCounterKillConn:Disconnect() AntiGrabCounterKillConn = nil end
+            if AntiGrabCounterKillHeldConn then AntiGrabCounterKillHeldConn:Disconnect() AntiGrabCounterKillHeldConn = nil end
+        end
+    end
+})
+end
 antiTab:AddToggle({
 	Name = " Pro Anti Grab ",
 	Default = false,
