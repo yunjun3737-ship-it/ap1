@@ -1112,6 +1112,7 @@ do
 			end
 		end
 	end)
+--[[
 	pcall(makefolder, "lunaBGM")
 	pcall(makefolder, "UhhhhhhReanim/Assets")
 	pcall(makefolder, "UhhhhhhReanim/Modules")
@@ -1243,7 +1244,7 @@ do
 		Downloading:Destroy()
 	end
 end
-
+]]
 Util.GetCDNAsset = function(filename)
 	local path = "UhhhhhhReanim/Assets/" .. filename
 	local s, id = pcall(isfile, path)
