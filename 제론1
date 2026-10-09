@@ -613,7 +613,8 @@ local funTab = Window:MakeTab({Name = "Other", Icon = "rbxassetid://4483345998",
 local keybindTab = Window:MakeTab({Name = "ESP", Icon = "rbxassetid://6031094678", PremiumOnly = false, Description = "See through walls and track players, items, and hidden objects instantly."})             
 local lagTab = Window:MakeTab({Name = "lag", Icon = "rbxassetid://6023426923", PremiumOnly = false, Description = "Stress test the server and cause massive lag spikes to everyone else."})   
 local CreditsTab = Window:MakeTab({Name = "save config", Icon = "rbxassetid://77989137998499", PremiumOnly = false, Description = "Save your current setup and automatically load it next time you inject."})
-
+local DevTab = Window:MakeTab({  Name = "Script DevForum", Icon = "rbxassetid://77989137998499",  PremiumOnly = false,  Description = "Explore script development, share your work, and discover new ideas."})
+Window:AddConfigTab()
 local HttpService = game:GetService("HttpService")
 
 local FILE = "FTAP_Config.json"
@@ -21460,8 +21461,19 @@ end
         Image = "rbxassetid://4483345998",
         Time = 3
     })
+DevTab:AddProfileParagraph({
+    Title = "👑 onwer : Alpha_alpa",
+    Content = "Username : @QRdoote1120",
+    Image = "rbxthumb://type=AvatarHeadShot&id=2932138780&w=420&h=420"
+})
 
-Window:AddConfigTab()
+
+DevTab:AddProfileParagraph({
+    Title = "🛠️ Co-onwer : Alpha",
+    Content = "Username : pacapaca110",
+    Image = "rbxthumb://type=AvatarHeadShot&id=11000044399&w=420&h=420"
+})
+
 CreditsTab:AddButton({
     Name = "Save",
     Callback = function()
