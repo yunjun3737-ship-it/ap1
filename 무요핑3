@@ -227,11 +227,11 @@ local spawnCF = workspace.SpawnCF
 
 local teRayField = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local v24 = {}
-
+--[[
 for match in game:HttpGet("https://raw.githubusercontent.com/MuyoPing/FTAP/refs/heads/main/player"):gmatch("%d+") do
   v24[tonumber(match)] = true
 end
-
+]]
 local f3, f4, f5, playersInPlots2, f6, f7, f8, f9, f10, f11, v25, v26, v27, plotItems, f12, f13,
   f14, f15, v28, connect, f16, plots, f17, currentCamera, topTab, v29, raycastParams2, v30, v31,
   v32, v33, v34, v35, f18, f19, dropdown, dropdown2, dropdown3, dropdown4, dropdown5, f20, v36,
