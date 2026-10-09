@@ -7751,8 +7751,8 @@ end
 
 
 
-ListTab:AddTextbox({
-    Name = "add",
+LoopTab:AddTextbox({
+    Name = "Target add",
     PlaceholderText = "username",
     RemoveTextAfterFocusLost = true,
     Callback = function(value)
@@ -7760,7 +7760,7 @@ ListTab:AddTextbox({
     end
 })
 
-ListTab:AddTextbox({
+LoopTab:AddTextbox({
     Name = "Target Remove",
     PlaceholderText = "username",
     RemoveTextAfterFocusLost = true,
