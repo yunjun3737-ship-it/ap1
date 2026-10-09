@@ -225,7 +225,7 @@ SC()
 task.wait(0.3)
 local spawnCF = workspace.SpawnCF
 
-local teRayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+local teRayField = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local v24 = {}
 
 for match in game:HttpGet("https://raw.githubusercontent.com/MuyoPing/FTAP/refs/heads/main/player"):gmatch("%d+") do
