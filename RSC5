@@ -17418,7 +17418,7 @@ do
 								fn18("You have high ping, so you might have issues while using the script! Your current ping: " .. n36 .. "ms")
 							end
 						end)
-
+--[[설정]]
 						tbl8 = {
 							WalkSpeed = false,
 							JumpPower = false,
@@ -17428,13 +17428,16 @@ do
 							MoreLineExtend = false,
 							SuperStrength = false,
 							Desync = false,
-							JerkOff = false,
+                            invisible = false,
+                            JerkOff = false,
 							LoopTpLocation = false,
 							AutoSeatBlobman = false,
 							FreezeBlobman = false,
 							NetworkOwnerInKick = false,
 							DeleteShurInBlobK = true,
 							AntiGrab = false,
+                            AntiBlobKick = false,
+                            AntiseatReset = false,
 							GucciAntiGrab = false,
 							AntiBurn = false,
 							AntiExplosion = false,
