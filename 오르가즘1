@@ -345,7 +345,7 @@ local function makeBoolValue()
             namecall = v25.__namecall
             setreadonly(v25, false)
 
-            v25.__namecall = newcclosure(function(p3, .. .)
+            v25.__namecall = newcclosure(function(p3, .. )
                 local v26 = getnamecallmethod()
                 local v27 = .. .
 
