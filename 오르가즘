@@ -1,22 +1,4 @@
--- This file was Deobfuscated & Cleaned using SigmaBot V5 | .gg/Zame2JAGDr
---[[
-   SSSSSSSSSSSSSSS BBBBBBBBBBBBBBBBB   555555555555555555
-  SS:::::::::::::::SB::::::::::::::::B  5::::::::::::::::5
- S:::::SSSSSS::::::SB::::::BBBBBB:::::B 5::::::::::::::::5
- S:::::S     SSSSSSSBB:::::B     B:::::B5:::::555555555555
- S:::::S              B::::B     B:::::B5:::::5
- S:::::S              B::::B     B:::::B5:::::5
-  S::::SSSS           B::::BBBBBB:::::B 5:::::5555555555
-   SS::::::SSSSS      B:::::::::::::BB  5:::::::::::::::5
-     SSS::::::::SS    B::::BBBBBB:::::B 555555555555:::::5
-        SSSSSS::::S   B::::B     B:::::B            5:::::5
-             S:::::S  B::::B     B:::::B            5:::::5
-             S:::::S  B::::B     B:::::B5555555     5:::::5
- SSSSSSS     S:::::SBB:::::BBBBBB::::::B5::::::55555::::::5
- S::::::SSSSSS:::::SB:::::::::::::::::B  55:::::::::::::55
- S:::::::::::::::SS B::::::::::::::::B     55:::::::::55
-  SSSSSSSSSSSSSSS   BBBBBBBBBBBBBBBBB        555555555
-]]
+
 
 local players, runService, userInputService, workspaceService, debris, replicatedStorage, httpService, textChatService, orionLib, ftapWindow, scannerTab, reachGrabsTab, playerTab, superThrow, v13, v14, v15, furtherExtend, extendAmount, invincibilityTab, attackTab, localPlayer7, selectPlayerAddDropdown3, localPlayer11, randomTab
 
