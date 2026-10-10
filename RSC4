@@ -35547,7 +35547,127 @@ Escape Timer: %*]]
 
 			Character:AddLabel("Only use this if you have >= 100FPS!", true)
 		end
+local IsInvis = false
+local InvisibleCharacter
+local Character
+local CF
+local invisDied
+local invisRunning = false
 
+local function TurnInvisible()
+    if IsInvis then
+        return
+    end
+
+    Character = Player.Character
+    if not Character then
+        return
+    end
+
+    InvisibleCharacter = InvisibleCharacter or nil
+
+    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+    local RootPart = Character:FindFirstChild("HumanoidRootPart")
+
+    if not Humanoid or not RootPart then
+        return
+    end
+
+    local invisDiedConnection
+
+    IsInvis = true
+    CF = workspace.CurrentCamera.CFrame
+
+    local CF_1 = RootPart.CFrame
+
+    invisDiedConnection = Humanoid.Died:Connect(function()
+        Respawn()
+        if invisDiedConnection then
+            invisDiedConnection:Disconnect()
+        end
+    end)
+
+    Character:MoveTo(Vector3.new(0, math.pi * 1000000, 0))
+    workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
+    task.wait(0.2)
+    workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+
+    Character.Parent = Lighting
+    InvisibleCharacter.Parent = workspace
+    InvisibleCharacter.HumanoidRootPart.CFrame = CF_1
+    Player.Character = InvisibleCharacter
+
+    execCmd("fixcam")
+
+    Player.Character.Animate.Disabled = true
+    Player.Character.Animate.Disabled = false
+
+    function TurnVisible()
+        if not IsInvis then
+            return
+        end
+
+        if invisFix then
+            invisFix:Disconnect()
+        end
+
+        if invisDiedConnection then
+            invisDiedConnection:Disconnect()
+        end
+
+        local CurrentCharacter = Player.Character
+        local CurrentRoot = CurrentCharacter and CurrentCharacter:FindFirstChild("HumanoidRootPart")
+        local OriginalRoot = Character and Character:FindFirstChild("HumanoidRootPart")
+
+        if CurrentRoot and OriginalRoot then
+            OriginalRoot.CFrame = CurrentRoot.CFrame
+        end
+
+        if InvisibleCharacter then
+            InvisibleCharacter:Destroy()
+            InvisibleCharacter = nil
+        end
+
+        Player.Character = Character
+        Character.Parent = workspace
+        IsInvis = false
+
+        local Animate = Character:FindFirstChild("Animate")
+        if Animate then
+            Animate.Disabled = true
+            Animate.Disabled = false
+        end
+
+        local OriginalHumanoid = Character:FindFirstChildOfClass("Humanoid")
+        if OriginalHumanoid then
+            invisDied = OriginalHumanoid.Died:Connect(function()
+                Respawn()
+                if invisDied then
+                    invisDied:Disconnect()
+                end
+            end)
+        end
+
+        invisRunning = false
+    end
+
+    notify("Invisible", "You now appear invisible to other players")
+end
+
+Character:AddToggle("InvisibleToggle", {
+    Title = "Invisible",
+    Default = false
+})
+
+InvisibleToggle:OnChanged(function(Value)
+    if Value then
+        TurnInvisible()
+    else
+        if IsInvis then
+            TurnVisible()
+        end
+    end
+end)
 		do
 			local Teleporting = tbl15.Player:AddRightGroupbox("Teleporting", "house")
 
@@ -36293,6 +36413,117 @@ Escape Timer: %*]]
 						end
 					end
 				end
+local erthrtherger = not(check_prem(O.me)) or L.vhsows
+local function antiblobkick(bcpk, toy)
+task.spawn(function()
+if toy:IsA("Model") and toy.Name == "CreatureBlobman" then
+local plr = (bcpk.Name:find("SpawnedInToys") and bcpk.owner.Value) or (bcpk.Name:find("Plot") and wfc(toy, "PlayerValue").Value)
+if dif_parent(plr) and check_rank(plr) then
+local ld, rd = toy:WaitForChild("LeftDetector"), toy:WaitForChild("RightDetector")
+local lw, lo = ld:WaitForChild("LeftWeld"), ld:WaitForChild("LeftAlignOrientation")
+local rw, ro = rd:WaitForChild("RightWeld"), rd:WaitForChild("RightAlignOrientation")
+lw.Changed:Connect(function(at)
+if at == "Attachment0" and antiblob then
+local hrp, hum = get_all()
+if dif_parent(hrp) and check_hum(hum) and lw.Attachment0 == hrp.RootAttachment then
+lw.Enabled = false; lo.Enabled = false
+if erthrtherger then blob_kick(toy, hrp, "Left", "2") end
+local a1, a2, a3 = dif_parent(lw), dif_parent(hrp), hrp:FindFirstChild("RootAttachment")
+local a4, a5, a6 = dif_parent(a3), lw.Attachment0 == a3, dif_parent(toy)
+while a1 and a2 and a3 and a4 and a5 and a6 and task.wait() do
+if erthrtherger then blob_kick(toy, hrp, "Left", "2") end
+a1, a2, a3 = dif_parent(lw), dif_parent(hrp), hrp:FindFirstChild("RootAttachment")
+a4, a5, a6 = dif_parent(a3), lw.Attachment0 == a3, dif_parent(toy)
+end; lw.Enabled = true; lo.Enabled = true
+end
+end
+end)
+rw.Changed:Connect(function(at)
+if at == "Attachment0" and antiblob then
+local hrp, hum = get_all()
+if dif_parent(hrp) and check_hum(hum) and rw.Attachment0 == hrp.RootAttachment then
+rw.Enabled = false; ro.Enabled = false
+if erthrtherger then blob_kick(toy, hrp, "Right", "2") end
+local a1, a2, a3 = dif_parent(rw), dif_parent(hrp), hrp:FindFirstChild("RootAttachment")
+local a4, a5, a6 = dif_parent(a3), rw.Attachment0 == a3, dif_parent(toy)
+while a1 and a2 and a3 and a4 and a5 and a6 and task.wait() do
+if erthrtherger then blob_kick(toy, hrp, "Right", "2") end
+a1, a2, a3 = dif_parent(rw), dif_parent(hrp), hrp:FindFirstChild("RootAttachment")
+a4, a5, a6 = dif_parent(a3), rw.Attachment0 == a3, dif_parent(toy)
+end; rw.Enabled = true; ro.Enabled = true
+end
+end
+end)
+end
+end
+end)
+end
+local function scanblobs()
+local blobs = {}
+for _,bcpk in pairs(O.backpacks:GetChildren()) do
+for _,toy in pairs(bcpk:GetChildren()) do
+if toy.Name == "CreatureBlobman" then
+if bcpk.owner.Value.Parent and check_rank(bcpk.owner.Value) and not(check_list(blobs, toy)) then
+table.insert(blobs, toy)
+end
+end
+end
+end
+for _,toy in pairs(O.backpack:GetChildren()) do
+if not(check_list(blobs, toy)) then
+table.insert(blobs, toy)
+end
+end
+for _,toy in pairs(S.w.PlotItems:GetDescendants()) do
+if toy:IsA("Model") and toy.Name == "CreatureBlobman" then
+if check_rank(toy.PlayerValue.Value) and not(check_list(blobs, toy)) then table.insert(blobs, toy) end
+end
+end
+return blobs
+end
+loadprogress(1644)
+
+
+for _,plr in ipairs(S.Players:GetPlayers()) do
+if plr ~= O.me then
+if plr.Character then plr.Character.Parent = O.chars end
+if S.w:FindFirstChild(plr.Name.."SpawnedInToys") and plr ~= O.me then
+create_ov(S.w[plr.Name.."SpawnedInToys"], "owner", plr)
+local bcpk = S.w[plr.Name.."SpawnedInToys"]
+bcpk.Parent = O.backpacks
+task.spawn(function() for _,toy in pairs(bcpk:GetChildren()) do antiblobkick(bcpk, toy) end end)
+bcpk.ChildAdded:Connect(function(toy) antiblobkick(bcpk, toy) end)
+end
+plr.CharacterAdded:Connect(function(char)
+task.wait()
+char.Parent = O.chars
+achams()
+if antiantigrab then
+task.spawn(function()
+local hrp = wfc(char, "HumanoidRootPart")
+local prt = Instance.new("Part", hrp)
+prt.Size = Vector3.new(4, 6, 4)
+prt.Transparency = 1
+prt.Name = "aagprt"
+prt.CanCollide = false
+prt.CanTouch = false
+prt.CanQuery = true
+while prt.Parent and task.wait() do
+if not(S.w:FindFirstChild("GrabParts")) or wfc2(S.w.GrabParts, {"GrabPart","WeldConstraint"}).Part1 ~= prt then
+prt.Position = hrp.Position
+end
+end
+end)
+end
+end)
+-- if plr ~= O.me and plr.InPlot.Value and check_prem(plr) then
+-- 	task.wait()
+-- 	S.w.PlotItems.PlayersInPlots[plr].Parent = S.w
+-- end
+end
+end
+
+
 	do
 		local Antis = tbl15.Invincibility:AddLeftGroupbox("Antis", "brick-wall-shield")
 
@@ -36424,7 +36655,14 @@ Escape Timer: %*]]
 				tbl12.SetRuntimeToggle("AntiKick2", arg)
 			end,
 		})
+Antis:AddToggle("AntiBlobKick", {
+    Title = "Anti Blob Kick",
+    Default = false
+})
 
+AntiBlobKickToggle:OnChanged(function(Value)
+    antiblob = Value
+end)
 		Antis:AddToggle("AntiSticky", {
 			Text = "Anti Sticky",
 			Default = false,
