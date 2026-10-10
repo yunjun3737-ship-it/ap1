@@ -17428,7 +17428,7 @@ do
 							MoreLineExtend = false,
 							SuperStrength = false,
 							Desync = false,
-                            invisible = false,
+                            InvisibleToggle = false,
                             JerkOff = false,
 							LoopTpLocation = false,
 							AutoSeatBlobman = false,
