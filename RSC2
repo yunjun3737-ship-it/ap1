@@ -34970,15 +34970,15 @@ Escape Timer: %*]]
 		lib.ForceCheckbox = true
 
 		v19 = lib:CreateWindow({
-			Title = "<b>Resonance</b>",
-			Footer = ("<b>Project Resonance %* | FTAP</b>"):format("v2.9"),
+			Title = "<b>Xeron Onwer</b>",
+			Footer = ("<b>Xeron onwer%* | FTAP</b>"):format("v3.1"),
 			ToggleKeybind = Enum.KeyCode.RightShift,
 			Center = true,
 			AutoShow = true,
 			EnableSidebarResize = true,
-			Icon = 79685990879972,
+			Icon = 77989137998499,
 			IconSize = UDim2.fromOffset(32, 32),
-			CornerRadius = 6,
+			CornerRadius = 7,
 			Compact = true,
 			Animations = {
 				ToggleWindow = false,
