@@ -17196,16 +17196,16 @@ do
 
 								fn17 = function(arg, arg2, arg3)
 									StarterGui:SetCore("SendNotification", {
-										Title = arg or "Resonance",
+										Title = arg or "Xeron",
 										Text = arg2 or "Notification",
 										Duration = arg3 or 5,
-										Icon = "rbxassetid://79685990879972",
+										Icon = "rbxassetid://77989137998499",
 									})
 								end
 
 								placeId = game.PlaceId
 								if placeId ~= 6961824067 then
-									fn17("Resonance", "This game is not supported; couldn't start the script", 3)
+									fn17("Xeron", "This game is not supported; couldn't start the script", 3)
 									return
 								end
 
@@ -17228,14 +17228,7 @@ do
 								do
 									local v24 = string.gsub([[
 
-    _____________________ _________________    _______      _____    _______  _________ ___________
-    \______   \_   _____//   _____/\_____  \   \      \    /  _  \   \      \ \_   ___ \\_   _____/
-    |       _/|    __)_ \_____  \  /   |   \  /   |   \  /  /_\  \  /   |   \/    \  \/ |    __)_
-    |    |   \|        \/        \/    |    \/    |    \/    |    \/    |    \     \____|        \
-    |____|_  /_______  /_______  /\_______  /\____|__  /\____|__  /\____|__  /\______  /_______  /
-            \/        \/        \/         \/         \/         \/         \/        \/        \/   ver
-
-    ]], "ver", "v2.9")
+  - ]], "ver", "v5.9")
 
 									warn(v24)
 								end
@@ -17257,7 +17250,7 @@ do
 						end
 
 						if not lib3 then
-							fn17("Resonance", "Failed to load the UI Library! GitHub might be down/blocked by your ISP. Try using a VPN!", 5)
+							fn17("Xeron V5", "Failed to load the UI Library! GitHub might be down/blocked by your ISP. Try using a VPN!", 5)
 							getgenv().ResonanceRunning = false
 							return
 						end
@@ -17321,7 +17314,7 @@ do
 							CFrame.new((0/0), (0/0), (0/0))
 							Vector3.new((0/0), (0/0), (0/0))
 							screenGui = Instance.new("ScreenGui")
-							screenGui.Name = "RSC"
+							screenGui.Name = "XR"
 							screenGui.ResetOnSpawn = false
 							screenGui.IgnoreGuiInset = true
 							screenGui.Parent = gethui()
