@@ -345,15 +345,15 @@ local function makeBoolValue()
             namecall = v25.__namecall
             setreadonly(v25, false)
 
-            v25.__namecall = newcclosure(function(p3,. )
+            v25.__namecall = newcclosure(function(p3,)
                 local v26 = getnamecallmethod()
-                local v27 = .. .
+                local v27 = 
 
                 if v26 == "InvokeServer" and p3.Name == "CheckForGamepass" and v27 == 20837132 then
                     return true
                 end
 
-            return namecall(p3, .. .)
+            return namecall(p3, )
         end)
 
     setreadonly(v25, true)
