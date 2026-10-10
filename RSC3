@@ -36275,7 +36275,24 @@ Escape Timer: %*]]
 			end,
 		})
 	end
-
+            local seat 
+				while antiseat and task.wait(0,1) do
+					local v1 = O.me.Character; if v1 then
+						local v2 = v1:FindFirstChild("Humanoid"); if v2 then
+							if v2.SeatPart then
+								seat = v2.SeatPart
+								last_seat = true
+							else last_seat = false end
+							if O.me.IsHeld.Value and last_seat then
+								while O.me.IsHeld.Value do task.wait() end
+								while v2.SeatPart ~= seat and task.wait() do
+									if not(dif_parent(seat)) or not(dif_parent(v2)) then break end
+									while seat.Occupant do task.wait() end; seat:Sit(v2)
+								end
+							end
+						end
+					end
+				end
 	do
 		local Antis = tbl15.Invincibility:AddLeftGroupbox("Antis", "brick-wall-shield")
 
@@ -36288,7 +36305,41 @@ Escape Timer: %*]]
 				tbl12.AntiGrab()
 			end,
 		})
-
+        Antis:AddToggle("Anti anti grab", {
+			Teat = "Anti Anti Grab",
+			Default = false,
+			Callback = function(Value)
+				antiantigrab = Value
+				if antiantigrab and not(check_prem(O.me)) or L.vhsows then
+					for _,char in pairs(O.chars:GetChildren()) do
+						task.spawn(function()
+							if check_rank(get_plr(char)) and check_whll(char.Name) then
+								local hrp = wfc(char, "HumanoidRootPart")
+								local prt = Instance.new("Part", hrp)
+								prt.Size = Vector3.new(4, 6, 4)
+								prt.Transparency = 1
+								prt.Name = "aagprt"
+								prt.CanCollide = false
+								prt.CanTouch = false
+								prt.CanQuery = true
+								while prt.Parent and task.wait() do
+									if not(S.w:FindFirstChild("GrabParts")) or wfc2(S.w.GrabParts, {"GrabPart","WeldConstraint"}).Part1 ~= prt then
+										prt.Position = hrp.Position
+									end
+								end
+							end
+						end)
+					end
+				else for _,obj in pairs(S.w:GetDescendants()) do if obj.Name == "aagprt" or obj.Name == "aagbp" then obj:Destroy() end end end
+			end,
+		})
+         Antis:AddToggle("Anti seat Reaset", {
+			Text = "Anti Seat Reset",
+			Tooltip = " beat anti",
+			Callback = function(Value)
+	     	antiseat = Value
+			end,		
+		})
 		Antis:AddToggle("GucciAntiGrab", {
 			Text = "[GUCCI] Anti Grab",
 			Default = false,
