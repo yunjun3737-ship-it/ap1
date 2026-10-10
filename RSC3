@@ -38347,11 +38347,11 @@ Escape Timer: %*]]
 				end
 
 				local v24 = lib:Notify({
-					Title = "Resonance",
+					Title = "Xeron",
 					Description = "Destroyed 0/" .. #tbl16 .. " toys",
 					Persist = true,
 					SoundId = n34,
-					BigIcon = "rbxassetid://79685990879972",
+					BigIcon = "rbxassetid://77989137998499",
 					Volume = n35,
 					IconColor = Color3.new(1, 1, 1),
 				})
@@ -39593,8 +39593,8 @@ Escape Timer: %*]]
 			Searchable = true,
 			Text = "Texture",
 			Callback = function(arg)
-				if arg == "Resonance" then
-					fn27("Texture", "rbxassetid://79685990879972")
+				if arg == "Xeron " then
+					fn27("Texture", "rbxassetid://77989137998499")
 				elseif arg == "Snowflakes" then
 					fn27("Texture", "rbxassetid://14443362047")
 				elseif arg == "Circles" then
