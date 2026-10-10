@@ -30979,11 +30979,11 @@ end
 			tbl12.UpdateServerHopButton()
 
 			local v22 = lib:Notify({
-				Title = "Resonance",
+				Title = "XERON",
 				Description = "Attempting to serverhop..",
 				Persist = true,
 				SoundId = n34,
-				BigIcon = "rbxassetid://79685990879972",
+				BigIcon = "rbxassetid://77989137998499",
 				Volume = n35,
 				IconColor = Color3.new(1, 1, 1),
 			})
