@@ -35067,7 +35067,7 @@ Escape Timer: %*]]
 				local floor = math.floor
 				local dataPing = Stats2.Network.ServerStatsItem["Data Ping"]
 				local getValue = dataPing.GetValue
-				setText(v23, ("Resonance %s | %s fps | %s ms"):format("v2.9", math.floor(Stats2.Workspace.Heartbeat:GetValue()), floor(getValue(dataPing))))
+				setText(v23, ("XERON V5%s | %s fps | %s ms"):format("v5.9", math.floor(Stats2.Workspace.Heartbeat:GetValue()), floor(getValue(dataPing))))
 				task.wait(1)
 			end
 		end)
@@ -37087,7 +37087,7 @@ Escape Timer: %*]]
 
 		v21:AddButton({
 			Text = "TP To Void Platform",
-			Tooltip = "Teleports you to a platform where victim cant spawn anti-kick shurikens, though it affects you as well [ONLY WORKS WHEN YOU HAVE RESONANCE ANTI-KICK ON AND ONLY WORKS GOOD ON CHEATERS]",
+			Tooltip = "Teleports you to a platform where victim cant spawn anti-kick shurikens, though it affects you as well [ONLY WORKS WHEN YOU HAVE XERON ANTI-KICK ON AND ONLY WORKS GOOD ON CHEATERS]",
 			Func = function()
 				local v22
 				v22, v22 = tbl12.Char()
