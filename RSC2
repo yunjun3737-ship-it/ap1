@@ -35053,7 +35053,7 @@ Escape Timer: %*]]
 			label.Position = UDim2.fromOffset(viewportSize.X * 0.5, viewportSize.Y * 0.8)
 		end
 
-		Watermark = lib:AddDraggableLabel("Resonance", 79685990879972)
+		Watermark = lib:AddDraggableLabel("Resonance", 77989137998499)
 		Watermark:SetVisible(true)
 
 		task.spawn(function()
@@ -35067,7 +35067,7 @@ Escape Timer: %*]]
 				local floor = math.floor
 				local dataPing = Stats2.Network.ServerStatsItem["Data Ping"]
 				local getValue = dataPing.GetValue
-				setText(v23, ("XERON V5%s | %s fps | %s ms"):format("v5.9", math.floor(Stats2.Workspace.Heartbeat:GetValue()), floor(getValue(dataPing))))
+				setText(v23, ("XERON %s | %s fps | %s ms"):format("v5.9", math.floor(Stats2.Workspace.Heartbeat:GetValue()), floor(getValue(dataPing))))
 				task.wait(1)
 			end
 		end)
