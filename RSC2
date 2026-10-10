@@ -33752,7 +33752,7 @@ Escape Timer: %*]]
 
 						if tbl8.AutoReset then
 							if tbl9.KickFlags >= 4 and tbl8.AutoLeave then
-								return localPlayer:Kick("Resonance (Auto Reset)\nAvoided Kick")
+								return localPlayer:Kick("Xeron (Auto Reset)\nAvoided Kick")
 							end
 							local v22, v23, v24 = tbl12.Char()
 
