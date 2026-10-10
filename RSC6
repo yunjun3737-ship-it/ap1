@@ -17436,13 +17436,14 @@ do
 							NetworkOwnerInKick = false,
 							DeleteShurInBlobK = true,
 							AntiGrab = false,
-                            AntiBlobKick = false,
-                            AntiseatReset = false,
+                            Antiantigrab = false,
+                            AntiseatReaset = false,
 							GucciAntiGrab = false,
 							AntiBurn = false,
 							AntiExplosion = false,
 							AntiKick = false,
 							AntiKick2 = false,
+                            AntiBlobKick = false,
 							AntiPaint = false,
 							AntiBlobman = false,
 							AutoAntiLag = true,
@@ -36539,7 +36540,7 @@ end
 				tbl12.AntiGrab()
 			end,
 		})
-        Antis:AddToggle("Anti anti grab", {
+        Antis:AddToggle("Antiantigrab", {
 			Teat = "Anti Anti Grab",
 			Default = false,
 			Callback = function(Value)
@@ -36567,7 +36568,7 @@ end
 				else for _,obj in pairs(S.w:GetDescendants()) do if obj.Name == "aagprt" or obj.Name == "aagbp" then obj:Destroy() end end end
 			end,
 		})
-         Antis:AddToggle("Anti seat Reaset", {
+         Antis:AddToggle("AntiseatReaset", {
 			Text = "Anti Seat Reset",
 			Tooltip = " beat anti",
 			Callback = function(Value)
@@ -36658,10 +36659,10 @@ end
 				tbl12.SetRuntimeToggle("AntiKick2", arg)
 			end,
 		})
-Antis:AddToggle("AntiBlobKick", {
-    Title = "Anti Blob Kick",
-    Default = false
-})
+      Antis:AddToggle("AntiBlobKick", {
+           Title = "Anti Blob Kick",
+           Default = false
+        })
 
 AntiBlobKickToggle:OnChanged(function(Value)
     antiblob = Value
