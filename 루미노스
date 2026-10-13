@@ -1,11 +1,7 @@
 --=======================================================================
 -- FTAP - Luminous Target
 --=======================================================================
-do
-    local success = pcall(function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-    end)
-end
+
 
 local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
 local Library, ThemeManager, SaveManager
