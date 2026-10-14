@@ -3454,7 +3454,7 @@ CracktroFrame.InputEnded:Connect(function(input)
 pcall(function() setfpscap(9999) end)
 --setsimulationradius(math.huge)
 
-local bypassing = false
+local bypassing = true
 
 -- // Anti Kick Hook (HttpGet Intercept & Self-Protection Bypass)
 if hookmetamethod then
