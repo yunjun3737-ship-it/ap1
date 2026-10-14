@@ -3636,14 +3636,7 @@ local userId = player.UserId
 if userId ~= 9014717036 and userId ~= 9013467605 and userId ~= 11180960211 and userId ~= 7868402170 and userId ~= 1269834437 then
 	exeutsScript()
 end
---- == // Infinite Yield FE
-pcall(function()
-    local iyRaw = game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source')
-    local s, func = pcall(loadstring, iyRaw)
-    if s and type(func) == "function" then
-        func()
-    end
-end)
+
 
 --- == // Library Ui
 local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
