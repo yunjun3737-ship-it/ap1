@@ -1,0 +1,2244 @@
+-- Restored & Cleaned Script (Break In 2 - Exclusionz Hub)
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+local TeleportService = game:GetService("TeleportService")
+
+local queueOnTeleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
+
+if queueOnTeleport then
+    print("[Teleport Test] queue_on_teleport detected – teleport persistence WILL work.")
+else
+    warn("[Teleport Test] queue_on_teleport NOT found – script will NOT survive teleports.")
+end
+
+print("[Teleport Test] Script loaded! (Current server: " .. game.JobId .. ")")
+
+-- 메인 게임 (Break In 2 - Game)
+if game.PlaceId == 13864667823 then
+    local floatPart = Instance.new("Part")
+    floatPart.Size = Vector3.new(5, 1, 5)
+    floatPart.Parent = Workspace
+    floatPart.Anchored = true
+    floatPart.Transparency = 1
+
+    local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+    local Events = ReplicatedStorage:WaitForChild("Events")
+    local localPlayer = Players.LocalPlayer
+    local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+
+    local selectedItem = "Med Kit"
+    local damageAmount = 5
+    local isLoaded = false
+
+    local origWalkSpeed = humanoid.WalkSpeed
+    local origJumpPower = humanoid.JumpPower
+    local targetWalkSpeed = 50
+    local targetJumpPower = 100
+
+    local origBrightness = Lighting.Brightness
+    local origFogEnd = Lighting.FogEnd
+    local origGlobalShadows = Lighting.GlobalShadows
+
+    local hailsClone = Workspace:FindFirstChild("Hails") and Workspace.Hails:Clone()
+    local secretEndingItems = { "HatCollected", "MaskCollected", "CrowbarCollected" }
+    local tableFoodSlot = 1
+    local originEndingMsg = ".gg/rTw5M8dRXN | Breaking Blitz has"
+
+    getgenv().RemoveSlipping = false
+    getgenv().SemiGodmode = false
+
+    -- 알림 헬퍼 함수
+    local function notify(title, content, duration, image)
+        Rayfield:Notify({
+            Title = title,
+            Content = content,
+            Duration = duration,
+            Image = image
+        })
+    end
+
+    -- 순간이동 함수
+    local function teleportTo(cframe)
+        if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            localPlayer.Character.HumanoidRootPart.CFrame = cframe
+        end
+    end
+
+    -- 서버 오브젝트 제거 함수 (OnDoorHit 리모트 악용)
+    local function deleteInstance(target)
+        pcall(function()
+            if target then
+                Events:WaitForChild("OnDoorHit"):FireServer(target)
+            end
+        end)
+    end
+
+    -- 진흙 비활성화
+    local function removeMud(state)
+        if Workspace:FindFirstChild("BogArea") and Workspace.BogArea:FindFirstChild("Bog") then
+            for _, obj in ipairs(Workspace.BogArea.Bog:GetDescendants()) do
+                if obj.Name == "Mud" and obj:IsA("Part") then
+                    obj.CanTouch = not state
+                end
+            end
+        end
+    end
+
+    -- 적 관절/체력 파괴
+    local function breakEnemies()
+        pcall(function()
+            local folders = { Workspace.BadGuys, Workspace.BadGuysBoss, Workspace.BadGuysFront }
+            for _, folder in ipairs(folders) do
+                for _, enemy in ipairs(folder:GetChildren()) do
+                    local hum = enemy:FindFirstChild("Humanoid", true)
+                    if hum then
+                        hum.Health = 0
+                    end
+                end
+            end
+        end)
+    end
+
+    -- 적 끌어오기
+    local function bringEnemies()
+        pcall(function()
+            local rootCFrame = localPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -4)
+            local folders = { Workspace.BadGuys, Workspace.BadGuysBoss, Workspace.BadGuysFront }
+            for _, folder in ipairs(folders) do
+                for _, enemy in ipairs(folder:GetChildren()) do
+                    if enemy:FindFirstChild("HumanoidRootPart") then
+                        enemy.HumanoidRootPart.Anchored = true
+                        enemy.HumanoidRootPart.CFrame = rootCFrame
+                    end
+                end
+            end
+        end)
+    end
+
+    -- 적 공격/처치
+    local function killEnemies()
+        pcall(function()
+            local hitEvent = Events:WaitForChild("HitBadguy")
+            local folders = { Workspace.BadGuys, Workspace.BadGuysBoss, Workspace.BadGuysFront }
+            for _, folder in ipairs(folders) do
+                for _, enemy in ipairs(folder:GetChildren()) do
+                    hitEvent:FireServer(enemy, 64.8, 4)
+                end
+            end
+
+            local pizzaBoss = Workspace:FindFirstChild("BadGuyPizza", true)
+            if pizzaBoss then
+                hitEvent:FireServer(pizzaBoss, 64.8, 4)
+            end
+
+            local brute = Workspace:FindFirstChild("BadGuyBrute")
+            if brute then
+                hitEvent:FireServer(brute, 64.8, 4)
+            end
+        end)
+    end
+
+    -- 스탯 훈련
+    local function trainStat(statName)
+        Events:WaitForChild("RainbowWhatStat"):FireServer(statName)
+    end
+
+    -- 자해 (에너지 차감)
+    local function damageSelf(amount)
+        Events:WaitForChild("Energy"):FireServer(-amount, false, false)
+    end
+
+    -- 바닥 현금 수집
+    local function collectCash()
+        for _, obj in ipairs(Workspace:GetChildren()) do
+            if obj.Name == "Part" and obj:FindFirstChild("TouchInterest") and obj:FindFirstChild("Weld") and obj.Transparency == 1 then
+                firetouchinterest(obj, localPlayer.Character.HumanoidRootPart, 0)
+            end
+        end
+    end
+
+    -- Uncle Pete 클릭
+    local function clickUnclePete()
+        if Workspace:FindFirstChild("UnclePete") and Workspace.UnclePete:FindFirstChild("ClickDetector") then
+            fireclickdetector(Workspace.UnclePete.ClickDetector)
+        end
+    end
+
+    -- 바람 제거 (클라이언트)
+    local function removeWindClient()
+        if Workspace:FindFirstChild("WavePart") then
+            Workspace.WavePart.CanTouch = false
+        end
+    end
+
+    -- 바람 제거 (서버)
+    local function removeWindServer()
+        if Workspace:FindFirstChild("WavePart") then
+            deleteInstance(Workspace.WavePart)
+        end
+    end
+
+    -- 쓰러진 나무 부수기
+    local function breakFallenTrees()
+        if Workspace:FindFirstChild("FallenTrees") then
+            for _, tree in ipairs(Workspace.FallenTrees:GetChildren()) do
+                local hitPart = tree:FindFirstChild("TreeHitPart")
+                if hitPart then
+                    for _ = 1, 20 do
+                        Events.RoadMissionEvent:FireServer(1, hitPart, 5)
+                    end
+                end
+            end
+        end
+    end
+
+    -- 도구 전체 장착 / 해제
+    local function equipAllTools()
+        for _, tool in ipairs(localPlayer.Backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Parent = localPlayer.Character
+            end
+        end
+    end
+
+    local function unequipAllTools()
+        for _, tool in ipairs(localPlayer.Character:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Parent = localPlayer.Backpack
+            end
+        end
+    end
+
+    -- 아이템 지급 함수
+    local function giveItem(itemName)
+        local cleanName = (itemName:gsub(" ", ""))
+        if itemName == "Armor" then
+            Events:WaitForChild("Vending"):FireServer(3, "Armor2", "Armor", tostring(localPlayer), 1)
+        elseif itemName == "Crowbar 1" or itemName == "Crowbar 2" or itemName == "Bat" or itemName == "Pitchfork" or itemName == "Hammer" or itemName == "Wrench" or itemName == "Broom" then
+            Events.Vending:FireServer(3, cleanName, "Weapons", localPlayer.Name, 1)
+            notify("Credits To", "Leo Dicap On V3rmillion For Making This Feature!", 5, 6034304908)
+        else
+            Events:WaitForChild("GiveTool"):FireServer(cleanName)
+        end
+    end
+
+    -- 최고 무기 획득
+    local function getBestWeapon()
+        for _, child in ipairs(localPlayer.PlayerGui.Assets.Note2.Note2.Note2:GetChildren()) do
+            if child.Name:match("Circle") and child.Visible == true then
+                local weaponName = (child.Name:gsub("Circle", ""))
+                giveItem(weaponName)
+            end
+        end
+    end
+
+    -- 최고 음식 획득
+    local function getBestFood()
+        for _, child in ipairs(localPlayer.PlayerGui.Assets.Note.Note.Note:GetChildren()) do
+            if child.Name:match("Circle") and child.Visible == true then
+                local foodName = (child.Name:gsub("Circle", ""))
+                giveItem(foodName)
+            end
+        end
+    end
+
+    -- NPC 구출/영입 함수들
+    local function getAgentBradley()
+        giveItem("Louise")
+        task.wait(0.1)
+        localPlayer.Backpack:WaitForChild("Louise").Parent = localPlayer.Character
+        Events:WaitForChild("LouiseGive"):FireServer(2)
+    end
+
+    local function getUnclePete()
+        giveItem("Key")
+        task.wait(0.1)
+        localPlayer.Backpack:WaitForChild("Key").Parent = localPlayer.Character
+        task.wait(0.5)
+        Events.KeyEvent:FireServer()
+    end
+
+    local function getDog()
+        for _, child in ipairs(localPlayer.PlayerGui.Assets.Note.Note.Note:GetChildren()) do
+            if child.Name:match("Circle") and child.Visible == true then
+                local foodName = (child.Name:gsub("Circle", ""))
+                giveItem(foodName)
+                task.wait(0.1)
+                localPlayer.Backpack:WaitForChild(foodName).Parent = localPlayer.Character
+                teleportTo(CFrame.new(-257.56839, 29.4499969, -910.452637, -0.238445505, 7.71292363e-09, 0.971155882, 1.2913591e-10, 1, -7.91029819e-09, -0.971155882, -1.76076387e-09, -0.238445505))
+                task.wait(0.5)
+                Events:WaitForChild("CatFed"):FireServer(foodName)
+            end
+        end
+        task.wait(2)
+        for _ = 1, 3 do
+            teleportTo(CFrame.new(-203.533081, 30.4500484, -790.901428, -0.0148558766, 8.85941187e-09, -0.999889672, 2.65695732e-08, 1, 8.46563175e-09, 0.999889672, -2.64408779e-08, -0.0148558766) + Vector3.new(0, 5, 0))
+            task.wait(0.1)
+        end
+    end
+
+    -- 회복 함수들
+    local function healAllPlayers()
+        unequipAllTools()
+        task.wait(0.2)
+        giveItem("Golden Apple")
+        task.wait(0.5)
+        localPlayer.Backpack:WaitForChild("GoldenApple").Parent = localPlayer.Character
+        task.wait(0.5)
+        Events:WaitForChild("HealTheNoobs"):FireServer()
+    end
+
+    local function healSelf()
+        giveItem("Pizza")
+        Events.Energy:FireServer(25, "Pizza")
+    end
+
+    -- 모든 장비 세팅
+    local function getAllEquipment()
+        getBestWeapon()
+        task.wait(0.1)
+        giveItem("Armor")
+        task.wait(0.1)
+        for _ = 1, 5 do
+            trainStat("Speed")
+            trainStat("Strength")
+        end
+        task.wait(0.1)
+        unequipAllTools()
+        for _ = 1, 15 do
+            giveItem("Gold Pizza")
+            task.wait(0.05)
+        end
+    end
+
+    -- 외부 아이템 모두 수집
+    local function collectOutsideItems()
+        teleportTo(CFrame.new(-199.240555, 30.0009422, -790.182739, 0.08340507, 2.48169538e-08, 0.996515751, -2.7112752e-09, 1, -2.46767993e-08, -0.996515751, -6.43658127e-10, 0.08340507))
+        for _, item in ipairs(Workspace.OutsideParts:GetChildren()) do
+            if item:IsA("BasePart") then
+                if item:FindFirstChild("TouchInterest") then
+                    firetouchinterest(item, localPlayer.Character.HumanoidRootPart, 0)
+                elseif item:FindFirstChild("ClickDetector") then
+                    fireclickdetector(item.ClickDetector)
+                end
+            elseif item:IsA("Model") then
+                for _, desc in ipairs(item:GetDescendants()) do
+                    if desc:IsA("BasePart") then
+                        if desc:FindFirstChild("TouchInterest") then
+                            firetouchinterest(desc, localPlayer.Character.HumanoidRootPart, 0)
+                        elseif desc:FindFirstChild("ClickDetector") then
+                            fireclickdetector(desc.ClickDetector)
+                        end
+                    end
+                end
+            end
+        end
+        localPlayer.Character.Humanoid:MoveTo(localPlayer.Character.HumanoidRootPart.Position + Vector3.new(-10, 0, 0))
+    end
+
+    -- 시크릿 엔딩 해금
+    local function unlockSecretEnding()
+        for _, itemEvent in ipairs(secretEndingItems) do
+            Events.LarryEndingEvent:FireServer(itemEvent, true)
+        end
+    end
+
+    -- 황금 사과 배지 획득
+    local function collectGoldenAppleBadge()
+        if Workspace:FindFirstChild("FallenTrees") then
+            breakFallenTrees()
+            task.wait(1)
+            teleportTo(CFrame.new(61.8781624, 29.4499969, -534.381165, -0.584439218, -1.05103076e-07, 0.811437488, -3.12853778e-08, 1, 1.06993674e-07, -0.811437488, 3.71451705e-08, -0.584439218))
+            task.wait(0.5)
+            fireclickdetector(Workspace.GoldenApple.ClickDetector)
+        else
+            notify("Error", "Golden Apple Has Not Spawned Yet, Please Wait Until the First Wave.", 5, 6034304908)
+        end
+    end
+
+    -- 캐릭터 충돌 설정 (Noclip용)
+    local function setCharacterCollision(state)
+        if localPlayer.Character then
+            if localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                localPlayer.Character.HumanoidRootPart.CanCollide = state
+            end
+            for _, part in ipairs(localPlayer.Character:GetChildren()) do
+                if part:IsA("MeshPart") then
+                    part.CanCollide = state
+                end
+            end
+        end
+    end
+
+    -- 플레이어 이름 목록 가져오기 헬퍼
+    local function getPlayerNames()
+        local list = {}
+        for _, plr in ipairs(Players:GetPlayers()) do
+            table.insert(list, plr.Name)
+        end
+        return list
+    end
+
+    -- Rayfield 윈도우 생성
+    Rayfield:Notify({
+        Title = "Key System",
+        Content = "Link Copied!!🗝️",
+        Duration = 20.5,
+        Image = "key-round"
+    })
+    if setclipboard then
+        setclipboard("https://loot-link.com/s?a7825yMi")
+    end
+
+    local Window = Rayfield:CreateWindow({
+        Name = "Exclusionz Hub",
+        Icon = 0,
+        LoadingTitle = "Loading Script",
+        LoadingSubtitle = "Break in 2",
+        Theme = "Default",
+        DisableRayfieldPrompts = false,
+        DisableBuildWarnings = false,
+        ConfigurationSaving = {
+            Enabled = true,
+            FolderName = nil,
+            FileName = "Big Hub"
+        },
+        Discord = {
+            Enabled = false,
+            Invite = "noinvitelink",
+            RememberJoins = true
+        },
+        KeySystem = true,
+        KeySettings = {
+            Title = "Enter Access Key",
+            Subtitle = "Key Verification",
+            Note = "Link Copied!🗝️🕸️",
+            FileName = "aUltimateHubKey2",
+            SaveKey = false,
+            GrabKeyFromSite = true,
+            Key = {
+                "https://script.google.com/macros/s/AKfycbzrfROD0ZBsmgJXFDRwsi-4M4bLPNlSre-c47kn3_EVGfCOJo7onzmWzXsYUk6CfxbtHg/exec"
+            }
+        }
+    })
+
+    -- ==========================================
+    -- Tab 1: Main
+    -- ==========================================
+    local MainTab = Window:CreateTab("Main", 4483362458)
+
+    MainTab:CreateSection("Training")
+    MainTab:CreateButton({
+        Name = "Train Strength",
+        Callback = function()
+            trainStat("Strength")
+        end
+    })
+    MainTab:CreateButton({
+        Name = "Train Speed",
+        Callback = function()
+            trainStat("Speed")
+        end
+    })
+
+    MainTab:CreateSection("Heal Yourself")
+    MainTab:CreateButton({
+        Name = "Heal Yourself",
+        Callback = function()
+            for _ = 1, 10 do
+                healSelf()
+            end
+        end
+    })
+    MainTab:CreateToggle({
+        Name = "Loop Heal Yourself",
+        CurrentValue = false,
+        Callback = function(state)
+            getgenv().HealLoop = state
+            while getgenv().HealLoop do
+                healSelf()
+                task.wait(0.1)
+            end
+        end
+    })
+
+    MainTab:CreateSection("Heal All")
+    MainTab:CreateButton({
+        Name = "Heal All",
+        Callback = function()
+            healAllPlayers()
+        end
+    })
+    MainTab:CreateToggle({
+        Name = "Loop Heal All",
+        CurrentValue = false,
+        Callback = function(state)
+            getgenv().HealAllLoop = state
+            while getgenv().HealAllLoop do
+                healAllPlayers()
+                task.wait(3)
+            end
+        end
+    })
+
+    MainTab:CreateSection("Item Giver")
+    MainTab:CreateParagraph({
+        Title = "Note:",
+        Content = "Warning: Duplicating or grabbing multiple of the same item can cause it to malfunction and become unusable or unequippable. To avoid this, only take one item at a time — especially items accessible to all players."
+    })
+
+    local itemOptions = {
+        "Crowbar 1", "Crowbar 2", "Bat", "Pitchfork", "Hammer", "Wrench", "Broom",
+        "Armor", "Med Kit", "Key", "Gold Key", "Louise", "Lollipop", "Chips",
+        "Golden Apple", "Pizza", "Gold Pizza", "Rainbow Pizza", "Rainbow Pizza Box",
+        "Book", "Phone", "Cookie", "Apple", "Bloxy Cola", "Expired Bloxy Cola",
+        "Bottle", "Ladder", "Battery"
+    }
+
+    MainTab:CreateDropdown({
+        Name = "Item",
+        Options = itemOptions,
+        CurrentOption = { "Med Kit" },
+        MultipleOptions = false,
+        Flag = "ItemDropdown3",
+        Callback = function(option)
+            local chosen = option[1]
+            if chosen == "Book" or chosen == "Phone" then
+                notify("Warning", chosen .. " Wont Work Unless You Own The Corresponding Gamepass.", 7, 6034304908)
+            end
+            selectedItem = chosen
+        end
+    })
+    MainTab:CreateButton({
+        Name = "Get Item",
+        Callback = function()
+            giveItem(selectedItem)
+        end
+    })
+
+    MainTab:CreateSection("Quality Of Life")
+    MainTab:CreateToggle({
+        Name = "Semi-Godmode",
+        CurrentValue = false,
+        Callback = function(state)
+            getgenv().SemiGodmode = state
+            if state then
+                notify("Info", "What Semi-Godmode Works On: Special Attacks (Pizza Boss's Pepper Attack, All Scarry Larry/Marry Attacks Except Monster Spawner), Hailing And Possibly Some Others\nWhat Semi-Godmode Doesnt Work On: Enemies, Ice (Use Anti Slip), Getting Locked In A Room While An Enemy Wave Comes, And Possibly Some Others.", 7, 4483345998)
+            end
+        end
+    })
+    MainTab:CreateToggle({
+        Name = "Remove Slipping",
+        CurrentValue = false,
+        Callback = function(state)
+            getgenv().RemoveSlipping = state
+            if state then
+                notify("Credits To", "Leo Dicap On V3rmillion For Making This Feature!", 7, 6034304908)
+            end
+        end
+    })
+    MainTab:CreateToggle({
+        Name = "Remove Hailing",
+        CurrentValue = false,
+        Callback = function(state)
+            if not state then
+                if isLoaded and hailsClone then
+                    hailsClone.Parent = Workspace
+                end
+            else
+                if Workspace:FindFirstChild("Hails") then
+                    hailsClone = Workspace.Hails:Clone()
+                    Workspace.Hails:Destroy()
+                end
+            end
+        end
+    })
+    MainTab:CreateToggle({
+        Name = "Remove Wind",
+        CurrentValue = false,
+        Callback = function(state)
+            getgenv().NoWind = state
+            while getgenv().NoWind do
+                removeWindClient()
+                task.wait(0.5)
+            end
+        end
+    })
+    MainTab:CreateToggle({
+        Name = "Remove Mud",
+        CurrentValue = false,
+        Callback = function(state)
+            removeMud(state)
+        end
+    })
+
+    MainTab:CreateSection("Kitchen Food")
+    MainTab:CreateSlider({
+        Name = "Table Food Slot",
+        Range = { 0, 4 },
+        Increment = 1,
+        Suffix = "",
+        CurrentValue = 1,
+        Flag = "Slider13131",
+        Callback = function(val)
+            tableFoodSlot = val
+        end
+    })
+    MainTab:CreateButton({
+        Name = "Spawn Pizza Box",
+        Callback = function()
+            Events:WaitForChild("OutsideFood"):FireServer(6, { item2 = "Pizza", placement = tableFoodSlot })
+        end
+    })
+    MainTab:CreateButton({
+        Name = "Spawn Bloxy Cola",
+        Callback = function()
+            Events:WaitForChild("OutsideFood"):FireServer(6, { item2 = "BloxyPack", placement = tableFoodSlot })
+        end
+    })
+
+    MainTab:CreateSection("Others")
+    MainTab:CreateToggle({
+        Name = "Lag/Crash The Server",
+        CurrentValue = false,
+        Callback = function(state)
+            getgenv().LagServer = state
+            while getgenv().LagServer do
+                for _ = 1, 10 do
+                    for slot = 1, 4 do
+                        Events:WaitForChild("OutsideFood"):FireServer(6, { item2 = "Pizza", placement = slot })
+                        Events:WaitForChild("OutsideFood"):FireServer(6, { item2 = "BloxyPack", placement = slot })
+                    end
+                end
+                task.wait(0.1)
+            end
+        end
+    })
+    MainTab:CreateButton({
+        Name = "Break The Game",
+        Callback = function()
+            localPlayer.Character.HumanoidRootPart.CFrame = Workspace.UnclePete.PrimaryPart.CFrame
+            task.wait(0.5)
+            Workspace.UnclePete:MoveTo(Vector3.new(math.huge, math.huge, math.huge))
+        end
+    })
+    MainTab:CreateButton({
+        Name = "Teleport To Private Lobby",
+        Callback = function()
+            TeleportService:Teleport(14775231477, localPlayer)
+        end
+    })
+    MainTab:CreateButton({
+        Name = "Unlock Secret Ending",
+        Callback = function()
+            unlockSecretEnding()
+        end
+    })
+    MainTab:CreateButton({
+        Name = "Get The Best Weapon",
+        Callback = function()
+            getBestWeapon()
+        end
+    })
+    MainTab:CreateButton({
+        Name = "Get The Best Food",
+        Callback = function()
+            getBestFood()
+        end
+    })
+    MainTab:CreateButton({
+        Name = "Get All Equipment",
+        Callback = function()
+            getAllEquipment()
+        end
+    })
+
+    -- ==========================================
+    -- Tab 2: Combat
+    -- ==========================================
+    local CombatTab = Window:CreateTab("Combat", 4483362458)
+
+    CombatTab:CreateSection("Kill Enemies")
+    CombatTab:CreateButton({
+        Name = "Kill All Enemies",
+        Callback = function()
+            for _ = 1, 10 do
+                killEnemies()
+            end
+        end
+    })
+    CombatTab:CreateToggle({
+        Name = "Loop Kill All",
+        CurrentValue = false,
+        Callback = function(state)
+            getgenv().KillAllLoop = state
+            while getgenv().KillAllLoop do
+                for _ = 1, 3 do
+                    killEnemies()
+                end
+                task.wait(0.1)
+            end
+        end
+    })
+
+    CombatTab:CreateSection("Break Enemies")
+    CombatTab:CreateButton({
+        Name = "Break All Enemies",
+        Callback = function()
+            breakEnemies()
+        end
+    })
+    CombatTab:CreateToggle({
+        Name = "Loop Break All",
+        CurrentValue = false,
+        Callback = function(state)
+            getgenv().BreakAllLoop = state
+            while getgenv().BreakAllLoop do
+                breakEnemies()
+                task.wait(1)
+            end
+        end
+    })
+
+    CombatTab:CreateSection("Bring Enemies")
+    CombatTab:CreateButton({
+        Name = "Bring All Enemies",
+        Callback = function()
+            bringEnemies()
+        end
+    })
+    CombatTab:CreateToggle({
+        Name = "Loop Bring All",
+        CurrentValue = false,
+        Callback = function(state)
+            getgenv().BringAllLoop = state
+            while getgenv().BringAllLoop do
+                bringEnemies()
+                task.wait(0.1)
+            end
+        end
+    })
+
+    -- ==========================================
+    -- Tab 3: Server-Side Deletion
+    -- ==========================================
+    local ServerTab = Window:CreateTab("Server Deletion", 4483362458)
+
+    ServerTab:CreateLabel("Visible By Everyone")
+    ServerTab:CreateSection("Mass Deletion")
+    ServerTab:CreateButton({
+        Name = "Delete The House",
+        Callback = function()
+            for _, obj in ipairs(Workspace.TheHouse:GetChildren()) do
+                if obj.Name ~= "FloorLayer" then
+                    deleteInstance(obj)
+                end
+            end
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Delete The Game(☠️)",
+        Callback = function()
+            for _, obj in ipairs(Workspace:GetChildren()) do
+                deleteInstance(obj)
+            end
+        end
+    })
+
+    ServerTab:CreateSection("Player Remover")
+    ServerTab:CreateInput({
+        Name = "Delete Player's Body",
+        CurrentValue = "",
+        PlaceholderText = "PlayerName",
+        RemoveTextAfterFocusLost = false,
+        Flag = "Input122",
+        Callback = function(playerName)
+            if Workspace:FindFirstChild(playerName) then
+                deleteInstance(Workspace[playerName])
+            end
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Delete Other's Body",
+        Callback = function()
+            for _, plr in ipairs(Players:GetChildren()) do
+                if plr.Name ~= localPlayer.Name then
+                    deleteInstance(Workspace:FindFirstChild(plr.Name, true))
+                end
+            end
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Delete Everyone's Body",
+        Callback = function()
+            for _, plr in ipairs(Players:GetChildren()) do
+                deleteInstance(Workspace:FindFirstChild(plr.Name, true))
+            end
+        end
+    })
+
+    local limbNames = {
+        "LeftHand", "LeftFoot", "LeftLowerArm", "LeftLowerLeg", "LeftUpperArm", "LeftUpperLeg",
+        "RightFoot", "RightHand", "RightLowerArm", "RightLowerLeg", "RightUpperArm", "RightUpperLeg"
+    }
+
+    local function deleteCharacterLimbs(charModel)
+        if not charModel then return end
+        for _, limb in ipairs(limbNames) do
+            if charModel:FindFirstChild(limb) then
+                deleteInstance(charModel[limb])
+            end
+        end
+    end
+
+    ServerTab:CreateSection("Limbs Deletion")
+    ServerTab:CreateInput({
+        Name = "Delete Player's Limbs",
+        CurrentValue = "",
+        PlaceholderText = "PlayerName",
+        RemoveTextAfterFocusLost = false,
+        Flag = "Input13333",
+        Callback = function(playerName)
+            local targetChar = Workspace:FindFirstChild(tostring(playerName))
+            deleteCharacterLimbs(targetChar)
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Delete Other's Limbs",
+        Callback = function()
+            for _, plr in ipairs(Players:GetChildren()) do
+                if plr.Name ~= localPlayer.Name then
+                    local targetChar = Workspace:FindFirstChild(plr.Name)
+                    deleteCharacterLimbs(targetChar)
+                end
+            end
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Delete Everyone's Limbs",
+        Callback = function()
+            for _, plr in ipairs(Players:GetChildren()) do
+                local targetChar = Workspace:FindFirstChild(plr.Name)
+                deleteCharacterLimbs(targetChar)
+            end
+        end
+    })
+
+    ServerTab:CreateSection("Character Freezing")
+    ServerTab:CreateInput({
+        Name = "Freeze Player",
+        CurrentValue = "",
+        PlaceholderText = "PlayerName",
+        RemoveTextAfterFocusLost = false,
+        Flag = "Input11111111",
+        Callback = function(playerName)
+            pcall(function()
+                local targetChar = Workspace:FindFirstChild(tostring(playerName))
+                if targetChar and targetChar:FindFirstChild("LowerTorso") then
+                    deleteInstance(targetChar.LowerTorso)
+                end
+            end)
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Freeze Other's Characters",
+        Callback = function()
+            for _, plr in ipairs(Players:GetChildren()) do
+                if plr.Name ~= localPlayer.Name then
+                    local targetChar = Workspace:FindFirstChild(plr.Name)
+                    if targetChar and targetChar:FindFirstChild("LowerTorso") then
+                        deleteInstance(targetChar.LowerTorso)
+                    end
+                end
+            end
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Freeze Everyone's Characters",
+        Callback = function()
+            for _, plr in ipairs(Players:GetChildren()) do
+                local targetChar = Workspace:FindFirstChild(plr.Name)
+                if targetChar and targetChar:FindFirstChild("LowerTorso") then
+                    deleteInstance(targetChar.LowerTorso)
+                end
+            end
+        end
+    })
+
+    ServerTab:CreateSection("Kill Players")
+    ServerTab:CreateInput({
+        Name = "Kill Player",
+        CurrentValue = "",
+        PlaceholderText = "PlayerName",
+        RemoveTextAfterFocusLost = false,
+        Flag = "Input111111121",
+        Callback = function(playerName)
+            pcall(function()
+                local targetChar = Workspace:FindFirstChild(tostring(playerName))
+                if targetChar then
+                    deleteInstance(targetChar:FindFirstChild("Head"))
+                    deleteInstance(targetChar:FindFirstChild("UpperTorso"))
+                end
+            end)
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Kill Others",
+        Callback = function()
+            for _, plr in ipairs(Players:GetChildren()) do
+                if plr.Name ~= localPlayer.Name then
+                    pcall(function()
+                        local targetChar = Workspace:FindFirstChild(plr.Name)
+                        if targetChar then
+                            deleteInstance(targetChar:FindFirstChild("Head"))
+                            deleteInstance(targetChar:FindFirstChild("UpperTorso"))
+                        end
+                    end)
+                end
+            end
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Kill Everyone",
+        Callback = function()
+            for _, plr in ipairs(Players:GetChildren()) do
+                pcall(function()
+                    local targetChar = Workspace:FindFirstChild(plr.Name)
+                    if targetChar then
+                        deleteInstance(targetChar:FindFirstChild("Head"))
+                        deleteInstance(targetChar:FindFirstChild("UpperTorso"))
+                    end
+                end)
+            end
+        end
+    })
+
+    ServerTab:CreateSection("Delete Models")
+    ServerTab:CreateButton({
+        Name = "Delete Treadmills",
+        Callback = function()
+            deleteInstance(Workspace:FindFirstChild("Tredmills"))
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Delete Benches",
+        Callback = function()
+            deleteInstance(Workspace:FindFirstChild("BenchPresses"))
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Delete TV",
+        Callback = function()
+            if Workspace:FindFirstChild("TheHouse") then
+                deleteInstance(Workspace.TheHouse:FindFirstChild("Projector"))
+            end
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Delete Vending Machines",
+        Callback = function()
+            deleteInstance(Workspace:FindFirstChild("VendingMachines"))
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Delete Boss Room",
+        Callback = function()
+            if Workspace:FindFirstChild("Final") then
+                deleteInstance(Workspace.Final:FindFirstChild("BossRoom"))
+            end
+        end
+    })
+
+    ServerTab:CreateSection("Delete Enemies")
+    ServerTab:CreateButton({
+        Name = "Delete Bad Guys",
+        Callback = function()
+            local folders = { Workspace.BadGuys, Workspace.BadGuysBoss, Workspace.BadGuysFront }
+            for _, folder in ipairs(folders) do
+                for _, enemy in ipairs(folder:GetChildren()) do
+                    deleteInstance(enemy)
+                end
+            end
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Delete Pizza Miniboss",
+        Callback = function()
+            deleteInstance(Workspace:FindFirstChild("BadGuyPizza", true))
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Delete Brute",
+        Callback = function()
+            deleteInstance(Workspace:FindFirstChild("BadGuyBrute"))
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Delete Scary Mary",
+        Callback = function()
+            if Workspace:FindFirstChild("Villainess") then
+                deleteInstance(Workspace.Villainess)
+            else
+                notify("Warning", "Scary Marry Is Already Deleted Or Boss Fight Hasnt Started!", 7, 6034304908)
+            end
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Delete Scary Larry",
+        Callback = function()
+            if Workspace:FindFirstChild("BigBoss") then
+                deleteInstance(Workspace.BigBoss)
+            else
+                notify("Warning", "Scary Larry Is Already Deleted Or Boss Fight Hasnt Started!", 7, 6034304908)
+            end
+        end
+    })
+
+    ServerTab:CreateSection("Weather Modifications")
+    ServerTab:CreateToggle({
+        Name = "Remove Wind For Everyone",
+        CurrentValue = false,
+        Flag = "Toggle212431313131",
+        Callback = function(state)
+            getgenv().NoWindSS = state
+            while getgenv().NoWindSS do
+                removeWindServer()
+                task.wait(0.1)
+            end
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Remove Ice For Everyone",
+        Callback = function()
+            deleteInstance(Workspace.Terrain)
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Remove Hailing For Everyone",
+        Callback = function()
+            deleteInstance(Workspace:FindFirstChild("Hails"))
+        end
+    })
+    ServerTab:CreateButton({
+        Name = "Remove Mud For Everyone",
+        Callback = function()
+            if Workspace:FindFirstChild("BogArea") and Workspace.BogArea:FindFirstChild("Bog") then
+                for _, obj in ipairs(Workspace.BogArea.Bog:GetDescendants()) do
+                    if obj.Name == "Mud" and obj:IsA("Part") then
+                        deleteInstance(obj)
+                    end
+                end
+            end
+        end
+    })
+
+    -- ==========================================
+    -- Tab 4: Teleports
+    -- ==========================================
+    local TeleportTab = Window:CreateTab("Teleports", 4483362458)
+
+    TeleportTab:CreateSection("Main")
+    TeleportTab:CreateButton({
+        Name = "Home",
+        Callback = function()
+            teleportTo(CFrame.new(-239, 30, -790))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Boss Fight",
+        Callback = function()
+            teleportTo(CFrame.new(-1565.78772, -368.711945, -1040.66626, 0.0929690823, -1.97564436e-08, 0.995669007, -1.53269308e-08, 1, 2.1273511e-08, -0.995669007, -1.72383299e-08, 0.0929690823))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Shop",
+        Callback = function()
+            teleportTo(CFrame.new(-246.653229, 30.4500484, -847.319275, 0.999987781, -9.18427645e-08, -0.00494772941, 9.19905787e-08, 1, 2.96483353e-08, 0.00494772941, -3.01031164e-08, 0.999987781))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Kitchen",
+        Callback = function()
+            teleportTo(CFrame.new(-249.753555, 30.4500484, -732.703125, -0.999205947, -1.97705017e-08, 0.0398429185, -2.00601384e-08, 1, -6.86967372e-09, -0.0398429185, -7.66347341e-09, -0.999205947))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Fighting Arena",
+        Callback = function()
+            teleportTo(CFrame.new(-255.521988, 62.7139359, -723.436035, -0.0542500541, 4.28905356e-09, -0.998527408, 1.07862625e-08, 1, 3.70936082e-09, 0.998527408, -1.05691456e-08, -0.0542500541))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "The Gym",
+        Callback = function()
+            teleportTo(CFrame.new(-256.477448, 63.4500465, -840.825562, 0.999789953, 2.17116263e-08, 0.020495005, -2.15169358e-08, 1, -9.7199333e-09, -0.020495005, 9.27690191e-09, 0.999789953))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Golden Apple",
+        Callback = function()
+            teleportTo(CFrame.new(61.8781624, 29.4499969, -534.381165, -0.584439218, -1.05103076e-07, 0.811437488, -3.12853778e-08, 1, 1.06993674e-07, -0.811437488, 3.71451705e-08, -0.584439218))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Feeding Instructions",
+        Callback = function()
+            teleportTo(CFrame.new(-207.885056, 60.4500465, -830.583557, 0.118373089, 3.89876789e-08, -0.992969215, 3.47791551e-09, 1, 3.96783406e-08, 0.992969215, -8.15031065e-09, 0.118373089))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Middle Room",
+        Callback = function()
+            teleportTo(CFrame.new(-209.951859, 30.4590473, -789.723877, -0.0485812724, 6.74905039e-08, 0.998819232, 1.19352916e-09, 1, -6.75122394e-08, -0.998819232, -2.08771045e-09, -0.0485812724))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Scarry Mary Pillar",
+        Callback = function()
+            teleportTo(CFrame.new(-1501.49597, -325.156891, -1060.63367, -0.691015959, 7.43958628e-09, 0.722839475, -5.03345055e-09, 1, -1.51040194e-08, -0.722839475, -1.40754954e-08, -0.691015959))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Outside Loot",
+        Callback = function()
+            local part = Workspace.OutsideParts:FindFirstChildWhichIsA("Part", true)
+            if part then
+                teleportTo(part.CFrame + Vector3.new(10, 0, 0))
+            end
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Experiment Room",
+        Callback = function()
+            teleportTo(Workspace.Final.Factory.RedDesk.Drawer:GetChildren()[2].CFrame + Vector3.new(20, 0, 0))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Cafeteria",
+        Callback = function()
+            teleportTo(Workspace.Final.Factory:FindFirstChild("Legs", true).CFrame)
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Rainbow Pizza Box",
+        Callback = function()
+            teleportTo(Workspace.RainbowPizzaBox.CFrame)
+        end
+    })
+
+    TeleportTab:CreateSection("NPC's")
+    TeleportTab:CreateButton({
+        Name = "Secret Agent Bradley",
+        Callback = function()
+            teleportTo(CFrame.new(-281.792053, 95.4500275, -790.556946, -0.116918251, -7.95074726e-08, -0.993141532, -2.79918044e-09, 1, -7.97270019e-08, 0.993141532, -6.54155974e-09, -0.116918251))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Twando The Dog",
+        Callback = function()
+            teleportTo(CFrame.new(-257.56839, 29.4499969, -910.452637, -0.238445505, 7.71292363e-09, 0.971155882, 1.2913591e-10, 1, -7.91029819e-09, -0.971155882, -1.76076387e-09, -0.238445505))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Uncle Pete",
+        Callback = function()
+            teleportTo(CFrame.new(-294.208923, 63.4182587, -737.712036, -0.998669028, -7.34403613e-08, -0.05157727, -7.2258743e-08, 1, -2.47743781e-08, 0.05157727, -2.1014495e-08, -0.998669028))
+        end
+    })
+
+    TeleportTab:CreateSection("Secret Ending")
+    TeleportTab:CreateButton({
+        Name = "Golden Crowbar",
+        Callback = function()
+            teleportTo(CFrame.new(-147.337204, 29.4477005, -929.365295, 0.756779075, 4.53537341e-09, -0.653670728, 5.82708326e-09, 1, 1.36845468e-08, 0.653670728, -1.4165173e-08, 0.756779075))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Purple Mask",
+        Callback = function()
+            teleportTo(CFrame.new(102.560722, 29.2477055, -976.389954, -0.951403797, 3.76210636e-08, -0.307946175, 1.89752569e-08, 1, 6.35433466e-08, 0.307946175, 5.46120233e-08, -0.951403797))
+        end
+    })
+    TeleportTab:CreateButton({
+        Name = "Homeless Kid",
+        Callback = function()
+            teleportTo(CFrame.new(-79.4871826, 29.4477024, -932.782715, -0.215949073, 3.18771427e-08, 0.976404607, -7.60385461e-08, 1, -4.94647345e-08, -0.976404607, -8.49262562e-08, -0.215949073))
+        end
+    })
+
+    -- ==========================================
+    -- Tab 5: Player Settings
+    -- ==========================================
+    local PlayerTab = Window:CreateTab("Player", 4483362458)
+
+    PlayerTab:CreateSection("Settings")
+    PlayerTab:CreateSlider({
+        Name = "Walk Speed",
+        Range = { 0, 500 },
+        Increment = 1,
+        Suffix = "Speed",
+        CurrentValue = 50,
+        Flag = "Slide3131",
+        Callback = function(val)
+            targetWalkSpeed = val
+        end
+    })
+    PlayerTab:CreateSlider({
+        Name = "Jump Power",
+        Range = { 0, 500 },
+        Increment = 1,
+        Suffix = "Power",
+        CurrentValue = 50,
+        Flag = "Slide31312",
+        Callback = function(val)
+            targetJumpPower = val
+        end
+    })
+
+    PlayerTab:CreateSection("Player")
+    PlayerTab:CreateToggle({
+        Name = "Enable Walk Speed",
+        CurrentValue = false,
+        Callback = function(state)
+            if state then
+                origWalkSpeed = localPlayer.Character.Humanoid.WalkSpeed
+                localPlayer.Character.Humanoid.WalkSpeed = targetWalkSpeed
+            else
+                localPlayer.Character.Humanoid.WalkSpeed = origWalkSpeed
+            end
+        end
+    })
+    PlayerTab:CreateToggle({
+        Name = "Enable Jump Power",
+        CurrentValue = false,
+        Callback = function(state)
+            if state then
+                origJumpPower = localPlayer.Character.Humanoid.JumpPower
+                localPlayer.Character.Humanoid.JumpPower = targetJumpPower
+                localPlayer.Character.Humanoid.UseJumpPower = true
+            else
+                localPlayer.Character.Humanoid.JumpPower = origJumpPower
+            end
+        end
+    })
+    PlayerTab:CreateToggle({
+        Name = "Enable Noclip",
+        CurrentValue = false,
+        Callback = function(state)
+            getgenv().Noclipping = state
+            if state then
+                task.spawn(function()
+                    while getgenv().Noclipping do
+                        setCharacterCollision(false)
+                        task.wait(0.05)
+                    end
+                end)
+            else
+                setCharacterCollision(true)
+            end
+        end
+    })
+    PlayerTab:CreateToggle({
+        Name = "Enable Floating",
+        CurrentValue = false,
+        Callback = function(state)
+            getgenv().Float = state
+            if state then
+                task.spawn(function()
+                    while getgenv().Float do
+                        if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            floatPart.CFrame = localPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, -4, 0)
+                        end
+                        task.wait(0.05)
+                    end
+                end)
+            else
+                if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    floatPart.CFrame = localPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 999, 0)
+                end
+            end
+        end
+    })
+
+    -- ==========================================
+    -- Tab 6: Endings & Badges
+    -- ==========================================
+    local BadgesTab = Window:CreateTab("Badges & Endings", 4483362458)
+
+    BadgesTab:CreateSection("Origin ending")
+    BadgesTab:CreateInput({
+        Name = "origin ending message(troll)",
+        CurrentValue = originEndingMsg,
+        PlaceholderText = "Message to origin ending",
+        RemoveTextAfterFocusLost = false,
+        Flag = "Input2222",
+        Callback = function(text)
+            originEndingMsg = text
+        end
+    })
+    BadgesTab:CreateButton({
+        Name = "Unlock ending",
+        Callback = function()
+            ReplicatedStorage.Events.PagesReplicate:FireServer(5, originEndingMsg)
+        end
+    })
+    BadgesTab:CreateButton({
+        Name = "esp hidden items in origin ending",
+        Callback = function()
+            local boxes = Workspace.GameObjects.Boxes
+
+            local function createESP(item, parentBox)
+                if not item:FindFirstChild("ESP") then
+                    local esp = Instance.new("BillboardGui", item)
+                    esp.Name = "ESP"
+                    esp.Size = UDim2.new(0, 100, 0, 20)
+                    esp.AlwaysOnTop = true
+                    esp.Adornee = item
+
+                    local label = Instance.new("TextLabel", esp)
+                    label.Size = UDim2.new(1, 0, 1, 0)
+                    label.BackgroundTransparency = 1
+                    label.Text = item.Name
+                    label.TextColor3 = Color3.new(1, 1, 0)
+                    label.TextScaled = true
+
+                    item.AncestryChanged:Connect(function()
+                        if not item:IsDescendantOf(parentBox) and esp then
+                            esp:Destroy()
+                        end
+                    end)
+                end
+            end
+
+            local function watchBox(box)
+                box.DescendantAdded:Connect(function(desc)
+                    if desc.Name == "HiddenItem" and desc:IsA("Model") then
+                        createESP(desc, box)
+                    end
+                end)
+                local existing = box:FindFirstChild("HiddenItem", true)
+                if existing and existing:IsA("Model") then
+                    createESP(existing, box)
+                end
+            end
+
+            for _, box in ipairs(boxes:GetChildren()) do
+                watchBox(box)
+            end
+            boxes.ChildAdded:Connect(watchBox)
+        end
+    })
+    BadgesTab:CreateButton({
+        Name = "auto rose",
+        Callback = function()
+            local rose = Workspace.Gym.Roses.Rose
+            local hitRose = ReplicatedStorage.Events.HitRose
+            for _ = 1, 10 do
+                for i = 1, 6 do
+                    for _ = 1, 6 do
+                        hitRose:FireServer(rose, i)
+                    end
+                end
+            end
+        end
+    })
+
+    BadgesTab:CreateSection("others")
+    BadgesTab:CreateButton({
+        Name = "Dream Team (And The 3 Below)",
+        Callback = function()
+            getDog()
+            task.wait(5)
+            getAgentBradley()
+            task.wait(1)
+            getUnclePete()
+        end
+    })
+    BadgesTab:CreateButton({
+        Name = "Operation: Dog Rescue",
+        Callback = function()
+            getDog()
+        end
+    })
+    BadgesTab:CreateButton({
+        Name = "Wake Up, Bradley!",
+        Callback = function()
+            getAgentBradley()
+        end
+    })
+    BadgesTab:CreateButton({
+        Name = "Uncle Pete's Return",
+        Callback = function()
+            getUnclePete()
+        end
+    })
+    BadgesTab:CreateButton({
+        Name = "The Golden Apple",
+        Callback = function()
+            collectGoldenAppleBadge()
+        end
+    })
+    BadgesTab:CreateButton({
+        Name = "Delivery's Here",
+        Callback = function()
+            collectOutsideItems()
+        end
+    })
+    BadgesTab:CreateButton({
+        Name = "So Speedy",
+        Callback = function()
+            for _ = 1, 5 do
+                trainStat("Speed")
+            end
+        end
+    })
+    BadgesTab:CreateButton({
+        Name = "So Strong",
+        Callback = function()
+            for _ = 1, 5 do
+                trainStat("Strength")
+            end
+        end
+    })
+    BadgesTab:CreateButton({
+        Name = "Reformed",
+        Callback = function()
+            unlockSecretEnding()
+        end
+    })
+    BadgesTab:CreateButton({
+        Name = "Avoid Humiliation",
+        Callback = function()
+            getAllEquipment()
+            task.wait(4)
+            getDog()
+            task.wait(5)
+            getAgentBradley()
+            task.wait(1)
+            getUnclePete()
+        end
+    })
+
+    -- ==========================================
+    -- Tab 7: Misc
+    -- ==========================================
+    local MiscTab = Window:CreateTab("Misc", 4483362458)
+
+    MiscTab:CreateSection("Harmful")
+    MiscTab:CreateSlider({
+        Name = "Damage Amount",
+        Range = { 0, 200 },
+        Increment = 1,
+        Suffix = "Damage",
+        CurrentValue = 5,
+        Flag = "Slider1313131",
+        Callback = function(val)
+            damageAmount = val
+        end
+    })
+    MiscTab:CreateButton({
+        Name = "Damage Yourself",
+        Callback = function()
+            if getgenv().SemiGodmode then
+                notify("Warning", "Damaging Yourself Won't Work Due To Having 'Semi Godmode' Enabled!", 7, 6034304908)
+            else
+                damageSelf(damageAmount)
+            end
+        end
+    })
+    MiscTab:CreateButton({
+        Name = "Slip",
+        Callback = function()
+            if getgenv().RemoveSlipping then
+                notify("Warning", "Slipping Won't Work Due To Having 'Remove Slipping' Enabled!", 7, 6034304908)
+            else
+                Events:WaitForChild("IceSlip"):FireServer(Vector3.new(0, 0, 0))
+            end
+        end
+    })
+
+    MiscTab:CreateSection("Tools")
+    MiscTab:CreateButton({
+        Name = "Equip All",
+        Callback = function()
+            equipAllTools()
+        end
+    })
+    MiscTab:CreateButton({
+        Name = "Unequip All",
+        Callback = function()
+            unequipAllTools()
+        end
+    })
+
+    MiscTab:CreateSection("Bosses")
+    MiscTab:CreateButton({
+        Name = "Delete Scary Mary",
+        Callback = function()
+            if Workspace:FindFirstChild("Villainess") then
+                Workspace.Villainess:Destroy()
+            else
+                notify("Warning", "Scary Marry Is Already Deleted Or Boss Fight Hasnt Started!", 7, 6034304908)
+            end
+        end
+    })
+    MiscTab:CreateButton({
+        Name = "Delete Scary Larry",
+        Callback = function()
+            if Workspace:FindFirstChild("BigBoss") then
+                Workspace.BigBoss:Destroy()
+            else
+                notify("Warning", "Scary Larry Is Already Deleted Or Boss Fight Hasnt Started!", 7, 6034304908)
+            end
+        end
+    })
+
+    MiscTab:CreateSection("NPC's")
+    MiscTab:CreateButton({
+        Name = "Get All NPC's",
+        Callback = function()
+            getDog()
+            task.wait(5)
+            getAgentBradley()
+            task.wait(1)
+            getUnclePete()
+        end
+    })
+    MiscTab:CreateButton({
+        Name = "Get Dog",
+        Callback = function()
+            getDog()
+        end
+    })
+    MiscTab:CreateButton({
+        Name = "Get Agent Bradley",
+        Callback = function()
+            getAgentBradley()
+        end
+    })
+    MiscTab:CreateButton({
+        Name = "Get Uncle Pete",
+        Callback = function()
+            getUnclePete()
+        end
+    })
+
+    MiscTab:CreateSection("Cash")
+    MiscTab:CreateButton({
+        Name = "Collect Cash",
+        Callback = function()
+            collectCash()
+        end
+    })
+    MiscTab:CreateToggle({
+        Name = "Auto Collect Cash",
+        CurrentValue = false,
+        Callback = function(state)
+            getgenv().CollectAllCash = state
+            while getgenv().CollectAllCash do
+                collectCash()
+                task.wait(1)
+            end
+        end
+    })
+
+    MiscTab:CreateSection("Others")
+    MiscTab:CreateButton({
+        Name = "Get All Items From Outside(fixed working any executor)",
+        Callback = function()
+            collectOutsideItems()
+        end
+    })
+    MiscTab:CreateButton({
+        Name = "Break Fallen Trees",
+        Callback = function()
+            breakFallenTrees()
+        end
+    })
+    MiscTab:CreateToggle({
+        Name = "Hidden Items ESP",
+        CurrentValue = false,
+        Callback = function(state)
+            if state then
+                for _, item in ipairs(Workspace.Hidden:GetChildren()) do
+                    local highlight = Instance.new("Highlight")
+                    highlight.Parent = item
+                    highlight.FillColor = Color3.fromRGB(255, 0, 255)
+                    highlight.FillTransparency = 0
+                    highlight.OutlineTransparency = 0
+                    highlight.OutlineColor = Color3.fromRGB(0, 0, 255)
+                end
+            else
+                for _, item in ipairs(Workspace.Hidden:GetChildren()) do
+                    local hl = item:FindFirstChild("Highlight")
+                    if hl then
+                        hl:Destroy()
+                    end
+                end
+            end
+        end
+    })
+    MiscTab:CreateToggle({
+        Name = "Full Bright",
+        CurrentValue = false,
+        Callback = function(state)
+            if state then
+                Lighting.Brightness = 1
+                Lighting.FogEnd = 999999
+                Lighting.GlobalShadows = false
+            else
+                Lighting.Brightness = origBrightness
+                Lighting.FogEnd = origFogEnd
+                Lighting.GlobalShadows = origGlobalShadows
+            end
+        end
+    })
+
+    MiscTab:CreateSection("Auto Func")
+    MiscTab:CreateToggle({
+        Name = "Auto Quests",
+        CurrentValue = false,
+        Callback = function(state)
+            getgenv().AutoPete = state
+            if state then
+                print("AutoPete enabled. Starting task loop...")
+                task.spawn(function()
+                    while getgenv().AutoPete do
+                        clickUnclePete()
+                        task.wait(5)
+                    end
+                end)
+            else
+                print("AutoPete disabled.")
+            end
+        end
+    })
+
+    -- ==========================================
+    -- Tab 8: Extra / FE Trolling
+    -- ==========================================
+    local ExtraTab = Window:CreateTab("Extra & FE", 4483362458)
+
+    ExtraTab:CreateSection("Break in 2")
+    ExtraTab:CreateButton({
+        Name = "Infinite Yield",
+        Callback = function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Dex",
+        Callback = function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
+        end
+    })
+
+    ExtraTab:CreateSection("Kick Players")
+    local kickTargetName = nil
+    local activePlayersWithChar = {}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr.Character then
+            table.insert(activePlayersWithChar, plr.Name)
+        end
+    end
+
+    ExtraTab:CreateDropdown({
+        Name = "Select Player",
+        Options = activePlayersWithChar,
+        CurrentOption = { "Select Player" },
+        MultipleOptions = false,
+        Flag = "SelectPlayerDropdown1",
+        Callback = function(option)
+            kickTargetName = option[1]
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Kick",
+        Callback = function()
+            if kickTargetName then
+                local targetPlr = Players:FindFirstChild(kickTargetName)
+                if targetPlr then
+                    deleteInstance(targetPlr)
+                end
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Naked")
+    local clothesTargetPlr = nil
+    ExtraTab:CreateDropdown({
+        Name = "Select Player",
+        Options = getPlayerNames(),
+        CurrentOption = { "Select Player" },
+        MultipleOptions = false,
+        Flag = "SelectPlayerDropdown2",
+        Callback = function(option)
+            clothesTargetPlr = Players:FindFirstChild(option[1])
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete Clothes",
+        Callback = function()
+            if clothesTargetPlr and clothesTargetPlr.Character then
+                local char = clothesTargetPlr.Character
+                local shirt = char:FindFirstChildOfClass("Shirt")
+                if shirt then
+                    deleteInstance(shirt)
+                end
+                local pants = char:FindFirstChildOfClass("Pants")
+                if pants then
+                    deleteInstance(pants)
+                end
+            end
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete Everyone's Clothes (fixed)",
+        Callback = function()
+            local playerSet = {}
+            for _, plr in ipairs(Players:GetPlayers()) do
+                playerSet[plr.Name] = true
+            end
+            for _, model in ipairs(Workspace:GetChildren()) do
+                if model:IsA("Model") and playerSet[model.Name] then
+                    for _, item in ipairs(model:GetChildren()) do
+                        if item.ClassName == "Shirt" or item.ClassName == "Pants" then
+                            deleteInstance(item)
+                        end
+                    end
+                end
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Delete Accessory")
+    local accessoryTargetPlr = nil
+    ExtraTab:CreateDropdown({
+        Name = "Select Player",
+        Options = getPlayerNames(),
+        CurrentOption = { "Select Player" },
+        MultipleOptions = false,
+        Flag = "SelectPlayerDropdown3",
+        Callback = function(option)
+            accessoryTargetPlr = Players:FindFirstChild(option[1])
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete Selected Player's Accessories",
+        Callback = function()
+            if accessoryTargetPlr and accessoryTargetPlr.Character then
+                for _, item in ipairs(accessoryTargetPlr.Character:GetChildren()) do
+                    if item:IsA("Accessory") then
+                        deleteInstance(item)
+                    end
+                end
+            end
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete Everyone's Accessories",
+        Callback = function()
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr.Character then
+                    for _, item in ipairs(plr.Character:GetChildren()) do
+                        if item:IsA("Accessory") then
+                            deleteInstance(item)
+                        end
+                    end
+                end
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Delete Player Hair")
+    local hairTargetPlr = nil
+    ExtraTab:CreateDropdown({
+        Name = "Select Player",
+        Options = getPlayerNames(),
+        CurrentOption = { "Select Player" },
+        MultipleOptions = false,
+        Flag = "SelectPlayerDropdown4",
+        Callback = function(option)
+            hairTargetPlr = Players:FindFirstChild(option[1])
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete Hair",
+        Callback = function()
+            if hairTargetPlr and hairTargetPlr.Character then
+                for _, item in ipairs(hairTargetPlr.Character:GetChildren()) do
+                    if item:IsA("Accessory") and item.AccessoryType == Enum.AccessoryType.Hair then
+                        deleteInstance(item)
+                    end
+                end
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Delete Player Face")
+    local faceTargetPlr = nil
+    ExtraTab:CreateDropdown({
+        Name = "Select Player",
+        Options = getPlayerNames(),
+        CurrentOption = { "Select Player" },
+        MultipleOptions = false,
+        Flag = "SelectPlayerDropdown5",
+        Callback = function(option)
+            faceTargetPlr = Players:FindFirstChild(option[1])
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete Face",
+        Callback = function()
+            local head = faceTargetPlr and faceTargetPlr.Character and faceTargetPlr.Character:FindFirstChild("Head")
+            if head then
+                for _, decal in ipairs(head:GetChildren()) do
+                    if decal:IsA("Decal") then
+                        deleteInstance(decal)
+                    end
+                end
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Delete Player TShirt")
+    local tshirtTargetPlr = nil
+    ExtraTab:CreateDropdown({
+        Name = "Select Player",
+        Options = getPlayerNames(),
+        CurrentOption = { "Select Player" },
+        MultipleOptions = false,
+        Flag = "SelectPlayerDropdown6",
+        Callback = function(option)
+            tshirtTargetPlr = Players:FindFirstChild(option[1])
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete TShirt",
+        Callback = function()
+            if tshirtTargetPlr and tshirtTargetPlr.Character then
+                for _, item in ipairs(tshirtTargetPlr.Character:GetChildren()) do
+                    if item:IsA("Accessory") and item.Name:lower():find("shirt") then
+                        deleteInstance(item)
+                    end
+                end
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Delete Player Hat")
+    local hatTargetPlr = nil
+    ExtraTab:CreateDropdown({
+        Name = "Select Player",
+        Options = getPlayerNames(),
+        CurrentOption = { "Select Player" },
+        MultipleOptions = false,
+        Flag = "SelectPlayerDropdown7",
+        Callback = function(option)
+            hatTargetPlr = Players:FindFirstChild(option[1])
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete Hat",
+        Callback = function()
+            if hatTargetPlr and hatTargetPlr.Character then
+                for _, item in ipairs(hatTargetPlr.Character:GetChildren()) do
+                    if item:IsA("Accessory") and item.Name:lower():find("hat") then
+                        deleteInstance(item)
+                    end
+                end
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Delete Tool")
+    ExtraTab:CreateButton({
+        Name = "Delete Tool (you can delete things and the game may broken)",
+        Callback = function()
+            local tool = Instance.new("Tool")
+            tool.Name = "Delete Tool"
+            tool.RequiresHandle = false
+            tool.Parent = localPlayer.Backpack
+
+            tool.Activated:Connect(function()
+                local target = localPlayer:GetMouse().Target
+                if target then
+                    if target:IsA("Model") then
+                        for _, child in ipairs(target:GetChildren()) do
+                            if child:IsA("BasePart") then
+                                deleteInstance(child)
+                            end
+                        end
+                        deleteInstance(target)
+                    elseif target:IsA("BasePart") then
+                        deleteInstance(target)
+                    end
+                end
+            end)
+        end
+    })
+
+    ExtraTab:CreateSection("Harked")
+    ExtraTab:CreateButton({
+        Name = "Harked SS Script",
+        Callback = function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/JulesV2/sigma-sigma-boy/refs/heads/main/break%20in%202%20harked.lua"))()
+        end
+    })
+
+    ExtraTab:CreateSection("Funny")
+    ExtraTab:CreateButton({
+        Name = "Delete all BenchPress",
+        Callback = function()
+            local model = Workspace:FindFirstChild("BenchPresses")
+            if model then
+                deleteInstance(model)
+            else
+                print("Model not found")
+            end
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete all Tredmills",
+        Callback = function()
+            local model = Workspace:FindFirstChild("Tredmills")
+            if model then
+                deleteInstance(model)
+            else
+                print("Model not found")
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Doors")
+    ExtraTab:CreateButton({
+        Name = "Delete Doors (I do not recommend)",
+        Callback = function()
+            local doors1 = Workspace:FindFirstChild("Doors1")
+            local doors2 = Workspace:FindFirstChild("Doors2")
+            if doors1 then
+                deleteInstance(doors1)
+            end
+            if doors2 then
+                deleteInstance(doors2)
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Trees")
+    ExtraTab:CreateButton({
+        Name = "Delete Trees",
+        Callback = function()
+            for _, folderName in ipairs({ "Trees", "PlacingTrees" }) do
+                local folder = Workspace:FindFirstChild(folderName)
+                if folder then
+                    deleteInstance(folder)
+                end
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Delete NPCs")
+    ExtraTab:CreateButton({
+        Name = "Delete UnclePete",
+        Callback = function()
+            local npc = Workspace:FindFirstChild("UnclePete")
+            if npc then
+                deleteInstance(npc)
+            else
+                warn("UnclePete model not found!")
+            end
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete Dog",
+        Callback = function()
+            local house = Workspace:FindFirstChild("TheHouse")
+            if house then
+                local smallCat = house:FindFirstChild("SmallCat")
+                if smallCat then
+                    deleteInstance(smallCat)
+                    print("SmallCat has been deleted from TheHouse.")
+                else
+                    print("SmallCat model not found in TheHouse.")
+                end
+            else
+                print("TheHouse model not found in Workspace.")
+            end
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete Agent Bradley",
+        Callback = function()
+            local npc = Workspace:FindFirstChild("AgentBeans")
+            if npc then
+                deleteInstance(npc)
+            else
+                print("Model not found")
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Delete VendingMachines")
+    local function deleteVendingCategory(categoryName)
+        local vm = Workspace:FindFirstChild("VendingMachines")
+        if vm then
+            local target = vm:FindFirstChild(categoryName)
+            if target then
+                deleteInstance(target)
+            else
+                print("model not found")
+            end
+        end
+    end
+
+    ExtraTab:CreateButton({
+        Name = "Weapons",
+        Callback = function()
+            deleteVendingCategory("Weapons")
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Food",
+        Callback = function()
+            deleteVendingCategory("Food")
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Drinks",
+        Callback = function()
+            deleteVendingCategory("Drinks")
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Armor",
+        Callback = function()
+            deleteVendingCategory("Armor")
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete all VendingMachines",
+        Callback = function()
+            local vm = Workspace:FindFirstChild("VendingMachines")
+            if vm then
+                deleteInstance(vm)
+            else
+                print("Model not found")
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Delete any model (use Dex)")
+    local customModelName = ""
+    ExtraTab:CreateInput({
+        Name = "Enter Model Name",
+        CurrentValue = "",
+        PlaceholderText = "Model Name",
+        RemoveTextAfterFocusLost = false,
+        Flag = "Input31",
+        Callback = function(text)
+            customModelName = text
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete Model",
+        Callback = function()
+            if customModelName == "" then
+                warn("Please enter a model name.")
+                return
+            end
+            local model = Workspace:FindFirstChild(customModelName)
+            if model then
+                for _, child in ipairs(model:GetChildren()) do
+                    deleteInstance(child)
+                end
+                deleteInstance(model)
+                print(customModelName .. " has been deleted.")
+            else
+                warn("Model not found: " .. customModelName)
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Delete any Folder")
+    local customFolderName = ""
+    ExtraTab:CreateInput({
+        Name = "Enter Folder Name",
+        CurrentValue = "",
+        PlaceholderText = "Folder Name",
+        RemoveTextAfterFocusLost = false,
+        Flag = "Input69",
+        Callback = function(text)
+            customFolderName = text
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete Folder",
+        Callback = function()
+            if customFolderName == "" then
+                warn("Please enter a folder name.")
+                return
+            end
+            local folder = Workspace:FindFirstChild(customFolderName)
+            if folder then
+                for _, child in ipairs(folder:GetChildren()) do
+                    deleteInstance(child)
+                end
+                deleteInstance(folder)
+                print(customFolderName .. " has been deleted.")
+            else
+                warn("Folder not found: " .. customFolderName)
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Delete any Part")
+    local customPartName = ""
+    ExtraTab:CreateInput({
+        Name = "Enter Part Name",
+        CurrentValue = "",
+        PlaceholderText = "Part Name",
+        RemoveTextAfterFocusLost = false,
+        Flag = "Input1",
+        Callback = function(text)
+            customPartName = text
+        end
+    })
+    ExtraTab:CreateButton({
+        Name = "Delete Part",
+        Callback = function()
+            if customPartName == "" then
+                warn("Please enter a part name.")
+                return
+            end
+            local part = Workspace:FindFirstChild(customPartName)
+            if part then
+                deleteInstance(part)
+                print(customPartName .. " has been deleted.")
+            else
+                warn("Part not found: " .. customPartName)
+            end
+        end
+    })
+
+    ExtraTab:CreateSection("Delete Golden Apple")
+    ExtraTab:CreateButton({
+        Name = "Delete GoldenApple",
+        Callback = function()
+            local ga = Workspace:FindFirstChild("GoldenApple")
+            if ga then
+                deleteInstance(ga)
+                print("GoldenApple has been deleted.")
+            else
+                print("GoldenApple part not found in Workspace.")
+            end
+        end
+    })
+    ExtraTab:CreateParagraph({
+        Title = "✅",
+        Content = "Why are we deleting the Golden Apple? If you delete the Golden Apple, normal players won't be able to get it. So, what happens if normal players do get it? You won't be able to use the 'heal all' command or obtain it from the 'get item' section. Why? Because once they get it, the Golden Apple won't be available again. If you want to prevent this, you can delete it."
+    })
+
+    notify("Loaded!", "Script Successfully Loaded!", 5, 6034304908)
+    isLoaded = true
+    Rayfield:LoadConfiguration()
+
+elseif game.PlaceId == 14775231477 or game.PlaceId == 13864661000 then
+    local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+    
+    local LobbyWindow = Rayfield:CreateWindow({
+        Name = "알파 허브",
+        Icon = 0,
+        LoadingTitle = "Loading Script...",
+        LoadingSubtitle = "Break in 2",
+        Theme = "Default",
+        DisableRayfieldPrompts = false,
+        DisableBuildWarnings = false,
+        ConfigurationSaving = {
+            Enabled = true,
+            FolderName = nil,
+            FileName = "Big Hub"
+        },
+        Discord = {
+            Enabled = false,
+            Invite = "",
+            RememberJoins = true
+        },
+        KeySystem = false,
+        KeySettings = {
+            Title = " Key",
+            Subtitle = "Key ",
+            Note = "Link Copied!🗝️🕸️",
+            FileName = "aUltimateHubKey2",
+            SaveKey = false,
+            GrabKeyFromSite = false,
+            Key = {
+                ""
+            }
+        }
+    })
+
+    local RoleTab = LobbyWindow:CreateTab("역할", 4483362458)
+
+    RoleTab:CreateButton({
+        Name = "해커 역할",
+        Callback = function()
+            ReplicatedStorage.RemoteEvents.OutsideRole:FireServer("Phone", true, false)
+            Rayfield:Notify({
+                Title = "실패",
+                Content = "실행기 좆쓰레기세요..",
+                Duration = 5,
+                Image = "wrong"
+            })
+        end
+    })
+    RoleTab:CreateButton({
+        Name = "너드 키드 역할",
+        Callback = function()
+            ReplicatedStorage.RemoteEvents.OutsideRole:FireServer("Book", true, false)
+            Rayfield:Notify({
+                Title = "실패",
+                Content = "실행기 좆쓰레기세요..",
+                Duration = 5,
+                Image = "wrong"
+            })
+        end
+    })
+
+    Rayfield:LoadConfiguration()
+
+    local char = Players.LocalPlayer.Character
+    local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+    if rootPart then
+        for _, child in ipairs(Workspace:GetChildren()) do
+            if child.Name == "Part" and child:FindFirstChild("TouchInterest") then
+                firetouchinterest(child, rootPart, 0)
+            end
+        end
+    end
+else
+    Players.LocalPlayer:Kick("오류 이게임지원안함!")
+end
+
+--[[
+local isTeleportQueued = false
+local localPlayer = Players.LocalPlayer
+if localPlayer and localPlayer.OnTeleport and queueOnTeleport then
+    localPlayer.OnTeleport:Connect(function(state)
+        if not isTeleportQueued then
+            isTeleportQueued = true
+            print("[Teleport Test] Teleport detected – re-queuing script.")
+            queueOnTeleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/Fluxincontroller/RandomStuff/refs/heads/main/reloadshi'))()")
+        end
+        if state == Enum.TeleportState.Completed then
+            isTeleportQueued = false
+            print("[Teleport Test] Teleport completed.")
+        end
+    end)
+end
+]]
