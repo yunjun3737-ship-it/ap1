@@ -1,5 +1,3 @@
--- Restored & Cleaned Script (Break In 2 - Exclusionz Hub)
-
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -9,14 +7,13 @@ local TeleportService = game:GetService("TeleportService")
 local queueOnTeleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
 
 if queueOnTeleport then
-    print("[Teleport Test] queue_on_teleport detected – teleport persistence WILL work.")
+    print("[텔레포트 감지] queue_on_teleport 확인됨 - 서버 이동 시 자동 재실행됩니다.")
 else
-    warn("[Teleport Test] queue_on_teleport NOT found – script will NOT survive teleports.")
+    warn("[텔레포트 감지] queue_on_teleport 미지원 - 서버 이동 시 스크립트가 풀립니다.")
 end
 
-print("[Teleport Test] Script loaded! (Current server: " .. game.JobId .. ")")
+print("[스크립트 로드 완료] 현재 서버: " .. game.JobId)
 
--- 메인 게임 (Break In 2 - Game)
 if game.PlaceId == 13864667823 then
     local floatPart = Instance.new("Part")
     floatPart.Size = Vector3.new(5, 1, 5)
@@ -51,7 +48,6 @@ if game.PlaceId == 13864667823 then
     getgenv().RemoveSlipping = false
     getgenv().SemiGodmode = false
 
-    -- 알림 헬퍼 함수
     local function notify(title, content, duration, image)
         Rayfield:Notify({
             Title = title,
@@ -61,14 +57,12 @@ if game.PlaceId == 13864667823 then
         })
     end
 
-    -- 순간이동 함수
     local function teleportTo(cframe)
         if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
             localPlayer.Character.HumanoidRootPart.CFrame = cframe
         end
     end
 
-    -- 서버 오브젝트 제거 함수 (OnDoorHit 리모트 악용)
     local function deleteInstance(target)
         pcall(function()
             if target then
@@ -77,7 +71,6 @@ if game.PlaceId == 13864667823 then
         end)
     end
 
-    -- 진흙 비활성화
     local function removeMud(state)
         if Workspace:FindFirstChild("BogArea") and Workspace.BogArea:FindFirstChild("Bog") then
             for _, obj in ipairs(Workspace.BogArea.Bog:GetDescendants()) do
@@ -88,7 +81,6 @@ if game.PlaceId == 13864667823 then
         end
     end
 
-    -- 적 관절/체력 파괴
     local function breakEnemies()
         pcall(function()
             local folders = { Workspace.BadGuys, Workspace.BadGuysBoss, Workspace.BadGuysFront }
@@ -103,7 +95,6 @@ if game.PlaceId == 13864667823 then
         end)
     end
 
-    -- 적 끌어오기
     local function bringEnemies()
         pcall(function()
             local rootCFrame = localPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -4)
@@ -119,7 +110,6 @@ if game.PlaceId == 13864667823 then
         end)
     end
 
-    -- 적 공격/처치
     local function killEnemies()
         pcall(function()
             local hitEvent = Events:WaitForChild("HitBadguy")
@@ -142,17 +132,14 @@ if game.PlaceId == 13864667823 then
         end)
     end
 
-    -- 스탯 훈련
     local function trainStat(statName)
         Events:WaitForChild("RainbowWhatStat"):FireServer(statName)
     end
 
-    -- 자해 (에너지 차감)
     local function damageSelf(amount)
         Events:WaitForChild("Energy"):FireServer(-amount, false, false)
     end
 
-    -- 바닥 현금 수집
     local function collectCash()
         for _, obj in ipairs(Workspace:GetChildren()) do
             if obj.Name == "Part" and obj:FindFirstChild("TouchInterest") and obj:FindFirstChild("Weld") and obj.Transparency == 1 then
@@ -161,28 +148,24 @@ if game.PlaceId == 13864667823 then
         end
     end
 
-    -- Uncle Pete 클릭
     local function clickUnclePete()
         if Workspace:FindFirstChild("UnclePete") and Workspace.UnclePete:FindFirstChild("ClickDetector") then
             fireclickdetector(Workspace.UnclePete.ClickDetector)
         end
     end
 
-    -- 바람 제거 (클라이언트)
     local function removeWindClient()
         if Workspace:FindFirstChild("WavePart") then
             Workspace.WavePart.CanTouch = false
         end
     end
 
-    -- 바람 제거 (서버)
     local function removeWindServer()
         if Workspace:FindFirstChild("WavePart") then
             deleteInstance(Workspace.WavePart)
         end
     end
 
-    -- 쓰러진 나무 부수기
     local function breakFallenTrees()
         if Workspace:FindFirstChild("FallenTrees") then
             for _, tree in ipairs(Workspace.FallenTrees:GetChildren()) do
@@ -196,7 +179,6 @@ if game.PlaceId == 13864667823 then
         end
     end
 
-    -- 도구 전체 장착 / 해제
     local function equipAllTools()
         for _, tool in ipairs(localPlayer.Backpack:GetChildren()) do
             if tool:IsA("Tool") then
@@ -213,20 +195,18 @@ if game.PlaceId == 13864667823 then
         end
     end
 
-    -- 아이템 지급 함수
     local function giveItem(itemName)
         local cleanName = (itemName:gsub(" ", ""))
         if itemName == "Armor" then
             Events:WaitForChild("Vending"):FireServer(3, "Armor2", "Armor", tostring(localPlayer), 1)
         elseif itemName == "Crowbar 1" or itemName == "Crowbar 2" or itemName == "Bat" or itemName == "Pitchfork" or itemName == "Hammer" or itemName == "Wrench" or itemName == "Broom" then
             Events.Vending:FireServer(3, cleanName, "Weapons", localPlayer.Name, 1)
-            notify("Credits To", "Leo Dicap On V3rmillion For Making This Feature!", 5, 6034304908)
+            notify("제작자 출처", "V3rmillion의 Leo Dicap님이 제작한 기능입니다.", 5, 6034304908)
         else
             Events:WaitForChild("GiveTool"):FireServer(cleanName)
         end
     end
 
-    -- 최고 무기 획득
     local function getBestWeapon()
         for _, child in ipairs(localPlayer.PlayerGui.Assets.Note2.Note2.Note2:GetChildren()) do
             if child.Name:match("Circle") and child.Visible == true then
@@ -236,7 +216,6 @@ if game.PlaceId == 13864667823 then
         end
     end
 
-    -- 최고 음식 획득
     local function getBestFood()
         for _, child in ipairs(localPlayer.PlayerGui.Assets.Note.Note.Note:GetChildren()) do
             if child.Name:match("Circle") and child.Visible == true then
@@ -246,7 +225,6 @@ if game.PlaceId == 13864667823 then
         end
     end
 
-    -- NPC 구출/영입 함수들
     local function getAgentBradley()
         giveItem("Louise")
         task.wait(0.1)
@@ -281,7 +259,6 @@ if game.PlaceId == 13864667823 then
         end
     end
 
-    -- 회복 함수들
     local function healAllPlayers()
         unequipAllTools()
         task.wait(0.2)
@@ -297,7 +274,6 @@ if game.PlaceId == 13864667823 then
         Events.Energy:FireServer(25, "Pizza")
     end
 
-    -- 모든 장비 세팅
     local function getAllEquipment()
         getBestWeapon()
         task.wait(0.1)
@@ -315,7 +291,6 @@ if game.PlaceId == 13864667823 then
         end
     end
 
-    -- 외부 아이템 모두 수집
     local function collectOutsideItems()
         teleportTo(CFrame.new(-199.240555, 30.0009422, -790.182739, 0.08340507, 2.48169538e-08, 0.996515751, -2.7112752e-09, 1, -2.46767993e-08, -0.996515751, -6.43658127e-10, 0.08340507))
         for _, item in ipairs(Workspace.OutsideParts:GetChildren()) do
@@ -340,14 +315,12 @@ if game.PlaceId == 13864667823 then
         localPlayer.Character.Humanoid:MoveTo(localPlayer.Character.HumanoidRootPart.Position + Vector3.new(-10, 0, 0))
     end
 
-    -- 시크릿 엔딩 해금
     local function unlockSecretEnding()
         for _, itemEvent in ipairs(secretEndingItems) do
             Events.LarryEndingEvent:FireServer(itemEvent, true)
         end
     end
 
-    -- 황금 사과 배지 획득
     local function collectGoldenAppleBadge()
         if Workspace:FindFirstChild("FallenTrees") then
             breakFallenTrees()
@@ -356,11 +329,10 @@ if game.PlaceId == 13864667823 then
             task.wait(0.5)
             fireclickdetector(Workspace.GoldenApple.ClickDetector)
         else
-            notify("Error", "Golden Apple Has Not Spawned Yet, Please Wait Until the First Wave.", 5, 6034304908)
+            notify("오류", "황금 사과가 아직 스폰되지 않았습니다. 첫 번째 웨이브까지 기다려주세요.", 5, 6034304908)
         end
     end
 
-    -- 캐릭터 충돌 설정 (Noclip용)
     local function setCharacterCollision(state)
         if localPlayer.Character then
             if localPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -374,7 +346,6 @@ if game.PlaceId == 13864667823 then
         end
     end
 
-    -- 플레이어 이름 목록 가져오기 헬퍼
     local function getPlayerNames()
         local list = {}
         for _, plr in ipairs(Players:GetPlayers()) do
@@ -383,22 +354,11 @@ if game.PlaceId == 13864667823 then
         return list
     end
 
-    -- Rayfield 윈도우 생성
-    Rayfield:Notify({
-        Title = "Key System",
-        Content = "Link Copied!!🗝️",
-        Duration = 20.5,
-        Image = "key-round"
-    })
-    if setclipboard then
-        setclipboard("https://loot-link.com/s?a7825yMi")
-    end
-
     local Window = Rayfield:CreateWindow({
         Name = "Exclusionz Hub",
         Icon = 0,
-        LoadingTitle = "Loading Script",
-        LoadingSubtitle = "Break in 2",
+        LoadingTitle = "스크립트 불러오는 중",
+        LoadingSubtitle = "브레이크 인 2",
         Theme = "Default",
         DisableRayfieldPrompts = false,
         DisableBuildWarnings = false,
@@ -412,42 +372,28 @@ if game.PlaceId == 13864667823 then
             Invite = "noinvitelink",
             RememberJoins = true
         },
-        KeySystem = true,
-        KeySettings = {
-            Title = "Enter Access Key",
-            Subtitle = "Key Verification",
-            Note = "Link Copied!🗝️🕸️",
-            FileName = "aUltimateHubKey2",
-            SaveKey = false,
-            GrabKeyFromSite = true,
-            Key = {
-                "https://script.google.com/macros/s/AKfycbzrfROD0ZBsmgJXFDRwsi-4M4bLPNlSre-c47kn3_EVGfCOJo7onzmWzXsYUk6CfxbtHg/exec"
-            }
-        }
+        KeySystem = false
     })
 
-    -- ==========================================
-    -- Tab 1: Main
-    -- ==========================================
-    local MainTab = Window:CreateTab("Main", 4483362458)
+    local MainTab = Window:CreateTab("메인", 4483362458)
 
-    MainTab:CreateSection("Training")
+    MainTab:CreateSection("스탯 훈련")
     MainTab:CreateButton({
-        Name = "Train Strength",
+        Name = "힘 훈련하기",
         Callback = function()
             trainStat("Strength")
         end
     })
     MainTab:CreateButton({
-        Name = "Train Speed",
+        Name = "스피드 훈련하기",
         Callback = function()
             trainStat("Speed")
         end
     })
 
-    MainTab:CreateSection("Heal Yourself")
+    MainTab:CreateSection("자가 회복")
     MainTab:CreateButton({
-        Name = "Heal Yourself",
+        Name = "체력 회복",
         Callback = function()
             for _ = 1, 10 do
                 healSelf()
@@ -455,7 +401,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     MainTab:CreateToggle({
-        Name = "Loop Heal Yourself",
+        Name = "무한 자가 회복",
         CurrentValue = false,
         Callback = function(state)
             getgenv().HealLoop = state
@@ -466,15 +412,15 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    MainTab:CreateSection("Heal All")
+    MainTab:CreateSection("전체 회복")
     MainTab:CreateButton({
-        Name = "Heal All",
+        Name = "서버 인원 전체 회복",
         Callback = function()
             healAllPlayers()
         end
     })
     MainTab:CreateToggle({
-        Name = "Loop Heal All",
+        Name = "무한 전체 회복",
         CurrentValue = false,
         Callback = function(state)
             getgenv().HealAllLoop = state
@@ -485,10 +431,10 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    MainTab:CreateSection("Item Giver")
+    MainTab:CreateSection("아이템 지급")
     MainTab:CreateParagraph({
-        Title = "Note:",
-        Content = "Warning: Duplicating or grabbing multiple of the same item can cause it to malfunction and become unusable or unequippable. To avoid this, only take one item at a time — especially items accessible to all players."
+        Title = "참고:",
+        Content = "주의: 같은 아이템을 여러 개 복사하거나 한 번에 많이 꺼내면 아이템이 고장 나서 장착이나 사용이 안 될 수 있습니다. 특히 공용 아이템은 한 번에 하나씩만 꺼내 쓰세요."
     })
 
     local itemOptions = {
@@ -500,7 +446,7 @@ if game.PlaceId == 13864667823 then
     }
 
     MainTab:CreateDropdown({
-        Name = "Item",
+        Name = "아이템 선택",
         Options = itemOptions,
         CurrentOption = { "Med Kit" },
         MultipleOptions = false,
@@ -508,41 +454,41 @@ if game.PlaceId == 13864667823 then
         Callback = function(option)
             local chosen = option[1]
             if chosen == "Book" or chosen == "Phone" then
-                notify("Warning", chosen .. " Wont Work Unless You Own The Corresponding Gamepass.", 7, 6034304908)
+                notify("경고", chosen .. " 아이템은 해당 게임패스가 있어야 정상 작동합니다.", 7, 6034304908)
             end
             selectedItem = chosen
         end
     })
     MainTab:CreateButton({
-        Name = "Get Item",
+        Name = "선택한 아이템 받기",
         Callback = function()
             giveItem(selectedItem)
         end
     })
 
-    MainTab:CreateSection("Quality Of Life")
+    MainTab:CreateSection("편의 기능")
     MainTab:CreateToggle({
-        Name = "Semi-Godmode",
+        Name = "반무적 모드 (Semi-Godmode)",
         CurrentValue = false,
         Callback = function(state)
             getgenv().SemiGodmode = state
             if state then
-                notify("Info", "What Semi-Godmode Works On: Special Attacks (Pizza Boss's Pepper Attack, All Scarry Larry/Marry Attacks Except Monster Spawner), Hailing And Possibly Some Others\nWhat Semi-Godmode Doesnt Work On: Enemies, Ice (Use Anti Slip), Getting Locked In A Room While An Enemy Wave Comes, And Possibly Some Others.", 7, 4483345998)
+                notify("안내", "방어 가능: 특수 패턴(피자 보스 고추 공격, 몬스터 스포너를 제외한 래리/메리 보스 패턴), 우박 등\n방어 불가: 일반 몹 평타, 얼음 미끄러짐(미끄럼 방지 켜세요), 웨이브 때 방에 갇히는 판정 등", 7, 4483345998)
             end
         end
     })
     MainTab:CreateToggle({
-        Name = "Remove Slipping",
+        Name = "얼음 미끄러짐 방지",
         CurrentValue = false,
         Callback = function(state)
             getgenv().RemoveSlipping = state
             if state then
-                notify("Credits To", "Leo Dicap On V3rmillion For Making This Feature!", 7, 6034304908)
+                notify("제작자 출처", "V3rmillion의 Leo Dicap님이 제작한 기능입니다.", 7, 6034304908)
             end
         end
     })
     MainTab:CreateToggle({
-        Name = "Remove Hailing",
+        Name = "우박 제거",
         CurrentValue = false,
         Callback = function(state)
             if not state then
@@ -558,7 +504,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     MainTab:CreateToggle({
-        Name = "Remove Wind",
+        Name = "강풍 제거",
         CurrentValue = false,
         Callback = function(state)
             getgenv().NoWind = state
@@ -569,16 +515,16 @@ if game.PlaceId == 13864667823 then
         end
     })
     MainTab:CreateToggle({
-        Name = "Remove Mud",
+        Name = "진흙 무시",
         CurrentValue = false,
         Callback = function(state)
             removeMud(state)
         end
     })
 
-    MainTab:CreateSection("Kitchen Food")
+    MainTab:CreateSection("주방 음식 스폰")
     MainTab:CreateSlider({
-        Name = "Table Food Slot",
+        Name = "식탁 자리 번호",
         Range = { 0, 4 },
         Increment = 1,
         Suffix = "",
@@ -589,21 +535,21 @@ if game.PlaceId == 13864667823 then
         end
     })
     MainTab:CreateButton({
-        Name = "Spawn Pizza Box",
+        Name = "피자 박스 스폰",
         Callback = function()
             Events:WaitForChild("OutsideFood"):FireServer(6, { item2 = "Pizza", placement = tableFoodSlot })
         end
     })
     MainTab:CreateButton({
-        Name = "Spawn Bloxy Cola",
+        Name = "블록시 콜라 스폰",
         Callback = function()
             Events:WaitForChild("OutsideFood"):FireServer(6, { item2 = "BloxyPack", placement = tableFoodSlot })
         end
     })
 
-    MainTab:CreateSection("Others")
+    MainTab:CreateSection("기타 기능")
     MainTab:CreateToggle({
-        Name = "Lag/Crash The Server",
+        Name = "서버 렉 유발 / 터뜨리기",
         CurrentValue = false,
         Callback = function(state)
             getgenv().LagServer = state
@@ -619,7 +565,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     MainTab:CreateButton({
-        Name = "Break The Game",
+        Name = "게임 진행 망가뜨리기",
         Callback = function()
             localPlayer.Character.HumanoidRootPart.CFrame = Workspace.UnclePete.PrimaryPart.CFrame
             task.wait(0.5)
@@ -627,44 +573,41 @@ if game.PlaceId == 13864667823 then
         end
     })
     MainTab:CreateButton({
-        Name = "Teleport To Private Lobby",
+        Name = "비공개 로비로 이동",
         Callback = function()
             TeleportService:Teleport(14775231477, localPlayer)
         end
     })
     MainTab:CreateButton({
-        Name = "Unlock Secret Ending",
+        Name = "시크릿 엔딩 해금",
         Callback = function()
             unlockSecretEnding()
         end
     })
     MainTab:CreateButton({
-        Name = "Get The Best Weapon",
+        Name = "최고 등급 무기 받기",
         Callback = function()
             getBestWeapon()
         end
     })
     MainTab:CreateButton({
-        Name = "Get The Best Food",
+        Name = "최고 등급 음식 받기",
         Callback = function()
             getBestFood()
         end
     })
     MainTab:CreateButton({
-        Name = "Get All Equipment",
+        Name = "풀세팅 한 번에 받기",
         Callback = function()
             getAllEquipment()
         end
     })
 
-    -- ==========================================
-    -- Tab 2: Combat
-    -- ==========================================
-    local CombatTab = Window:CreateTab("Combat", 4483362458)
+    local CombatTab = Window:CreateTab("전투", 4483362458)
 
-    CombatTab:CreateSection("Kill Enemies")
+    CombatTab:CreateSection("적 처치")
     CombatTab:CreateButton({
-        Name = "Kill All Enemies",
+        Name = "모든 적 죽이기",
         Callback = function()
             for _ = 1, 10 do
                 killEnemies()
@@ -672,7 +615,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     CombatTab:CreateToggle({
-        Name = "Loop Kill All",
+        Name = "무한 적 죽이기",
         CurrentValue = false,
         Callback = function(state)
             getgenv().KillAllLoop = state
@@ -685,15 +628,15 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    CombatTab:CreateSection("Break Enemies")
+    CombatTab:CreateSection("적 무력화")
     CombatTab:CreateButton({
-        Name = "Break All Enemies",
+        Name = "모든 적 즉사 (체력 0)",
         Callback = function()
             breakEnemies()
         end
     })
     CombatTab:CreateToggle({
-        Name = "Loop Break All",
+        Name = "무한 적 즉사",
         CurrentValue = false,
         Callback = function(state)
             getgenv().BreakAllLoop = state
@@ -704,15 +647,15 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    CombatTab:CreateSection("Bring Enemies")
+    CombatTab:CreateSection("적 끌어오기")
     CombatTab:CreateButton({
-        Name = "Bring All Enemies",
+        Name = "모든 적 내 앞으로 모으기",
         Callback = function()
             bringEnemies()
         end
     })
     CombatTab:CreateToggle({
-        Name = "Loop Bring All",
+        Name = "무한 적 모으기",
         CurrentValue = false,
         Callback = function(state)
             getgenv().BringAllLoop = state
@@ -723,15 +666,12 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    -- ==========================================
-    -- Tab 3: Server-Side Deletion
-    -- ==========================================
-    local ServerTab = Window:CreateTab("Server Deletion", 4483362458)
+    local ServerTab = Window:CreateTab("서버 파괴 (FE)", 4483362458)
 
-    ServerTab:CreateLabel("Visible By Everyone")
-    ServerTab:CreateSection("Mass Deletion")
+    ServerTab:CreateLabel("모든 플레이어에게 적용됩니다")
+    ServerTab:CreateSection("대규모 삭제")
     ServerTab:CreateButton({
-        Name = "Delete The House",
+        Name = "집 통째로 날리기",
         Callback = function()
             for _, obj in ipairs(Workspace.TheHouse:GetChildren()) do
                 if obj.Name ~= "FloorLayer" then
@@ -741,7 +681,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ServerTab:CreateButton({
-        Name = "Delete The Game(☠️)",
+        Name = "맵 전체 삭제 (☠️)",
         Callback = function()
             for _, obj in ipairs(Workspace:GetChildren()) do
                 deleteInstance(obj)
@@ -749,11 +689,11 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    ServerTab:CreateSection("Player Remover")
+    ServerTab:CreateSection("플레이어 캐릭터 삭제")
     ServerTab:CreateInput({
-        Name = "Delete Player's Body",
+        Name = "특정 유저 몸통 삭제",
         CurrentValue = "",
-        PlaceholderText = "PlayerName",
+        PlaceholderText = "플레이어 닉네임",
         RemoveTextAfterFocusLost = false,
         Flag = "Input122",
         Callback = function(playerName)
@@ -763,7 +703,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ServerTab:CreateButton({
-        Name = "Delete Other's Body",
+        Name = "나 빼고 전부 몸통 삭제",
         Callback = function()
             for _, plr in ipairs(Players:GetChildren()) do
                 if plr.Name ~= localPlayer.Name then
@@ -773,7 +713,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ServerTab:CreateButton({
-        Name = "Delete Everyone's Body",
+        Name = "모든 유저 몸통 삭제",
         Callback = function()
             for _, plr in ipairs(Players:GetChildren()) do
                 deleteInstance(Workspace:FindFirstChild(plr.Name, true))
@@ -795,11 +735,11 @@ if game.PlaceId == 13864667823 then
         end
     end
 
-    ServerTab:CreateSection("Limbs Deletion")
+    ServerTab:CreateSection("팔다리 삭제")
     ServerTab:CreateInput({
-        Name = "Delete Player's Limbs",
+        Name = "특정 유저 팔다리 삭제",
         CurrentValue = "",
-        PlaceholderText = "PlayerName",
+        PlaceholderText = "플레이어 닉네임",
         RemoveTextAfterFocusLost = false,
         Flag = "Input13333",
         Callback = function(playerName)
@@ -808,7 +748,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ServerTab:CreateButton({
-        Name = "Delete Other's Limbs",
+        Name = "나 빼고 전부 팔다리 삭제",
         Callback = function()
             for _, plr in ipairs(Players:GetChildren()) do
                 if plr.Name ~= localPlayer.Name then
@@ -819,7 +759,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ServerTab:CreateButton({
-        Name = "Delete Everyone's Limbs",
+        Name = "모든 유저 팔다리 삭제",
         Callback = function()
             for _, plr in ipairs(Players:GetChildren()) do
                 local targetChar = Workspace:FindFirstChild(plr.Name)
@@ -828,11 +768,11 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    ServerTab:CreateSection("Character Freezing")
+    ServerTab:CreateSection("캐릭터 굳히기")
     ServerTab:CreateInput({
-        Name = "Freeze Player",
+        Name = "특정 유저 굳히기",
         CurrentValue = "",
-        PlaceholderText = "PlayerName",
+        PlaceholderText = "플레이어 닉네임",
         RemoveTextAfterFocusLost = false,
         Flag = "Input11111111",
         Callback = function(playerName)
@@ -845,7 +785,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ServerTab:CreateButton({
-        Name = "Freeze Other's Characters",
+        Name = "나 빼고 전부 굳히기",
         Callback = function()
             for _, plr in ipairs(Players:GetChildren()) do
                 if plr.Name ~= localPlayer.Name then
@@ -858,7 +798,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ServerTab:CreateButton({
-        Name = "Freeze Everyone's Characters",
+        Name = "모든 유저 굳히기",
         Callback = function()
             for _, plr in ipairs(Players:GetChildren()) do
                 local targetChar = Workspace:FindFirstChild(plr.Name)
@@ -869,11 +809,11 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    ServerTab:CreateSection("Kill Players")
+    ServerTab:CreateSection("플레이어 킬")
     ServerTab:CreateInput({
-        Name = "Kill Player",
+        Name = "특정 유저 죽이기",
         CurrentValue = "",
-        PlaceholderText = "PlayerName",
+        PlaceholderText = "플레이어 닉네임",
         RemoveTextAfterFocusLost = false,
         Flag = "Input111111121",
         Callback = function(playerName)
@@ -887,7 +827,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ServerTab:CreateButton({
-        Name = "Kill Others",
+        Name = "나 빼고 전부 죽이기",
         Callback = function()
             for _, plr in ipairs(Players:GetChildren()) do
                 if plr.Name ~= localPlayer.Name then
@@ -903,7 +843,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ServerTab:CreateButton({
-        Name = "Kill Everyone",
+        Name = "모든 유저 죽이기",
         Callback = function()
             for _, plr in ipairs(Players:GetChildren()) do
                 pcall(function()
@@ -917,21 +857,21 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    ServerTab:CreateSection("Delete Models")
+    ServerTab:CreateSection("구조물 삭제")
     ServerTab:CreateButton({
-        Name = "Delete Treadmills",
+        Name = "런닝머신 삭제",
         Callback = function()
             deleteInstance(Workspace:FindFirstChild("Tredmills"))
         end
     })
     ServerTab:CreateButton({
-        Name = "Delete Benches",
+        Name = "벤치프레스 삭제",
         Callback = function()
             deleteInstance(Workspace:FindFirstChild("BenchPresses"))
         end
     })
     ServerTab:CreateButton({
-        Name = "Delete TV",
+        Name = "TV 삭제",
         Callback = function()
             if Workspace:FindFirstChild("TheHouse") then
                 deleteInstance(Workspace.TheHouse:FindFirstChild("Projector"))
@@ -939,13 +879,13 @@ if game.PlaceId == 13864667823 then
         end
     })
     ServerTab:CreateButton({
-        Name = "Delete Vending Machines",
+        Name = "자판기 삭제",
         Callback = function()
             deleteInstance(Workspace:FindFirstChild("VendingMachines"))
         end
     })
     ServerTab:CreateButton({
-        Name = "Delete Boss Room",
+        Name = "보스방 삭제",
         Callback = function()
             if Workspace:FindFirstChild("Final") then
                 deleteInstance(Workspace.Final:FindFirstChild("BossRoom"))
@@ -953,9 +893,9 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    ServerTab:CreateSection("Delete Enemies")
+    ServerTab:CreateSection("적 삭제 (서버 전체)")
     ServerTab:CreateButton({
-        Name = "Delete Bad Guys",
+        Name = "일반 몹 전체 삭제",
         Callback = function()
             local folders = { Workspace.BadGuys, Workspace.BadGuysBoss, Workspace.BadGuysFront }
             for _, folder in ipairs(folders) do
@@ -966,41 +906,41 @@ if game.PlaceId == 13864667823 then
         end
     })
     ServerTab:CreateButton({
-        Name = "Delete Pizza Miniboss",
+        Name = "피자 미니보스 삭제",
         Callback = function()
             deleteInstance(Workspace:FindFirstChild("BadGuyPizza", true))
         end
     })
     ServerTab:CreateButton({
-        Name = "Delete Brute",
+        Name = "브루트 삭제",
         Callback = function()
             deleteInstance(Workspace:FindFirstChild("BadGuyBrute"))
         end
     })
     ServerTab:CreateButton({
-        Name = "Delete Scary Mary",
+        Name = "스캐리 메리 삭제",
         Callback = function()
             if Workspace:FindFirstChild("Villainess") then
                 deleteInstance(Workspace.Villainess)
             else
-                notify("Warning", "Scary Marry Is Already Deleted Or Boss Fight Hasnt Started!", 7, 6034304908)
+                notify("경고", "스캐리 메리가 이미 삭제되었거나 아직 보스전이 시작되지 않았습니다!", 7, 6034304908)
             end
         end
     })
     ServerTab:CreateButton({
-        Name = "Delete Scary Larry",
+        Name = "스캐리 래리 삭제",
         Callback = function()
             if Workspace:FindFirstChild("BigBoss") then
                 deleteInstance(Workspace.BigBoss)
             else
-                notify("Warning", "Scary Larry Is Already Deleted Or Boss Fight Hasnt Started!", 7, 6034304908)
+                notify("경고", "스캐리 래리가 이미 삭제되었거나 아직 보스전이 시작되지 않았습니다!", 7, 6034304908)
             end
         end
     })
 
-    ServerTab:CreateSection("Weather Modifications")
+    ServerTab:CreateSection("날씨 조작 (서버 전체)")
     ServerTab:CreateToggle({
-        Name = "Remove Wind For Everyone",
+        Name = "강풍 영구 삭제 (전체 적용)",
         CurrentValue = false,
         Flag = "Toggle212431313131",
         Callback = function(state)
@@ -1012,19 +952,19 @@ if game.PlaceId == 13864667823 then
         end
     })
     ServerTab:CreateButton({
-        Name = "Remove Ice For Everyone",
+        Name = "얼음 지형 삭제 (전체 적용)",
         Callback = function()
             deleteInstance(Workspace.Terrain)
         end
     })
     ServerTab:CreateButton({
-        Name = "Remove Hailing For Everyone",
+        Name = "우박 삭제 (전체 적용)",
         Callback = function()
             deleteInstance(Workspace:FindFirstChild("Hails"))
         end
     })
     ServerTab:CreateButton({
-        Name = "Remove Mud For Everyone",
+        Name = "진흙 삭제 (전체 적용)",
         Callback = function()
             if Workspace:FindFirstChild("BogArea") and Workspace.BogArea:FindFirstChild("Bog") then
                 for _, obj in ipairs(Workspace.BogArea.Bog:GetDescendants()) do
@@ -1036,74 +976,71 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    -- ==========================================
-    -- Tab 4: Teleports
-    -- ==========================================
-    local TeleportTab = Window:CreateTab("Teleports", 4483362458)
+    local TeleportTab = Window:CreateTab("순간이동", 4483362458)
 
-    TeleportTab:CreateSection("Main")
+    TeleportTab:CreateSection("주요 장소")
     TeleportTab:CreateButton({
-        Name = "Home",
+        Name = "기지 (집)",
         Callback = function()
             teleportTo(CFrame.new(-239, 30, -790))
         end
     })
     TeleportTab:CreateButton({
-        Name = "Boss Fight",
+        Name = "보스전 방",
         Callback = function()
             teleportTo(CFrame.new(-1565.78772, -368.711945, -1040.66626, 0.0929690823, -1.97564436e-08, 0.995669007, -1.53269308e-08, 1, 2.1273511e-08, -0.995669007, -1.72383299e-08, 0.0929690823))
         end
     })
     TeleportTab:CreateButton({
-        Name = "Shop",
+        Name = "상점",
         Callback = function()
             teleportTo(CFrame.new(-246.653229, 30.4500484, -847.319275, 0.999987781, -9.18427645e-08, -0.00494772941, 9.19905787e-08, 1, 2.96483353e-08, 0.00494772941, -3.01031164e-08, 0.999987781))
         end
     })
     TeleportTab:CreateButton({
-        Name = "Kitchen",
+        Name = "주방",
         Callback = function()
             teleportTo(CFrame.new(-249.753555, 30.4500484, -732.703125, -0.999205947, -1.97705017e-08, 0.0398429185, -2.00601384e-08, 1, -6.86967372e-09, -0.0398429185, -7.66347341e-09, -0.999205947))
         end
     })
     TeleportTab:CreateButton({
-        Name = "Fighting Arena",
+        Name = "투기장",
         Callback = function()
             teleportTo(CFrame.new(-255.521988, 62.7139359, -723.436035, -0.0542500541, 4.28905356e-09, -0.998527408, 1.07862625e-08, 1, 3.70936082e-09, 0.998527408, -1.05691456e-08, -0.0542500541))
         end
     })
     TeleportTab:CreateButton({
-        Name = "The Gym",
+        Name = "체력단련실 (체육관)",
         Callback = function()
             teleportTo(CFrame.new(-256.477448, 63.4500465, -840.825562, 0.999789953, 2.17116263e-08, 0.020495005, -2.15169358e-08, 1, -9.7199333e-09, -0.020495005, 9.27690191e-09, 0.999789953))
         end
     })
     TeleportTab:CreateButton({
-        Name = "Golden Apple",
+        Name = "황금 사과 위치",
         Callback = function()
             teleportTo(CFrame.new(61.8781624, 29.4499969, -534.381165, -0.584439218, -1.05103076e-07, 0.811437488, -3.12853778e-08, 1, 1.06993674e-07, -0.811437488, 3.71451705e-08, -0.584439218))
         end
     })
     TeleportTab:CreateButton({
-        Name = "Feeding Instructions",
+        Name = "먹이 안내문 메모",
         Callback = function()
             teleportTo(CFrame.new(-207.885056, 60.4500465, -830.583557, 0.118373089, 3.89876789e-08, -0.992969215, 3.47791551e-09, 1, 3.96783406e-08, 0.992969215, -8.15031065e-09, 0.118373089))
         end
     })
     TeleportTab:CreateButton({
-        Name = "Middle Room",
+        Name = "중앙 홀",
         Callback = function()
             teleportTo(CFrame.new(-209.951859, 30.4590473, -789.723877, -0.0485812724, 6.74905039e-08, 0.998819232, 1.19352916e-09, 1, -6.75122394e-08, -0.998819232, -2.08771045e-09, -0.0485812724))
         end
     })
     TeleportTab:CreateButton({
-        Name = "Scarry Mary Pillar",
+        Name = "스캐리 메리 기둥 위",
         Callback = function()
             teleportTo(CFrame.new(-1501.49597, -325.156891, -1060.63367, -0.691015959, 7.43958628e-09, 0.722839475, -5.03345055e-09, 1, -1.51040194e-08, -0.722839475, -1.40754954e-08, -0.691015959))
         end
     })
     TeleportTab:CreateButton({
-        Name = "Outside Loot",
+        Name = "야외 파밍 장소",
         Callback = function()
             local part = Workspace.OutsideParts:FindFirstChildWhichIsA("Part", true)
             if part then
@@ -1112,75 +1049,72 @@ if game.PlaceId == 13864667823 then
         end
     })
     TeleportTab:CreateButton({
-        Name = "Experiment Room",
+        Name = "실험실",
         Callback = function()
             teleportTo(Workspace.Final.Factory.RedDesk.Drawer:GetChildren()[2].CFrame + Vector3.new(20, 0, 0))
         end
     })
     TeleportTab:CreateButton({
-        Name = "Cafeteria",
+        Name = "구내식당",
         Callback = function()
             teleportTo(Workspace.Final.Factory:FindFirstChild("Legs", true).CFrame)
         end
     })
     TeleportTab:CreateButton({
-        Name = "Rainbow Pizza Box",
+        Name = "무지개 피자 박스",
         Callback = function()
             teleportTo(Workspace.RainbowPizzaBox.CFrame)
         end
     })
 
-    TeleportTab:CreateSection("NPC's")
+    TeleportTab:CreateSection("NPC 위치")
     TeleportTab:CreateButton({
-        Name = "Secret Agent Bradley",
+        Name = "비밀요원 브래들리",
         Callback = function()
             teleportTo(CFrame.new(-281.792053, 95.4500275, -790.556946, -0.116918251, -7.95074726e-08, -0.993141532, -2.79918044e-09, 1, -7.97270019e-08, 0.993141532, -6.54155974e-09, -0.116918251))
         end
     })
     TeleportTab:CreateButton({
-        Name = "Twando The Dog",
+        Name = "강아지 트완도",
         Callback = function()
             teleportTo(CFrame.new(-257.56839, 29.4499969, -910.452637, -0.238445505, 7.71292363e-09, 0.971155882, 1.2913591e-10, 1, -7.91029819e-09, -0.971155882, -1.76076387e-09, -0.238445505))
         end
     })
     TeleportTab:CreateButton({
-        Name = "Uncle Pete",
+        Name = "피트 삼촌",
         Callback = function()
             teleportTo(CFrame.new(-294.208923, 63.4182587, -737.712036, -0.998669028, -7.34403613e-08, -0.05157727, -7.2258743e-08, 1, -2.47743781e-08, 0.05157727, -2.1014495e-08, -0.998669028))
         end
     })
 
-    TeleportTab:CreateSection("Secret Ending")
+    TeleportTab:CreateSection("시크릿 엔딩 재료")
     TeleportTab:CreateButton({
-        Name = "Golden Crowbar",
+        Name = "황금 빠루",
         Callback = function()
             teleportTo(CFrame.new(-147.337204, 29.4477005, -929.365295, 0.756779075, 4.53537341e-09, -0.653670728, 5.82708326e-09, 1, 1.36845468e-08, 0.653670728, -1.4165173e-08, 0.756779075))
         end
     })
     TeleportTab:CreateButton({
-        Name = "Purple Mask",
+        Name = "보라색 가면",
         Callback = function()
             teleportTo(CFrame.new(102.560722, 29.2477055, -976.389954, -0.951403797, 3.76210636e-08, -0.307946175, 1.89752569e-08, 1, 6.35433466e-08, 0.307946175, 5.46120233e-08, -0.951403797))
         end
     })
     TeleportTab:CreateButton({
-        Name = "Homeless Kid",
+        Name = "노숙자 아이",
         Callback = function()
             teleportTo(CFrame.new(-79.4871826, 29.4477024, -932.782715, -0.215949073, 3.18771427e-08, 0.976404607, -7.60385461e-08, 1, -4.94647345e-08, -0.976404607, -8.49262562e-08, -0.215949073))
         end
     })
 
-    -- ==========================================
-    -- Tab 5: Player Settings
-    -- ==========================================
-    local PlayerTab = Window:CreateTab("Player", 4483362458)
+    local PlayerTab = Window:CreateTab("플레이어", 4483362458)
 
-    PlayerTab:CreateSection("Settings")
+    PlayerTab:CreateSection("수치 조절")
     PlayerTab:CreateSlider({
-        Name = "Walk Speed",
+        Name = "이동 속도",
         Range = { 0, 500 },
         Increment = 1,
-        Suffix = "Speed",
+        Suffix = "속도",
         CurrentValue = 50,
         Flag = "Slide3131",
         Callback = function(val)
@@ -1188,10 +1122,10 @@ if game.PlaceId == 13864667823 then
         end
     })
     PlayerTab:CreateSlider({
-        Name = "Jump Power",
+        Name = "점프력",
         Range = { 0, 500 },
         Increment = 1,
-        Suffix = "Power",
+        Suffix = "파워",
         CurrentValue = 50,
         Flag = "Slide31312",
         Callback = function(val)
@@ -1199,9 +1133,9 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    PlayerTab:CreateSection("Player")
+    PlayerTab:CreateSection("캐릭터 기능")
     PlayerTab:CreateToggle({
-        Name = "Enable Walk Speed",
+        Name = "이동 속도 적용",
         CurrentValue = false,
         Callback = function(state)
             if state then
@@ -1213,7 +1147,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     PlayerTab:CreateToggle({
-        Name = "Enable Jump Power",
+        Name = "점프력 적용",
         CurrentValue = false,
         Callback = function(state)
             if state then
@@ -1226,7 +1160,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     PlayerTab:CreateToggle({
-        Name = "Enable Noclip",
+        Name = "노클립",
         CurrentValue = false,
         Callback = function(state)
             getgenv().Noclipping = state
@@ -1243,7 +1177,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     PlayerTab:CreateToggle({
-        Name = "Enable Floating",
+        Name = "Float",
         CurrentValue = false,
         Callback = function(state)
             getgenv().Float = state
@@ -1264,16 +1198,13 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    -- ==========================================
-    -- Tab 6: Endings & Badges
-    -- ==========================================
-    local BadgesTab = Window:CreateTab("Badges & Endings", 4483362458)
+    local BadgesTab = Window:CreateTab("배지 및 엔딩", 4483362458)
 
-    BadgesTab:CreateSection("Origin ending")
+    BadgesTab:CreateSection("오리지널 엔딩")
     BadgesTab:CreateInput({
-        Name = "origin ending message(troll)",
+        Name = "오리지널 엔딩 문구 조작",
         CurrentValue = originEndingMsg,
-        PlaceholderText = "Message to origin ending",
+        PlaceholderText = "출력할 메시지 입력",
         RemoveTextAfterFocusLost = false,
         Flag = "Input2222",
         Callback = function(text)
@@ -1281,13 +1212,13 @@ if game.PlaceId == 13864667823 then
         end
     })
     BadgesTab:CreateButton({
-        Name = "Unlock ending",
+        Name = "오리지널 엔딩 강제 해금",
         Callback = function()
             ReplicatedStorage.Events.PagesReplicate:FireServer(5, originEndingMsg)
         end
     })
     BadgesTab:CreateButton({
-        Name = "esp hidden items in origin ending",
+        Name = "오리지널 엔딩 숨겨진 아이템 ESP",
         Callback = function()
             local boxes = Workspace.GameObjects.Boxes
 
@@ -1333,7 +1264,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     BadgesTab:CreateButton({
-        Name = "auto rose",
+        Name = "장미  타격",
         Callback = function()
             local rose = Workspace.Gym.Roses.Rose
             local hitRose = ReplicatedStorage.Events.HitRose
@@ -1347,9 +1278,9 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    BadgesTab:CreateSection("others")
+    BadgesTab:CreateSection("배지 획득")
     BadgesTab:CreateButton({
-        Name = "Dream Team (And The 3 Below)",
+        Name = "드림팀 (아래 3개 한 번에 완료)",
         Callback = function()
             getDog()
             task.wait(5)
@@ -1359,37 +1290,37 @@ if game.PlaceId == 13864667823 then
         end
     })
     BadgesTab:CreateButton({
-        Name = "Operation: Dog Rescue",
+        Name = "강아지 구출 작전",
         Callback = function()
             getDog()
         end
     })
     BadgesTab:CreateButton({
-        Name = "Wake Up, Bradley!",
+        Name = "일어나, 브래들리!",
         Callback = function()
             getAgentBradley()
         end
     })
     BadgesTab:CreateButton({
-        Name = "Uncle Pete's Return",
+        Name = "피트 삼촌의 귀환",
         Callback = function()
             getUnclePete()
         end
     })
     BadgesTab:CreateButton({
-        Name = "The Golden Apple",
+        Name = "황금 사과 배지",
         Callback = function()
             collectGoldenAppleBadge()
         end
     })
     BadgesTab:CreateButton({
-        Name = "Delivery's Here",
+        Name = "배달왔음",
         Callback = function()
             collectOutsideItems()
         end
     })
     BadgesTab:CreateButton({
-        Name = "So Speedy",
+        Name = "스피드 만렙",
         Callback = function()
             for _ = 1, 5 do
                 trainStat("Speed")
@@ -1397,7 +1328,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     BadgesTab:CreateButton({
-        Name = "So Strong",
+        Name = "힘 만렙",
         Callback = function()
             for _ = 1, 5 do
                 trainStat("Strength")
@@ -1411,7 +1342,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     BadgesTab:CreateButton({
-        Name = "Avoid Humiliation",
+        Name = "풀세팅 + 동료 영입",
         Callback = function()
             getAllEquipment()
             task.wait(4)
@@ -1423,17 +1354,14 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    -- ==========================================
-    -- Tab 7: Misc
-    -- ==========================================
-    local MiscTab = Window:CreateTab("Misc", 4483362458)
+    local MiscTab = Window:CreateTab("기타", 4483362458)
 
-    MiscTab:CreateSection("Harmful")
+    MiscTab:CreateSection("자해")
     MiscTab:CreateSlider({
-        Name = "Damage Amount",
+        Name = " 데미지 수치",
         Range = { 0, 200 },
         Increment = 1,
-        Suffix = "Damage",
+        Suffix = "데미지",
         CurrentValue = 5,
         Flag = "Slider1313131",
         Callback = function(val)
@@ -1441,65 +1369,65 @@ if game.PlaceId == 13864667823 then
         end
     })
     MiscTab:CreateButton({
-        Name = "Damage Yourself",
+        Name = "자해(많이 힘드니 브로😭🥀)",
         Callback = function()
             if getgenv().SemiGodmode then
-                notify("Warning", "Damaging Yourself Won't Work Due To Having 'Semi Godmode' Enabled!", 7, 6034304908)
+                notify("경고", "반무적 모드가 켜져 있어서 자해가 작동하지 않습니다!", 7, 6034304908)
             else
                 damageSelf(damageAmount)
             end
         end
     })
     MiscTab:CreateButton({
-        Name = "Slip",
+        Name = " 넘어지기",
         Callback = function()
             if getgenv().RemoveSlipping then
-                notify("Warning", "Slipping Won't Work Due To Having 'Remove Slipping' Enabled!", 7, 6034304908)
+                notify("경고", "미끄러짐 방지가 켜져 있어서 넘어지기가 작동하지 않습니다!", 7, 6034304908)
             else
                 Events:WaitForChild("IceSlip"):FireServer(Vector3.new(0, 0, 0))
             end
         end
     })
 
-    MiscTab:CreateSection("Tools")
+    MiscTab:CreateSection("인벤토리 도구")
     MiscTab:CreateButton({
-        Name = "Equip All",
+        Name = "모든 아이템 손에 들기",
         Callback = function()
             equipAllTools()
         end
     })
     MiscTab:CreateButton({
-        Name = "Unequip All",
+        Name = "손에 든 아이템 모두 넣기",
         Callback = function()
             unequipAllTools()
         end
     })
 
-    MiscTab:CreateSection("Bosses")
+    MiscTab:CreateSection("보스 제거 (내 화면)")
     MiscTab:CreateButton({
-        Name = "Delete Scary Mary",
+        Name = "스캐리 메리 지우기",
         Callback = function()
             if Workspace:FindFirstChild("Villainess") then
                 Workspace.Villainess:Destroy()
             else
-                notify("Warning", "Scary Marry Is Already Deleted Or Boss Fight Hasnt Started!", 7, 6034304908)
+                notify("경고", "스캐리 메리가 이미 지워졌거나 보스전이 시작되지 않았습니다!", 7, 6034304908)
             end
         end
     })
     MiscTab:CreateButton({
-        Name = "Delete Scary Larry",
+        Name = "스캐리 래리 지우기",
         Callback = function()
             if Workspace:FindFirstChild("BigBoss") then
                 Workspace.BigBoss:Destroy()
             else
-                notify("Warning", "Scary Larry Is Already Deleted Or Boss Fight Hasnt Started!", 7, 6034304908)
+                notify("경고", "스캐리 래리가 이미 지워졌거나 보스전이 시작되지 않았습니다!", 7, 6034304908)
             end
         end
     })
 
-    MiscTab:CreateSection("NPC's")
+    MiscTab:CreateSection("따까리")
     MiscTab:CreateButton({
-        Name = "Get All NPC's",
+        Name = "모든 NPC 따까리로 가져오기",
         Callback = function()
             getDog()
             task.wait(5)
@@ -1509,33 +1437,33 @@ if game.PlaceId == 13864667823 then
         end
     })
     MiscTab:CreateButton({
-        Name = "Get Dog",
+        Name = "강아지 영입",
         Callback = function()
             getDog()
         end
     })
     MiscTab:CreateButton({
-        Name = "Get Agent Bradley",
+        Name = "브래들리 요원 영입",
         Callback = function()
             getAgentBradley()
         end
     })
     MiscTab:CreateButton({
-        Name = "Get Uncle Pete",
+        Name = "피트 삼촌 영입",
         Callback = function()
             getUnclePete()
         end
     })
 
-    MiscTab:CreateSection("Cash")
+    MiscTab:CreateSection("현금 파밍")
     MiscTab:CreateButton({
-        Name = "Collect Cash",
+        Name = "바닥에 떨어진 돈 줍기",
         Callback = function()
             collectCash()
         end
     })
     MiscTab:CreateToggle({
-        Name = "Auto Collect Cash",
+        Name = "자동 돈 줍기",
         CurrentValue = false,
         Callback = function(state)
             getgenv().CollectAllCash = state
@@ -1546,21 +1474,21 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    MiscTab:CreateSection("Others")
+    MiscTab:CreateSection("맵 상호작용 및 시야")
     MiscTab:CreateButton({
-        Name = "Get All Items From Outside(fixed working any executor)",
+        Name = "야외 아이템 전부 가져오기 (모든 실행기 호환)",
         Callback = function()
             collectOutsideItems()
         end
     })
     MiscTab:CreateButton({
-        Name = "Break Fallen Trees",
+        Name = "쓰러진 나무 모두 부수기",
         Callback = function()
             breakFallenTrees()
         end
     })
     MiscTab:CreateToggle({
-        Name = "Hidden Items ESP",
+        Name = "숨겨진 아이템 위치 표시 (ESP)",
         CurrentValue = false,
         Callback = function(state)
             if state then
@@ -1583,7 +1511,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     MiscTab:CreateToggle({
-        Name = "Full Bright",
+        Name = "풀브라이트 ",
         CurrentValue = false,
         Callback = function(state)
             if state then
@@ -1598,46 +1526,40 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    MiscTab:CreateSection("Auto Func")
+    MiscTab:CreateSection("자동화")
     MiscTab:CreateToggle({
-        Name = "Auto Quests",
+        Name = "피트 삼촌 퀘스트 자동 수락",
         CurrentValue = false,
         Callback = function(state)
             getgenv().AutoPete = state
             if state then
-                print("AutoPete enabled. Starting task loop...")
                 task.spawn(function()
                     while getgenv().AutoPete do
                         clickUnclePete()
                         task.wait(5)
                     end
                 end)
-            else
-                print("AutoPete disabled.")
             end
         end
     })
 
-    -- ==========================================
-    -- Tab 8: Extra / FE Trolling
-    -- ==========================================
-    local ExtraTab = Window:CreateTab("Extra & FE", 4483362458)
+    local ExtraTab = Window:CreateTab("추가 기능 및 트롤링", 4483362458)
 
-    ExtraTab:CreateSection("Break in 2")
+    ExtraTab:CreateSection("외부  스크립트")
     ExtraTab:CreateButton({
-        Name = "Infinite Yield",
+        Name = "인야 (lY)",
         Callback = function()
             loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
         end
     })
     ExtraTab:CreateButton({
-        Name = "Dex",
+        Name = "덱스 (Dex)",
         Callback = function()
             loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
         end
     })
 
-    ExtraTab:CreateSection("Kick Players")
+    ExtraTab:CreateSection("플레이어 강퇴")
     local kickTargetName = nil
     local activePlayersWithChar = {}
     for _, plr in ipairs(Players:GetPlayers()) do
@@ -1647,7 +1569,7 @@ if game.PlaceId == 13864667823 then
     end
 
     ExtraTab:CreateDropdown({
-        Name = "Select Player",
+        Name = "대상 선택",
         Options = activePlayersWithChar,
         CurrentOption = { "Select Player" },
         MultipleOptions = false,
@@ -1657,7 +1579,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ExtraTab:CreateButton({
-        Name = "Kick",
+        Name = "킥(킥당한새끼 개븅신ㅋㅋ)",
         Callback = function()
             if kickTargetName then
                 local targetPlr = Players:FindFirstChild(kickTargetName)
@@ -1668,10 +1590,10 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    ExtraTab:CreateSection("Naked")
+    ExtraTab:CreateSection("복장 삭제 (FE)")
     local clothesTargetPlr = nil
     ExtraTab:CreateDropdown({
-        Name = "Select Player",
+        Name = "대상 선택",
         Options = getPlayerNames(),
         CurrentOption = { "Select Player" },
         MultipleOptions = false,
@@ -1681,7 +1603,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete Clothes",
+        Name = "선택한 유저 옷 벗기기",
         Callback = function()
             if clothesTargetPlr and clothesTargetPlr.Character then
                 local char = clothesTargetPlr.Character
@@ -1697,7 +1619,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete Everyone's Clothes (fixed)",
+        Name = "모든 유저 옷 벗기기",
         Callback = function()
             local playerSet = {}
             for _, plr in ipairs(Players:GetPlayers()) do
@@ -1715,10 +1637,10 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    ExtraTab:CreateSection("Delete Accessory")
+    ExtraTab:CreateSection("악세사리 삭제 (FE)")
     local accessoryTargetPlr = nil
     ExtraTab:CreateDropdown({
-        Name = "Select Player",
+        Name = "대상 선택",
         Options = getPlayerNames(),
         CurrentOption = { "Select Player" },
         MultipleOptions = false,
@@ -1728,7 +1650,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete Selected Player's Accessories",
+        Name = "선택한 유저 악세사리 삭제",
         Callback = function()
             if accessoryTargetPlr and accessoryTargetPlr.Character then
                 for _, item in ipairs(accessoryTargetPlr.Character:GetChildren()) do
@@ -1740,7 +1662,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete Everyone's Accessories",
+        Name = "모든 유저 악세사리 삭제",
         Callback = function()
             for _, plr in ipairs(Players:GetPlayers()) do
                 if plr.Character then
@@ -1754,10 +1676,10 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    ExtraTab:CreateSection("Delete Player Hair")
+    ExtraTab:CreateSection("머리카락 삭제 (FE)")
     local hairTargetPlr = nil
     ExtraTab:CreateDropdown({
-        Name = "Select Player",
+        Name = "대상 선택",
         Options = getPlayerNames(),
         CurrentOption = { "Select Player" },
         MultipleOptions = false,
@@ -1767,7 +1689,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete Hair",
+        Name = "선택한 유저 대머리 만들기",
         Callback = function()
             if hairTargetPlr and hairTargetPlr.Character then
                 for _, item in ipairs(hairTargetPlr.Character:GetChildren()) do
@@ -1779,10 +1701,10 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    ExtraTab:CreateSection("Delete Player Face")
+    ExtraTab:CreateSection("얼굴 삭제 (FE)")
     local faceTargetPlr = nil
     ExtraTab:CreateDropdown({
-        Name = "Select Player",
+        Name = "대상 선택",
         Options = getPlayerNames(),
         CurrentOption = { "Select Player" },
         MultipleOptions = false,
@@ -1792,7 +1714,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete Face",
+        Name = "선택한 유저 얼굴 지우기",
         Callback = function()
             local head = faceTargetPlr and faceTargetPlr.Character and faceTargetPlr.Character:FindFirstChild("Head")
             if head then
@@ -1805,10 +1727,10 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    ExtraTab:CreateSection("Delete Player TShirt")
+    ExtraTab:CreateSection("티셔츠 삭제 (FE)")
     local tshirtTargetPlr = nil
     ExtraTab:CreateDropdown({
-        Name = "Select Player",
+        Name = "대상 선택",
         Options = getPlayerNames(),
         CurrentOption = { "Select Player" },
         MultipleOptions = false,
@@ -1818,7 +1740,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete TShirt",
+        Name = "선택한 유저 티셔츠 삭제",
         Callback = function()
             if tshirtTargetPlr and tshirtTargetPlr.Character then
                 for _, item in ipairs(tshirtTargetPlr.Character:GetChildren()) do
@@ -1830,10 +1752,10 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    ExtraTab:CreateSection("Delete Player Hat")
+    ExtraTab:CreateSection("모자 삭제 (FE)")
     local hatTargetPlr = nil
     ExtraTab:CreateDropdown({
-        Name = "Select Player",
+        Name = "대상 선택",
         Options = getPlayerNames(),
         CurrentOption = { "Select Player" },
         MultipleOptions = false,
@@ -1843,7 +1765,7 @@ if game.PlaceId == 13864667823 then
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete Hat",
+        Name = "선택한 유저 모자 삭제",
         Callback = function()
             if hatTargetPlr and hatTargetPlr.Character then
                 for _, item in ipairs(hatTargetPlr.Character:GetChildren()) do
@@ -1855,12 +1777,12 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    ExtraTab:CreateSection("Delete Tool")
+    ExtraTab:CreateSection("클릭 삭제 도구")
     ExtraTab:CreateButton({
-        Name = "Delete Tool (you can delete things and the game may broken)",
+        Name = "삭제 툴",
         Callback = function()
             local tool = Instance.new("Tool")
-            tool.Name = "Delete Tool"
+            tool.Name = "삭제 도구"
             tool.RequiresHandle = false
             tool.Parent = localPlayer.Backpack
 
@@ -1881,42 +1803,38 @@ if game.PlaceId == 13864667823 then
             end)
         end
     })
-
+--[[
     ExtraTab:CreateSection("Harked")
     ExtraTab:CreateButton({
-        Name = "Harked SS Script",
+        Name = "Harked 서버사이드켜기",
         Callback = function()
             loadstring(game:HttpGet("https://raw.githubusercontent.com/JulesV2/sigma-sigma-boy/refs/heads/main/break%20in%202%20harked.lua"))()
         end
     })
-
-    ExtraTab:CreateSection("Funny")
+]]
+    ExtraTab:CreateSection("운동 기구 삭제")
     ExtraTab:CreateButton({
-        Name = "Delete all BenchPress",
+        Name = "벤치프레스 전부 삭제",
         Callback = function()
             local model = Workspace:FindFirstChild("BenchPresses")
             if model then
                 deleteInstance(model)
-            else
-                print("Model not found")
             end
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete all Tredmills",
+        Name = "런닝머신 전부 삭제",
         Callback = function()
             local model = Workspace:FindFirstChild("Tredmills")
             if model then
                 deleteInstance(model)
-            else
-                print("Model not found")
             end
         end
     })
 
-    ExtraTab:CreateSection("Doors")
+    ExtraTab:CreateSection("문 삭제")
     ExtraTab:CreateButton({
-        Name = "Delete Doors (I do not recommend)",
+        Name = "맵의 모든 문 삭제 (비추😭🥀)",
         Callback = function()
             local doors1 = Workspace:FindFirstChild("Doors1")
             local doors2 = Workspace:FindFirstChild("Doors2")
@@ -1929,9 +1847,9 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    ExtraTab:CreateSection("Trees")
+    ExtraTab:CreateSection("나무 삭제")
     ExtraTab:CreateButton({
-        Name = "Delete Trees",
+        Name = "배경 나무 전부 삭제",
         Callback = function()
             for _, folderName in ipairs({ "Trees", "PlacingTrees" }) do
                 local folder = Workspace:FindFirstChild(folderName)
@@ -1942,102 +1860,89 @@ if game.PlaceId == 13864667823 then
         end
     })
 
-    ExtraTab:CreateSection("Delete NPCs")
+    ExtraTab:CreateSection("NPC 삭제 (서버 전체)")
     ExtraTab:CreateButton({
-        Name = "Delete UnclePete",
+        Name = "피트 삼촌 삭제",
         Callback = function()
             local npc = Workspace:FindFirstChild("UnclePete")
             if npc then
                 deleteInstance(npc)
-            else
-                warn("UnclePete model not found!")
             end
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete Dog",
+        Name = "강아지 삭제",
         Callback = function()
             local house = Workspace:FindFirstChild("TheHouse")
             if house then
                 local smallCat = house:FindFirstChild("SmallCat")
                 if smallCat then
                     deleteInstance(smallCat)
-                    print("SmallCat has been deleted from TheHouse.")
-                else
-                    print("SmallCat model not found in TheHouse.")
                 end
-            else
-                print("TheHouse model not found in Workspace.")
             end
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete Agent Bradley",
+        Name = "브래들리 요원 삭제",
         Callback = function()
             local npc = Workspace:FindFirstChild("AgentBeans")
             if npc then
                 deleteInstance(npc)
-            else
-                print("Model not found")
             end
         end
     })
 
-    ExtraTab:CreateSection("Delete VendingMachines")
+    ExtraTab:CreateSection("자판기 개별 삭제")
     local function deleteVendingCategory(categoryName)
         local vm = Workspace:FindFirstChild("VendingMachines")
         if vm then
             local target = vm:FindFirstChild(categoryName)
             if target then
                 deleteInstance(target)
-            else
-                print("model not found")
             end
         end
     end
 
     ExtraTab:CreateButton({
-        Name = "Weapons",
+        Name = "무기 자판기 삭제",
         Callback = function()
             deleteVendingCategory("Weapons")
         end
     })
     ExtraTab:CreateButton({
-        Name = "Food",
+        Name = "음식 자판기 삭제",
         Callback = function()
             deleteVendingCategory("Food")
         end
     })
     ExtraTab:CreateButton({
-        Name = "Drinks",
+        Name = "음료 자판기 삭제",
         Callback = function()
             deleteVendingCategory("Drinks")
         end
     })
     ExtraTab:CreateButton({
-        Name = "Armor",
+        Name = "갑옷 자판기 삭제",
         Callback = function()
             deleteVendingCategory("Armor")
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete all VendingMachines",
+        Name = "모든 자판기 한번에 삭제",
         Callback = function()
             local vm = Workspace:FindFirstChild("VendingMachines")
             if vm then
                 deleteInstance(vm)
-            else
-                print("Model not found")
             end
         end
     })
 
-    ExtraTab:CreateSection("Delete any model (use Dex)")
+    ExtraTab:CreateSection("원하는 모델  삭제 (Dex 참고해주세용)")
     local customModelName = ""
     ExtraTab:CreateInput({
-        Name = "Enter Model Name",
+        Name = "모델 이름",
         CurrentValue = "",
-        PlaceholderText = "Model Name",
+        PlaceholderText = "모델 이름",
         RemoveTextAfterFocusLost = false,
         Flag = "Input31",
         Callback = function(text)
@@ -2045,31 +1950,25 @@ if game.PlaceId == 13864667823 then
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete Model",
+        Name = "모델 삭제 ",
         Callback = function()
-            if customModelName == "" then
-                warn("Please enter a model name.")
-                return
-            end
+            if customModelName == "" then return end
             local model = Workspace:FindFirstChild(customModelName)
             if model then
                 for _, child in ipairs(model:GetChildren()) do
                     deleteInstance(child)
                 end
                 deleteInstance(model)
-                print(customModelName .. " has been deleted.")
-            else
-                warn("Model not found: " .. customModelName)
             end
         end
     })
 
-    ExtraTab:CreateSection("Delete any Folder")
+    ExtraTab:CreateSection("원하는 폴더 삭제")
     local customFolderName = ""
     ExtraTab:CreateInput({
-        Name = "Enter Folder Name",
+        Name = "폴더 이름",
         CurrentValue = "",
-        PlaceholderText = "Folder Name",
+        PlaceholderText = "폴더 이름",
         RemoveTextAfterFocusLost = false,
         Flag = "Input69",
         Callback = function(text)
@@ -2077,31 +1976,25 @@ if game.PlaceId == 13864667823 then
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete Folder",
+        Name = "폴더 삭제",
         Callback = function()
-            if customFolderName == "" then
-                warn("Please enter a folder name.")
-                return
-            end
+            if customFolderName == "" then return end
             local folder = Workspace:FindFirstChild(customFolderName)
             if folder then
                 for _, child in ipairs(folder:GetChildren()) do
                     deleteInstance(child)
                 end
                 deleteInstance(folder)
-                print(customFolderName .. " has been deleted.")
-            else
-                warn("Folder not found: " .. customFolderName)
             end
         end
     })
 
-    ExtraTab:CreateSection("Delete any Part")
+    ExtraTab:CreateSection("원하는 파트 삭제")
     local customPartName = ""
     ExtraTab:CreateInput({
-        Name = "Enter Part Name",
+        Name = "파트 이름 입력",
         CurrentValue = "",
-        PlaceholderText = "Part Name",
+        PlaceholderText = "파트 이름",
         RemoveTextAfterFocusLost = false,
         Flag = "Input1",
         Callback = function(text)
@@ -2109,53 +2002,40 @@ if game.PlaceId == 13864667823 then
         end
     })
     ExtraTab:CreateButton({
-        Name = "Delete Part",
+        Name = "파트 삭제",
         Callback = function()
-            if customPartName == "" then
-                warn("Please enter a part name.")
-                return
-            end
+            if customPartName == "" then return end
             local part = Workspace:FindFirstChild(customPartName)
             if part then
                 deleteInstance(part)
-                print(customPartName .. " has been deleted.")
-            else
-                warn("Part not found: " .. customPartName)
             end
         end
     })
 
-    ExtraTab:CreateSection("Delete Golden Apple")
+    ExtraTab:CreateSection("황금 사과  삭제")
     ExtraTab:CreateButton({
-        Name = "Delete GoldenApple",
+        Name = "황금 사과 지우기",
         Callback = function()
             local ga = Workspace:FindFirstChild("GoldenApple")
             if ga then
                 deleteInstance(ga)
-                print("GoldenApple has been deleted.")
-            else
-                print("GoldenApple part not found in Workspace.")
             end
         end
     })
     ExtraTab:CreateParagraph({
-        Title = "✅",
-        Content = "Why are we deleting the Golden Apple? If you delete the Golden Apple, normal players won't be able to get it. So, what happens if normal players do get it? You won't be able to use the 'heal all' command or obtain it from the 'get item' section. Why? Because once they get it, the Golden Apple won't be available again. If you want to prevent this, you can delete it."
+        Title = " 왜 황금 사과를 지움?",
+        Content = "일반 유저들이 필드에 스폰된 황금 사과를 먼저 먹어버리면, 스크립트의 '전체 회복' 기능이나 아이템 지급에서 황금 사과를 아예 못 쓰게 됩니다. 다른 유저가 먹는 걸 방지하려면 미리 맵에서 지워두는 게 좋습니다.그러니 조용히하세요🥀"
     })
 
-    notify("Loaded!", "Script Successfully Loaded!", 5, 6034304908)
-    isLoaded = true
-    Rayfield:LoadConfiguration()
-
+    
 elseif game.PlaceId == 14775231477 or game.PlaceId == 13864661000 then
     local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
-    
     local LobbyWindow = Rayfield:CreateWindow({
-        Name = "알파 허브",
+        Name = "알파허브(꼬추)",
         Icon = 0,
-        LoadingTitle = "Loading Script...",
-        LoadingSubtitle = "Break in 2",
+        LoadingTitle = "스크립트 불러오는 중...",
+        LoadingSubtitle = "브레이크 인 2",
         Theme = "Default",
         DisableRayfieldPrompts = false,
         DisableBuildWarnings = false,
@@ -2166,44 +2046,33 @@ elseif game.PlaceId == 14775231477 or game.PlaceId == 13864661000 then
         },
         Discord = {
             Enabled = false,
-            Invite = "",
+            Invite = "noinvitelink",
             RememberJoins = true
         },
-        KeySystem = false,
-        KeySettings = {
-            Title = " Key",
-            Subtitle = "Key ",
-            Note = "Link Copied!🗝️🕸️",
-            FileName = "aUltimateHubKey2",
-            SaveKey = false,
-            GrabKeyFromSite = false,
-            Key = {
-                ""
-            }
-        }
+        KeySystem = false
     })
 
-    local RoleTab = LobbyWindow:CreateTab("역할", 4483362458)
+    local RoleTab = LobbyWindow:CreateTab("역할 선택", 4483362458)
 
     RoleTab:CreateButton({
-        Name = "해커 역할",
+        Name = "해커 (Hacker) 역할 고르기",
         Callback = function()
             ReplicatedStorage.RemoteEvents.OutsideRole:FireServer("Phone", true, false)
             Rayfield:Notify({
                 Title = "실패",
-                Content = "실행기 좆쓰레기세요..",
+                Content = "실행기 성능이 부족하거나 조건이 맞지 않습니다.",
                 Duration = 5,
                 Image = "wrong"
             })
         end
     })
     RoleTab:CreateButton({
-        Name = "너드 키드 역할",
+        Name = "너드 (Nerd Kid) 역할 고르기",
         Callback = function()
             ReplicatedStorage.RemoteEvents.OutsideRole:FireServer("Book", true, false)
             Rayfield:Notify({
                 Title = "실패",
-                Content = "실행기 좆쓰레기세요..",
+                Content = "실행기 성능이 부족하거나 조건이 맞지 않습니다.",
                 Duration = 5,
                 Image = "wrong"
             })
@@ -2222,9 +2091,8 @@ elseif game.PlaceId == 14775231477 or game.PlaceId == 13864661000 then
         end
     end
 else
-    Players.LocalPlayer:Kick("오류 이게임지원안함!")
+    Players.LocalPlayer:Kick("오류! 지원하지 않는 게임입니다.")
 end
-
 --[[
 local isTeleportQueued = false
 local localPlayer = Players.LocalPlayer
@@ -2232,13 +2100,14 @@ if localPlayer and localPlayer.OnTeleport and queueOnTeleport then
     localPlayer.OnTeleport:Connect(function(state)
         if not isTeleportQueued then
             isTeleportQueued = true
-            print("[Teleport Test] Teleport detected – re-queuing script.")
+            print("[텔레포트 감지] 이동 감지됨 - 스크립트 자동 재등록 완료.")
             queueOnTeleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/Fluxincontroller/RandomStuff/refs/heads/main/reloadshi'))()")
         end
         if state == Enum.TeleportState.Completed then
             isTeleportQueued = false
-            print("[Teleport Test] Teleport completed.")
+            print("[텔레포트 감지] 서버 이동 완료.")
         end
     end)
 end
 ]]
+ 
