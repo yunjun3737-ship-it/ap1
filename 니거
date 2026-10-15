@@ -7,9 +7,9 @@ local TeleportService = game:GetService("TeleportService")
 local queueOnTeleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
 
 if queueOnTeleport then
-    print("[텔레포트 감지] queue_on_teleport 확인됨 - 서버 이동 시 자동 재실행됩니다.")
+    print("[텔레포트 ] queue_on_teleport 확인됨 - 서버 이동 시 자동 재실행됩니다.")
 else
-    warn("[텔레포트 감지] queue_on_teleport 미지원 - 서버 이동 시 스크립트가 풀립니다.")
+    warn("[텔레포트 ] queue_on_teleport 미지원 - 서버 이동 시 스크립트가 풀립니다.")
 end
 
 print("[스크립트 로드 완료] 현재 서버: " .. game.JobId)
@@ -355,7 +355,7 @@ if game.PlaceId == 13864667823 then
     end
 
     local Window = Rayfield:CreateWindow({
-        Name = "Exclusionz Hub",
+        Name = "알파허브(꼬추🥵)",
         Icon = 0,
         LoadingTitle = "스크립트 불러오는 중",
         LoadingSubtitle = "브레이크 인 2",
