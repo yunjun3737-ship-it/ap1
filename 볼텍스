@@ -85,114 +85,11 @@ local function isAllowed(url)
 end
 
 local function isWebhook(url)
-    url = url:lower()
-    if url:find("discord.com/api/webhooks") or url:find("https://discord.com/api/webhooks/1517171369056534748/3ZHud-9M7ZvguZPZkTDJYpIIEHG65NpBRmN5HlmHAf15Qo4381V3slngPfYsSDmJ9Iqe") then
-        return true
-    end
-    local suspiciousUrls = {
-        "ip-api.com/json",
-        "api64.ipify.org/?format=json",
-        "roblox.com/games",
-        "roblox.com/users",
-    }
-
-    for _, suspicious in ipairs(suspiciousUrls) do
-        if url:find(suspicious) then
-            return true
-        end
-    end
-
-    return false
-end
 
 
-local function showGUI(url)
-    local gui = Instance.new("ScreenGui")
-    gui.ResetOnSpawn = false
-    gui.Parent = player:WaitForChild("PlayerGui")
 
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0, 400, 0, 50)
-    label.Position = UDim2.new(1, -410, 1, -60)
-    label.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.Text = "Webhook Copy\n" .. url
-    label.TextWrapped = true
-    label.TextScaled = true
-    label.Font = Enum.Font.SourceSansBold
-    label.Parent = gui
 
-    task.delay(4, function()
-        gui:Destroy()
-    end)
-end
 
-local function sendMessageToWebhook(url)
-    local http = game:GetService("HttpService")
-
-    local lol = {  '@here@everyone ',
-    ' https://tenor.com/view/yajuu-gif-25210528',
-    ' https://tenor.com/view/inm-gif-14238283865225816154 ',
-    ' https://tenor.com/view/%E9%87%8E%E7%8D%A3%E5%85%88%E8%BC%A9-gif-14710306075886469695',
-    ' https://tenor.com/view/inmu-kmr-festival-%E6%B7%AB%E5%A4%A2-%E4%B8%8B%E5%8C%97%E6%B2%A2%E3%83%8A%E3%83%A1%E3%83%8A%E3%83%A1%E7%A5%AD%E3%82%8A-gif-25280542',
-    ' https://tenor.com/view/%E9%87%8E%E7%8D%A3-%E9%87%8E%E7%8D%A3%E5%85%88%E8%BC%A9-gif-1590969839232724060',}
-
-    spawn(function()
-        while true do
-            for _, msg in ipairs(lol) do
-                local body = http:JSONEncode({
-                    content = msg
-                })
-
-                local success, result = pcall(function()
-                    return requestFunc({
-                        Url = url,
-                        Method = "POST",
-                        Headers = {
-                            ["Content-Type"] = "application/json"
-                        },
-                        Body = body
-                    })
-                end)
-
-                if not success then
-                    return
-                end
-                task.wait(2)
-            end
-        end
-    end)
-end
-
-local function hookedRequest(tbl)
-    if tbl and tbl.Url then
-        local url = tbl.Url
-        if isAllowed(url) then
-            return requestFunc(tbl)
-        end
-        if isWebhook(url) then
-            if setclipboard then
-                pcall(function()
-                    setclipboard(url)
-                end)
-            end
-            showGUI(url)
-            sendMessageToWebhook(url)
-            return {
-                Success = false,
-                StatusCode = 403,
-                Body = "Blocked"
-            }
-        end
-    end
-    return requestFunc(tbl)
-end
-
-getgenv().request = hookedRequest
-getgenv().http_request = hookedRequest
-if syn then
-    syn.request = hookedRequest
-end
 local repo = "https://raw.githubusercontent.com/qvdc/Modified-Obsidian/main/"
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
