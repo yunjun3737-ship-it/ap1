@@ -87,7 +87,7 @@ end
 
 --local function isWebhook(url)
 ]]
-
+do
 local Utils = {}
 
 function Utils.GetPlayerCharacter()
@@ -169,7 +169,7 @@ function Utils.ROS(part, ignoreDistance)
 end
 
 return Utils
-
+end
 
 local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
