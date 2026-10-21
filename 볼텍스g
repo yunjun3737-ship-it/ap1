@@ -5697,7 +5697,7 @@ RemoveKickanti:AddToggle("RemoveWdantikick", {
         end
     end
 })
-
+do
 Loop2:AddToggle("FireT", {
     Text = "Loop Fire",
     Default = false,
@@ -9979,7 +9979,7 @@ Breakiroiro:AddToggle("PlotBreakt", {
         end
     end
 })
-
+end
 local TimeLabel = OOOOO:AddLabel("House-Time: 0")
 local OwnerLabel = OOOOO:AddLabel("House-Owner: ?")
 OOOOO:AddToggle("plottime", {
