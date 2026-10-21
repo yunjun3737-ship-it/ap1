@@ -84,7 +84,7 @@ local function isAllowed(url)
     return false
 end
 
-local function isWebhook(url)
+--local function isWebhook(url)
 
 
 
