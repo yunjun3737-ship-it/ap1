@@ -1,3 +1,4 @@
+--[[
 local A = {}
 
 A.s = {
@@ -85,7 +86,7 @@ local function isAllowed(url)
 end
 
 --local function isWebhook(url)
-
+]]
 
 
 
