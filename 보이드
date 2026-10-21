@@ -1,7 +1,7 @@
-loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/Its3rr0rsWRLD/Rayfield/refs/heads/main/source.lua"))()
+--loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local Window = Rayfield:CreateWindow({
+ㅇlocal Window = Rayfield:CreateWindow({
    Name = "Private HUB (V O I D)",
    Icon = heart,
    LoadingTitle = "Loading...",
