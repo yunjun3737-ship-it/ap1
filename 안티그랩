@@ -1,0 +1,1266 @@
+LBox:AddToggle("AntiGrab", {
+    Text = "안티 그랩",
+    Default = false,
+    Callback = function(Value)
+        if AntiGrabS.SetDisabled then AntiGrabS:SetDisabled(not Value) end
+        if Value then
+            AntiGrabC = rs2.PreSimulation:Connect(function(deltaTime)
+                if not pp.char then return end
+                pp.hum.AutoRotate = true
+                
+                -- 물리적 용접 파괴를 통한 절대 그랩 해제
+                local grabParts = workspace:FindFirstChild("GrabParts")
+                if grabParts then
+                    local grabPart = grabParts:FindFirstChild("GrabPart")
+                    local weld = grabPart and grabPart:FindFirstChild("WeldConstraint")
+                    if weld and weld.Part1 and weld.Part1.Parent == pp.char then
+                        weld.Part1 = nil
+                        pcall(function() weld:Destroy() end)
+                    end
+                end
+
+                if isHeld.Value then
+                    task.spawn(function()
+                        repeat rs2.PreSimulation:Wait() until isHeld.Value or not Value
+                        repeat rs2.PreSimulation:Wait() until not isHeld.Value or not Value
+                        if AntiGrabS.Value["Anchored"] then pp.hrp.Massless = false end
+                        repeat rs2.PreSimulation:Wait()
+                    if pp.rag.Value and isHeld.Value then
+                        if pp.head then pp.head.CFrame = pp.hrp.CFrame * CFrame.new(0,1.5,0) pp.head.AssemblyAngularVelocity = Vector3.zero pp.head_c.MaxFrictionTorque = math.huge end
+                        if pp.la then pp.la.CFrame = pp.hrp.CFrame * CFrame.new(-1.5,0,0) pp.la.AssemblyAngularVelocity = Vector3.zero pp.la_p.CanCollide = false pp.la.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                        if pp.ra then pp.ra.CFrame = pp.hrp.CFrame * CFrame.new(1.5,0,0) pp.ra.AssemblyAngularVelocity = Vector3.zero pp.ra_p.CanCollide = false pp.ra.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                        if pp.ll then pp.ll.CFrame = pp.hrp.CFrame * CFrame.new(-0.5,-2,0) pp.ll.AssemblyAngularVelocity = Vector3.zero pp.ll_p.CanCollide = false pp.ll.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                        if pp.rl then pp.rl.CFrame = pp.hrp.CFrame * CFrame.new(0.5,-2,0) pp.rl.AssemblyAngularVelocity = Vector3.zero pp.rl_p.CanCollide = false pp.rl.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                    end
+                        until not isHeld.Value and not pp.rag.Value or not Value
+						task.wait(0.3)
+                        if pp.head then
+                            if pp.head_c then pp.head_c.MaxFrictionTorque = 20 end
+                            pp.head.CustomPhysicalProperties = nil
+                        end
+                        if pp.la then pp.la.CustomPhysicalProperties = nil end
+                        if pp.ra then pp.ra.CustomPhysicalProperties = nil end
+                        if pp.ll then pp.ll.CustomPhysicalProperties = nil end
+                        if pp.rl then pp.rl.CustomPhysicalProperties = nil end
+                        if not isHeld.Value and AntiGrabS.Value["Sit"] and not pp.rag.Value then pp.hum:ChangeState(Enum.HumanoidStateType.GettingUp) end
+                    end)
+                end
+                if not pp.hrp and pp.rag.Value then
+                    pp.hum:ChangeState(Enum.HumanoidStateType.Dead)
+                    pp.hum.Health = 0
+                    rs.CharacterEvents.Struggle:FireServer()
+                    return
+                end
+                if Owner and AntiGrabS.Value["Struggle"] then rs.CharacterEvents.Struggle:FireServer() end
+                if isHeld.Value then
+                    if AntiGrabS.Value["Anchored"] then pp.hrp.Massless = true end
+                    if AntiGrabS.Value["Struggle"] and not Owner then rs.CharacterEvents.Struggle:FireServer() end
+                    if AntiGrabS.Value["Sit"] then pp.hum:ChangeState(Enum.HumanoidStateType.StrafingNoPhysics) end
+                end
+                if isHeld.Value then
+                    if AntiGrabS.Value["Ragdoll"] then rs.CharacterEvents.RagdollRemote:FireServer(pp.hrp, 0.8) end
+                    if not AntiGrabS.Value["Sit"] then if not pp.hum.SeatPart then pp.hum.Sit = false end end
+                    if AntiGrabS.Value["Sit"] then pp.hum.Sit = true end
+                end
+
+                if pp.rag.Value and isHeld.Value then
+                    if pp.head then pp.head.CFrame = pp.hrp.CFrame * CFrame.new(0,1.5,0) pp.head.AssemblyAngularVelocity = Vector3.zero pp.head_c.MaxFrictionTorque = math.huge end
+                    if pp.la then pp.la.CFrame = pp.hrp.CFrame * CFrame.new(-1.5,0,0) pp.la.AssemblyAngularVelocity = Vector3.zero pp.la_p.CanCollide = false pp.la.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                    if pp.ra then pp.ra.CFrame = pp.hrp.CFrame * CFrame.new(1.5,0,0) pp.ra.AssemblyAngularVelocity = Vector3.zero pp.ra_p.CanCollide = false pp.ra.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                    if pp.ll then pp.ll.CFrame = pp.hrp.CFrame * CFrame.new(-0.5,-2,0) pp.ll.AssemblyAngularVelocity = Vector3.zero pp.ll_p.CanCollide = false pp.ll.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                    if pp.rl then pp.rl.CFrame = pp.hrp.CFrame * CFrame.new(0.5,-2,0) pp.rl.AssemblyAngularVelocity = Vector3.zero pp.rl_p.CanCollide = false pp.rl.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                end
+            end)
+        else
+            pp.hrp.Massless = false
+            if pp.head then pp.head.CustomPhysicalProperties = nil end
+            if pp.la then pp.la.CustomPhysicalProperties = nil end
+            if pp.ra then pp.ra.CustomPhysicalProperties = nil end
+            if pp.ll then pp.ll.CustomPhysicalProperties = nil end
+            if pp.rl then pp.rl.CustomPhysicalProperties = nil end
+            if AntiGrabC then AntiGrabC:Disconnect() AntiGrabC = nil end
+        end
+    end
+})
+
+AntiGrabS = LBox:AddDropdown("AntiGrabType", {
+    Values = {"Struggle", "Ragdoll", "Sit", "Anchored"},
+    ValueImages = {Struggle = "rbxassetid://15799460828", Ragdoll = "rbxassetid://124297634602310", Sit = "rbxassetid://137293332040116", Anchored = "rbxassetid://83720681461053"},
+    Multi = true
+})
+
+
+LeftGroupBox:AddToggle("Antigrab", {
+    Text = "Anti-Grab",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            if not Config.AntigrabCon then
+                Config.AntigrabCon = service.RunService.RenderStepped:Connect(function()
+                    local Char = GetCharacter()
+                    local hrp = Char and Char:FindFirstChild("HumanoidRootPart")
+                    local humanoid = Char and Char:FindFirstChild("Humanoid")
+                    if hrp and humanoid then
+                        if hrp.ReceiveAge ~= 0 then
+                            hrp.Anchored = true
+                            if isHeld then
+                                isHeld.Value = false
+                            end
+                            task.spawn(function()
+                                Struggle:FireServer()
+                                RagdollRemote:FireServer(hrp, 0)
+                            end)
+                            service.ContextActionService:UnbindAction("JumpRemover")
+                            humanoid.AutoRotate = true
+                            if hrp:FindFirstChild("RootJoint") then
+                                hrp.RootJoint.Enabled = true
+                            end
+                            hrp.Anchored = false
+                        elseif hrp.ReceiveAge == 0 then
+                            hrp.Anchored = false
+                        end
+                    end
+                end)
+            end
+        else
+            if Config.AntigrabCon then
+                Config.AntigrabCon:Disconnect()
+                Config.AntigrabCon = nil
+            end
+        end
+    end
+})
+
+LeftGroupBox:AddToggle("Antiragrag", {
+    Text = "Anti-Grab (Ragdoll)",
+    Default = false,
+    Callback = function(Value)
+        Config.AntiGrabRag = Value
+        for k, v in pairs(Config.Contuuti) do
+            if v then v:Disconnect() end
+        end
+        table.clear(Config.Contuuti)
+        if Config.AntiGrabRag then
+            local function setupAntiGrab(char)
+                if not char or not Config.AntiGrabRag then return end
+                local hrp = char:WaitForChild("HumanoidRootPart", 5)
+                local hum = char:WaitForChild("Humanoid", 5)
+                local head = char:WaitForChild("Head", 5)
+                if not (hrp and hum and head) then return end
+                for _, v in pairs(char:GetChildren()) do
+                    if v:IsA("BasePart") and v:FindFirstChild("BallSocketConstraint") and v.Name ~= "Head" then
+                        v.BallSocketConstraint.Enabled = false
+                        if v:FindFirstChild("RagdollLimbPart") then
+                            v.RagdollLimbPart.WeldConstraint.Enabled = false
+                        end
+                    end
+                end
+                Config.Contuuti["AGHead"] = head.ChildAdded:Connect(function(PartOwner)
+                    if PartOwner.Name == "PartOwner" then
+                        if not Config.AntigrabRGProc then
+                            Config.AntigrabRGProc = true
+                            hum.Sit = false
+                            Struggle:FireServer(localPlayer)
+                            
+                            task.spawn(function() 
+                                while (head and head:FindFirstChild("PartOwner")) or isHeld.Value do
+                                    Struggle:FireServer(localPlayer)
+                                    RagdollRemote:FireServer(hrp, 0)
+                                    task.wait()
+                                end
+                            end)
+                            hrp.Anchored = true
+                            if not Config.AntigrabragWalk then
+                                Config.AntigrabragWalk = true
+                                while isHeld.Value and task.wait() do
+                                    hrp.CFrame = hrp.CFrame + hum.MoveDirection * 0.43
+                                end
+                            end
+                            hrp.Anchored = false
+                            Config.AntigrabRGProc = false
+                            Config.AntigrabragWalk = false
+                        end
+                    end
+                end)
+                local ragdolled = hum:WaitForChild("Ragdolled", 5)
+                if ragdolled then
+                    Config.Contuuti["AGRagdoll"] = ragdolled.Changed:Connect(function()
+                        if hum.Ragdolled.Value then
+                            for _, v in pairs(char:GetChildren()) do
+                                if v:IsA("BasePart") and v:FindFirstChild("BallSocketConstraint") and v.Name ~= "Head" then
+                                    v.BallSocketConstraint.Enabled = false
+                                    if v:FindFirstChild("RagdollLimbPart") then
+                                        v.RagdollLimbPart.WeldConstraint.Enabled = false
+                                    end
+                                end
+                            end
+                        end
+                    end)
+                end
+                local weldHRP = hrp:WaitForChild("WeldHRP", 5)
+                if weldHRP then
+                    Config.Contuuti["AGWeld"] = weldHRP.Changed:Connect(function()
+                        if hrp.WeldHRP.Enabled then
+                            while not hum.Sit do task.wait() end
+                            hum.Sit = false
+                            hum.AutoRotate = true
+                            hum.HipHeight = 1
+                            while hrp.WeldHRP.Enabled and task.wait() do
+                                head.CFrame = hrp.CFrame + Vector3.new(0, 1.35, 0)
+                            end
+                            hum.HipHeight = 0
+                        end
+                    end)
+                end
+            end
+            setupAntiGrab(localPlayer.Character)
+            Config.Contuuti["AGChar"] = localPlayer.CharacterAdded:Connect(setupAntiGrab)
+        else
+            local char = localPlayer.Character
+            if char then
+                for _, v in pairs(char:GetChildren()) do
+                    if v:IsA("BasePart") and v:FindFirstChild("BallSocketConstraint") and v.Name ~= "Head" then
+                        v.BallSocketConstraint.Enabled = false
+                        if v:FindFirstChild("RagdollLimbPart") then
+                            v.RagdollLimbPart.WeldConstraint.Enabled = true
+                        end
+                    end
+                end
+            end
+        end
+    end
+})
+
+
+tbl12.AntiGrab = function()
+						if flag11 then
+							return
+						end
+
+						if isHeld.Value and tbl8.AntiGrab and not tbl7.States["Anti Grab"] then
+							tbl11.Struggle:FireServer()
+							local v23, v24, v25 = tbl12.Char()
+							local torso = v23 and v23:FindFirstChild("Torso")
+							local neck = torso and torso:FindFirstChild("Neck")
+							if not (v25 and torso) then
+								return
+							end
+							v25.RequiresNeck = false
+							v25.AutoRotate = false
+							tbl12.ResetVelocity(v24 or torso)
+							local position = torso.Position
+							local lookVector = torso.CFrame.LookVector
+							local unit = Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+							tbl7.States["Anti Grab"] = true
+							local flag12 = tbl9.AGType == "Escapes Anything, but buggy"
+							local sit = tbl9.AGType == "Anti-Kill"
+							local flag13 = tbl9.AGType == "No Ragdoll"
+
+							if flag12 then
+								task.spawn(tbl12.ExtraEscape)
+							end
+
+							local now3 = tick()
+							local connection = nil
+							local n36 = tick() + 0.033333333333333333
+							local n37 = 0
+
+							connection = RunService.RenderStepped:Connect(function(deltaTime)
+								local now4 = tick()
+
+								if now4 >= n36 then
+									tbl11.Struggle:FireServer()
+									n36 = now4 + 0.033333333333333333
+								end
+
+								if v24 and not flag12 and not flag13 and now4 >= n37 then
+									local ragdollRemote = tbl11.RagdollRemote
+									local fireServer = ragdollRemote.FireServer
+									local n38
+
+									if sit then
+										n38 = 0.11
+									else
+										n38 = 0
+									end
+
+									fireServer(ragdollRemote, v24, n38)
+									n37 = now4 + 0.033333333333333333
+								end
+
+								if flag12 and tick() - now3 > 2 then
+									task.spawn(tbl12.ExtraEscape)
+									now3 = tick()
+								end
+
+								local moveDirection = v25.MoveDirection
+								local walkSpeed
+
+								if tbl8.WalkSpeed and tbl9.WalkSpeed > 16 then
+									walkSpeed = tbl9.WalkSpeed
+								else
+									walkSpeed = 16
+								end
+
+								if moveDirection.Magnitude > 0 then
+									position += moveDirection * walkSpeed * deltaTime
+								end
+
+								if (currentCamera.CFrame.Position - currentCamera.Focus.Position).Magnitude < 1 then
+									moveDirection = currentCamera.CFrame.LookVector
+								end
+
+								local vector = Vector3.new(moveDirection.X, 0, moveDirection.Z)
+
+								if vector.Magnitude > 0 then
+									unit = unit:Lerp(vector.Unit, math.min(deltaTime * 12, 1)).Unit
+								end
+
+								tbl12.ResetVelocity(v24 or torso)
+
+								if v22 then
+									local v26 = torso
+									local v27 = v22
+									position = v22.Position
+									v26.CFrame = v27
+									v22 = nil
+								else
+									torso.CFrame = CFrame.lookAt(position, position + unit)
+								end
+
+								v25.Sit = sit
+
+								if not neck or not neck.Enabled then
+									tbl12.ToggleCollisions(v23, false)
+									tbl12.RepositionLimbs(v23, true)
+								end
+
+								for _, v26 in ipairs(v25:GetPlayingAnimationTracks()) do
+									if v26.Animation.AnimationId == "rbxassetid://7047322890" then
+										v26:Stop()
+									end
+								end
+
+								if v24 and v24:FindFirstChild("Scream") then
+									v24.Scream.Playing = false
+								end
+
+								if not isHeld.Value or not tbl8.AntiGrab then
+									tbl7.States["Anti Grab"] = false
+
+									if sit then
+										task.delay(0.1, function()
+											if not v25.SeatPart then
+												v25.Sit = false
+												v25:ChangeState(Enum.HumanoidStateType.Running)
+											end
+										end)
+									end
+
+									v25.AutoRotate = true
+									connection:Disconnect()
+								end
+							end)
+						end
+					end
+
+					do
+						local tbl16 = nil
+						local flag12 = nil
+
+						local function fn21(arg)
+							if not arg.Parent or arg.Health <= 0 then
+								return
+							end
+							arg.Sit = true
+							task.wait(0.05)
+
+							if arg.Parent then
+								arg.Sit = false
+							end
+
+							task.wait(0.05)
+						end
+
+						local function fn22()
+							if not tbl16 then
+								return
+							end
+
+							for _, v23 in tbl16.Connections, nil, nil do
+								v23:Disconnect()
+							end
+
+							table.clear(tbl16.Connections)
+
+							if tbl16.BP then
+								tbl16.BP:Destroy()
+								tbl16.BP = nil
+							end
+
+							local hum = tbl16.Hum
+							local hrp = tbl16.HRP
+
+							if hum and hum.Parent then
+								hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, tbl16.Jumping)
+
+								if hum.SeatPart == tbl16.Seat or not hum.SeatPart then
+									hum.Sit = false
+								end
+							end
+
+							if tbl16.Ragdoll and hrp and hrp.Parent then
+								tbl11.RagdollRemote:FireServer(hrp, 0.15)
+							end
+
+							local v23 = tbl16
+							local v24 = tbl16
+							tbl16.Hum = nil
+							v23.HRP = nil
+							v24.Ragdoll = nil
+						end
+
+
+
+local Cons = {}
+    local AntiGrab = false
+    local AntiGrabProc = false
+    local OriginalHipHeight = nil
+    local OriginalAnchored = nil
+    local AnimationTracks = {}
+    local CharacterConnections = {}
+    local FreezeConnection = nil
+
+    local function FWC(Parent, Name, Time)
+        return Parent:FindFirstChild(Name) or Parent:WaitForChild(Name, Time)
+    end
+
+    local function Disc(Name)
+        for i, v in pairs(Cons) do
+            if i:find(Name) then
+                pcall(function()
+                    v:Disconnect()
+                end)
+                Cons[i] = nil
+            end
+        end
+    end
+
+    local function DisconnectCharacterConnections()
+        for _, conn in ipairs(CharacterConnections) do
+            pcall(function()
+                conn:Disconnect()
+            end)
+        end
+        CharacterConnections = {}
+    end
+
+    local function ClearAnimationTracks()
+        for _, conn in ipairs(AnimationTracks) do
+            pcall(function()
+                conn:Disconnect()
+            end)
+        end
+        AnimationTracks = {}
+    end
+
+    local PART_NAMES = {
+        "Head",
+        "Torso",        "UpperTorso",    "LowerTorso",
+        "Left Arm",     "LeftUpperArm",  "LeftLowerArm",  "LeftHand",
+        "Right Arm",    "RightUpperArm", "RightLowerArm", "RightHand",
+        "Left Leg",     "LeftUpperLeg",  "LeftLowerLeg",  "LeftFoot",
+        "Right Leg",    "RightUpperLeg", "RightLowerLeg", "RightFoot",
+    }
+
+    local function GetIdleOffsets(char, hrp)
+        local offsets = {}
+        local isR15 = char:FindFirstChild("UpperTorso") ~= nil
+
+        if isR15 then
+            offsets["Head"]          = CFrame.new(0, 1.5, 0)
+            offsets["UpperTorso"]    = CFrame.new(0, 0.5, 0)
+            offsets["LowerTorso"]    = CFrame.new(0, 0, 0)
+            offsets["LeftUpperArm"]  = CFrame.new(-0.75, 0.75, 0)
+            offsets["LeftLowerArm"]  = CFrame.new(-1.25, 0.75, 0)
+            offsets["LeftHand"]      = CFrame.new(-1.6, 0.75, 0)
+            offsets["RightUpperArm"] = CFrame.new(0.75, 0.75, 0)
+            offsets["RightLowerArm"] = CFrame.new(1.25, 0.75, 0)
+            offsets["RightHand"]     = CFrame.new(1.6, 0.75, 0)
+            offsets["LeftUpperLeg"]  = CFrame.new(-0.25, -0.5, 0)
+            offsets["LeftLowerLeg"]  = CFrame.new(-0.25, -1.0, 0)
+            offsets["LeftFoot"]      = CFrame.new(-0.25, -1.5, 0)
+            offsets["RightUpperLeg"] = CFrame.new(0.25, -0.5, 0)
+            offsets["RightLowerLeg"] = CFrame.new(0.25, -1.0, 0)
+            offsets["RightFoot"]     = CFrame.new(0.25, -1.5, 0)
+        else
+            offsets["Head"]      = CFrame.new(0, 1.5, 0)
+            offsets["Torso"]     = CFrame.new(0, 0, 0)
+            offsets["Left Arm"]  = CFrame.new(-1.5, 0, 0)
+            offsets["Right Arm"] = CFrame.new(1.5, 0, 0)
+            offsets["Left Leg"]  = CFrame.new(-0.5, -2, 0)
+            offsets["Right Leg"] = CFrame.new(0.5, -2, 0)
+        end
+
+        return offsets
+    end
+
+    local function LockLimbs(char, hrp, offsets, alpha)
+        alpha = alpha or 1
+        for name, offset in pairs(offsets) do
+            local part = char:FindFirstChild(name)
+            if part and part ~= hrp then
+                local targetCF = hrp.CFrame * offset
+                part.CFrame = part.CFrame:Lerp(targetCF, alpha)
+                part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                part.Velocity = Vector3.new(0, 0, 0)
+                part.RotVelocity = Vector3.new(0, 0, 0)
+            end
+        end
+    end
+
+    local function UnlockLimbs(char, hrp)
+        if not char or not hrp then return end
+        for _, name in ipairs(PART_NAMES) do
+            local part = char:FindFirstChild(name)
+            if part and part ~= hrp then
+                part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                part.Velocity = Vector3.new(0, 0, 0)
+                part.RotVelocity = Vector3.new(0, 0, 0)
+            end
+        end
+    end
+
+    local function ResetHRPState(hrp)
+        if not hrp or not hrp.Parent then return end
+        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        hrp.Velocity = Vector3.new(0, 0, 0)
+        hrp.RotVelocity = Vector3.new(0, 0, 0)
+        pcall(function()
+            hrp:SetNetworkOwner(LocalPlayer)
+        end)
+    end
+
+    local function SaveOriginalState(hum, hrp)
+        if hum and OriginalHipHeight == nil then
+            OriginalHipHeight = hum.HipHeight
+        end
+        if hrp and OriginalAnchored == nil then
+            OriginalAnchored = hrp.Anchored
+        end
+    end
+
+    local function StartFreeze(hrp)
+        if not hrp or not hrp.Parent then return end
+        if OriginalAnchored == nil then
+            OriginalAnchored = hrp.Anchored
+        end
+        hrp.Anchored = true
+        hrp.Massless = true
+        pcall(function()
+            hrp.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
+        end)
+    end
+
+    local function EndFreeze(hrp, char)
+        if not hrp or not hrp.Parent then return end
+
+        hrp.Massless = false
+        pcall(function()
+            hrp.CustomPhysicalProperties = nil
+        end)
+
+        if OriginalAnchored ~= nil then
+            hrp.Anchored = OriginalAnchored
+        else
+            hrp.Anchored = false
+        end
+
+        pcall(function()
+            hrp:SetNetworkOwner(LocalPlayer)
+        end)
+
+        if char then
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum.AutoRotate = true
+                hum.PlatformStand = false
+                hum.Sit = false
+                if OriginalHipHeight ~= nil then
+                    hum.HipHeight = OriginalHipHeight
+                end
+                pcall(function()
+                    hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+                end)
+                pcall(function()
+                    hum:ChangeState(Enum.HumanoidStateType.Running)
+                end)
+            end
+        end
+    end
+
+    local function StopFreeze()
+        if FreezeConnection then
+            pcall(function()
+                FreezeConnection:Disconnect()
+            end)
+            FreezeConnection = nil
+        end
+    end
+
+    local function FreezeWhile(char, hrp, condFunc)
+        task.wait(0.05)
+
+        local hum = char:FindFirstChildOfClass("Humanoid")
+
+        local frozenOffsets = GetIdleOffsets(char, hrp)
+
+        local lockedPosition = hrp.Position
+        local lockedRotation = hrp.CFrame.Rotation
+        local currentRotation = lockedRotation
+
+        StartFreeze(hrp)
+        ResetHRPState(hrp)
+
+        if hum then
+            hum.Sit = false
+            hum.PlatformStand = false
+            hum.AutoRotate = false
+            hum.HipHeight = OriginalHipHeight
+        end
+
+        StopFreeze()
+
+        local ROT_SPEED = 12
+        local MOVE_ALPHA = 0.35
+
+        FreezeConnection = RunService.Heartbeat:Connect(function(dt)
+            if not condFunc() then
+                StopFreeze()
+                EndFreeze(hrp, char)
+                UnlockLimbs(char, hrp)
+                return
+            end
+
+            if not hrp or not hrp.Parent then
+                StopFreeze()
+                return
+            end
+
+            local h = char:FindFirstChildOfClass("Humanoid")
+            if h then
+                h.Sit = false
+                h.PlatformStand = false
+                h.AutoRotate = false
+                h.HipHeight = OriginalHipHeight
+            end
+
+            local moveDir = h and h.MoveDirection or Vector3.new(0, 0, 0)
+            local flat = Vector3.new(moveDir.X, 0, moveDir.Z)
+
+            if flat.Magnitude > 0.01 then
+                local dir = flat.Unit
+                local speed = h and h.WalkSpeed or 16
+
+                lockedPosition = lockedPosition + dir * speed * dt
+
+                local targetRot = CFrame.lookAt(Vector3.zero, dir).Rotation
+                currentRotation = currentRotation:Lerp(targetRot, math.clamp(ROT_SPEED * dt, 0, 1))
+            end
+
+            local targetCF = CFrame.new(lockedPosition) * currentRotation
+            hrp.Anchored = true
+            hrp.CFrame = hrp.CFrame:Lerp(targetCF, MOVE_ALPHA)
+            ResetHRPState(hrp)
+            LockLimbs(char, hrp, frozenOffsets, MOVE_ALPHA)
+        end)
+    end
+
+    local function CleanupCharacterState(char)
+        if not char then return end
+
+        StopFreeze()
+
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+
+        if hrp then
+            EndFreeze(hrp, char)
+            ResetHRPState(hrp)
+            UnlockLimbs(char, hrp)
+        elseif hum then
+            if OriginalHipHeight ~= nil then
+                hum.HipHeight = OriginalHipHeight
+            end
+            hum.AutoRotate = true
+            hum.Sit = false
+            hum.PlatformStand = false
+            pcall(function()
+                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+            end)
+        end
+
+        char:SetAttribute("AntiGrabAnimBlocked", nil)
+        ClearAnimationTracks()
+        AntiGrabProc = false
+    end
+
+    local function WaitForCharacterReady(char, timeout)
+        timeout = timeout or 10
+        local startTime = tick()
+
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        local head = char:FindFirstChild("Head")
+
+        while (not hrp or not hum or not head) and tick() - startTime < timeout do
+            task.wait(0.05)
+            hrp = char:FindFirstChild("HumanoidRootPart")
+            hum = char:FindFirstChildOfClass("Humanoid")
+            head = char:FindFirstChild("Head")
+        end
+
+        return hrp, hum, head
+    end
+
+    local function SetupAntiGrab(char)
+        if not char then return end
+
+        DisconnectCharacterConnections()
+
+        local hrp, hum, head = WaitForCharacterReady(char)
+        if not hrp or not hum or not head then return end
+        SaveOriginalState(hum, hrp)
+
+        local conn1 = LocalPlayer.IsHeld.Changed:Connect(function()
+            if LocalPlayer.IsHeld.Value and not AntiGrabProc then
+                AntiGrabProc = true
+
+                ResetHRPState(hrp)
+
+                hum.Sit = false
+                hum.AutoRotate = false
+                hum.PlatformStand = false
+
+                task.spawn(function()
+                    while LocalPlayer.IsHeld.Value and AntiGrabProc do
+                        if Struggle then
+                            Struggle:FireServer(LocalPlayer)
+                        end
+                        if RagdollRemote then
+                            RagdollRemote:FireServer(hrp, 0)
+                        end
+                        task.wait()
+                    end
+                end)
+
+                FreezeWhile(char, hrp, function()
+                    return LocalPlayer.IsHeld.Value and AntiGrabProc
+                end)
+
+                if hum.Parent then
+                    hum.HipHeight = OriginalHipHeight
+                end
+                AntiGrabProc = false
+            end
+        end)
+        table.insert(CharacterConnections, conn1)
+        Cons["AGIsHeld"] = conn1
+
+        local conn2 = head.ChildAdded:Connect(function(child)
+            if child.Name == "PartOwner" then
+                hum.Sit = false
+                hum.AutoRotate = false
+                if Struggle then
+                    Struggle:FireServer(LocalPlayer)
+                end
+            end
+        end)
+        table.insert(CharacterConnections, conn2)
+        Cons["AGHead"] = conn2
+
+        local ragdolled = FWC(hum, "Ragdolled", 3)
+        if ragdolled then
+            local conn3 = ragdolled.Changed:Connect(function()
+                if hum.Ragdolled.Value then
+                    task.spawn(function()
+                        FreezeWhile(char, hrp, function()
+                            return hum.Ragdolled.Value and LocalPlayer.IsHeld.Value
+                        end)
+                    end)
+                end
+            end)
+            table.insert(CharacterConnections, conn3)
+            Cons["AGRagdoll"] = conn3
+        end
+
+        local weld = FWC(hrp, "WeldHRP", 3)
+        if weld then
+            local conn4 = weld.Changed:Connect(function()
+                if hrp.WeldHRP.Enabled then
+                    while not hum.Sit and hrp.Parent do task.wait() end
+                    if not hrp.Parent then return end
+                    hum.Sit = false
+                    hum.AutoRotate = false
+
+                    FreezeWhile(char, hrp, function()
+                        return hrp.WeldHRP.Enabled and hrp.Parent ~= nil
+                    end)
+                end
+            end)
+            table.insert(CharacterConnections, conn4)
+            Cons["AGWeld"] = conn4
+        end
+    end
+
+    local function OnCharacterAdded(char)
+        OriginalHipHeight = nil
+        OriginalAnchored = nil
+
+        if not AntiGrab then return end
+
+        Disc("AGIsHeld")
+        Disc("AGHead")
+        Disc("AGRagdoll")
+        Disc("AGWeld")
+        DisconnectCharacterConnections()
+        ClearAnimationTracks()
+        StopFreeze()
+        AntiGrabProc = false
+
+        task.wait(0.1)
+
+        if AntiGrab and char and char.Parent then
+            SetupAntiGrab(char)
+        end
+    end
+
+    local function OnCharacterRemoving(char)
+        CleanupCharacterState(char)
+    end
+
+    local AntiGrabCheckbox = AntiGroupbox:AddCheckbox("AntiGrabCheckbox", {
+        Text = "Anti Grab",
+        Default = false,
+    })
+
+    AntiGrabCheckbox:OnChanged(function(Value)
+        AntiGrab = Value
+
+        if AntiGrab then
+            if LocalPlayer.Character then
+                SetupAntiGrab(LocalPlayer.Character)
+            end
+
+            Cons["AGChar"] = LocalPlayer.CharacterAdded:Connect(OnCharacterAdded)
+            Cons["AGCharRemoving"] = LocalPlayer.CharacterRemoving:Connect(OnCharacterRemoving)
+        else
+            if LocalPlayer.Character then
+                CleanupCharacterState(LocalPlayer.Character)
+            end
+
+            Disc("AGIsHeld")
+            Disc("AGHead")
+            Disc("AGRagdoll")
+            Disc("AGWeld")
+            Disc("AGChar")
+            Disc("AGCharRemoving")
+            DisconnectCharacterConnections()
+            StopFreeze()
+            OriginalHipHeight = nil
+            OriginalAnchored = nil
+        end
+    end)
+end
+
+
+ClassicDefense = Tabs.DefenseTab:AddLeftGroupbox("Classic Defense")
+
+ClassicDefense:AddLabel("Core Protection", true, Color3.fromRGB(0, 122, 255))
+
+local autoStruggleConn = nil
+local AntiGrabEnabled = false
+local HeldConnection = nil
+
+local StruggleEvent = Services.rs.CharacterEvents:WaitForChild("Struggle")
+
+local AntiGrab = false
+local AntiGrabProc = false
+local AGWalk = false
+local Cons = {}
+local AGCharAddedConn = nil
+
+local function DiscAll()
+    for k, v in pairs(Cons) do
+        if v then v:Disconnect() end
+    end
+    table.clear(Cons)
+end
+
+local function ApplyAntiGrab(char)
+    if not char or not AntiGrab then return end
+    local hrp = char:WaitForChild("HumanoidRootPart", 5)
+    local hum = char:WaitForChild("Humanoid", 5)
+    local head = char:WaitForChild("Head", 5)
+    local torso = char:WaitForChild("Torso", 5) or char:WaitForChild("UpperTorso", 5)
+    if not (hrp and hum and head and torso) then return end
+    local beingHeld = char:FindFirstChild("BeingHeld")
+    local wasRagdolled = false
+    Cons["AGCFrameLimbing"] = RunService.Heartbeat:Connect(function()
+        local ragdolled = hum:FindFirstChild("Ragdolled")
+        if ragdolled and ragdolled.Value then
+            wasRagdolled = true
+            local leftArm = char:FindFirstChild("Left Arm")
+            local rightArm = char:FindFirstChild("Right Arm")
+            local leftLeg = char:FindFirstChild("Left Leg")
+            local rightLeg = char:FindFirstChild("Right Leg")
+            if leftArm then leftArm.CFrame = torso.CFrame * CFrame.new(-1.5, 0, 0); leftArm.CanCollide = false end
+            if rightArm then rightArm.CFrame = torso.CFrame * CFrame.new(1.5, 0, 0); rightArm.CanCollide = false end
+            if leftLeg then leftLeg.CFrame = torso.CFrame * CFrame.new(-0.5, -2, 0); leftLeg.CanCollide = false end
+            if rightLeg then rightLeg.CFrame = torso.CFrame * CFrame.new(0.5, -2, 0); rightLeg.CanCollide = false end
+        elseif wasRagdolled then
+            wasRagdolled = false
+            local limbs = {"RightLeg", "LeftLeg", "RightArm", "LeftArm"}
+            for _, limbName in ipairs(limbs) do
+                local limb = char:FindFirstChild(limbName)
+                if limb then limb.CanCollide = true end
+            end
+        end
+    end)
+    Cons["AGHead"] = head.ChildAdded:Connect(function(PartOwner)
+        if PartOwner.Name == "PartOwner" then
+            if not AntiGrabProc then
+                AntiGrabProc = true
+                hum.Sit = false
+                for _ = 1, 20 do
+                    pcall(function() StruggleEvent:FireServer(Services.LocalPlayer) end)
+                end
+                for i = 1, 5 do
+                    task.spawn(function() 
+                        while (head and head:FindFirstChild("PartOwner")) or (beingHeld and beingHeld.Value) do
+                            pcall(function() StruggleEvent:FireServer(Services.LocalPlayer) end)
+                            pcall(function() Services.rs.CharacterEvents.RagdollRemote:FireServer(hrp, 0) end)
+                            task.wait(0.001)
+                        end
+                    end)
+                end
+                task.spawn(function()
+                    for _ = 1, 100 do
+                        if not ((head and head:FindFirstChild("PartOwner")) or (beingHeld and beingHeld.Value)) then break end
+                        pcall(function() StruggleEvent:FireServer(Services.LocalPlayer) end)
+                        pcall(function() StruggleEvent:FireServer(Services.LocalPlayer) end)
+                        pcall(function() StruggleEvent:FireServer(Services.LocalPlayer) end)
+                        pcall(function() StruggleEvent:FireServer(Services.LocalPlayer) end)
+                        pcall(function() StruggleEvent:FireServer(Services.LocalPlayer) end)
+                        task.wait(0.001)
+                    end
+                end)
+                task.spawn(function()
+                    hrp.Anchored = true
+                    if not AGWalk then
+                        AGWalk = true
+                        pcall(function()
+                            while (head and head:FindFirstChild("PartOwner")) or (beingHeld and beingHeld.Value) do
+                                hrp.CFrame = hrp.CFrame + hum.MoveDirection * 0.43
+                                task.wait()
+                            end
+                        end)
+                    end
+                    hrp.Anchored = false
+                    AntiGrabProc = false
+                    AGWalk = false
+                end)
+            end
+        end
+    end)
+    local weldHRP = hrp:WaitForChild("WeldHRP", 5)
+    if weldHRP then
+        Cons["AGWeld"] = weldHRP.Changed:Connect(function()
+            if hrp.WeldHRP.Enabled then
+                task.spawn(function()
+                    while hrp.WeldHRP.Enabled and task.wait() do
+                        hum.Sit = false
+                        hum.AutoRotate = true
+                        hum.HipHeight = 1
+                        pcall(function() head.CFrame = hrp.CFrame + Vector3.new(0, 1.35, 0) end)
+                    end
+                    hum.HipHeight = 0
+                end)
+            end
+        end)
+    end
+end
+
+function StartBestAntiGrab()
+    if AntiGrab then return end
+    AntiGrab = true
+    local char = Services.LocalPlayer.Character
+    if char then ApplyAntiGrab(char) end
+    AGCharAddedConn = Services.LocalPlayer.CharacterAdded:Connect(function(newChar)
+        task.wait(0.5)
+        if AntiGrab then ApplyAntiGrab(newChar) end
+    end)
+end
+
+function StopBestAntiGrab()
+    AntiGrab = false
+    AntiGrabProc = false
+    AGWalk = false
+    DiscAll()
+    if AGCharAddedConn then AGCharAddedConn:Disconnect() AGCharAddedConn = nil end
+end
+
+local TractorEscapeActive = false
+local TractorEscapeConn = nil
+local TractorEscapeCharConn = nil
+local tractorEscapeDebounce = false
+
+function StartTractorEscape()
+    if TractorEscapeActive then return end
+    TractorEscapeActive = true
+    tractorEscapeDebounce = false
+    TractorEscapeConn = RunService.Heartbeat:Connect(function()
+        local char = Services.LocalPlayer.Character
+        if not char then return end
+        local head = char:FindFirstChild("Head")
+        local partOwner = head and head:FindFirstChild("PartOwner")
+        if not partOwner or partOwner.Value == "" then return end
+        if tractorEscapeDebounce then return end
+        tractorEscapeDebounce = true
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChild("Humanoid")
+        local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+        if not hrp or not hum or hum.Health <= 0 then
+            tractorEscapeDebounce = false
+            return
+        end
+        local originalCF = hrp.CFrame
+        local CharEvents = ReplicatedStorage:FindFirstChild("CharacterEvents")
+        if CharEvents and CharEvents:FindFirstChild("Struggle") then
+            pcall(function() CharEvents.Struggle:FireServer(Services.LocalPlayer) end)
+        end
+        for _, part in pairs(char:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.Anchored = true
+            end
+        end
+        local isHeld = Services.LocalPlayer:FindFirstChild("IsHeld")
+        while isHeld and isHeld.Value and TractorEscapeActive do
+            task.wait()
+        end
+        local inv = workspace:FindFirstChild(Services.LocalPlayer.Name .. "SpawnedInToys")
+        local MenuToys = ReplicatedStorage:FindFirstChild("MenuToys")
+        local DestroyToy = MenuToys and MenuToys:FindFirstChild("DestroyToy")
+        local SpawnToy = MenuToys and MenuToys:FindFirstChild("SpawnToyRemoteFunction")
+        if inv and inv:FindFirstChild("antinetowner") and DestroyToy then
+            pcall(function() DestroyToy:FireServer(inv.antinetowner) end)
+        end
+        task.spawn(function()
+            if SpawnToy then
+                pcall(function() SpawnToy:InvokeServer("TractorGreen", CFrame.new(298, 13, 486), Vector3.zero) end)
+            end
+        end)
+        local tractor = nil
+        if inv then
+            local startTime = tick()
+            repeat 
+                tractor = inv:FindFirstChild("TractorGreen")
+                task.wait() 
+            until tractor or (tick() - startTime > 3)
+        end
+        if tractor then
+            tractor.Name = "antinetowner"
+            local seat = tractor:WaitForChild("VehicleSeat", 3)
+            if seat then
+                for _, part in pairs(char:GetChildren()) do
+                    if part:IsA("BasePart") then part.Anchored = false end
+                end
+                if hum then hum.Sit = false end
+                for i = 1, 15 do
+                    if hum and seat then seat:Sit(hum) end
+                    if hrp and seat then hrp.CFrame = seat.CFrame end
+                    if torso and seat then torso.CFrame = seat.CFrame end
+                    task.wait()
+                end
+                if hum then
+                    hum.Sit = false
+                    pcall(function() hum:ChangeState(Enum.HumanoidStateType.GettingUp) end)
+                end
+                if DestroyToy then
+                    pcall(function() DestroyToy:FireServer(tractor) end)
+                end
+            end
+        end
+        for _, part in pairs(char:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.Anchored = false
+            end
+        end
+        if hrp then hrp.CFrame = originalCF end
+        if torso then torso.CFrame = originalCF end
+        for _, part in pairs(char:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.Velocity = Vector3.zero
+                part.RotVelocity = Vector3.zero
+                part.AssemblyLinearVelocity = Vector3.zero
+                part.AssemblyAngularVelocity = Vector3.zero
+            end
+        end
+        tractorEscapeDebounce = false
+    end)
+    if type(AGDiscAll) == "function" then pcall(AGDiscAll) end
+    if type(ApplyAntiGrab) == "function" then pcall(ApplyAntiGrab, Services.LocalPlayer.Character) end
+    TractorEscapeCharConn = Services.LocalPlayer.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        if TractorEscapeActive then
+            if type(AGDiscAll) == "function" then pcall(AGDiscAll) end
+            if type(ApplyAntiGrab) == "function" then pcall(ApplyAntiGrab, Services.LocalPlayer.Character) end
+        end
+    end)
+end
+
+function StopTractorEscape()
+    TractorEscapeActive = false
+    tractorEscapeDebounce = false
+    if TractorEscapeConn then
+        TractorEscapeConn:Disconnect()
+        TractorEscapeConn = nil
+    end
+    if TractorEscapeCharConn then
+        TractorEscapeCharConn:Disconnect()
+        TractorEscapeCharConn = nil
+    end
+    local inv = workspace:FindFirstChild(Services.LocalPlayer.Name .. "SpawnedInToys")
+    local DestroyToy = ReplicatedStorage:FindFirstChild("MenuToys") and ReplicatedStorage.MenuToys:FindFirstChild("DestroyToy")
+    if inv and inv:FindFirstChild("antinetowner") and DestroyToy then
+        pcall(function() DestroyToy:FireServer(inv.antinetowner) end)
+    end
+    if type(AGDiscAll) == "function" then pcall(AGDiscAll) end
+end
+getgenv().AntiGrabMode = "Basic"
+
+ClassicDefense:AddToggle("AntiGrabMaster", {
+    Text = "Enable Anti Grab",
+    Default = false,
+    Callback = function(v)
+        getgenv().AntiGrabEnabled = v
+        if v then
+            if getgenv().AntiGrabMode == "Basic" then
+                StartBestAntiGrab()
+            elseif getgenv().AntiGrabMode == "Escape Anything" then
+                StartTractorEscape()
+            end
+        else
+            StopBestAntiGrab()
+            StopTractorEscape()
+        end
+    end
+})
+
+ClassicDefense:AddDropdown("AntiGrabModeSelect", {
+    Values = {"Basic", "Escape Anything"},
+    Default = "Basic",
+    Callback = function(mode)
+        getgenv().AntiGrabMode = mode
+        if getgenv().AntiGrabEnabled then
+            StopBestAntiGrab()
+            StopTractorEscape()
+            task.wait(0.1)
+            if mode == "Basic" then StartBestAntiGrab()
+            elseif mode == "Escape Anything" then StartTractorEscape() end
+        end
+    end
+})
+
+
+local ACGE = false
+local AGE = false
+local plot = nil
+
+function AntiGrabLoop()
+    local st, model
+
+    while ACGE do
+        model = Workspace[LocalPlayer.Name .. 'SpawnedInToys']:FindFirstChild('InstrumentWoodwindOcarina') or (plot and Workspace.PlotItems[plot]:FindFirstChild('InstrumentWoodwindOcarina'))
+
+        if model then
+            if LocalPlayer.Character then
+                for _, prt in pairs(LocalPlayer.Character:GetChildren())do
+                    if prt:FindFirstChild('PartOwner') and prt.PartOwner.Value ~= '' then
+                        if model:FindFirstChild('HoldPart') then
+                            if model.HoldPart:FindFirstChild('HoldItemRemoteFunction') then
+                                task.spawn(function()
+                                    model.HoldPart.HoldItemRemoteFunction:InvokeServer(model, LocalPlayer.Character)
+                                end)
+                                rs.MenuToys.DestroyToy:FireServer(model)
+
+                                if LocalPlayer.Character:FindFirstChild('Humanoid') then
+                                    LocalPlayer.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+
+                                    LocalPlayer.Character.Humanoid.AutoRotate = true
+                                end
+
+                                CAS:UnbindAction('Escape')
+                                CAS:UnbindAction('JumpRemover')
+
+                                prt.PartOwner.Value = ''
+
+                                if LocalPlayer.Character.Humanoid.Sit then
+                                    LocalPlayer.Character.Humanoid.Sit = false
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        else
+            if LocalPlayer.Character and LocalPlayer:FindFirstChild('CanSpawnToy') and LocalPlayer.CanSpawnToy.Value and not st then
+                st = tick()
+
+                task.spawn(function()
+                    rs.MenuToys.SpawnToyRemoteFunction:InvokeServer('InstrumentWoodwindOcarina', CFrame.new(1e5, 1e5, 1e5), Vector3.new(0, 0, 0))
+                end)
+            elseif st and tick() - st > 1 and not Workspace[LocalPlayer.Name .. 'SpawnedInToys']:FindFirstChild('InstrumentWoodwindOcarina') then
+                st = nil
+            end
+
+            local grabbed = false
+
+            if LocalPlayer.Character then
+                for _, prt in pairs(LocalPlayer.Character:GetChildren())do
+                    if prt:FindFirstChild('PartOwner') and prt.PartOwner.Value ~= '' then
+                        grabbed = true
+                    end
+                end
+            end
+            if grabbed then
+                rs.CharacterEvents.Struggle:FireServer(LocalPlayer)
+
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild('Humanoid') and LocalPlayer.Character:FindFirstChild('HumanoidRootPart') then
+                    rs.CharacterEvents.RagdollRemote:FireServer(LocalPlayer.Character.HumanoidRootPart, 0.00000000001)
+
+                    for _, track in ipairs(LocalPlayer.Character.Humanoid:GetPlayingAnimationTracks())do
+                        if track.Animation.AnimationId == 'rbxassetid://7047322890' then
+                            track:Stop()
+                        end
+                    end
+                end
+
+                task.wait()
+            end
+        end
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild('Humanoid') and (AGE or ACGE) then
+            for _, track in ipairs(LocalPlayer.Character.Humanoid:GetPlayingAnimationTracks())do
+                if track.Animation.AnimationId == 'rbxassetid://7047322890' then
+                    track:Stop()
+                end
+            end
+        end
+
+        task.wait()
+    end
+end
+
