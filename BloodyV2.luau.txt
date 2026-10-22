@@ -1,4 +1,4 @@
--- dsc.gg/robloxinternals
+
 local players = game:GetService("Players")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local lighting = game:GetService("Lighting")
