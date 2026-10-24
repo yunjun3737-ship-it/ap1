@@ -10023,20 +10023,22 @@ OOOOO:AddButton("PlotOO", {
         end
     end
 })
---[[
-local Credits = Tabs.Settings:AddLeftGroupbox("크레딧 & 개발자") 
+
+local Dev = Tabs.Settings:AddLeftGroupbox("크레딧 & 개발자") 
+local Dev2 = Tabs.Settings:AddLeftGroupbox("크레딧 & 개발자") 
+local disc = Tabs.Settings:AddLeftGroupbox("크레딧 & 개발자") 
 
 Dev:AddParagraph({
     Title = "개발자",
     Content = "일본인(이름까먹)"
 })
 
-Dev:AddParagraph({
+Dev2:AddParagraph({
     Title = "난독화해제&재업로드",
     Content = "알파(alpha)"
 })
 
-Dev:AddParagraph({
+disc:AddParagraph({
     Title = "여기에 이름적히고싶은분 DM",
     Content = "제 디코는 알아서 찾아오세요~"
 })
