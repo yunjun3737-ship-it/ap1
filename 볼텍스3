@@ -4517,7 +4517,7 @@ dadadadad:AddToggle("TPPAntiKick", {
 })
 
 
-local TargetDropdown = Targ:AddPlayersDropdown("TargetSelect", {
+local TargetDropdown = Targ:AddDropdown("TargetSelect", {
     Text = "Select Target",
     Multi = false,
     ExcludeLocalPlayer = true,
