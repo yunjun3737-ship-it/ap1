@@ -772,7 +772,7 @@ Ser:AddButton({
 })
 
 LeftGroupBoxC:AddToggle("3rd", {
-    Text = "3인칭 <font color="rgb(100, 0, 55)">화면 편함</font>",
+    Text = "3인칭  <font color='rgb(100, 0, 55)'>화면 편함</font>",
     Default = false,
     Callback = function(Value)
         if Value then
@@ -1103,7 +1103,7 @@ Korblox:AddButton({
 })
 
 LeftGroupBox:AddToggle("Antigrab", {
-    Text = "안티그랩 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
+    Text = "안티그랩 <font color='rgb(0, 0, 255)'>핵전 필수</font>",
     Default = false,
     Callback = function(Value)
         if Value then
@@ -1144,7 +1144,7 @@ LeftGroupBox:AddToggle("Antigrab", {
 })
 
 LeftGroupBox:AddToggle("Antiragrag", {
-    Text = "안티그랩 (래그돌) '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
+    Text = "안티그랩 (래그돌) <font color='rgb(0, 0, 255)'>핵전 필수</font>",
     Default = false,
     Callback = function(Value)
         Config.AntiGrabRag = Value
@@ -1933,7 +1933,7 @@ LeftGroupBox:AddDropdown("atamode", {
 })
 
 LeftGroupBox:AddToggle("AntikillB", {
-    Text = "안티 블롭 (킬) '<font color="rgb(0, 0, 155)">블롭루프 필수</font>'",
+    Text = "안티 블롭 (킬) <font color='rgb(0, 0, 155)>블롭루프 필수</font>",
     CurrentValue = false,
     Callback = function(Value)
         Config.Blobkilltest = Value
@@ -1976,7 +1976,7 @@ LeftGroupBox:AddToggle("AntikillB", {
 })
 
 LeftGroupBox:AddToggle("AntiBLobAura", {
-    Text = "안티블롭 (아우라) '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
+    Text = "안티블롭 (아우라) <font color='rgb(0, 0, 255)'>핵전 필수</font>",
     Default = false,
     Callback = function(enabled)
         if enabled then
@@ -2583,7 +2583,7 @@ task.spawn(function()
 end)
 
 LeftGroupBox:AddToggle("Antikill", {
-    Text = "안티킬 (셋오너) '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
+    Text = "안티킬 (셋오너) <font color='rgb(0, 0, 255)'>핵전 필수</font>",
     Default = false,
     Callback = function(value)
         runtimeFlags.AntiGrab = value
@@ -2647,7 +2647,7 @@ LeftGroupBox:AddToggle("Invisi", {
 })
 
 LeftGroupBox:AddToggle("Antiragd", {
-    Text = "안티 래그돌 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
+    Text = "안티 래그돌 <font color='rgb(0, 0, 255)'>핵전 필수</font>",
     Default = false,
     Callback = function(Value)
         Config.AntiragdollToggle = Value
@@ -3255,7 +3255,7 @@ LeftGroupBox:AddToggle("AntiPaint", {
 })
 
 LeftGroupBox:AddToggle("teeeeees", {
-    Text = "안티 인풋 (반조) '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
+    Text = "안티 인풋 (반조) <font color='rgb(0, 0, 255)'>핵전 필수</font>",
     Default = false,
     Callback = function(Value)
         if Value then
@@ -3453,7 +3453,7 @@ LeftGroupBox:AddButton({
 })
 
 Toggles["AntiLag"] = LeftGroupBox:AddToggle("Antilag", {
-    Text = "안티렉 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
+    Text = "안티렉 <font color='rgb(0, 0, 255)'>핵전 필수</font>",
     Default = false,
     Callback = function(Value)
         Config.CountLines = 0
@@ -3463,7 +3463,7 @@ Toggles["AntiLag"] = LeftGroupBox:AddToggle("Antilag", {
 })
 
 LeftGroupBox:AddToggle("AntilagAuto", {
-    Text = "오토 안티렉 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
+    Text = "오토 안티렉 <font color='rgb(0, 0, 255)'>핵전 필수</font>",
     Default = true,
     Callback = function(Value)
         Config.AutoAntiLag = Value
@@ -3471,7 +3471,7 @@ LeftGroupBox:AddToggle("AntilagAuto", {
 })
 
 RightGroupBox:AddToggle("Antivoid", {
-    Text = "안티 보이드 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
+    Text = "안티 보이드 <font color='rgb(0, 0, 255)'>핵전 필수</font>",
     Default = false,
     Callback = function(state)
         if state then
@@ -3486,7 +3486,7 @@ RightGroupBox:AddToggle("Antivoid", {
 })
 
 RightGroupBox:AddToggle("Antiburn", {
-    Text = "안티 불 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
+    Text = "안티 불 <font color='rgb(0, 0, 255)'>핵전 필수</font>",
     Default = false,
     Callback = function(enabled)
         local mapHole = workspace:WaitForChild("Map"):WaitForChild("Hole"):WaitForChild("PoisonBigHole")
@@ -3545,7 +3545,7 @@ RightGroupBox:AddToggle("AntiexeV", {
 })
 
 RightGroupBox:AddToggle("Antiexe", {
-    Text = "안티 폭발 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
+    Text = "안티 폭발 <font color='rgb(0, 0, 255)'>핵전 필수</font>",
     Default = false,
     Callback = function(Value)
         Config.AntiExplosionActive = Value
@@ -3610,7 +3610,7 @@ RightGroupBox:AddToggle("Antistickey", {
 })
 
 antikick:AddToggle("BreakPCLD", {
-	Text = "PCLD 삭제'<font color="rgb(100, 0, 155)">핵전시 키면 애미 X </font>'",
+	Text = "PCLD 삭제 <font color='rgb(100, 0, 155)'>핵전시 키면 애미 X </font>",
 	Default = false,
 	Callback = function(Value)
 		local hkExpectDeath = false
@@ -3822,7 +3822,7 @@ localPlayer.CharacterAdded:Connect(function(char)
 end)
 
 Config.AntiKickToggle = antikick:AddToggle("atikikc", {
-    Text = "안티킥 (표창) '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
+    Text = "안티킥 (표창) <font color='rgb(0, 0, 255)'>핵전 필수</font>",
     Default = false,
     Callback = function(Value)
         Config.AntikickT = Value
@@ -4186,7 +4186,7 @@ antikick:AddToggle("AntikickPenc", {
 })
 
 antikick:AddToggle("Antireset", {
-	Text = "오토 리셋 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
+	Text = "오토 리셋 <font color='rgb(0, 0, 255)'>핵전 필수</font>",
     Default = true,
     Callback = function(Value)
         Config.AntikickResetToggle = Value
@@ -4356,7 +4356,7 @@ dadadadad:AddDropdown("Config.tpmode", {
 })
 
 dadadadad:AddToggle("TPPEnabled", {
-	Text = "안티그랩 '<font color="rgb(1, 10, 155)">친구 보호</font>'",
+	Text = "안티그랩 <font color='rgb(1, 10, 155)'>친구 보호</font>",
 	Default = false,
 	Callback = function(v)
 		Config.TargetAntigrabtpT = v
@@ -4367,7 +4367,7 @@ dadadadad:AddToggle("TPPEnabled", {
 })
 
 dadadadad:AddToggle("TPPAntiKick", {
-	Text = "안티 킥  '<font color="rgb(1, 10, 155)">친구보호</font>'",
+	Text = "안티 킥  <font color='rgb(1, 10, 155)'>친구보호</font>",
 	Default = false,
 	Callback = function(v)
 		if not v then
@@ -4785,7 +4785,7 @@ local function StopRagdollLoop()
 end
 
 Spamde:AddToggle("KickspamMain", {
-    Text = "셋오너킥 '<font color="rgb(0, 0, 0)">골라먹는 맛도리</font>'",
+    Text = "셋오너킥 <font color='rgb(0, 0, 0)'>골라먹는 맛도리</font>",
     Default = false,
     Callback = function(state)
         Config.MainActive = state
@@ -5239,7 +5239,7 @@ blobkill:AddToggle("blobkillLoop", {
 })
 
 blobkill:AddToggle("spamkickbl", {
-    Text = "루프킥 (스팸) '<font color="rgb(0, 0, 0)">블롭오너 스팸</font>'",
+    Text = "루프킥 (스팸) <font color='rgb(0, 0, 0)'>블롭 오너 스팸</font>",
     Default = false,
     Settings = false,
     Callback = function(on)
@@ -5542,7 +5542,7 @@ DestroyGucci:AddButton({
 })
 
 RemoveKickanti:AddToggle("RemoveWdantikick", {
-    Text = "안티킥 삭제[WD]",
+    Text = "안티킥 삭제 [WD]",
     Default = false,
     Callback = function(Value)
         Config.TarAntiAntikickWD = Value
@@ -5964,7 +5964,7 @@ Rei:AddButton({
 })
 
 Loop:AddToggle("PenKill", {
-    Text = "펜 킬 '<font color="rgb(0, 0, 0)">래그돌킬</font>'",
+    Text = "펜 킬 <font color='rgb(0, 0, 0)'>래그돌킬</font>",
     Default = false,
     Callback = function(Value)
         Config.PenKillT = Value
@@ -6190,7 +6190,7 @@ Loop:AddToggle("PenKill", {
 })
 
 Loop:AddToggle("LoopKill", {
-    Text = "루프킬 '<font color="rgb(0, 0, 255)">셋오너</font>'",
+    Text = "루프킬 <font color='rgb(0, 0, 255)'>셋오너</font>",
     Default = false,
     Callback = function(Value)
         Config.LoopKillToggle = Value
@@ -8500,7 +8500,7 @@ local function KickTarget(target, fixedPosition)
 end
 
 kickaura:AddToggle("KickAuraT", {
-    Text = "킥아우라 (라인렉)  '<font color="rgb(255, 0, 0)">블랙리스트주의</font>'",
+    Text = "킥아우라 (라인렉) <font color='rgb(255, 0, 0)'>블랙리스트주의</font>",
     Default = false,
     Callback = function(value)
         local hrp = HRP()
@@ -8929,7 +8929,7 @@ BBB:AddButton({
 })
 
 BBB:AddToggle("BarrierNoclip", {
-    Text = "베리어 노클립 '<font color="rgb(0, 255, 0)">안티노클립</font>'",
+    Text = "베리어 노클립 <font color='rgb(0, 255, 0)'>안티 베리어</font>",
     Default = false,
     Callback = function(Value)
         local shouldCollide = not Value
@@ -8948,7 +8948,7 @@ BBB:AddToggle("BarrierNoclip", {
 })
 
 Freeeeeeeeee:AddToggle("FireT", {
-    Text = "파이어 올 '<font color="rgb(255, 0, 0)">블랙리스트주의</font>'",
+    Text = "파이어 올 <font color='rgb(255, 0, 0)'>블랙리스트주의</font>",
     Default = false,
     Callback = function(Value)
         Config.FireAllT = Value
@@ -9201,7 +9201,7 @@ Nigger:AddToggle("NiggerWhite", {
 })
 
 BR:AddToggle("BR", {
-    Text = "브링올 '<font color="rgb(255, 0, 0)">블랙리스트주의</font>'",
+    Text = "브링올 <font color='rgb(255, 0, 0)'>블랙리스트주의</font>",
     Default = false,
     Callback = function(state)
         Config.BringAllToggle = state
@@ -9377,7 +9377,7 @@ BR:AddToggle("BRWhite", {
 })
 
 Lag:AddToggle("LineLagT", {
-    Text = "라인렉 서버 '<font color="rgb(255, 0, 0)">블랙리스트주의</font>'",
+    Text = "라인렉 서버 <font color='rgb(255, 0, 0)'>블랙리스트주의</font>",
     Default = false,
     Callback = function(Value)
         if Value then
@@ -9459,7 +9459,7 @@ Lag:AddToggle("Crazy", {
 
 
 Groundkick:AddButton({
-    Text = "땅킥  '<font color="rgb(255, 0, 0)">블랙리스트 주의</font>'",
+    Text = "땅킥 <font color='rgb(255, 0, 0)'>블랙리스트주의</font>",
     Func = function()
         local hrp
         if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -9544,7 +9544,7 @@ Groundkick:AddButton({
 })
 do
 KickallNoblob:AddButton({
-    Text = "킥 올 (블롭+라인렉)'<font color="rgb(255, 0, 0)">블랙리스트 주의</font>'"
+    Text = "킥 올 (블롭+라인렉) <font color='rgb(255, 0, 0)'>블랙리스트주의</font>"
     Callback = function()
         task.spawn(function()
             local allPlayers = {}
