@@ -4520,22 +4520,38 @@ dadadadad:AddToggle("TPPAntiKick", {
 		end)
 	end
 })
-
+                       
+local function GetPlayersList()
+    local list = {}
+    for _, p in ipairs(game:GetService("Players"):GetPlayers()) do
+        if p ~= game:GetService("Players").LocalPlayer then
+            table.insert(list, p.Name)
+        end
+    end
+    return list
+end
 
 local TargetDropdown = Targ:AddDropdown("TargetSelect", {
     Text = "타겟 설정",
+    Values = GetPlayersList(),
     Multi = false,
-    ExcludeLocalPlayer = true,
-    Searchable = false,
-    EnablePlayerImages = true,
-    Callback = function(player)
-        if player then
-            Config.PlayerList = { player.Name }
+    Searchable = true,
+    Callback = function(Value)
+        if Value and Value ~= "" then
+            local selectedName = type(Value) == "string" and Value or Value.Name
+            Config.PlayerList = { selectedName }
         else
             Config.PlayerList = {}
         end
     end,
 })
+
+game:GetService("Players").PlayerAdded:Connect(function()
+    if TargetDropdown.SetValues then TargetDropdown:SetValues(GetPlayersList()) end
+end)
+game:GetService("Players").PlayerRemoving:Connect(function()
+    if TargetDropdown.SetValues then TargetDropdown:SetValues(GetPlayersList()) end
+end)
 
 Config.MainActive = false
 Config.ModeRagdoll = false
@@ -4653,7 +4669,6 @@ local function aa25(aa26, aa27)
     local aa29 = aa27.CFrame
     aa27.CFrame = aa28.CFrame * CFrame.new(0, 0, 2)
     for aa30 = 1, 15 do
-        -- 셋네트워크오너 연사하는부분
         SetNetworkOwner:FireServer(aa28, aa28.CFrame)
         task.wait()
     end
@@ -6406,7 +6421,9 @@ Loop:AddToggle("LoopKill", {
         end
     end
 })
+ 
 
+ 
 aurabklaaaaao:AddToggle("Whiteblob", {
     Text = "친구 제외",
     Default = false,
