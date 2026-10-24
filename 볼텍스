@@ -10025,20 +10025,9 @@ OOOOO:AddButton("PlotOO", {
 })
 
 
-Dev:AddParagraph({
-    Title = "개발자",
-    Content = "일본인(이름까먹)"
-})
-
-Dev2:AddParagraph({
-    Title = "난독화해제&재업로드",
-    Content = "알파(alpha)"
-})
-
-disc:AddParagraph({
-    Title = "여기에 이름적히고싶은분 DM",
-    Content = "제 디코는 알아서 찾아오세요~"
-})
+Dev:AddLabel("개발자: 일본인(이름까먹)")
+Dev2:AddLabel("난독화해제&재업로드: 알파(alpha)")
+disc:AddLabel("여기에 이름적히고싶은분 DM: 제딬은 알아서 찾아오세요~", true)
 
 
 
