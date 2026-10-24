@@ -623,7 +623,7 @@ local Window = Library:CreateWindow({
 
 ThemeManager:SetLibrary(Library)
 ThemeManager:SetDefaultTheme({
-	BackgroundColor = Color3.fromRGB(128, 128, 128),
+	BackgroundColor = Color3.fromRGB(1, 1, 1),
     AccentColor = Color3.fromRGB(126, 126, 126),
     OutlineColor = Color3.fromRGB(30, 30, 30),
     FontColor = Color3.fromRGB(174, 174, 174),
@@ -10085,7 +10085,6 @@ SaveManager:IgnoreThemeSettings()
 SaveManager:SetIgnoreIndexes({ "MenuKeybind" })
 ThemeManager:ApplyToTab(Tabs.UISettings)
 SaveManager:BuildConfigSection(Tabs.UISettings)
-VortexNotify("Script loaded successfully")
 service.RunService.Heartbeat:Connect(function()
     Config.Frames = Config.Frames + 1
     local CurrentTime = tick()
