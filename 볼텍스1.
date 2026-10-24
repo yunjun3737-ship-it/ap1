@@ -10042,7 +10042,7 @@ disc:AddParagraph({
     Title = "여기에 이름적히고싶은분 DM",
     Content = "제 디코는 알아서 찾아오세요~"
 })
-]]
+
 
 
 MenuGroup:AddToggle("KeybindMenuOpen", {
