@@ -4012,7 +4012,7 @@ Config.AntiKickToggle = antikick:AddToggle("atikikc", {
                                         local img = Instance.new("ImageLabel")
                                         img.Size = UDim2.fromScale(1, 1)
                                         img.BackgroundTransparency = 1
-                                        img.Image = "rbxassetid://89062714375517"
+                                        img.Image = "rbxassetid://2818"
                                         img.Parent = gui
                                     end
                                 end
@@ -4180,31 +4180,41 @@ antikick:AddToggle("AntikickPenc", {
     end,
 })
 
+local flyingResetConn = nil
+
 antikick:AddToggle("Antireset", {
-	Text = "오토 리셋 <font color='rgb(0, 0, 255)'>핵전 필수</font>",
-    Default = true,
+    Text = "Auto reset",
+    Default = false,
     Callback = function(Value)
-        Config.AntikickResetToggle = Value
-        if Config.AntikickResetToggle then
-            Config.Contuuti['GameNotify'] = GameCorrectionsNotify.OnClientEvent:Connect(function(actionType)
-                if actionType == "Flying" then
-                    Struggle:FireServer(localPlayer)
-                    local parent = GetCharacter()
-                    local childName = "Humanoid"
-                    local humanoid = parent:FindFirstChild(childName) or parent:WaitForChild(childName, nil)
-                    if humanoid then
-                        humanoid.Health = 0
-                    end
+        if flyingResetConn then
+            flyingResetConn:Disconnect()
+            flyingResetConn = nil
+        end
+
+        if Value then
+            flyingResetConn = rs.GameCorrectionEvents.GameCorrectionsNotify.OnClientEvent:Connect(function(Type)
+                if Type ~= "Flying" then
+                    return
                 end
+
+                local char = plr.Character
+                if not char then
+                    return
+                end
+
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if not hum then
+                    return
+                end
+
+                pcall(function()
+                    rs.CharacterEvents.Struggle:FireServer()
+                end)
+
+                hum.Health = 0
+                hum:ChangeState(Enum.HumanoidStateType.Dead)
+                char:BreakJoints()
             end)
-        else
-            local playname = "GameNotify"
-            for connectionName, connection in Config.Contuuti do
-                if connectionName:find(playname) then
-                    connection:Disconnect()
-                    connection = nil
-                end
-            end
         end
     end
 })
