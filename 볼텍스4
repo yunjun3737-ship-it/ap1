@@ -9544,7 +9544,7 @@ Groundkick:AddButton({
 })
 do
 KickallNoblob:AddButton({
-    Text = "킥 올 (블롭+라인렉) <font color='rgb(255, 0, 0)'>블랙리스트주의</font>"
+    Text = "킥 올 (블롭+라인렉) <font color='rgb(255, 0, 0)'>블랙리스트주의</font>",
     Callback = function()
         task.spawn(function()
             local allPlayers = {}
