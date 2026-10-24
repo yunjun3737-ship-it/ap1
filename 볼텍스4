@@ -4533,7 +4533,7 @@ local TargetDropdown = Targ:AddDropdown("TargetSelect", {
 })
 
 spamde:AddToggle("KickspamRag", {
-    Text = "Kick spam (Ragdoll & Lag)",
+    Text = "셋오너킥 (래그돌 & 렉)",
     Default = false,
     Callback = function(aa61)
         Config.aa6 = aa61
@@ -4796,9 +4796,9 @@ spamde:AddToggle("KickspamRag", {
 })
 
 Bring:AddDropdown("Bringmode", {
-    Text = "Bring Method",
-    Values = {"GRAB", "BLOBMAN"},
-    Default = "GRAB",
+    Text = "납치 모드",
+    Values = {"그랩", "블롭맨"},
+    Default = "그랩",
     Callback = function(Value)
         Config.BringMode = Value
     end
@@ -4864,7 +4864,7 @@ local function sitOnBlobman(blobman)
     end
 end
 Bring:AddButton({
-    Text = "Bring",
+    Text = "납치",
     Func = function()
         local selected = Config.PlayerList
         local EmptyTable = type(selected) == "table" and #selected == 0
@@ -5056,7 +5056,7 @@ Bring:AddButton({
 })
 
 blobkill:AddToggle("blobkillLoop", {
-    Text = "LoopKill",
+    Text = "블롭 루프킬",
     Default = false,
     Callback = function(Value)
         Config.Loopkillblob = Value
@@ -5198,7 +5198,7 @@ blobkill:AddToggle("blobkillLoop", {
 })
 
 blobkill:AddToggle("spamkickbl", {
-    Text = "Loop Kick (Spam)",
+    Text = "루프킥 (스팸) '<font color="rgb(0, 0, 0)">블롭오너 스팸</font>'",
     Default = false,
     Settings = false,
     Callback = function(on)
@@ -5327,7 +5327,7 @@ blobkill:AddToggle("spamkickbl", {
 })
 
 DestroyGucci:AddButton({
-    Text = "Destroy Gucci [BLOB]",
+    Text = "구찌파괴 [블롭]",
     Func = function()
         local c, h = GetLocalCharAndHum()
         if not c or not h then return end
@@ -5439,7 +5439,7 @@ DestroyGucci:AddButton({
 })
 
 DestroyGucci:AddButton({
-    Text = "Destroy Gucci[Jump/Sit]",
+    Text = "구찌 파괴 [점프/앉기]",
     Func = function()
         local c, h = GetLocalCharAndHum()
         if not c or not h then return end
@@ -5501,7 +5501,7 @@ DestroyGucci:AddButton({
 })
 
 RemoveKickanti:AddToggle("RemoveWdantikick", {
-    Text = "Remove Anti-Kick [WD]",
+    Text = "안티킥 삭제[WD]",
     Default = false,
     Callback = function(Value)
         Config.TarAntiAntikickWD = Value
@@ -5616,7 +5616,7 @@ RemoveKickanti:AddToggle("RemoveWdantikick", {
 })
 do
 Loop2:AddToggle("FireT", {
-    Text = "Loop Fire",
+    Text = "루프 파이어",
     Default = false,
     Callback = function(Value)
         Config.FireLoop = Value
@@ -5672,7 +5672,7 @@ Loop2:AddToggle("FireT", {
 })
 
 Loop2:AddToggle("BananaT", {
-    Text = "Loop Banana",
+    Text = "루프 바나나",
     Default = false,
     Callback = function(Value)
         local char = GetCharacter()
@@ -5817,7 +5817,7 @@ Loop2:AddToggle("BananaT", {
 })
 
 Loop2:AddToggle("LoopdarkT", {
-    Text = "Loop Nigger",
+    Text = "루프 니거",
     Default = false,
     Callback = function(Value)
         Config.niggerLoop = Value
@@ -5880,7 +5880,7 @@ Loop2:AddToggle("LoopdarkT", {
 })
 
 Rei:AddButton({
-    Text = "Decoy Fling",
+    Text = "미끼 플링",
     Callback = function()
         local decoy = spawntoy("YouDecoy", CFrame.new(3, 4, 0))
         if not decoy then return end
@@ -5923,7 +5923,7 @@ Rei:AddButton({
 })
 
 Loop:AddToggle("PenKill", {
-    Text = "Pen Kill",
+    Text = "펜 킬 '<font color="rgb(0, 0, 0)">래그돌킬</font>'",
     Default = false,
     Callback = function(Value)
         Config.PenKillT = Value
@@ -6149,7 +6149,7 @@ Loop:AddToggle("PenKill", {
 })
 
 Loop:AddToggle("LoopKill", {
-    Text = "Loop Kill (Grab)",
+    Text = "루프킬 '<font color="rgb(0, 0, 255)">셋오너</font>'",
     Default = false,
     Callback = function(Value)
         Config.LoopKillToggle = Value
@@ -6362,7 +6362,7 @@ Loop:AddToggle("LoopKill", {
 })
 
 aurabklaaaaao:AddToggle("Whiteblob", {
-    Text = "whitelist",
+    Text = "친구 제외",
     Default = false,
     Callback = function(Value)
         Config.bloballWhite = Value
@@ -6373,9 +6373,9 @@ aurabklaaaaao:AddToggle("Whiteblob", {
 })
 
 aurabklaaaaao:AddDropdown("allmode", {
-    Text = "All Mode",
-    Default = "Kill",
-    Values = {"Kill", "Destroy Gucci", "Speed/Jump (Control)"},
+    Text = "All 모드",
+    Default = "킬",
+    Values = {"킬", "구찌  파괴", "스피드/점프 (조종)"},
     Callback = function(Value)
         Config.Bloballmode = Value
         blobmanAllMode = Value
@@ -6458,7 +6458,7 @@ aurabklaaaaao:AddDropdown("allmode", {
 })
 
 aurabklaaaaao:AddToggle("All", {
-    Text = "All",
+    Text = "all",
     Default = false,
     Callback = function(Value)
         Config.blobAllT = Value
@@ -6541,15 +6541,15 @@ aurabklaaaaao:AddToggle("All", {
 })
 
 aurabklo:AddToggle("WhiteBLob", {
-    Text = "Whitelist",
+    Text = "친구 제외",
     Default = true,
     Callback = function(Value)
         Config.WhitelistFriendsBLOB = Value
     end
 })
 aurabklo:AddDropdown("Auramoded", {
-    Text = "Aura Mode",
-    Values = {"Kill", "Destroy Gucci", "Speed/Jump (Control)", "Kill (Beach)", "Grab Aura"},
+    Text = "아우라모드",
+    Values = {"킬", "구찌 파괴", "스피드/점프 (조종)", "킬 (해변)", "그랩아우라"},
     Default = "Kill",
     Callback = function(Value)
         Config.BlobauraM = Value
@@ -6671,7 +6671,7 @@ aurabklo:AddDropdown("Auramoded", {
 })
 
 aurabklo:AddToggle("AuraT", {
-    Text = "Aura",
+    Text = "아우라🥀",
     Default = false,
     Callback = function(Value)
         Config.BlobauraT = Value
@@ -6784,7 +6784,7 @@ aurabklo:AddToggle("AuraT", {
 })
 
 SettingsDou:AddSlider("WalkspeedCon", {
-    Text = "Walk Speed",
+    Text = "스피드",
     Min = 0,
     Max = 500,
     Default = 16,
@@ -6795,7 +6795,7 @@ SettingsDou:AddSlider("WalkspeedCon", {
 })
 
 SettingsDou:AddSlider("JumppowerCon", {
-    Text = "Jump Powner",
+    Text = "점프높이",
     Min = 0,
     Max = 500,
     Default = 50,
@@ -6806,7 +6806,7 @@ SettingsDou:AddSlider("JumppowerCon", {
 })
 
 Antikickesp:AddToggle("Antesp", {
-    Text = "Anti-Kick ESP",
+    Text = "안티킥 ESP",
     Default = false,
     Callback = function(v)
         if v then
@@ -6867,7 +6867,7 @@ Antikickesp:AddToggle("Antesp", {
 })
 
 PCES:AddToggle("PCLD", {
-    Text = "PCLD",
+    Text = "PCLD ESP",
     Default = false,
     Callback = function(Value)
         Config.PCLDToggle = Value
@@ -6992,7 +6992,7 @@ PCES:AddToggle("PCLD", {
 
 PCES:AddLabel("PCLD Line Color"):AddColorPicker("pcld1", {
     Default = Color3.fromRGB(0, 255, 255),
-    Title = "PCLD Line Color",
+    Title = "PCLD 라인 색",
     Callback = function(Value)
         Config.PCLDLine = Value
         for _, container in pairs(Config.PCLDBOX or {}) do
@@ -7005,7 +7005,7 @@ PCES:AddLabel("PCLD Line Color"):AddColorPicker("pcld1", {
 
 PCES:AddLabel("PCLD Surface Color"):AddColorPicker("pcld2", {
     Default = Color3.fromRGB(0, 100, 255),
-    Title = "PCLD Surface Color",
+    Title = "PCLD 표면 색",
     Callback = function(Value)
         Config.PCLDSurface = Value
         for _, container in pairs(Config.PCLDBOX or {}) do
@@ -7018,7 +7018,7 @@ PCES:AddLabel("PCLD Surface Color"):AddColorPicker("pcld2", {
 
 PCES:AddLabel("PCLD Fill Color"):AddColorPicker("pcld3", {
     Default = Color3.fromRGB(0, 0, 255),
-    Title = "PCLD Fill Color",
+    Title = "PCLD 내부 컬러",
     Callback = function(Value)
         Config.PCLDFill = Value
         for _, container in pairs(Config.PCLDBOX or {}) do
@@ -7030,7 +7030,7 @@ PCES:AddLabel("PCLD Fill Color"):AddColorPicker("pcld3", {
 })
 
 BL:AddToggle("blesp", {
-    Text = "BlackHole (ESP)",
+    Text = "블랙홀 (ESP)",
     Default = false,
     Callback = function(Value)
         Config.blackHoleESP = Value
@@ -7137,7 +7137,7 @@ BL:AddToggle("blesp", {
 })
 
 PlayersNotify:AddToggle("JoinNotify", {
-    Text = "Join",
+    Text = "입장 알림",
     Default = false,
     Callback = function(Value)
         Config.JoinNotify = Value
@@ -7145,7 +7145,7 @@ PlayersNotify:AddToggle("JoinNotify", {
 })
 
 PlayersNotify:AddToggle("LeaveNotify", {
-    Text = "Leave",
+    Text = "퇴장 알림",
     Default = false,
     Callback = function(Value)
         Config.LeaveNotify = Value
@@ -7153,7 +7153,7 @@ PlayersNotify:AddToggle("LeaveNotify", {
 })
 
 PackBl:AddToggle("DetectPack", {
-    Text = "Detect packets",
+    Text = "패킷 알림",
     Default = false,
     Callback = function(Value)
         if Value then
@@ -7279,7 +7279,7 @@ PackBl:AddToggle("DetectPack", {
 })
 
 PackBl:AddToggle("KickNotify", {
-    Text = "BlackHoleKick",
+    Text = "블랙홀 킥",
     Default = false,
     Callback = function(Value)
         Config.KickNotify = Value
@@ -7315,9 +7315,9 @@ PackBl:AddToggle("KickNotify", {
 })
 
 Playa:AddDropdown("TPmode", {
-    Text = "TP Mode",
-    Default = "ClickTP",
-    Values = {"ClickTP", "ClickTP (Hold)"},
+    Text = "TP 모드",
+    Default = "클릭TP",
+    Values = {"클릭TP", "클릭TP (Hold)"},
     Callback = function(Value)
         Config.TPMode = Value
         Config.holdtoggletp = false
@@ -7326,7 +7326,7 @@ Playa:AddDropdown("TPmode", {
 })
 
 Playa:AddToggle("ClickTPZ", {
-    Text = "Click TP (Z)",
+    Text = "클릭 TP (Z)",
     Default = false,
     Callback = function(Value)
         Config.ClickTPfutuu = Value
@@ -7481,7 +7481,7 @@ Playa:AddLabel("Click TP Key"):AddKeyPicker("ClickTPKeybind", {
 })
 
 Playa:AddToggle("BringG", {
-    Text = "Bring",
+    Text = "끌고오기",
     Default = false,
     Callback = function(Value)
         Config.BringToggleValue = Value
@@ -7839,7 +7839,7 @@ Playa:AddLabel("Bring Key"):AddKeyPicker("BringKeybind", {
 })
 
 Playa:AddToggle("Spawn", {
-    Text = "Spawn Pallet (Tab)",
+    Text = "판자 스폰 (Tab)",
     Default = false,
     Callback = function(valuee)
         if Config.palletConn then
@@ -7885,7 +7885,7 @@ Playa:AddToggle("Spawn", {
 })
 
 MainAura:AddToggle("a455", {
-    Text = "Whitelist",
+    Text = "친구 제외",
     Default = Config.WhitelistFriends,
     Callback = function(state)
         Config.WhitelistFriends = state
@@ -7893,7 +7893,7 @@ MainAura:AddToggle("a455", {
 })
 
 MainAura:AddToggle("a45", {
-    Text = "Grab Aura",
+    Text = "그랩 아우라",
     Default = false,
     Callback = function(enabled)
         if Config.auraThread then
@@ -7959,7 +7959,7 @@ MainAura:AddToggle("a45", {
 })
 
 MainAura:AddToggle("a77", {
-    Text = "Sit Aura",
+    Text = "앉기 아우라",
     Default = false,
     Callback = function(Value)
         Config.SitAuraToggle = Value
@@ -7996,7 +7996,7 @@ MainAura:AddToggle("a77", {
 })
 
 MainAura:AddToggle("a1", {
-    Text = "Ragdoll Aura",
+    Text = "래그돌 아우라",
     Default = false,
     Callback = function(v)
         Config.RagdollAuraToggle = v
@@ -8030,7 +8030,7 @@ MainAura:AddToggle("a1", {
 })
 
 MainAura:AddToggle("a3", {
-    Text = "Spin Aura",
+    Text = "스핀아우라",
     Default = false,
     Callback = function(enabled)
         Config.spinAuraToggle = enabled
@@ -8083,7 +8083,7 @@ MainAura:AddToggle("a3", {
 })
 
 MainAura:AddToggle("a2", {
-    Text = "Bring Aura",
+    Text = "브링 아우라",
     Default = false,
     Callback = function(Val)
         Config.BringAura = Val
@@ -8119,7 +8119,7 @@ MainAura:AddToggle("a2", {
 })
 
 MainAura:AddToggle("a4", {
-    Text = "Teleport Aura (Spawn)",
+    Text = "텔레포트 아우라 '<font color="rgb(15, 195, 44)">스폰</font>'",
 	Default = false,
 	Callback = function(enabled)
 	Config.TeleportAuraT = enabled
@@ -8169,7 +8169,7 @@ MainAura:AddToggle("a4", {
 })
 
 MainAura:AddToggle("a5", {
-    Text = "Death Aura",
+    Text = "데스 아우라",
     Default = false,
     Callback = function(state)
         if Config.deathConnection then Config.deathConnection:Disconnect() end
@@ -8459,7 +8459,7 @@ local function KickTarget(target, fixedPosition)
 end
 
 kickaura:AddToggle("KickAuraT", {
-    Text = "KickAura (spam)",
+    Text = "킥아우라 (라인렉)  '<font color="rgb(255, 0, 0)">블랙리스트주의</font>'",
     Default = false,
     Callback = function(value)
         local hrp = HRP()
@@ -8620,7 +8620,7 @@ kickaura:AddToggle("KickAuraT", {
 })
 
 kickaura:AddButton({
-    Text = "SpawnPallet",
+    Text = "판자 스폰",
     Callback = function()
         for _, v in pairs(inv:GetChildren()) do
             if v.Name == "RagdollPalete" then
@@ -8632,7 +8632,7 @@ kickaura:AddButton({
 })
 
 kickaura:AddToggle("WhiteList", {
-    Text = "WhiteList",
+    Text = "친구 제외",
     Default = Config.WhitelistFriends,
     Callback = function(value)
         Config.WhitelistFriends = value
@@ -8640,7 +8640,7 @@ kickaura:AddToggle("WhiteList", {
 })
 
 Stiyyyyyyyyyyyyyyyyy:AddToggle("Plaetst", {
-    Text = "Pallet Sticky",
+    Text = "판자 부착",
     Default = false,
     Callback = function(Value)
         Config.PStickyToggle = Value
@@ -8739,7 +8739,7 @@ Stiyyyyyyyyyyyyyyyyy:AddToggle("Plaetst", {
 })
 
 miscOtherSec:AddToggle("SpeedT", {
-    Text = "Speed Tractor",
+    Text = "스피드 트랙터",
     Default = false,
     Callback = function(v)
         Config.speedTractor = v
@@ -8848,7 +8848,7 @@ miscOtherSec:AddLabel("Tractor Jump"):AddKeyPicker("TractorJump", {
 })
 
 BBB:AddButton({
-    Text = "Break Barrier",
+    Text = "베리어 브래이커,
     Func = function()
         if InPlot.Value and not InOwnedPlot.Value then 
             InPlot:GetPropertyChangedSignal("Value"):Wait()
@@ -8888,7 +8888,7 @@ BBB:AddButton({
 })
 
 BBB:AddToggle("BarrierNoclip", {
-    Text = "Barrier Noclip",
+    Text = "베리어 노클립 '<font color="rgb(0, 255, 0)">안티노클립</font>'",
     Default = false,
     Callback = function(Value)
         local shouldCollide = not Value
@@ -8907,7 +8907,7 @@ BBB:AddToggle("BarrierNoclip", {
 })
 
 Freeeeeeeeee:AddToggle("FireT", {
-    Text = "Fire All",
+    Text = "파이어 올 '<font color="rgb(255, 0, 0)">블랙리스트주의</font>'",
     Default = false,
     Callback = function(Value)
         Config.FireAllT = Value
@@ -8953,7 +8953,7 @@ Freeeeeeeeee:AddToggle("FireT", {
 })
 
 Freeeeeeeeee:AddToggle("FireWhite", {
-    Text = "Whitelist",
+    Text = "친구 제외",
     Default = Config.FireallWhitelist,
     Callback = function(Value)
         Config.FireallWhitelist = Value
@@ -8961,7 +8961,7 @@ Freeeeeeeeee:AddToggle("FireWhite", {
 })
 
 BananaAll:AddToggle("BananaT", {
-    Text = "Banana All",
+    Text = "바나나 올",
     Default = false,
     Callback = function(Value)
         local char = GetCharacter()
@@ -9094,7 +9094,7 @@ BananaAll:AddToggle("BananaT", {
 })
 
 BananaAll:AddToggle("BananaWhite", {
-    Text = "Whitelist",
+    Text = "친구 제외",
     Default = Config.RagdollallWhitelist,
     Callback = function(Value)
         Config.RagdollallWhitelist = Value
@@ -9102,7 +9102,7 @@ BananaAll:AddToggle("BananaWhite", {
 })
 
 Nigger:AddToggle("NiggerT", {
-    Text = "Nigger All",
+    Text = "깜댕이 올",
     Default = false,
     Callback = function(Value)
         Config.NiggerAllT = Value
@@ -9152,7 +9152,7 @@ Nigger:AddToggle("NiggerT", {
 })
 
 Nigger:AddToggle("NiggerWhite", {
-    Text = "Whitelist",
+    Text = "친구 제외",
     Default = Config.NiggerWhiteList,
     Callback = function(Value)
         Config.NiggerWhiteList = Value
@@ -9160,7 +9160,7 @@ Nigger:AddToggle("NiggerWhite", {
 })
 
 BR:AddToggle("BR", {
-    Text = "Bring All",
+    Text = "브링올 '<font color="rgb(255, 0, 0)">블랙리스트주의</font>'",
     Default = false,
     Callback = function(state)
         Config.BringAllToggle = state
@@ -9328,7 +9328,7 @@ BR:AddToggle("BR", {
 })
 
 BR:AddToggle("BRWhite", {
-    Text = "WhiteList",
+    Text = "친구제외",
     Default = Config.gewgsgvwe,
     Callback = function(Value)
         Config.gewgsgvwe = Value
@@ -9336,7 +9336,7 @@ BR:AddToggle("BRWhite", {
 })
 
 Lag:AddToggle("LineLagT", {
-    Text = "Line Lag server",
+    Text = "라인렉 서버 '<font color="rgb(255, 0, 0)">블랙리스트주의</font>'",
     Default = false,
     Callback = function(Value)
         if Value then
@@ -9377,7 +9377,7 @@ Lag:AddToggle("LineLagT", {
 })
 
 Lag:AddToggle("Crazy", {
-    Text = "Crazy Line",
+    Text = "크레이지 라인",
     Default = false,
     Callback = function(state)
         Config.CrazyLineLag = state
@@ -9418,7 +9418,7 @@ Lag:AddToggle("Crazy", {
 
 
 Groundkick:AddButton({
-    Text = "Ground kick",
+    Text = "땅킥  '<font color="rgb(255, 0, 0)">블랙리스트 주의</font>'",
     Func = function()
         local hrp
         if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -9503,7 +9503,7 @@ Groundkick:AddButton({
 })
 do
 KickallNoblob:AddButton({
-    Text = "Kick All (Blob)",
+    Text = "킥 올 (블롭+라인렉)'<font color="rgb(255, 0, 0)">블랙리스트 주의</font>'"
     Callback = function()
         task.spawn(function()
             local allPlayers = {}
@@ -9702,7 +9702,7 @@ KickallNoblob:AddButton({
 })
 
 KickallNoblob:AddToggle("WhitelistKickall", {
-    Text = "Whitelist Friends",
+    Text = "친구 제외",
     Default = false,
     Callback = function(Value)
         Config.WhitelistKickall = Value
@@ -9710,7 +9710,7 @@ KickallNoblob:AddToggle("WhitelistKickall", {
 })
 
 KickallNoblob:AddButton({
-    Text = "Stop Lag",
+    Text = "렉 멈추기",
     Callback = function()
         Config.lineLagConkickall = false
         if Config.lineLagkickall then
@@ -9721,15 +9721,15 @@ KickallNoblob:AddButton({
 })
 
 local Dropdown = Breakiroiro:AddDropdown("PlotSelect", {
-    Text = "Select Plot (Break Plot Area)",
+    Text = "플롯 선택 (브레이크 플롯 영역)",
     Default = Config.SelectedPlot,
     Multi = true,
     Values = {
-        {Name = "Purple-Plot"},
-        {Name = "Red-Plot"},
-        {Name = "Green-Plot"},
-        {Name = "Blue-Plot"},
-        {Name = "Chinese-Plot"},
+        {Name = "마녀집"},
+        {Name = "빨간집"},
+        {Name = "초록집"},
+        {Name = "파란집"},
+        {Name = "짱깨집"},
     },
     Callback = function(options)
         Config.SelectBleakPlot = {}
@@ -9742,7 +9742,7 @@ local Dropdown = Breakiroiro:AddDropdown("PlotSelect", {
 })
 
 Breakiroiro:AddToggle("PlotBreakt", {
-    Text = "Plot Break",
+    Text = "집 파괴",
     Default = false,
     Callback = function(value)
         Config.plotBreakToggle = value
@@ -9900,7 +9900,7 @@ end
 local TimeLabel = OOOOO:AddLabel("House-Time: 0")
 local OwnerLabel = OOOOO:AddLabel("House-Owner: ?")
 OOOOO:AddToggle("plottime", {
-    Text = "Plot-Time",
+    Text = "무제한 집시간",
     Default = false,
     Callback = function(Value)
         Config.HouseTPauto = Value
@@ -9917,14 +9917,14 @@ OOOOO:AddToggle("plottime", {
 })
 
 OOOOO:AddDropdown("PlotSelect2", {
-    Text = "Select Plot",
+    Text = "집선택",
     Default = Config.SelectedPlot,
     Values = {
-        {Name = "Purple-Plot"},
-        {Name = "Red-Plot"},
-        {Name = "Green-Plot"},
-        {Name = "Blue-Plot"},
-        {Name = "Chinese-Plot"},
+        {Name = "마녀집"},
+        {Name = "빨간집"},
+        {Name = "초록집"},
+        {Name = "파란집"},
+        {Name = "짱깨집"},
     },
     Callback = function(value)
         Config.SelectedPlot = value
@@ -9932,7 +9932,7 @@ OOOOO:AddDropdown("PlotSelect2", {
 })
 
 OOOOO:AddButton("PlotOO", {
-    Text = "Claim Plot",
+    Text = "플롯 얻기",
     Callback = function()
         local plot = GetPlot()
         if not plot then return end
@@ -9983,20 +9983,13 @@ OOOOO:AddButton("PlotOO", {
     end
 })
 
-Dev:AddIcontukiParagraph({
-    Icon = 9508739140,
-    content = "스키더"
-})
+Dev:AddParagraph("개발자", "일본인(이름까먹)")
 
-Dev:AddIcontukiParagraph({
-    Icon = 11152722145,
-    content = "I'm one of the devs for this hub, lol"
-})
+Dev:AddParagraph("난독화해제&재업로드", "알파(alpha)")
 
-Dev2:AddIcontukiParagraph({
-    Icon = 7658014476,
-    content = "SEX friends"
-})
+Dev:AddParagraph("여기에 이름적히고싶은분 DM", "제딬은 알아서 찾아오세요~")
+
+
 
 MenuGroup:AddToggle("KeybindMenuOpen", {
     Default = Library.KeybindFrame.Visible,
