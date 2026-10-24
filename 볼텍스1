@@ -4331,7 +4331,7 @@ local function runTPPLoop()
 	end)
 end
 
-local Tar = dadadadad:AddPlayersDropdown("TargetSelect1", {
+local Tar = dadadadad:AddsDropdown("TargetSelect1", {
     Text = "Select Target",
     Multi = false,
     ExcludeLocalPlayer = true,
