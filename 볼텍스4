@@ -613,8 +613,8 @@ pcall(function()
 end)
 
 local Window = Library:CreateWindow({
-    Title = "Vortex Hub",
-    Footer = "Project Vortex HUB | FTAP",
+    Title = "alpha Hub",
+    Footer = "Project alpha HUB | FTAP(skiddd)",
     Icon = 13639308918,
     NotifySide = "Right",
     ShowCustomCursor = true,
@@ -634,19 +634,19 @@ ThemeManager:SetDefaultTheme({
 })
 
 local Tabs = {
-    infoTab = Window:AddTab("Info", "info"),
-    PlayerTab = Window:AddTab("Local Player", "person-standing"),
-    AntiTab = Window:AddTab("Defense", "shield"),
-    Target = Window:AddTab("Target", "target"),
-    BlobmanTab = Window:AddTab("Blobman", "skull"),
+    infoTab = Window:AddTab("정보", "info"),
+    PlayerTab = Window:AddTab("플레이어", "person-standing"),
+    AntiTab = Window:AddTab("방어", "shield"),
+    Target = Window:AddTab("루프", "target"),
+    BlobmanTab = Window:AddTab("블롭", "skull"),
     ESPTab = Window:AddTab("ESP", "eye"),
-    NotifyTab = Window:AddTab("Notify", "bell"),
-	Keybinds = Window:AddTab("keybinds", "keyboard"),
-    AuraTab = Window:AddTab("Aura", "sparkles"),
-    MiscTab = Window:AddTab("Misc", "package"),
-    ServerTab = Window:AddTab("Server", "server"),
-    CreditsTab = Window:AddTab("Credits", "users"),
-    UISettings = Window:AddTab("UISettings", "settings")
+    NotifyTab = Window:AddTab("알림", "bell"),
+	Keybinds = Window:AddTab("키바인드", "keyboard"),
+    AuraTab = Window:AddTab("아우라", "sparkles"),
+    MiscTab = Window:AddTab("잡기능", "package"),
+    ServerTab = Window:AddTab("서버", "server"),
+    CreditsTab = Window:AddTab("크레딧", "users"),
+    UISettings = Window:AddTab("ui세팅", "settings")
 }
 
 local Avatar = Tabs.infoTab:AddLeftGroupbox("Avatar")
@@ -715,7 +715,7 @@ local GameInfoLabel = InfoLocal:AddLabel({
 })
 
 Ser:AddButton({
-    Text = "Rejoin",
+    Text = "제접",
     Func = function()
         if Config.serverHopRejoin == 0 then
             Config.serverHopRejoin = 1
@@ -733,7 +733,7 @@ Ser:AddButton({
 })
 
 Ser:AddButton({
-    Text = "Server Hop",
+    Text = "서버 이동",
     Func = function()
         if Config.serverHopRejoin == 0 then
             Config.serverHopRejoin = 1
@@ -770,7 +770,7 @@ Ser:AddButton({
 })
 
 LeftGroupBoxC:AddToggle("3rd", {
-    Text = "Third Person",
+    Text = "3인칭 '<font color="rgb(100, 0, 55)">화면 편함</font>'",
     Default = false,
     Callback = function(Value)
         if Value then
@@ -803,7 +803,7 @@ LeftGroupBoxC:AddToggle("fovT", {
 })
 
 LeftGroupBoxC:AddSlider("Fovdo", {
-    Text = "Fov °",
+    Text = "Fov 각도",
     Min = 10,
     Max = 120,
     Default = Config.fov,
@@ -817,7 +817,7 @@ LeftGroupBoxC:AddSlider("Fovdo", {
 })
 
 MainLocal:AddToggle("Walkspeed", {
-    Text = "Walk Speed",
+    Text = "걷기 속도",
     Default = false,
     Callback = function(Value)
         Config.walkSpeedToggle = Value
@@ -840,7 +840,7 @@ MainLocal:AddToggle("Walkspeed", {
 })
 
 MainLocal:AddSlider("walkspeeds", {
-    Text = "Speed",
+    Text = "스피드",
     Default = Config.walkSpeed,
     Min = 0,
     Max = 300,
@@ -855,7 +855,7 @@ MainLocal:AddSlider("walkspeeds", {
 })
 
 MainLocal:AddToggle("infjump", {
-    Text = "Infinite Jump",
+    Text = "무한 점프",
     Default = false,
     Callback = function(Value)
         Config.infiniteJumpToggle = Value
@@ -878,7 +878,7 @@ MainLocal:AddToggle("infjump", {
 })
 
 MainLocal:AddSlider("Jumppower", {
-    Text = "Jump Power",
+    Text = "점프높이",
     Min = 24,
     Max = 300,
     Default = Config.jumpPower,
@@ -895,7 +895,7 @@ MainLocal:AddSlider("Jumppower", {
 })
 
 ExtraLocal:AddToggle("Spider", {
-    Text = "Spider",
+    Text = "스파이더",
     Default = false,
     Callback = function(Value)
         Config.spiderT = Value
@@ -923,7 +923,7 @@ ExtraLocal:AddToggle("Spider", {
 })
 
 ExtraLocal:AddSlider("ClimbSpeed", {
-    Text = "Climb Speed",
+    Text = "클라임 스피드",
     Min = 20,
     Max = 50,
     Default = 20,
@@ -934,7 +934,7 @@ ExtraLocal:AddSlider("ClimbSpeed", {
 })
 
 ExtraLocal:AddToggle("Nocli", {
-    Text = "Noclip",
+    Text = "노클립",
     Default = false,
     Callback = function(Value)
         Config.noclip = Value
@@ -959,7 +959,7 @@ ExtraLocal:AddToggle("Nocli", {
 })
 
 ExtraLocal:AddToggle("SpinC", {
-	Text = "Spin Character",
+	Text = "스핀 플레이어",
 	Default = false,
 	Callback = function(Value)
 		if Value then
@@ -980,7 +980,7 @@ ExtraLocal:AddToggle("SpinC", {
 })
 
 ExtraLocal:AddSlider("SpinS", {
-	Text = "Spin Speed",
+	Text = "스핀 스피드",
 	Default = 5,
 	Min = 1,
 	Max = 50,
@@ -991,7 +991,7 @@ ExtraLocal:AddSlider("SpinS", {
 })
 
 ExtraLocal:AddSlider("FPScap", {
-    Text = "FPS",
+    Text = "프레임 부스터",
     Min = 5,
     Max = 10000,
     Default = 300,
@@ -1002,7 +1002,7 @@ ExtraLocal:AddSlider("FPScap", {
 })
 
 Korblox:AddButton({
-	Text = "Fake Korblox",
+	Text = "가짜 코블",
 	Callback = function()
         task.spawn(function()
             local char = GetCharacter()
@@ -1101,7 +1101,7 @@ Korblox:AddButton({
 })
 
 LeftGroupBox:AddToggle("Antigrab", {
-    Text = "Anti-Grab",
+    Text = "안티그랩 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
     Default = false,
     Callback = function(Value)
         if Value then
@@ -1142,7 +1142,7 @@ LeftGroupBox:AddToggle("Antigrab", {
 })
 
 LeftGroupBox:AddToggle("Antiragrag", {
-    Text = "Anti-Grab (Ragdoll)",
+    Text = "안티그랩 (래그돌) '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
     Default = false,
     Callback = function(Value)
         Config.AntiGrabRag = Value
@@ -1242,7 +1242,7 @@ LeftGroupBox:AddToggle("Antiragrag", {
 })
 
 LeftGroupBox:AddToggle("Antigucci", {
-    Text = "Anti-Gucci (Blobman)",
+    Text = "구찌 (블롭맨)",
     Default = false,
     Callback = function(Value)
         Config.gucciRunId = Config.gucciRunId + 1
@@ -1356,7 +1356,7 @@ LeftGroupBox:AddToggle("Antigucci", {
 })
 
 LeftGroupBox:AddToggle("RagdollGucci", {
-    Text = "Anti-Gucci (Ragdoll)",
+    Text = "구찌 (래그돌)",
     Default = false,
     Callback = function(Value)
         if Value then
@@ -1650,7 +1650,7 @@ LeftGroupBox:AddToggle("RagdollGucci", {
 })
 
 LeftGroupBox:AddToggle("GucciT", {
-    Text = "Anti-Gucci (Tractor)",
+    Text = "구찌 (트랙터)",
     Default = false,
     Callback = function(Value)
         if not Value then
@@ -1814,7 +1814,7 @@ LeftGroupBox:AddToggle("GucciT", {
 })
 
 LeftGroupBox:AddToggle("antigrabtp", {
-	Text = "Anti-Grab (TP)",
+	Text = "안티그랩 (TP)",
 	Default = false,
 	Callback = function(Value)
 		Config.AntigrabTPT = Value
@@ -1843,7 +1843,7 @@ LeftGroupBox:AddToggle("antigrabtp", {
 })
 
 LeftGroupBox:AddToggle("Autoat", {
-    Text = "Auto Attacker",
+    Text = "오토어택",
     Default = false,
     Callback = function(enabled)
         Config.autoatakka = enabled
@@ -1922,8 +1922,8 @@ LeftGroupBox:AddToggle("Autoat", {
 })
 
 LeftGroupBox:AddDropdown("atamode", {
-    Text = "Counter Mode",
-    Values = {"Death", "knock-back", "air-Suspend", "Freeze", "Fling"},
+    Text = "오토어택",
+    Values = {"데스", "크녹백", "에어서스펜션", "고정", "플링"},
     Default = "Death",
     Callback = function(value)
         Config.SelectAutoatakka = value
@@ -1931,7 +1931,7 @@ LeftGroupBox:AddDropdown("atamode", {
 })
 
 LeftGroupBox:AddToggle("AntikillB", {
-    Text = "Anti-Blob (Kill)",
+    Text = "안티 블롭 (킬) '<font color="rgb(0, 0, 155)">블롭루프 필수</font>'",
     CurrentValue = false,
     Callback = function(Value)
         Config.Blobkilltest = Value
@@ -1974,7 +1974,7 @@ LeftGroupBox:AddToggle("AntikillB", {
 })
 
 LeftGroupBox:AddToggle("AntiBLobAura", {
-    Text = "Anti-Blob (Aura)",
+    Text = "안티블롭 (아우라) '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
     Default = false,
     Callback = function(enabled)
         if enabled then
@@ -2010,7 +2010,7 @@ LeftGroupBox:AddToggle("AntiBLobAura", {
 })
 
 LeftGroupBox:AddToggle("ankiltp", {
-    Text = "Anti-Kill (House)",
+    Text = "안티 킬 (집 TP)",
     Default = false,
     Callback = function(val)
         Config.AntikillHouseT = val
@@ -2030,7 +2030,7 @@ LeftGroupBox:AddToggle("ankiltp", {
 })
 
 LeftGroupBox:AddToggle("ankilby", {
-    Text = "Anti-Kill (Bypass)",
+    Text = "안티킬  (바이패스)",
     Default = false,
     Callback = function(state)
         if state then
@@ -2502,8 +2502,7 @@ function H.ExtraEscape(returnCFrame)
     connection:Disconnect()
     humanoid.Sit = false
 
-    -- 【追加】トイを消去したあと、掴まれた元の位置へテレポート
-    H.dt(toy)
+        H.dt(toy)
     if returnCFrame then
         H.teleport(rootPart, returnCFrame)
     end
@@ -2543,7 +2542,7 @@ local function startAntiGrabIfNeeded()
 
     state.States["Anti Grab"] = true
 
-    -- 【変更】掴まれた位置を取得して ExtraEscape に渡す
+
     local originalCF = rootPart.CFrame
     task.spawn(H.ExtraEscape, originalCF)
 
@@ -2556,8 +2555,7 @@ local function startAntiGrabIfNeeded()
 
         local now = tick()
         if now - lastExtraEscape > 2 then
-            -- ループ呼び出し時も、元の位置（originalCF）を指定して脱出を実行
-            task.spawn(H.ExtraEscape, originalCF)
+           task.spawn(H.ExtraEscape, originalCF)
             lastExtraEscape = tick()
         end
 
@@ -2583,7 +2581,7 @@ task.spawn(function()
 end)
 
 LeftGroupBox:AddToggle("Antikill", {
-    Text = "Anti-Kill (Grab)",
+    Text = "안티킬 (셋오너) '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
     Default = false,
     Callback = function(value)
         runtimeFlags.AntiGrab = value
@@ -2594,7 +2592,7 @@ LeftGroupBox:AddToggle("Antikill", {
 })
 
 LeftGroupBox:AddToggle("Invisi", {
-	Text = "Invisibility",
+	Text = "투명화 (숨기)",
 	Default = false,
 	Callback = function(enabled)
 		Invisibility = Invisibility or {}
@@ -2647,7 +2645,7 @@ LeftGroupBox:AddToggle("Invisi", {
 })
 
 LeftGroupBox:AddToggle("Antiragd", {
-    Text = "Anti-Ragdoll",
+    Text = "안티 래그돌 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
     Default = false,
     Callback = function(Value)
         Config.AntiragdollToggle = Value
@@ -2701,7 +2699,7 @@ LeftGroupBox:AddToggle("Antiragd", {
 })
 
 LeftGroupBox:AddToggle("antiragdoll", {
-    Text = "Anti-Ragdoll (On Blob)",
+    Text = "안티 래그돌 (블롭에서)",
     Default = false,
     Callback = function(Value)
         Config.AntiRagBlob = Value
@@ -2771,7 +2769,7 @@ LeftGroupBox:AddToggle("antiragdoll", {
 })
 
 LeftGroupBox:AddToggle("AntiSit", {
-    Text = "Anti-Sit",
+    Text = "안티 앉기 ",
     Default = false,
     Callback = function(Value)
         Config.antibananaSit = Value
@@ -2799,7 +2797,7 @@ LeftGroupBox:AddToggle("AntiSit", {
 })
 
 LeftGroupBox:AddToggle("AntiBananaD", {
-    Text = "Anti-Banana (Destroy Banana)",
+    Text = "안티 바나나 (바나나 삭제)",
     Default = false,
     Callback = function(Value)
         Config.Antbananadest = Value
@@ -3193,7 +3191,7 @@ LeftGroupBox:AddToggle("AntiBananaD", {
 })
 
 LeftGroupBox:AddToggle("AntiPaint", {
-    Text = "Anti-Paint",
+    Text = "안티 페인트",
     Default = false,
     Callback = function(state)
         if state then
@@ -3255,7 +3253,7 @@ LeftGroupBox:AddToggle("AntiPaint", {
 })
 
 LeftGroupBox:AddToggle("teeeeees", {
-    Text = "Anti-Input (Banjo)",
+    Text = "안티 인풋 (반조) '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
     Default = false,
     Callback = function(Value)
         if Value then
@@ -3420,7 +3418,7 @@ LeftGroupBox:AddToggle("teeeeees", {
 })
 
 LeftGroupBox:AddButton({
-    Text = "Delete Legs",
+    Text = "다리 삭제",
     Func = function()
         local char = localPlayer.Character
         local hum = char:FindFirstChild("Humanoid") or char:WaitForChild("Humanoid")
@@ -3453,7 +3451,7 @@ LeftGroupBox:AddButton({
 })
 
 Toggles["AntiLag"] = LeftGroupBox:AddToggle("Antilag", {
-    Text = "Anti-Lag",
+    Text = "안티렉 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
     Default = false,
     Callback = function(Value)
         Config.CountLines = 0
@@ -3463,7 +3461,7 @@ Toggles["AntiLag"] = LeftGroupBox:AddToggle("Antilag", {
 })
 
 LeftGroupBox:AddToggle("AntilagAuto", {
-    Text = "Auto Anti-Lag",
+    Text = "오토 안티렉 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
     Default = true,
     Callback = function(Value)
         Config.AutoAntiLag = Value
@@ -3471,7 +3469,7 @@ LeftGroupBox:AddToggle("AntilagAuto", {
 })
 
 RightGroupBox:AddToggle("Antivoid", {
-    Text = "Anti-Void",
+    Text = "안티 보이드 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
     Default = false,
     Callback = function(state)
         if state then
@@ -3486,7 +3484,7 @@ RightGroupBox:AddToggle("Antivoid", {
 })
 
 RightGroupBox:AddToggle("Antiburn", {
-    Text = "Anti-Burn",
+    Text = "안티 불 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
     Default = false,
     Callback = function(enabled)
         local mapHole = workspace:WaitForChild("Map"):WaitForChild("Hole"):WaitForChild("PoisonBigHole")
@@ -3532,7 +3530,7 @@ RightGroupBox:AddToggle("Antiburn", {
 })
 
 RightGroupBox:AddToggle("AntiexeV", {
-    Text = "Anti-Explosion (Visual)",
+    Text = "안티 폭발 (비주얼 이펙트)",
     Default = false,
     Callback = function(state)
         if PlayerScripts then
@@ -3545,7 +3543,7 @@ RightGroupBox:AddToggle("AntiexeV", {
 })
 
 RightGroupBox:AddToggle("Antiexe", {
-    Text = "Anti-Explosion",
+    Text = "안티 폭발 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
     Default = false,
     Callback = function(Value)
         Config.AntiExplosionActive = Value
@@ -3599,7 +3597,7 @@ RightGroupBox:AddToggle("Antiexe", {
 })
 
 RightGroupBox:AddToggle("Antistickey", {
-	Text = "Anti-Sticky",
+	Text = "안티 스티키",
 	Default = false,
 	Callback = function(Value)
 		Config.antiStickyToggle = Value
@@ -3610,7 +3608,7 @@ RightGroupBox:AddToggle("Antistickey", {
 })
 
 antikick:AddToggle("BreakPCLD", {
-	Text = "Break Pcld",
+	Text = "PCLD 삭제'<font color="rgb(100, 0, 155)">핵전시 키면 애미 X </font>'",
 	Default = false,
 	Callback = function(Value)
 		local hkExpectDeath = false
@@ -3643,12 +3641,12 @@ antikick:AddToggle("BreakPCLD", {
 local SelectedToy = "SpookyCandle1"
 
 antikick:AddDropdown("AntikickitemD", {
-    Text = "anti kick item",
+    Text = "안티킥 아이템 리스트",
     Values = (function()
         local list = {
-            ["Japanese Lantern"] = "JapaneseLantern",
-            ["Spray Can"]        = "SprayCanWD",
-            ["Spooky Candle"]    = "SpookyCandle1",
+            ["일본 랜턴"] = "JapaneseLantern",
+            ["WD캔"]        = "SprayCanWD",
+            ["유령 촛불"]    = "SpookyCandle1",
         }
         local values = {}
         for shortName, _ in pairs(list) do
@@ -3657,19 +3655,19 @@ antikick:AddDropdown("AntikickitemD", {
         table.sort(values)
         return values
     end)(),
-    Default = "Spooky Candle", 
+    Default = "유령 촛불", 
     Callback = function(Value)
         local toyList = {
-            ["Japanese Lantern"] = "JapaneseLantern",
-            ["Spray Can"]        = "SprayCanWD",
-            ["Spooky Candle"]    = "SpookyCandle1",
+            ["일본 랜턴"] = "JapaneseLantern",
+            ["WD캔"]        = "SprayCanWD",
+            ["유령 촛불"]    = "SpookyCandle1",
         }
         SelectedToy = toyList[Value]
     end
 })
 
 antikick:AddToggle("Antikickitem", {
-    Text = "Anti-Kick [ITEM]",
+    Text = "안티킥 [아이템]",
     Default = false,
     Callback = function(Val)
         Config.kickitemToggle = Val 
@@ -3822,7 +3820,7 @@ localPlayer.CharacterAdded:Connect(function(char)
 end)
 
 Config.AntiKickToggle = antikick:AddToggle("atikikc", {
-    Text = "Anti-Kick",
+    Text = "안티킥 (표창) '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
     Default = false,
     Callback = function(Value)
         Config.AntikickT = Value
@@ -4097,7 +4095,7 @@ Config.AntiKickToggle = antikick:AddToggle("atikikc", {
 })
 
 antikick:AddToggle("AntikickPenc", {
-    Text = "Anti-Kick (Pencil ✏)",
+    Text = "안티 킥 (꼬추 ✏)",
     Default = false,
     Callback = function(Value)
         Config.Tinko = Value
@@ -4186,7 +4184,7 @@ antikick:AddToggle("AntikickPenc", {
 })
 
 antikick:AddToggle("Antireset", {
-	Text = "Auto-Reset",
+	Text = "오토 리셋 '<font color="rgb(0, 0, 255)">핵전 필수</font>'",
     Default = true,
     Callback = function(Value)
         Config.AntikickResetToggle = Value
@@ -4215,7 +4213,7 @@ antikick:AddToggle("Antireset", {
 })
 
 antikick:AddToggle("Antileave", {
-	Text = "Auto-Leave",
+	Text = "킥위험시 째끼기",
     Default = false,
     Callback = function(Value)
         Config.AntikickLeaveToggle = Value
@@ -4238,7 +4236,7 @@ antikick:AddToggle("Antileave", {
 })
 
 antikick:AddToggle("AntiEnable", {
-	Text = "Auto-Enable",
+	Text = "오토 on",
     Default = true,
     Callback = function(Value)
         Config.AutoTurnOnAntiKick = Value
@@ -4332,7 +4330,7 @@ local function runTPPLoop()
 end
 
 local Tar = dadadadad:AddDropdown("TargetSelect1", {
-    Text = "Select Target",
+    Text = "타겟 선택",
     Multi = false,
     ExcludeLocalPlayer = true,
     Searchable = false,
@@ -4347,16 +4345,16 @@ local Tar = dadadadad:AddDropdown("TargetSelect1", {
 })
 
 dadadadad:AddDropdown("Config.tpmode", {
-	Text = "Method",
-	Values = {"Grab", "Bring"},
-	Default = "Grab",
+	Text = "모드",
+	Values = {"그랩", "브링"},
+	Default = "그랩",
 	Callback = function(v)
 		Config.tpmode = v
 	end
 })
 
 dadadadad:AddToggle("TPPEnabled", {
-	Text = "Anti-Grab",
+	Text = "안티그랩 '<font color="rgb(1, 10, 155)">친구 보호</font>'",
 	Default = false,
 	Callback = function(v)
 		Config.TargetAntigrabtpT = v
@@ -4367,7 +4365,7 @@ dadadadad:AddToggle("TPPEnabled", {
 })
 
 dadadadad:AddToggle("TPPAntiKick", {
-	Text = "Anti-Kick",
+	Text = "안티 킥  '<font color="rgb(1, 10, 155)">친구보호</font>'",
 	Default = false,
 	Callback = function(v)
 		if not v then
@@ -4518,7 +4516,7 @@ dadadadad:AddToggle("TPPAntiKick", {
 
 
 local TargetDropdown = Targ:AddDropdown("TargetSelect", {
-    Text = "Select Target",
+    Text = "타겟 설정",
     Multi = false,
     ExcludeLocalPlayer = true,
     Searchable = false,
@@ -4532,265 +4530,306 @@ local TargetDropdown = Targ:AddDropdown("TargetSelect", {
     end,
 })
 
-spamde:AddToggle("KickspamRag", {
-    Text = "셋오너킥 (래그돌 & 렉)",
-    Default = false,
-    Callback = function(aa61)
-        Config.aa6 = aa61
-        Config.aa13 = aa61
-        if aa61 then
-            if not Config.PlayerList or #Config.PlayerList == 0 then
-                task.spawn(function()
-                    Toggles.KickspamRag:SetValue(false)
-                end)
-                return
-            end
-        end
-        
-        local function aa31(aa32, aa33, aa34)
-            return aa32:FindFirstChild(aa33) or aa32:WaitForChild(aa33, aa34 or 5)
-        end
-        
-        local function aa35(aa36)
-            if aa36 and aa36:IsA("BasePart") then
-                SetNetworkOwner:FireServer(aa36, aa36.CFrame)
-                task.wait()
-            end
-        end
-        
-        local function aa37(aa38, aa39)
-            return aa38:FindFirstChild(aa39) ~= nil
-        end
-        
-        local function aa40(aa41)
-            local aa42 = GetCharacter()
-            local aa43 = aa42:WaitForChild("HumanoidRootPart")
-            local waitCount = 0
-            while (localPlayer.InPlot.Value and not localPlayer.InOwnedPlot.Value) and waitCount < 50 do
-                task.wait(0.1)
-                waitCount = waitCount + 1
-            end
-            waitCount = 0
-            while not localPlayer.CanSpawnToy.Value and waitCount < 50 do
-                task.wait(0.1)
-                waitCount = waitCount + 1
-            end
-            local aa44 = aa43.CFrame * CFrame.new(0, 14, 20)
-            local aa45 = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys")
-            if not aa45 then
-                aa45 = workspace:FindFirstChild("PlotItems")
-                if aa45 then
-                    aa45 = aa45:FindFirstChild("Plot1")
-                end
-            end
-            if not aa45 then
-                aa45 = workspace
-            end
-            local aa46 = nil
-            local aa47 = aa45.ChildAdded:Connect(function(aa48)
-                if aa48.Name == aa41 then
-                    aa46 = aa48
-                end
-            end)
-            task.spawn(function()
-                pcall(function()
-                    spawntoy(aa41, aa44, Vector3.zero)
-                end)
-            end)
-            local aa49 = tick()
-            repeat task.wait(0.05) until aa46 or (tick() - aa49) > 5
-            aa47:Disconnect()
-            return aa46
-        end
-        
-        local function aa50()
-            if Config.aa17 then return nil end
-            Config.aa17 = true
-            local aa51 = aa40("PalletLightBrown")
-            if not aa51 then
-                Config.aa17 = false
-                return nil
-            end
-            local aa52 = aa31(aa51, "SoundPart", 3)
-            if not aa52 then
-                aa51:Destroy()
-                Config.aa17 = false
-                return nil
-            end
-            local retryCount = 0
-            while retryCount < 10 do
-                if not Config.aa13 then
-                    aa51:Destroy()
-                    Config.aa17 = false
-                    return nil
-                end
-                aa35(aa52)
-                task.wait()
-                if aa37(aa52, "PartOwner") then
-                    break
-                end
-                retryCount = retryCount + 1
-            end
-            if not aa37(aa52, "PartOwner") then
-                aa51:Destroy()
-                Config.aa17 = false
-                return nil
-            end            for _, aa54 in pairs(aa51:GetDescendants()) do
-                if aa54:IsA("BasePart") then
-                    aa54.CanCollide = false
-                    aa54.Transparency = 0.8
-                end
-            end
-            aa51.Name = "RagdollPalete"
-            local aa55 = Instance.new("BodyVelocity")
-            aa55.MaxForce = Vector3.new(0, math.huge, 0)
-            aa55.Velocity = Vector3.new(0, 900, 0)
-            aa55.Parent = aa52
+Config.MainActive = false
+Config.ModeRagdoll = false
+Config.ModeLag = false
 
+local function aa31(aa32, aa33, aa34)
+    return aa32:FindFirstChild(aa33) or aa32:WaitForChild(aa33, aa34 or 5)
+end
+
+local function aa35(aa36)
+    if aa36 and aa36:IsA("BasePart") then
+        SetNetworkOwner:FireServer(aa36, aa36.CFrame)
+        task.wait()
+    end
+end
+
+local function aa37(aa38, aa39)
+    return aa38:FindFirstChild(aa39) ~= nil
+end
+
+local function aa40(aa41)
+    local aa42 = GetCharacter()
+    local aa43 = aa42:WaitForChild("HumanoidRootPart")
+    local waitCount = 0
+    while (localPlayer.InPlot.Value and not localPlayer.InOwnedPlot.Value) and waitCount < 50 do
+        task.wait(0.1)
+        waitCount = waitCount + 1
+    end
+    waitCount = 0
+    while not localPlayer.CanSpawnToy.Value and waitCount < 50 do
+        task.wait(0.1)
+        waitCount = waitCount + 1
+    end
+    local aa44 = aa43.CFrame * CFrame.new(0, 14, 20)
+    local aa45 = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys")
+    if not aa45 then
+        aa45 = workspace:FindFirstChild("PlotItems")
+        if aa45 then
+            aa45 = aa45:FindFirstChild("Plot1")
+        end
+    end
+    if not aa45 then
+        aa45 = workspace
+    end
+    local aa46 = nil
+    local aa47 = aa45.ChildAdded:Connect(function(aa48)
+        if aa48.Name == aa41 then
+            aa46 = aa48
+        end
+    end)
+    task.spawn(function()
+        pcall(function()
+            spawntoy(aa41, aa44, Vector3.zero)
+        end)
+    end)
+    local aa49 = tick()
+    repeat task.wait(0.05) until aa46 or (tick() - aa49) > 5
+    aa47:Disconnect()
+    return aa46
+end
+
+local function aa50()
+    if Config.aa17 then return nil end
+    Config.aa17 = true
+    local aa51 = aa40("PalletLightBrown")
+    if not aa51 then
+        Config.aa17 = false
+        return nil
+    end
+    local aa52 = aa31(aa51, "SoundPart", 3)
+    if not aa52 then
+        aa51:Destroy()
+        Config.aa17 = false
+        return nil
+    end
+    local retryCount = 0
+    while retryCount < 10 do
+        if not (Config.MainActive and Config.ModeRagdoll) then
+            aa51:Destroy()
             Config.aa17 = false
-            return aa51
+            return nil
         end
-        
-        local function aa25(aa26, aa27)
-            if not aa26.Character then return end
-            local aa28 = aa26.Character:FindFirstChild("HumanoidRootPart")
-            if not aa28 or not aa27 then return end
-            local aa29 = aa27.CFrame
-            aa27.CFrame = aa28.CFrame * CFrame.new(0, 0, 2)
-            for aa30 = 1, 15 do
-                SetNetworkOwner:FireServer(aa28, aa28.CFrame)
-                task.wait()
-            end
-            aa27.CFrame = aa29
+        aa35(aa52)
+        task.wait()
+        if aa37(aa52, "PartOwner") then
+            break
         end
-        
-        local function startLagSpam()
-            if Config.running then return end
-            if not Config.PlayerList or #Config.PlayerList == 0 then return end
-            if not CreateGrabLine then
-                CreateGrabLine = Events.GrabEvents:WaitForChild("CreateGrabLine", 3)
-                if not CreateGrabLine then return end
-            end
-            Config.running = true
-            task.spawn(function()
-                while Config.running do
-                    local spawnLocation = service.Workspace:FindFirstChild("SpawnLocation")
-                        or service.Workspace:FindFirstChild("Spawn")
-                        or (localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart"))
+        retryCount = retryCount + 1
+    end
+    if not aa37(aa52, "PartOwner") then
+        aa51:Destroy()
+        Config.aa17 = false
+        return nil
+    end            
+    for _, aa54 in pairs(aa51:GetDescendants()) do
+        if aa54:IsA("BasePart") then
+            aa54.CanCollide = false
+            aa54.Transparency = 0.8
+        end
+    end
+    aa51.Name = "RagdollPalete"
+    local aa55 = Instance.new("BodyVelocity")
+    aa55.MaxForce = Vector3.new(0, math.huge, 0)
+    aa55.Velocity = Vector3.new(0, 900, 0)
+    aa55.Parent = aa52
 
-                    if spawnLocation then
-                        CreateGrabLine:FireServer(spawnLocation, CFrame.new(math.random(-2010000000, 2000000001), 0, math.random(-2008100000, 2000200000)))
-                    end
-                    task.wait(0.001)
-                end
-            end)
-        end
-        
-        local function stopLagSpam()
-            if not Config.running then return end
-            Config.running = false
-        end
-        
-        if aa61 then
-            if not Config.PlayerList or #Config.PlayerList == 0 then
-                return
+    Config.aa17 = false
+    return aa51
+end
+
+local function aa25(aa26, aa27)
+    if not aa26.Character then return end
+    local aa28 = aa26.Character:FindFirstChild("HumanoidRootPart")
+    if not aa28 or not aa27 then return end
+    local aa29 = aa27.CFrame
+    aa27.CFrame = aa28.CFrame * CFrame.new(0, 0, 2)
+    for aa30 = 1, 15 do
+        -- 셋네트워크오너 연사하는부분
+        SetNetworkOwner:FireServer(aa28, aa28.CFrame)
+        task.wait()
+    end
+    aa27.CFrame = aa29
+end
+
+local function startLagSpam()
+    if Config.running then return end
+    if not Config.PlayerList or #Config.PlayerList == 0 then return end
+    if not CreateGrabLine then
+        CreateGrabLine = Events.GrabEvents:WaitForChild("CreateGrabLine", 3)
+        if not CreateGrabLine then return end
+    end
+    Config.running = true
+    task.spawn(function()
+        while Config.running and Config.MainActive and Config.ModeLag do
+            local spawnLocation = service.Workspace:FindFirstChild("SpawnLocation")
+                or service.Workspace:FindFirstChild("Spawn")
+                or (localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart"))
+
+            if spawnLocation then
+                CreateGrabLine:FireServer(spawnLocation, CFrame.new(math.random(-2010000000, 2000000001), 0, math.random(-2008100000, 2000200000)))
             end
-            task.wait(0.5)
-            task.defer(function()
-                startLagSpam()
-            end)
-        else
-            stopLagSpam()
+            task.wait(0.001)
         end
-        if Config.aa6 then
-            task.spawn(function()
-                while Config.aa6 do
-                    local targets = type(Config.PlayerList) == "table" and Config.PlayerList or {Config.PlayerList}
-                    for _, targetName in ipairs(targets) do
-                        local aa62 = service.Players:FindFirstChild(targetName)
-                        local aa63 = localPlayer.Character
-                        local aa64 = aa63 and aa63:FindFirstChild("HumanoidRootPart")
-                        if aa62 and aa64 then
-                            local aa65 = aa62.Character
-                            local aa66 = aa65 and aa65:FindFirstChild("HumanoidRootPart")
-                            if aa66 then
-                                local aa67 = (aa64.Position - aa66.Position).Magnitude
-                                if aa67 > Config.aa9 then
-                                    aa25(aa62, aa64)
-                                end
-                                SetNetworkOwner:FireServer(aa66, aa66.CFrame)
-                                if DestroyGrabLine then
-                                    DestroyGrabLine:FireServer(aa66)
-                                end
-                                aa66.AssemblyLinearVelocity = Vector3.zero
-                                aa66.AssemblyAngularVelocity = Vector3.zero
-                                local aa68 = aa66:FindFirstChild("ControlBP")
-                                if not aa68 then
-                                    aa68 = Instance.new("BodyPosition")
-                                    aa68.Name = "ControlBP"
-                                    aa68.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                                    aa68.P = 800000
-                                    aa68.Parent = aa66
-                                end
-                                aa68.Position = aa64.Position + Vector3.new(0, 15, 0)
+        Config.running = false
+    end)
+end
+
+local function stopLagSpam()
+    Config.running = false
+end
+
+local function StartMainSetOwnerLoop()
+    if Config.MainLoopRunning then return end
+    Config.MainLoopRunning = true
+    task.spawn(function()
+        while Config.MainActive do
+            local targets = type(Config.PlayerList) == "table" and Config.PlayerList or {Config.PlayerList}
+            for _, targetName in ipairs(targets) do
+                local aa62 = service.Players:FindFirstChild(targetName)
+                local aa63 = localPlayer.Character
+                local aa64 = aa63 and aa63:FindFirstChild("HumanoidRootPart")
+                if aa62 and aa64 then
+                    local aa65 = aa62.Character
+                    local aa66 = aa65 and aa65:FindFirstChild("HumanoidRootPart")
+                    if aa66 then
+                        local aa67 = (aa64.Position - aa66.Position).Magnitude
+                        if aa67 > Config.aa9 then
+                            aa25(aa62, aa64)
+                        end
+                                               
+                        for _ = 1, 3 do
+                            SetNetworkOwner:FireServer(aa66, aa66.CFrame)
+                            if DestroyGrabLine then
+                                DestroyGrabLine:FireServer(aa66)
                             end
                         end
-                    end
-                    task.wait(0.001)
-                end
-                local targets = type(Config.PlayerList) == "table" and Config.PlayerList or {Config.PlayerList}
-                for _, targetName in ipairs(targets) do
-                    local aa69 = service.Players:FindFirstChild(targetName)
-                    if aa69 and aa69.Character then
-                        local aa70 = aa69.Character:FindFirstChild("HumanoidRootPart")
-                        if aa70 and aa70:FindFirstChild("ControlBP") then
-                            aa70.ControlBP:Destroy()
+
+                        aa66.AssemblyLinearVelocity = Vector3.zero
+                        aa66.AssemblyAngularVelocity = Vector3.zero
+                        local aa68 = aa66:FindFirstChild("ControlBP")
+                        if not aa68 then
+                            aa68 = Instance.new("BodyPosition")
+                            aa68.Name = "ControlBP"
+                            aa68.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                            aa68.P = 800000
+                            aa68.Parent = aa66
                         end
+                        aa68.Position = aa64.Position + Vector3.new(0, 15, 0)
                     end
                 end
-            end)
-        end
-        if aa61 then
-            local aa71 = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys")
-            local aa72 = nil
-            Config.aa73 = service.RunService.RenderStepped:Connect(function()
-                if not Config.aa13 then return end
-                if not Config.PlayerList or #Config.PlayerList == 0 then return end
-                local targets = type(Config.PlayerList) == "table" and Config.PlayerList or {Config.PlayerList}
-                local targetName = targets[1]
-                if not targetName then return end
-                local aa74 = service.Players:FindFirstChild(targetName)
-                if not aa74 or not aa74.Character then return end
-                local aa75 = aa74.Character:FindFirstChild("HumanoidRootPart")
-                local aa76 = aa74.Character:FindFirstChild("Humanoid")
-                if not aa75 or not aa76 then return end
-                if aa72 and aa72:IsDescendantOf(workspace) then
-                    local aa77 = aa72:FindFirstChild("SoundPart")
-                    if aa77 then
-                        if not aa37(aa77, "PartOwner") then
-                            aa72:Destroy()
-                            aa72 = nil
-                        end
-                    else
-                        aa72:Destroy()
-                        aa72 = nil
-                    end
-                end
-                if not Config.aa17 and (not aa72 or not aa72:IsDescendantOf(workspace)) then
-                    aa72 = aa71 and aa71:FindFirstChild("RagdollPalete") or aa50()
-                end
-                if aa72 and aa72:FindFirstChild("SoundPart") then
-                    local aa78 = aa76:FindFirstChild("Ragdolled")
-                    if aa78 and not aa78.Value then
-                        aa72.SoundPart.Position = aa75.Position
-                    end
-                end
-            end)
-        else
-            if Config.aa73 then
-                Config.aa73:Disconnect()
-                Config.aa73 = nil
             end
+            task.wait(0.001)
+        end
+        Config.MainLoopRunning = false
+        local targets = type(Config.PlayerList) == "table" and Config.PlayerList or {Config.PlayerList}
+        for _, targetName in ipairs(targets) do
+            local aa69 = service.Players:FindFirstChild(targetName)
+            if aa69 and aa69.Character then
+                local aa70 = aa69.Character:FindFirstChild("HumanoidRootPart")
+                if aa70 and aa70:FindFirstChild("ControlBP") then
+                    aa70.ControlBP:Destroy()
+                end
+            end
+        end
+    end)
+end
+
+local function StartRagdollLoop()
+    if Config.aa73 then return end
+    local aa71 = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys")
+    local aa72 = nil
+    Config.aa73 = service.RunService.RenderStepped:Connect(function()
+        if not (Config.MainActive and Config.ModeRagdoll) then return end
+        if not Config.PlayerList or #Config.PlayerList == 0 then return end
+        local targets = type(Config.PlayerList) == "table" and Config.PlayerList or {Config.PlayerList}
+        local targetName = targets[1]
+        if not targetName then return end
+        local aa74 = service.Players:FindFirstChild(targetName)
+        if not aa74 or not aa74.Character then return end
+        local aa75 = aa74.Character:FindFirstChild("HumanoidRootPart")
+        local aa76 = aa74.Character:FindFirstChild("Humanoid")
+        if not aa75 or not aa76 then return end
+        if aa72 and aa72:IsDescendantOf(workspace) then
+            local aa77 = aa72:FindFirstChild("SoundPart")
+            if aa77 then
+                if not aa37(aa77, "PartOwner") then
+                    aa72:Destroy()
+                    aa72 = nil
+                end
+            else
+                aa72:Destroy()
+                aa72 = nil
+            end
+        end
+        if not Config.aa17 and (not aa72 or not aa72:IsDescendantOf(workspace)) then
+            aa72 = aa71 and aa71:FindFirstChild("RagdollPalete") or aa50()
+        end
+        if aa72 and aa72:FindFirstChild("SoundPart") then
+            local aa78 = aa76:FindFirstChild("Ragdolled")
+            if aa78 and not aa78.Value then
+                aa72.SoundPart.Position = aa75.Position
+            end
+        end
+    end)
+end
+
+local function StopRagdollLoop()
+    if Config.aa73 then
+        Config.aa73:Disconnect()
+        Config.aa73 = nil
+    end
+end
+
+Spamde:AddToggle("KickspamMain", {
+    Text = "셋오너킥 '<font color="rgb(0, 0, 0)">골라먹는 맛도리</font>'",
+    Default = false,
+    Callback = function(state)
+        Config.MainActive = state
+        if state then
+            if not Config.PlayerList or #Config.PlayerList == 0 then
+                task.spawn(function()
+                    Toggles.KickspamMain:SetValue(false)
+                end)
+                return
+            end
+            StartMainSetOwnerLoop()
+            if Config.ModeLag then
+                startLagSpam()
+            end
+            if Config.ModeRagdoll then
+                StartRagdollLoop()
+            end
+        else
+            stopLagSpam()
+            StopRagdollLoop()
+        end
+    end
+})
+
+Spamde:AddToggle("KickspamRagdollMode", {
+    Text = "ㄴ 판자 래그돌",
+    Default = false,
+    Callback = function(state)
+        Config.ModeRagdoll = state
+        if state and Config.MainActive then
+            StartRagdollLoop()
+        elseif not state then
+            StopRagdollLoop()
+        end
+    end
+})
+
+Spamde:AddToggle("KickspamLagMode", {
+    Text = "ㄴ 라인렉",
+    Default = false,
+    Callback = function(state)
+        Config.ModeLag = state
+        if state and Config.MainActive then
+            startLagSpam()
+        elseif not state then
+            stopLagSpam()
         end
     end
 })
