@@ -9916,15 +9916,15 @@ OOOOO:AddToggle("plottime", {
     end
 })
 
-OOOOO:AddDropdownEx("PlotSelect2", {
+OOOOO:AddDropdown("PlotSelect2", {
     Text = "Select Plot",
     Default = Config.SelectedPlot,
     Values = {
-        {Name = "Purple-Plot", Image = "rbxassetid://9909725942"},
-        {Name = "Red-Plot", Image = "rbxassetid://8989326312"},
-        {Name = "Green-Plot", Image = "rbxassetid://8989327148"},
-        {Name = "Blue-Plot", Image = "rbxassetid://9909733734"},
-        {Name = "Chinese-Plot", Image = "rbxassetid://9108988013"},
+        {Name = "Purple-Plot"},
+        {Name = "Red-Plot"},
+        {Name = "Green-Plot"},
+        {Name = "Blue-Plot"},
+        {Name = "Chinese-Plot"},
     },
     Callback = function(value)
         Config.SelectedPlot = value
@@ -9985,7 +9985,7 @@ OOOOO:AddButton("PlotOO", {
 
 Dev:AddIcontukiParagraph({
     Icon = 9508739140,
-    content = "Owner"
+    content = "스키더"
 })
 
 Dev:AddIcontukiParagraph({
@@ -10007,7 +10007,7 @@ MenuGroup:AddToggle("KeybindMenuOpen", {
 })
 
 MenuGroup:AddToggle("ShowCustomCursor", {
-    Text = "Custom Cursor",
+    Text = "커스텀 커서",
     Default = true,
     Callback = function(Value)
         Library.ShowCustomCursor = Value
@@ -10015,8 +10015,8 @@ MenuGroup:AddToggle("ShowCustomCursor", {
 })
 
 MenuGroup:AddDropdown("NotificationSide", {
-    Values = { "Left", "Right" },
-    Default = "Right",
+    Values = { "왼쪽", "오른쪽" },
+    Default = "오론쪽",
     Text = "Notification Side",
     Callback = function(Value)
         Library:SetNotifySide(Value)
@@ -10026,7 +10026,7 @@ MenuGroup:AddDropdown("NotificationSide", {
 MenuGroup:AddDropdown("DPIDropdown", {
     Values = { "50%", "75%", "100%", "125%", "150%", "175%", "200%" },
     Default = "100%",
-    Text = "DPI Scale",
+    Text = "ui사이즈",
     Callback = function(Value)
         Value = Value:gsub("%%", "")
         local DPI = tonumber(Value)
@@ -10043,7 +10043,7 @@ MenuGroup:AddLabel("Menu bind"):AddKeyPicker("MenuKeybind", {
 })
 
 MenuGroup:AddButton({
-    Text = "Unload",
+    Text = "언로드",
     Func = function()
         Library:Unload()
     end,
