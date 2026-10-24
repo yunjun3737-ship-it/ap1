@@ -1,7 +1,7 @@
 
 
 
-local repo = "https://raw.githubusercontent.com/qvdc/Modified-Obsidian/main/"
+local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
@@ -9720,16 +9720,16 @@ KickallNoblob:AddButton({
     end
 })
 
-local Dropdown = Breakiroiro:AddDropdownEx("PlotSelect", {
+local Dropdown = Breakiroiro:AddDropdown("PlotSelect", {
     Text = "Select Plot (Break Plot Area)",
     Default = Config.SelectedPlot,
     Multi = true,
     Values = {
-        {Name = "Purple-Plot", Image = "rbxassetid://9909725942"},
-        {Name = "Red-Plot", Image = "rbxassetid://8989326312"},
-        {Name = "Green-Plot", Image = "rbxassetid://8989327148"},
-        {Name = "Blue-Plot", Image = "rbxassetid://9909733734"},
-        {Name = "Chinese-Plot", Image = "rbxassetid://9108988013"},
+        {Name = "Purple-Plot"},
+        {Name = "Red-Plot"},
+        {Name = "Green-Plot"},
+        {Name = "Blue-Plot"},
+        {Name = "Chinese-Plot"},
     },
     Callback = function(options)
         Config.SelectBleakPlot = {}
