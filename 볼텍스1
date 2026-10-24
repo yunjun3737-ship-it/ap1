@@ -10023,6 +10023,7 @@ OOOOO:AddButton("PlotOO", {
         end
     end
 })
+local Dev = Tabs.Settings:AddLeftGroupbox("크레딧 & 개발자") 
 
 Dev:AddParagraph({
     Title = "개발자",
