@@ -772,7 +772,7 @@ Ser:AddButton({
 })
 
 LeftGroupBoxC:AddToggle("3rd", {
-    Text = "3인칭 '<font color="rgb(100, 0, 55)">화면 편함</font>'",
+    Text = "3인칭 <font color="rgb(100, 0, 55)">화면 편함</font>",
     Default = false,
     Callback = function(Value)
         if Value then
