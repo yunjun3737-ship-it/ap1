@@ -4552,7 +4552,7 @@ game:GetService("Players").PlayerRemoving:Connect(function()
     if TargetDropdown.SetValues then TargetDropdown:SetValues(GetPlayersList()) end
 end)
 
- Spamde:AddToggle("KickspamRag", {
+ spamde:AddToggle("KickspamRag", {
     Text = "셋오너킥 (래그돌 & 렉)",
     Default = false,
     Callback = function(aa61)
