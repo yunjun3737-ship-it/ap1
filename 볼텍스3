@@ -8889,7 +8889,7 @@ miscOtherSec:AddLabel("Tractor Jump"):AddKeyPicker("TractorJump", {
 })
 
 BBB:AddButton({
-    Text = "베리어 브래이커,
+    Text = "베리어 브래이커",
     Func = function()
         if InPlot.Value and not InOwnedPlot.Value then 
             InPlot:GetPropertyChangedSignal("Value"):Wait()
