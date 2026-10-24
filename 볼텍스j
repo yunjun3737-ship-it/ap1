@@ -29,12 +29,7 @@ local service=setmetatable({},{
 		return s
 	end,
 })
-local function VortexNotify(Message)
-    Library:Notify({
-        Title = "Vortex HUB",
-        Description = Message,
-        Duration = 4
-    })
+do
 end
 wait(2)
 
@@ -111,7 +106,7 @@ bringLabel.BorderSizePixel = 0
 bringLabel.Position = UDim2.new(0.12, 0, 0.16, 0)
 bringLabel.Size = UDim2.new(0.7, 0, 0.62, 2)
 bringLabel.Image = "rbxassetid://130703864968637"
-bringLabel.Visible = false   -- ★ 初期は非表示
+bringLabel.Visible = false   
 
 local tpGui = Instance.new("ScreenGui")
 tpGui.Name = "TpGui"
@@ -628,7 +623,7 @@ local Window = Library:CreateWindow({
 
 ThemeManager:SetLibrary(Library)
 ThemeManager:SetDefaultTheme({
-	BackgroundColor = Color3.fromRGB(0, 0, 0),
+	BackgroundColor = Color3.fromRGB(128, 128, 128),
     AccentColor = Color3.fromRGB(126, 126, 126),
     OutlineColor = Color3.fromRGB(30, 30, 30),
     FontColor = Color3.fromRGB(174, 174, 174),
@@ -653,7 +648,7 @@ local Tabs = {
 
 local Avatar = Tabs.infoTab:AddLeftGroupbox("아바타")
 local InfoLocal = Tabs.infoTab:AddRightGroupbox("정보/ 게임정보")
-local Ser = Tabs.infoTab:AddRightGroupbox("제접 / 들어오기")
+local Ser = Tabs.infoTab:AddRightGroupbox("제접 / 서버이동")
 local LeftGroupBoxC = Tabs.PlayerTab:AddLeftGroupbox("카메라")
 local MainLocal = Tabs.PlayerTab:AddLeftGroupbox("메인")
 local ExtraLocal = Tabs.PlayerTab:AddRightGroupbox("엑스트라")
