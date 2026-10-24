@@ -4784,7 +4784,7 @@ local function StopRagdollLoop()
     end
 end
 
-Spamde:AddToggle("KickspamMain", {
+spamde:AddToggle("KickspamMain", {
     Text = "셋오너킥 <font color='rgb(0, 0, 0)'>골라먹는 맛도리</font>",
     Default = false,
     Callback = function(state)
@@ -4810,7 +4810,7 @@ Spamde:AddToggle("KickspamMain", {
     end
 })
 
-Spamde:AddToggle("KickspamRagdollMode", {
+spamde:AddToggle("KickspamRagdollMode", {
     Text = "ㄴ 판자 래그돌",
     Default = false,
     Callback = function(state)
@@ -4823,7 +4823,7 @@ Spamde:AddToggle("KickspamRagdollMode", {
     end
 })
 
-Spamde:AddToggle("KickspamLagMode", {
+spamde:AddToggle("KickspamLagMode", {
     Text = "ㄴ 라인렉",
     Default = false,
     Callback = function(state)
