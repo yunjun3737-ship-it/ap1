@@ -8160,7 +8160,7 @@ MainAura:AddToggle("a2", {
 })
 
 MainAura:AddToggle("a4", {
-    Text = "텔레포트 아우라 '<font color="rgb(15, 195, 44)">스폰</font>'",
+    Text = "텔레포트 아우라 <font color='rgb(15, 195, 44)'>스폰</font>",
 	Default = false,
 	Callback = function(enabled)
 	Config.TeleportAuraT = enabled
