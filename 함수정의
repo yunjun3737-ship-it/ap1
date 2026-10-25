@@ -1,3 +1,4 @@
+do
 Players = game:GetService("Players")
 LocalPlayer = Players.LocalPlayer
 CoreGui = game:GetService("CoreGui")
@@ -925,7 +926,7 @@ function UModule.SICF(...)
         vgs.RS.MenuToys.SpawnToyRemoteFunction:InvokeServer(item, cf, rotation)
     end)
 end
-
+end
 function UModule.IsAround(part, radius)
     local hrp = UModule.env.ov.char:FindFirstChild("HumanoidRootPart")
     if not hrp then return false end
