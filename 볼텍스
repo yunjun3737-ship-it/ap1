@@ -1927,7 +1927,7 @@ LeftGroupBox:AddDropdown("atamode", {
 })
 
 LeftGroupBox:AddToggle("AntikillB", {
-    Text = "안티 블롭 (킬) <font color='rgb(0, 0, 155)>블롭루프 필수</font>",
+    Text = "안티 블롭 (킬) <font color='rgb(0, 0, 155)'>블롭루프 필수</font>",
     CurrentValue = false,
     Callback = function(Value)
         Config.Blobkilltest = Value
@@ -4677,7 +4677,7 @@ end)
             if not aa28 or not aa27 then return end
             local aa29 = aa27.CFrame
             aa27.CFrame = aa28.CFrame * CFrame.new(0, 0, 2)
-            for aa30 = 1, 15 do
+            for aa30 = 1, 20 do
                 SetNetworkOwner:FireServer(aa28, aa28.CFrame)
                 task.wait()
             end
@@ -4739,7 +4739,7 @@ end)
                                     aa25(aa62, aa64)
                                 end
                                 
-                                for _ = 1, 3 do
+                                for _ = 1, 4 do
                                     SetNetworkOwner:FireServer(aa66, aa66.CFrame)
                                     if DestroyGrabLine then
                                         DestroyGrabLine:FireServer(aa66)
