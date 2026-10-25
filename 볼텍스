@@ -4739,7 +4739,7 @@ end)
                                     aa25(aa62, aa64)
                                 end
                                 
-                                for _ = 1, 15 do
+                                for _ = 1, 8 do
                                     SetNetworkOwner:FireServer(aa66, aa66.CFrame)
                                     if DestroyGrabLine then
                                         DestroyGrabLine:FireServer(aa66)
