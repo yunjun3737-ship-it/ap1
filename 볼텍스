@@ -4677,7 +4677,7 @@ end)
             if not aa28 or not aa27 then return end
             local aa29 = aa27.CFrame
             aa27.CFrame = aa28.CFrame * CFrame.new(0, 0, 2)
-            for aa30 = 1, 20 do
+            for aa30 = 1, 30 do
                 SetNetworkOwner:FireServer(aa28, aa28.CFrame)
                 task.wait()
             end
@@ -4739,7 +4739,7 @@ end)
                                     aa25(aa62, aa64)
                                 end
                                 
-                                for _ = 1, 4 do
+                                for _ = 1, 15 do
                                     SetNetworkOwner:FireServer(aa66, aa66.CFrame)
                                     if DestroyGrabLine then
                                         DestroyGrabLine:FireServer(aa66)
@@ -4756,11 +4756,11 @@ end)
                                     aa68.P = 800000
                                     aa68.Parent = aa66
                                 end
-                                aa68.Position = aa64.Position + Vector3.new(0, 15, 0)
+                                aa68.Position = aa64.Position + Vector3.new(5, 20, 0)
                             end
                         end
                     end
-                    task.wait(0.001)
+                    task.wait()
                 end
                 local targets = type(Config.PlayerList) == "table" and Config.PlayerList or {Config.PlayerList}
                 for _, targetName in ipairs(targets) do
