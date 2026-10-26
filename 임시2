@@ -1807,7 +1807,7 @@ pcall(function()
             end
         end
     
-end)
+
 
 local localPlayerAnnoy = players.LocalPlayer
 local annoyGrabEvents = replicatedStorage:WaitForChild("GrabEvents")
