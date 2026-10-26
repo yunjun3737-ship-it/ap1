@@ -1785,6 +1785,7 @@ pcall(function()
     players.PlayerAdded:Connect(updateBombDropdown)
     players.PlayerRemoving:Connect(updateBombDropdown)
     task.spawn(updateBombDropdown)
+end
 
     attackTab:AddButton({
         Name = "Explode All Bombs (Instant)",
