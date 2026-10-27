@@ -1250,6 +1250,8 @@ playerTab:AddButton({
 furtherExtend = false
 extendAmount = 3
 local currentMagnitude = 0
+local currentCamera = workspaceService.CurrentCamera
+local playerGui = localPlayer:WaitForChild("PlayerGui")
 
 local reachScreenGui = Instance.new("ScreenGui")
 reachScreenGui.ResetOnSpawn = false
