@@ -912,3 +912,104 @@ playerTab:AddSection({
         end
     end
 })
+--local Players = game:GetService("Players")
+--local RunService = game:GetService("RunService")
+local lp = Players.LocalPlayer
+local SetProperty = sethiddenproperty
+
+
+local desync1Enabled = false
+local function Desync1Start()
+    task.spawn(function()
+        while desync1Enabled do
+            task.wait()
+            if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                local loop = RunService.Heartbeat:Connect(function()
+                    SetProperty(lp.Character.HumanoidRootPart, "NetworkIsSleeping", true)
+                    task.wait()
+                    SetProperty(lp.Character.HumanoidRootPart, "NetworkIsSleeping", false)
+                    task.wait()
+                    SetProperty(lp.Character.HumanoidRootPart, "NetworkIsSleeping", true)
+                    task.wait()
+                    SetProperty(lp.Character.HumanoidRootPart, "NetworkIsSleeping", false)
+                    task.wait()
+                    SetProperty(lp.Character.HumanoidRootPart, "NetworkIsSleeping", false)
+                    task.wait()
+                    SetProperty(lp.Character.HumanoidRootPart, "NetworkIsSleeping", false)
+                    task.wait()
+                    SetProperty(lp.Character.HumanoidRootPart, "NetworkIsSleeping", true)
+                    task.wait()
+                    SetProperty(lp.Character.HumanoidRootPart, "NetworkIsSleeping", true)
+                    task.wait()
+                end)
+                task.wait()
+                if loop then
+                    loop:Disconnect()
+                end
+            end
+        end
+    end)
+end
+
+
+local desync2Enabled = false
+local RandomInstance = Random.new()
+local Targets = {}
+
+local function FindTargetParts()
+    local parts = {}
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part:IsA("BasePart") then
+            table.insert(parts, part)
+        end
+    end
+    return parts
+end
+
+Targets = FindTargetParts()
+local WaitTime = 1 / 240
+
+local function Desync2Start()
+    task.spawn(function()
+        while desync2Enabled do
+            if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = lp.Character.HumanoidRootPart
+
+                SetProperty(hrp, "PhysicsRepRootPart", hrp)
+                task.wait(WaitTime)
+
+                if #Targets > 0 then
+                    SetProperty(
+                        hrp,
+                        "PhysicsRepRootPart",
+                        Targets[RandomInstance:NextInteger(1, #Targets)]
+                    )
+                end
+            end
+            task.wait(WaitTime)
+        end
+    end)
+end
+
+
+playerTab:AddToggle({
+    Name = "Desync (Network Sleeping)",
+    Default = false,
+    Callback = function(Value)
+        desync1Enabled = Value
+        if desync1Enabled then
+            pcall(Desync1Start)
+        end
+    end    
+})
+
+playerTab:AddToggle({
+    Name = "Desync 2 (Random Part)",
+    Default = false,
+    Callback = function(Value)
+        desync2Enabled = Value
+        if desync2Enabled then
+            pcall(Desync2Start)
+        end
+    end    
+})
