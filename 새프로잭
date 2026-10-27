@@ -937,14 +937,14 @@ playerTab:AddSlider({
 playerTab:AddSection({
     Name = "supporter"
 })
-local SpamFakeposState = { Enabled = false, HeartbeatConn = nil, LoopThread = nil }
+--local SpamFakeposState = { Enabled = false, HeartbeatConn = nil, LoopThread = nil }
 
 
  playerTab:AddToggle({
     Text = "Fake Force",
     Default = false,
     Callback = function(Value)
-        SpamFakeposState.Enabled = Value
+        --SpamFakeposState.Enabled = Value
         if Value then
             if SpamFakeposState.LoopThread then task.cancel(SpamFakeposState.LoopThread) end
             SpamFakeposState.LoopThread = task.spawn(function()
@@ -989,7 +989,7 @@ local SpamFakeposState = { Enabled = false, HeartbeatConn = nil, LoopThread = ni
         end
     end
 })
---local Players = game:GetService("Players")
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local lp = Players.LocalPlayer
 local SetProperty = sethiddenproperty
