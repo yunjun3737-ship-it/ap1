@@ -430,6 +430,8 @@ local Window = OrionLib:MakeWindow({
 })
 
 local playerTab = Window:MakeTab({Name = "Player", Icon = "rbxassetid://6034281935", PremiumOnly = false, Description = "Customize your character's speed, jump power, and core physics."})    
+local grabTab = Window:MakeTab({Name = "Combat", Icon = "rbxassetid://6026568198", PremiumOnly = false, Description = "Catch and dominate your opponents using a wide variety of advanced grabs."})               
+local antiTab = Window:MakeTab({Name = "Invincibility", Icon = "rbxassetid://6034831332", PremiumOnly = false, Description = "Ultimate defense systems: Anti-Grab, Anti-Kick, and Anti-Explosion shields."})               
 
 
 playerTab:AddSection({
@@ -1243,3 +1245,166 @@ playerTab:AddButton({
     	end)
 	end
 })
+
+
+furtherExtend = false
+extendAmount = 3
+local currentMagnitude = 0
+
+local reachScreenGui = Instance.new("ScreenGui")
+reachScreenGui.ResetOnSpawn = false
+
+if userInputService.TouchEnabled then
+    reachScreenGui.Parent = playerGui
+end
+
+local function makeImageButton(yPosition, imageId)
+    local imgButton = Instance.new("ImageButton")
+    imgButton.Size = UDim2.new(0, 45, 0, 45)
+    imgButton.Position = UDim2.new(1, -70, 1, yPosition)
+    imgButton.Image = "rbxassetid://97166444"
+    imgButton.ImageTransparency = 0.2
+    imgButton.BackgroundTransparency = 1
+    imgButton.ImageColor3 = Color3.fromRGB(142, 142, 142)
+    imgButton.Visible = false
+    imgButton.Parent = reachScreenGui
+
+    local imageLabel = Instance.new("ImageLabel")
+    imageLabel.Size = UDim2.new(1, 0, 1, 0)
+    imageLabel.Image = imageId
+    imageLabel.BackgroundTransparency = 1
+    imageLabel.Parent = imgButton
+    return imgButton
+end
+
+local extendUpBtn = makeImageButton(-259, "rbxassetid://9603831913")
+local extendDownBtn = makeImageButton(-211, "rbxassetid://9603826756")
+
+local function toggleExtendButtons(isVisible)
+    extendUpBtn.Visible = isVisible
+    extendUpBtn.Active = isVisible
+    extendDownBtn.Visible = isVisible
+    extendDownBtn.Active = isVisible
+end
+
+local function decreaseExtendAmount()
+    if furtherExtend then
+        currentMagnitude = currentMagnitude - extendAmount
+        if currentMagnitude < 3 then currentMagnitude = 3 end
+    end
+end
+
+local function increaseExtendAmount()
+    if furtherExtend then
+        currentMagnitude = currentMagnitude + extendAmount
+        if currentMagnitude < 3 then currentMagnitude = 3 end
+    end
+end
+
+workspaceService.ChildAdded:Connect(function(child)
+    local isNotGrabModel = child.Name ~= "GrabParts" or not child:IsA("Model")
+    local camInstance, bodyPosition, updateLoopConnection
+
+    if isNotGrabModel then
+        return
+    elseif not furtherExtend then
+        return
+    else
+        camInstance = workspaceService.CurrentCamera
+        local grabPart = child:WaitForChild("GrabPart")
+        child:WaitForChild("DragPart").AlignPosition.Enabled = false
+
+        bodyPosition = Instance.new("BodyPosition")
+        bodyPosition.MaxForce = Vector3.new(275000, 275000, 275000)
+        bodyPosition.P = 20000
+        bodyPosition.D = 950
+        bodyPosition.Parent = grabPart
+
+        task.wait()
+
+        if currentMagnitude < 3 then
+            currentMagnitude = (grabPart.Position - camInstance.CFrame.Position).Magnitude
+        end
+
+        updateLoopConnection = runService.Heartbeat:Connect(function()
+            if child.Parent then
+                bodyPosition.Position = camInstance.CFrame.Position + camInstance.CFrame.LookVector * currentMagnitude
+            else
+                updateLoopConnection:Disconnect()
+                bodyPosition:Destroy()
+                currentMagnitude = 0
+            end
+        end)
+        toggleExtendButtons(true)
+    end
+end)
+
+workspaceService.ChildRemoved:Connect(function(child)
+    if child.Name == "GrabParts" then
+        toggleExtendButtons(false)
+    end
+end)
+
+local isHoldingButton = false
+
+local function loopExtendUpdate(actionFunc)
+    while isHoldingButton do
+        actionFunc()
+        task.wait(0.1)
+    end
+end
+
+extendUpBtn.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if userInputService.TouchEnabled and input.UserInputType == Enum.UserInputType.Touch then
+        isHoldingButton = true
+        loopExtendUpdate(increaseExtendAmount)
+    end
+end)
+
+extendUpBtn.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
+        isHoldingButton = false
+    end
+end)
+
+extendDownBtn.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if userInputService.TouchEnabled and input.UserInputType == Enum.UserInputType.Touch then
+        isHoldingButton = true
+        loopExtendUpdate(decreaseExtendAmount)
+    end
+end)
+
+extendDownBtn.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
+        isHoldingButton = false
+    end
+end)
+
+userInputService.InputChanged:Connect(function(input)
+    if input.UserInputType ~= Enum.UserInputType.MouseWheel then return end
+    if currentMagnitude < 11 then currentMagnitude = 11 end
+    if input.Position.Z < 0 then
+        currentMagnitude = currentMagnitude - extendAmount
+    else
+        currentMagnitude = currentMagnitude + extendAmount
+    end
+end)
+
+grabTab:AddSection({ Name = "Infinite line " })
+
+grabTab:AddToggle({
+    Name = "infinite line ",
+    Default = false,
+    Callback = function(value)
+        furtherExtend = value
+        toggleExtendButtons(value)
+    end
+})
+
+grabTab:AddSlider({
+    Name = "infinite line speed ", Min = 1, Max = 25, Default = 3, Increment = 1, ValueName = "Studs",
+    Callback = function(value) extendAmount = value end
+})
+ 
