@@ -1107,9 +1107,7 @@ playerTab:AddToggle({
 		else
 		
 			end
-		end
-	end
-})
+		end})
 
 playerTab:AddSlider({
 	Name = "Spin speed",
