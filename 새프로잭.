@@ -862,6 +862,8 @@ playerTab:AddSlider({
 playerTab:AddSection({
     Name = "supporter"
 })
+local SpamFakeposState = { Enabled = false, HeartbeatConn = nil, LoopThread = nil }
+
 
  playerTab:AddToggle({
     Text = "Fake Force",
