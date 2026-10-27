@@ -937,11 +937,11 @@ playerTab:AddSlider({
 playerTab:AddSection({
     Name = "supporter"
 })
---local SpamFakeposState = { Enabled = false, HeartbeatConn = nil, LoopThread = nil }
+local SpamFakeposState = { Enabled = false, HeartbeatConn = nil, LoopThread = nil }
 
 
  playerTab:AddToggle({
-    Text = "Fake Force",
+    Name = "Fake Force",
     Default = false,
     Callback = function(Value)
         --SpamFakeposState.Enabled = Value
