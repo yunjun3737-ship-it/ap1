@@ -1622,7 +1622,6 @@ end)
 					}), "Text"),
 					AddThemeObject(MakeElement("Stroke"), "Stroke")
 				}), "Second")
-
 				local LabelFunction = {}
 				function LabelFunction:Set(ToChange)
 					LabelFrame.Content.Text = ToChange
@@ -3192,6 +3191,82 @@ end)
 
 		local ElementFunction = {}
 
+		function ElementFunction:AddLSection(SectionConfig)
+			SectionConfig.Name = SectionConfig.Name or "Section"
+			local SectionFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(20, 20, 20), 0, 0), {
+				Size = UDim2.new(1, 0, 0, 26),
+				Parent = LeftColumn,
+				BackgroundTransparency = 0.5
+			}), {
+				AddThemeObject(MakeElement("Stroke"), "Stroke"),
+				AddThemeObject(SetProps(MakeElement("Label", SectionConfig.Name, 13), {
+					Size = UDim2.new(1, -12, 0, 24),
+					Position = UDim2.new(0, 12, 0, 0),
+					Font = Enum.Font.Code
+				}), "Text"),
+				SetChildren(SetProps(MakeElement("TFrame"), {
+					AnchorPoint = Vector2.new(0, 0),
+					Size = UDim2.new(1, -16, 1, -34),
+					Position = UDim2.new(0, 8, 0, 26),
+					Name = "Holder"
+				}), {
+					MakeElement("List", 0, 6)
+				}),
+			}), "Second")
+
+			AddConnection(SectionFrame.Holder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+				SectionFrame.Size = UDim2.new(1, 0, 0, SectionFrame.Holder.UIListLayout.AbsoluteContentSize.Y + 34)
+				SectionFrame.Holder.Size = UDim2.new(1, 0, 0, SectionFrame.Holder.UIListLayout.AbsoluteContentSize.Y)
+			end)
+
+			local SectionFunction = {}
+			for i, v in next, GetElements(SectionFrame.Holder) do
+				SectionFunction[i] = v 
+			end
+			Sections[TabConfig.Name] = Sections[TabConfig.Name] or {}
+			Sections[TabConfig.Name][SectionConfig.Name] = SectionFrame
+			SectionFrame.Name = SectionConfig.Name
+			return SectionFunction
+		end	
+
+		function ElementFunction:AddRSection(SectionConfig)
+			SectionConfig.Name = SectionConfig.Name or "Section"
+			local SectionFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(20, 20, 20), 0, 0), {
+				Size = UDim2.new(1, 0, 0, 26),
+				Parent = RightColumn,
+				BackgroundTransparency = 0.5
+			}), {
+				AddThemeObject(MakeElement("Stroke"), "Stroke"),
+				AddThemeObject(SetProps(MakeElement("Label", SectionConfig.Name, 13), {
+					Size = UDim2.new(1, -12, 0, 24),
+					Position = UDim2.new(0, 12, 0, 0),
+					Font = Enum.Font.Code
+				}), "Text"),
+				SetChildren(SetProps(MakeElement("TFrame"), {
+					AnchorPoint = Vector2.new(0, 0),
+					Size = UDim2.new(1, -16, 1, -34),
+					Position = UDim2.new(0, 8, 0, 26),
+					Name = "Holder"
+				}), {
+					MakeElement("List", 0, 6)
+				}),
+			}), "Second")
+
+			AddConnection(SectionFrame.Holder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+				SectionFrame.Size = UDim2.new(1, 0, 0, SectionFrame.Holder.UIListLayout.AbsoluteContentSize.Y + 34)
+				SectionFrame.Holder.Size = UDim2.new(1, 0, 0, SectionFrame.Holder.UIListLayout.AbsoluteContentSize.Y)
+			end)
+
+			local SectionFunction = {}
+			for i, v in next, GetElements(SectionFrame.Holder) do
+				SectionFunction[i] = v 
+			end
+			Sections[TabConfig.Name] = Sections[TabConfig.Name] or {}
+			Sections[TabConfig.Name][SectionConfig.Name] = SectionFrame
+			SectionFrame.Name = SectionConfig.Name
+			return SectionFunction
+		end	
+
 		function ElementFunction:AddSection(SectionConfig)
 			SectionConfig.Name = SectionConfig.Name or "Section"
 			SectionConfig.Side = SectionConfig.Side or "Left"
@@ -3285,9 +3360,8 @@ end)
             PremiumOnly = false
         })
 
-		local ui_settings = config_tab:AddSection({
-			Name = "UI Settings",
-			Side = "Left"
+		local ui_settings = config_tab:AddLSection({
+			Name = "UI Settings"
 		})
 
 		ui_settings:AddDropdown({
@@ -3343,19 +3417,16 @@ end)
 			end
 		})
 
-		local select_theme = config_tab:AddSection({
-			Name = "Theme Settings",
-			Side = "Right"
+		local select_theme = config_tab:AddRSection({
+			Name = "Theme Settings"
 		})
 
-		local windowstroke = config_tab:AddSection({
-			Name = "Border",
-			Side = "Right"
+		local windowstroke = config_tab:AddRSection({
+			Name = "Border"
 		})
 
-		local notification_settings = config_tab:AddSection({
-			Name = "Notification",
-			Side = "Left"
+		local notification_settings = config_tab:AddLSection({
+			Name = "Notification"
 		})
 
 		notification_settings:AddToggle({
@@ -3426,6 +3497,11 @@ end)
     end
 	return TabFunction
 end
+
+function OrionLib:Destroy()
+	Orion:Destroy()
+end
+
 local Window = OrionLib:MakeWindow({Name = "test", HidePremium = true, SaveConfig = false, IntroEnabled = false, FreeMouse = true})
 
 local Main_Tab = Window:MakeTab({
@@ -3435,21 +3511,20 @@ local Main_Tab = Window:MakeTab({
 	Description = "Welcome to Combat Tab"
 })
 
--- local 없이 전역으로 할당하여 사용 + AddLSection 적용
-LeftSection = Main_Tab:AddLSection({
+Main_Tab:AddLSection({
 	Name = "Left Section (Original + Tests)"
 })
 
-LeftSection:AddLabel("Left Section Label Test")
+Main_Tab:AddLabel("Left Section Label Test")
 
-LeftSection:AddButton({
+Main_Tab:AddButton({
 	Name = "Left Section Button Test",
 	Callback = function()
 		print("Left Button Clicked!")
 	end
 })
 
-LeftSection:AddDropdown({
+Main_Tab:AddDropdown({
     Name = "Weapons",
     Options = {
         {Name = "Witch House", Image = "rbxassetid://9909725942"},
@@ -3470,7 +3545,7 @@ LeftSection:AddDropdown({
     end
 })
 
-LeftSection:AddPlayersDropdown({
+Main_Tab:AddPlayersDropdown({
 	Name = "Select Player",
 	Default = "",
 	MultipleSelection = true,
@@ -3480,7 +3555,7 @@ LeftSection:AddPlayersDropdown({
 	end    
 })
 
-LeftSection:AddToggle({
+Main_Tab:AddToggle({
 	Name = "Blackhole (Kick)",
 	Default = true,
 	Callback = function(Value)
@@ -3490,21 +3565,20 @@ LeftSection:AddToggle({
 	Flag = "KickNotification_Toggle"      
 })
 
--- local 없이 전역으로 할당하여 사용 + AddRSection 적용
-RightSection = Main_Tab:AddRSection({
+Main_Tab:AddRSection({
 	Name = "Right Section (Elements Test)"
 })
 
-RightSection:AddLabel("Right Section Label Test")
+Main_Tab:AddLabel("Right Section Label Test")
 
-RightSection:AddButton({
+Main_Tab:AddButton({
 	Name = "Right Section Button Test",
 	Callback = function()
 		print("Right Button Clicked!")
 	end
 })
 
-RightSection:AddToggle({
+Main_Tab:AddToggle({
 	Name = "Right Toggle Switch Test",
 	Default = false,
 	Callback = function(Value)
@@ -3512,7 +3586,7 @@ RightSection:AddToggle({
 	end
 })
 
-RightSection:AddDropdown({
+Main_Tab:AddDropdown({
 	Name = "Right Dropdown Test",
 	Options = {"Option A", "Option B", "Option C"},
 	Default = "Option A",
@@ -3521,7 +3595,7 @@ RightSection:AddDropdown({
 	end
 })
 
-RightSection:AddSlider({
+Main_Tab:AddSlider({
 	Name = "Right Slider Test",
 	Min = 0,
 	Max = 100,
@@ -3533,9 +3607,5 @@ RightSection:AddSlider({
 })
 
 Window:AddConfigTab()
-
-function OrionLib:Destroy()
-	Orion:Destroy()
-end
 
 return OrionLib
