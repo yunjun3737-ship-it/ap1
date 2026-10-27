@@ -397,7 +397,7 @@ plr.CharacterAdded:Connect(onCharacterAdded)
                             end
                         end, closestPlayer, boolValue)
                     end
-                end
+                --end
             end
         end
     end)
