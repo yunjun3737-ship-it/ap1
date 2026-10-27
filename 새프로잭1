@@ -671,3 +671,507 @@ local function onCharacterAdded(char)
     end
 end
 LocalPlayer.CharacterAdded:Connect(onCharacterAdded)
+
+local OrionLib =  loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion."))()
+
+local Window = OrionLib:MakeWindow({
+    Name = "TY",
+    HidePremium = false,
+    SaveConfig = flase,
+    KeyToOpenWindow = "M",
+    ConfigFolder = "E",
+    IntroEnabled = flase,
+    IntroText = "4"
+})
+
+
+playerTab:AddLSection({
+    Name = "Player"
+})
+
+local plr = game.Players.LocalPlayer
+local run = game:GetService("RunService")
+
+local walkSpeedT = false
+local walkSpeedV = 80
+local activeLoop = nil
+local speedConn = nil
+
+local function updateWalkSpeedF()
+    local char = plr.Character
+    if not char then return end
+
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not hum or not root then return end
+
+    hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+    --hum:SetStateEnabled(Enum.HumanoidStateType.Tripping, false)
+
+    local speed = (type(walkSpeedV) == "number") and walkSpeedV or 80
+
+    if activeLoop then
+        activeLoop:Disconnect()
+        activeLoop = nil
+    end
+    if speedConn then
+        speedConn:Disconnect()
+        speedConn = nil
+    end
+
+    if walkSpeedT then
+        hum.WalkSpeed = 16
+
+        speedConn = hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+            if walkSpeedT and hum.WalkSpeed ~= 16 then
+                hum.WalkSpeed = 16
+            end
+        end)
+
+        activeLoop = run.Heartbeat:Connect(function()
+            if not char:IsDescendantOf(workspace) then
+                if activeLoop then activeLoop:Disconnect() end
+                return
+            end
+
+            if walkSpeedT then
+                local dir = hum.MoveDirection
+                if dir.Magnitude == 0 then
+                    root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
+                else
+                    root.AssemblyLinearVelocity = Vector3.new(dir.X * speed, root.AssemblyLinearVelocity.Y, dir.Z * speed)
+                end
+
+                for _, track in ipairs(hum:GetPlayingAnimationTracks()) do
+                    local name = track.Name:lower()
+                    local id = track.Animation and track.Animation.AnimationId:lower() or ""
+                    if name:find("walk") or name:find("run") or id:find("walk") or id:find("run") then
+                        track:AdjustSpeed(1)
+                    end
+                end
+            else
+                if activeLoop then activeLoop:Disconnect() end
+            end
+        end)
+    else
+        hum.WalkSpeed = 16
+        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+        --hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
+        --hum:SetStateEnabled(Enum.HumanoidStateType.Tripping, true)
+    end
+end
+
+playerTab:AddToggle({
+    Name = "Walk speed",
+    Default = false,
+    Flag = "u9r1dr68hv",
+    Callback = function(v)
+        walkSpeedT = v
+        updateWalkSpeedF()
+    end
+})
+
+playerTab:AddSlider({
+    Name = "Walk speed ",
+    Min = 16,
+    Max = 500,
+    Default = 80,
+    Flag = "furiqffuow",
+    Increment = 10,
+    ValueName = "Speed",
+    Callback = function(v)
+        walkSpeedV = v
+        if walkSpeedT then
+            updateWalkSpeedF()
+        end
+    end
+})
+
+plr.CharacterAdded:Connect(function(char)
+    char:WaitForChild("Humanoid")
+    char:WaitForChild("HumanoidRootPart")
+    task.wait(0.1)
+    updateWalkSpeedF()
+end)
+
+local plr = game.Players.LocalPlayer
+local jumpPowerT = false
+local jumpPowerV = 50
+
+local function updateJumpPowerF()
+    local function apply(char)
+        local hum = char:WaitForChild("Humanoid")
+
+        if jumpPowerT then
+            hum.UseJumpPower = true
+            hum.JumpPower = jumpPowerV
+            hum:GetPropertyChangedSignal("JumpPower"):Connect(function()
+                if jumpPowerT then
+                    hum.JumpPower = jumpPowerV
+                end
+            end)
+        else
+            hum.UseJumpPower = true
+            hum.JumpPower = 50
+        end
+    end
+
+    if plr.Character then
+        apply(plr.Character)
+    end
+
+    plr.CharacterAdded:Connect(apply)
+end
+playerTab:AddToggle({
+    Name = "Jump",
+    Default = false,
+    Flag = "udid8ow",
+    Callback = function(Value)
+        jumpPowerT = Value
+        updateJumpPowerF()
+    end    
+})
+
+playerTab:AddSlider({
+    Name = "Jump",
+    Min = 24,
+    Max = 500,
+    Default = 50,
+    Flag = "qodojici",
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Power",
+    Callback = function(Value)
+        jumpPowerV = Value
+        if jumpPowerT then
+            updateJumpPowerF()
+        end
+    end    
+})
+
+playerTab:AddRSection({
+    Name = "Other"
+})
+playerTab:AddToggle({
+    Name = "NoClip",
+    Default = false,
+    save = true,
+    Flag = "32999",
+    Callback = function(Value)
+        noClipT = Value
+        updateNoClipF()
+    end
+})
+--local isWaterWalking = false
+do
+local function setWaterWalk(state)
+    local workspaceMap = workspace:FindFirstChild("Map")
+    if workspaceMap then
+        local alwaysHere = workspaceMap:FindFirstChild("AlwaysHereTweenedObjects")
+        if alwaysHere then
+            local ocean = alwaysHere:FindFirstChild("Ocean")
+            if ocean then
+                local object = ocean:FindFirstChild("Object")
+                if object then
+                    local objectModel = object:FindFirstChild("ObjectModel")
+                    if objectModel then
+                        for _, child in pairs(objectModel:GetChildren()) do
+                            if child:IsA("BasePart") then
+                                child.CanCollide = state
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+playerTab:AddToggle({
+    Name = "Ocean Walk",
+    Default = false,
+    Flag = "wipspyhi",
+    Callback = function(Value)
+        setWaterWalk(Value)
+    end    
+})
+
+playerTab:AddToggle({
+    Name = "Infinite Jump",
+    Default = false,
+    save = true,
+    Flag = "sosowp0q",
+    Callback = function(v)
+        _G.InfiniteJump = v
+    end
+})
+
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if _G.InfiniteJump then
+        game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+do
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+
+local function getRoot(char)
+    if not char then return nil end
+    return char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+end
+
+
+local IsOnMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+
+
+local FLYING = false
+local QEfly = true
+local iyflyspeed = 1
+local vehicleflyspeed = 1
+local flyKeyDown, flyKeyUp
+local mfly1, mfly2
+
+local velocityHandlerName = "Orion_VelocityHandler"
+local gyroHandlerName = "Orion_GyroHandler"
+
+
+local function sFLY(vfly)
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if not humanoid then
+        repeat task.wait() until char:FindFirstChildOfClass("Humanoid")
+        humanoid = char:FindFirstChildOfClass("Humanoid")
+    end
+
+    if flyKeyDown or flyKeyUp then
+        flyKeyDown:Disconnect()
+        flyKeyUp:Disconnect()
+    end
+
+    local T = getRoot(char)
+    if not T then return end
+
+    local CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+    local lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+    local SPEED = 0
+
+    local function FLY()
+        FLYING = true
+        local BG = Instance.new('BodyGyro')
+        local BV = Instance.new('BodyVelocity')
+        BG.P = 9e4
+        BG.Parent = T
+        BV.Parent = T
+        BG.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        BG.CFrame = T.CFrame
+        BV.Velocity = Vector3.new(0, 0, 0)
+        BV.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        
+        task.spawn(function()
+            repeat task.wait()
+                local camera = workspace.CurrentCamera
+                if not vfly and humanoid then
+                    humanoid.PlatformStand = true
+                end
+
+                if CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 or CONTROL.Q + CONTROL.E ~= 0 then
+                    SPEED = 50
+                elseif not (CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 or CONTROL.Q + CONTROL.E ~= 0) and SPEED ~= 0 then
+                    SPEED = 0
+                end
+                
+                if (CONTROL.L + CONTROL.R) ~= 0 or (CONTROL.F + CONTROL.B) ~= 0 or (CONTROL.Q + CONTROL.E) ~= 0 then
+                    BV.Velocity = ((camera.CFrame.LookVector * (CONTROL.F + CONTROL.B)) + ((camera.CFrame * CFrame.new(CONTROL.L + CONTROL.R, (CONTROL.F + CONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).p) - camera.CFrame.p)) * SPEED
+                    lCONTROL = {F = CONTROL.F, B = CONTROL.B, L = CONTROL.L, R = CONTROL.R}
+                elseif (CONTROL.L + CONTROL.R) == 0 and (CONTROL.F + CONTROL.B) == 0 and (CONTROL.Q + CONTROL.E) == 0 and SPEED ~= 0 then
+                    BV.Velocity = ((camera.CFrame.LookVector * (lCONTROL.F + lCONTROL.B)) + ((camera.CFrame * CFrame.new(lCONTROL.L + lCONTROL.R, (lCONTROL.F + lCONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).p) - camera.CFrame.p)) * SPEED
+                else
+                    BV.Velocity = Vector3.new(0, 0, 0)
+                end
+                BG.CFrame = camera.CFrame
+            until not FLYING
+            
+            CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+            lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+            SPEED = 0
+            
+            if BG then BG:Destroy() end
+            if BV then BV:Destroy() end
+            if humanoid then humanoid.PlatformStand = false end
+        end)
+    end
+
+    flyKeyDown = UserInputService.InputBegan:Connect(function(input, processed)
+        if processed then return end
+        if input.KeyCode == Enum.KeyCode.W then
+            CONTROL.F = (vfly and vehicleflyspeed or iyflyspeed)
+        elseif input.KeyCode == Enum.KeyCode.S then
+            CONTROL.B = - (vfly and vehicleflyspeed or iyflyspeed)
+        elseif input.KeyCode == Enum.KeyCode.A then
+            CONTROL.L = - (vfly and vehicleflyspeed or iyflyspeed)
+        elseif input.KeyCode == Enum.KeyCode.D then
+            CONTROL.R = (vfly and vehicleflyspeed or iyflyspeed)
+        elseif input.KeyCode == Enum.KeyCode.E and QEfly then
+            CONTROL.Q = (vfly and vehicleflyspeed or iyflyspeed)*2
+        elseif input.KeyCode == Enum.KeyCode.Q and QEfly then
+            CONTROL.E = -(vfly and vehicleflyspeed or iyflyspeed)*2
+        end
+        pcall(function() workspace.CurrentCamera.CameraType = Enum.CameraType.Track end)
+    end)
+
+    flyKeyUp = UserInputService.InputEnded:Connect(function(input, processed)
+        if processed then return end
+        if input.KeyCode == Enum.KeyCode.W then CONTROL.F = 0
+        elseif input.KeyCode == Enum.KeyCode.S then CONTROL.B = 0
+        elseif input.KeyCode == Enum.KeyCode.A then CONTROL.L = 0
+        elseif input.KeyCode == Enum.KeyCode.D then CONTROL.R = 0
+        elseif input.KeyCode == Enum.KeyCode.E then CONTROL.Q = 0
+        elseif input.KeyCode == Enum.KeyCode.Q then CONTROL.E = 0
+        end
+    end)
+    FLY()
+end
+
+local function NOFLY()
+    FLYING = false
+    if flyKeyDown then flyKeyDown:Disconnect() end
+    if flyKeyUp then flyKeyUp:Disconnect() end
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
+        LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = false
+    end
+    pcall(function() workspace.CurrentCamera.CameraType = Enum.CameraType.Custom end)
+end
+
+
+function unmobilefly(speaker)
+    pcall(function()
+        FLYING = false
+        local root = getRoot(speaker.Character)
+        if root then
+            if root:FindFirstChild(velocityHandlerName) then root:FindFirstChild(velocityHandlerName):Destroy() end
+            if root:FindFirstChild(gyroHandlerName) then root:FindFirstChild(gyroHandlerName):Destroy() end
+        end
+        if speaker.Character and speaker.Character:FindFirstChildWhichIsA("Humanoid") then
+            speaker.Character:FindFirstChildWhichIsA("Humanoid").PlatformStand = false
+        end
+        if mfly1 then mfly1:Disconnect() end
+        if mfly2 then mfly2:Disconnect() end
+    end)
+end
+
+local function mobilefly(speaker, vfly)
+    unmobilefly(speaker)
+    FLYING = true
+
+    local root = getRoot(speaker.Character)
+    if not root then return end
+
+    local camera = workspace.CurrentCamera
+    local v3none = Vector3.new()
+    local v3zero = Vector3.new(0, 0, 0)
+    local v3inf = Vector3.new(9e9, 9e9, 9e9)
+
+    
+    local controlModule = require(speaker.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
+    
+    local bv = Instance.new("BodyVelocity")
+    bv.Name = velocityHandlerName
+    bv.Parent = root
+    bv.MaxForce = v3zero
+    bv.Velocity = v3zero
+
+    local bg = Instance.new("BodyGyro")
+    bg.Name = gyroHandlerName
+    bg.Parent = root
+    bg.MaxTorque = v3inf
+    bg.P = 1000
+    bg.D = 50
+
+    mfly1 = speaker.CharacterAdded:Connect(function(newChar)
+        local newRoot = getRoot(newChar)
+        if not newRoot then return end
+        
+        local nbv = Instance.new("BodyVelocity")
+        nbv.Name = velocityHandlerName
+        nbv.Parent = newRoot
+        nbv.MaxForce = v3zero
+        nbv.Velocity = v3zero
+
+        local nbg = Instance.new("BodyGyro")
+        nbg.Name = gyroHandlerName
+        nbg.Parent = newRoot
+        nbg.MaxTorque = v3inf
+        nbg.P = 1000
+        nbg.D = 50
+    end)
+
+    mfly2 = RunService.RenderStepped:Connect(function()
+        root = getRoot(speaker.Character)
+        camera = workspace.CurrentCamera
+        
+        if speaker.Character and speaker.Character:FindFirstChildWhichIsA("Humanoid") and root and root:FindFirstChild(velocityHandlerName) and root:FindFirstChild(gyroHandlerName) then
+            local humanoid = speaker.Character:FindFirstChildWhichIsA("Humanoid")
+            local VelocityHandler = root:FindFirstChild(velocityHandlerName)
+            local GyroHandler = root:FindFirstChild(gyroHandlerName)
+
+            VelocityHandler.MaxForce = v3inf
+            GyroHandler.MaxTorque = v3inf
+            if not vfly then humanoid.PlatformStand = true end
+            GyroHandler.CFrame = camera.CoordinateFrame
+            VelocityHandler.Velocity = v3none
+
+            local direction = controlModule:GetMoveVector()
+            
+            if direction.X > 0 or direction.X < 0 then
+                VelocityHandler.Velocity = VelocityHandler.Velocity + camera.CFrame.RightVector * (direction.X * ((vfly and vehicleflyspeed or iyflyspeed) * 50))
+            end
+            if direction.Z > 0 or direction.Z < 0 then
+                VelocityHandler.Velocity = VelocityHandler.Velocity - camera.CFrame.LookVector * (direction.Z * ((vfly and vehicleflyspeed or iyflyspeed) * 50))
+            end
+        end
+    end)
+end
+
+
+
+playerTab:AddToggle({
+    Name = "Fly (fix)",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            
+            if not IsOnMobile then
+                NOFLY()
+                task.wait()
+                sFLY()
+            else
+                mobilefly(LocalPlayer)
+            end
+        else
+            
+            if not IsOnMobile then
+                NOFLY()
+            else
+                unmobilefly(LocalPlayer)
+            end
+        end
+    end    
+})
+
+playerTab:AddSlider({
+    Name = "Fly ",
+    Min = 1,
+    Max = 100, 
+    Default = 1,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1, 
+    ValueName = "Speed",
+    Callback = function(Value)
+        iyflyspeed = Value
+        vehicleflyspeed = Value
+    end    
+})
