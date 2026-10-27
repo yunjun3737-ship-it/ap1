@@ -1476,6 +1476,139 @@ grabTab:AddSlider({
     end
 })
 
+function UpdateCurrentBlobman()
+	char = plr.Character
+	hrp = char and char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+
+	for _, blobs in workspace:GetDescendants() do
+		if blobs.Name ~= "CreatureBlobman" then continue end
+		 seat = blobs:FindFirstChild("VehicleSeat")
+		if not seat then continue end
+		 weld = seat:FindFirstChild("SeatWeld")
+		if not weld then continue end
+		if weld.Part1 == hrp then
+			currentBlobS = blobs
+		end
+	end
+end
+
+function BlobRelease(blob, target, side) 
+     args = {
+        [1] = blob:FindFirstChild(side.."Detector"):FindFirstChild(side.."Weld"),
+        [2] = target,
+        }
+        blob.BlobmanSeatAndOwnerScript.CreatureRelease:FireServer(unpack(args))
+end
+
+function BlobGrab(blob, target, side)
+     args = {
+        [1] = blob:FindFirstChild(side.."Detector"),
+        [2] = target,
+        [3] = blob:FindFirstChild(side.."Detector"):FindFirstChild(side.."Weld"),
+        }
+        blob.BlobmanSeatAndOwnerScript.CreatureGrab:FireServer(unpack(args))
+end
+
+function BlobDrop(blob, target, side)
+     args = {
+        [1] = blob:FindFirstChild(side.."Detector"):FindFirstChild(side.."Weld"),
+        [2] = target,
+        }
+        blob.BlobmanSeatAndOwnerScript.CreatureDrop:FireServer(unpack(args))
+end
+
+function BlobMassless(blob, target, side)
+     args = {
+        [1] = blob:FindFirstChild(side.."Detector"),
+        [2] = target,
+        [3] = blob:FindFirstChild(side.."Detector"):FindFirstChild(side.."Weld"),
+        }
+
+		 args2 = {
+        [1] = blob:FindFirstChild(side.."Detector"),
+        [2] = hrp,
+        [3] = blob:FindFirstChild(side.."Detector"):FindFirstChild(side.."Weld"),
+        }
+
+     args3 = {
+        [1] = blob:FindFirstChild(side.."Detector"):FindFirstChild(side.."Weld"),
+        [2] = target,
+        }
+
+        blob.BlobmanSeatAndOwnerScript.CreatureGrab:FireServer(unpack(args2))
+		blob.BlobmanSeatAndOwnerScript.CreatureGrab:FireServer(unpack(args))
+		blob.BlobmanSeatAndOwnerScript.CreatureDrop:FireServer(unpack(args3))
+end
+
+function flingF()
+    workspace.ChildAdded:Connect(function(model)
+        if model.Name == "GrabParts" then
+             part_to_impulse = model["GrabPart"]["WeldConstraint"].Part1
+            if part_to_impulse then
+                model:GetPropertyChangedSignal("Parent"):Connect(function()
+                    if not model.Parent and flingT then
+                        local connection
+                        connection = uis.InputBegan:Connect(function(inp, char)
+                            if inp.UserInputType == Enum.UserInputType.MouseButton2 then
+                                 velocityObj = Instance.new("BodyVelocity")
+                                velocityObj.Parent = part_to_impulse
+                                velocityObj.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                                velocityObj.Velocity = cam.CFrame.lookVector * strengthV
+                                
+                                wait(0.1)
+                                velocityObj.Parent = workspace
+                                velocityObj:Destroy()
+
+                                connection:Disconnect()
+                            end
+                        end)
+                    end
+                end)
+            end
+        end
+    end)
+end
+function BlobMasslessR()
+    UpdateCurrentBlobman()
+    for i, e in ipairs(playersInLoop2V) do
+         player = game.Players:FindFirstChild(e)
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		BlobMassless(currentBlobS, player.Character.HumanoidRootPart, "Right")
+        end
+    end
+end
+
+function BlobReleaseR()
+    UpdateCurrentBlobman()
+    for i, e in ipairs(playersInLoop2V) do
+         player = game.Players:FindFirstChild(e)
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		BlobGrab(currentBlobS, player.Character.HumanoidRootPart, "Right")
+		BlobRelease(currentBlobS, player.Character.HumanoidRootPart, "Right")
+        end
+    end
+end
+
+function BlobGrabR()
+    UpdateCurrentBlobman()
+    for i, e in ipairs(playersInLoop2V) do
+         player = game.Players:FindFirstChild(e)
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+			BlobGrab(currentBlobS, player.Character.HumanoidRootPart, "Right")
+        end
+    end
+end
+
+function BlobDropR()
+    UpdateCurrentBlobman()
+    for i, e in ipairs(playersInLoop2V) do
+         player = game.Players:FindFirstChild(e)
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+			BlobDrop(currentBlobS, player.Character.HumanoidRootPart, "Right")
+        end
+    end
+end
 
 function NoClipGrabF()
     local trackedTargets = {}
@@ -1799,7 +1932,267 @@ function AntiStruggleGrabF()
         end
     end)
 end
+grabTab:AddSection({
+	Name = "grab"
+})
+grabTab:AddToggle({
+    Name = "Super Throw   <font color='rgb(255,0,0)'>[Desktop]</font>",
+    
+    save = true,
+    Flag = "9999cwbe9999",
+    Callback = function(Value)
+        flingT = Value
+        flingF()
+    end
+})
 
+grabTab:AddTextbox({
+    Name = "Super Throw ",
+    
+    PlaceholderText = "Value",
+    save = true,
+    Flag = "20dwcv000",
+    Callback = function(Value)
+        strengthV = Value
+    end
+})
+local nageru = 800
+--local lastThrowTime = 0
+
+grabTab:AddToggle({
+    Name = "Super Throw V2   <font color='rgb(0,255,0)'>[Mobile]</font>",
+    
+    save = true,
+    Flag = "Super2hhsThrow",
+    Callback = function(enabled)
+        if enabled then
+            if strengthConnection then strengthConnection:Disconnect() end
+
+            strengthConnection = workspace.ChildAdded:Connect(function(model)
+                if model.Name == "GrabParts" then
+                    local grabPart = model:FindFirstChild("GrabPart")
+                    if grabPart and grabPart:FindFirstChild("WeldConstraint") then
+                        local targetPart = grabPart.WeldConstraint.Part1
+                        if targetPart then
+                            
+                            local bv = Instance.new("BodyVelocity")
+                            bv.Name = "SuperThrowBV"
+                            bv.MaxForce = Vector3.new(0, 0, 0)
+                            bv.Velocity = Vector3.new(0, 0, 0)
+                            bv.Parent = targetPart
+
+                            local throwConn
+                            throwConn = model:GetPropertyChangedSignal("Parent"):Connect(function()
+                                if not model.Parent then
+                                    local currentTime = tick()
+                                    
+                                    if currentTime - lastThrowTime < 1.4 then
+                                        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                                        bv.Velocity = workspace.CurrentCamera.CFrame.LookVector * nageru
+                                        game:GetService("Debris"):AddItem(bv, 2)
+                                    else
+                                        bv:Destroy()
+                                    end
+                                    
+                                    if throwConn then throwConn:Disconnect() end
+                                end
+                            end)
+                        end
+                    end
+                end
+            end)
+        else
+            if strengthConnection then
+                strengthConnection:Disconnect()
+                strengthConnection = nil
+            end
+        end
+    end
+})
+
+grabTab:AddTextbox({
+    Name = "Super Throw V2",
+    PlaceholderText = "Number input (default: 800)",
+    
+    save = true,
+    Flag = "ieiehdwue",
+    Callback = function(value)
+        local num = tonumber(value)
+        if num and num >= 0 then
+            nageru = num
+        end
+    end
+})
+
+
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.Touch then
+        lastThrowTime = tick()
+    end
+end)
+
+grabTab:AddToggle({
+    Name = "loop grab <font color='rgb(255,0,0)'>[Ownership]</font>",
+    
+    save = true,
+    Flag = "t1nosody1",
+    Callback = function(Value)
+        AntiStruggleGrabT = Value
+        if Value then
+            AntiStruggleGrabF()
+        end
+    end
+})
+
+grabTab:AddToggle({
+    Name = "Ragdoll grab  <font color='rgb(25,60,10)'>[Toy]</font>",
+    
+    save = true,
+    Flag = "1ppdddqup",
+    Callback = function(Value)
+        RagdollGrabT = Value
+        if Value then
+            RagdollGrabF()
+        end
+    end
+})
+
+grabTab:AddToggle({ 
+    Name = "massless grab", 
+    
+    save = true,
+    Flag = "1qqbdjty",
+    Callback = function(Value)
+        MasslessGrabT = Value
+        if Value then
+            MasslessGrabF()
+        end
+    end
+})
+
+grabTab:AddToggle({ 
+    Name = "Noclip grab", 
+    
+    save = true,
+    Flag = "1yriwfvti",
+    Callback = function(Value)
+        NoClipGrabT = Value
+        if Value then
+            NoClipGrabF()
+        end
+    end
+})
+grabTab:AddToggle({
+    Name = "Void grab",
+    Default = false,
+    Save = true,
+    Flag = "VoidGrabTqhjso1ggle",
+    Callback = function(Value)
+        getgenv().LoopGrabActive = Value
+        
+        if Value then
+            local Players = game:GetService("Players")
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local plr = Players.LocalPlayer
+
+            task.spawn(function()
+                while getgenv().LoopGrabActive do
+                    local grabParts = workspace:FindFirstChild("GrabParts")
+                    if not grabParts then
+                        task.wait()
+                        continue
+                    end
+
+                    local gp = grabParts:FindFirstChild("GrabPart")
+                    local weld = gp and gp:FindFirstChildOfClass("WeldConstraint")
+                    local part1 = weld and weld.Part1
+
+                    if part1 then
+                        local ownerPlayer = nil
+                        for _, pl in ipairs(Players:GetPlayers()) do
+                            if pl.Character and part1:IsDescendantOf(pl.Character) then
+                                ownerPlayer = pl
+                                break
+                            end
+                        end
+
+                        while getgenv().LoopGrabActive and workspace:FindFirstChild("GrabParts") do
+                            if not part1.Anchored then
+                                if ownerPlayer then
+                                    local tgtTorso = ownerPlayer.Character and ownerPlayer.Character:FindFirstChild("HumanoidRootPart") 
+                                    
+                                    if tgtTorso then
+                                        pcall(function()
+                                            tgtTorso.CFrame = CFrame.new(tgtTorso.Position.X, -5999, tgtTorso.Position.Z)
+                                        end)
+                                    end
+                                else
+                                    if part1.Parent then
+                                        pcall(function()
+                                            part1.CFrame = CFrame.new(part1.Position.X, -5999, part1.Position.Z)
+                                        end)
+                                    end
+                                end
+                            end
+                            task.wait()
+                        end
+                    end
+                    task.wait()
+                end
+            end)
+        end
+    end
+})
+
+grabTab:AddToggle({ 
+    Name = "Kill Grab  <font color='rgb(255,0,0)'>[Ownership]</font>   <font color='rgb(0,0,255)'>[grab]</font>", 
+    
+    save = true,
+    Flag = "1mbmwjdiebmb",
+    Callback = function(Value)
+        KillGrabT = Value
+        KillGrabF()
+    end
+})
+grabTab:AddToggle({ 
+    Name = "Void ", 
+    Default = false,
+    Flag = "g028tpigyw",
+    Callback = function(Value)
+        TpKLG = Value
+    end
+})
+grabTab:AddToggle({
+    Name = "Invisible Line grab",
+    Default = false,
+    Flag = "ehqidjsjdio",
+    Callback = function(invisibleLineEnabled)
+        _G.InvisibleLine = invisibleLineEnabled
+    end,
+    Save = true,
+    Flag = "invisLine_toggle"
+})
+
+grabTab:AddToggle({
+    Name = "Kick grab",
+    
+    save = true,
+    Flag = "99wvd999j",
+    Callback = function(Value)
+        KickGrabT = Value
+        if Value then KickGrabF() end
+    end
+})
+
+grabTab:AddToggle({
+    Name = " Anchor",
+    Default = false,
+    Flag = "c297r2oufcp2",
+    Callback = function(Value)
+        AnhKick = Value
+    end
+})
 grabTab:AddSection({
 	Name = "line type"
 })
@@ -2415,3 +2808,4 @@ grabTab:AddToggle({
    end,
 
 })
+
