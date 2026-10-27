@@ -859,3 +859,56 @@ playerTab:AddSlider({
         vehicleflyspeed = Value
     end    
 })
+playerTab:AddSection({
+    Name = "supporter"
+})
+
+ playerTab:AddToggle({
+    Text = "Fake Force",
+    Default = false,
+    Callback = function(Value)
+        SpamFakeposState.Enabled = Value
+        if Value then
+            if SpamFakeposState.LoopThread then task.cancel(SpamFakeposState.LoopThread) end
+            SpamFakeposState.LoopThread = task.spawn(function()
+                while SpamFakeposState.Enabled do
+                    if not SpamFakeposState.HeartbeatConn then
+                        SpamFakeposState.HeartbeatConn = rs2.Heartbeat:Connect(function()
+                            local root = (plr and plr.Character and (plr.Character:FindFirstChild("PhysicsRootPart") or plr.Character:FindFirstChild("HumanoidRootPart"))) or (pp and pp.hrp)
+                            if root then
+                                pcall(sethiddenproperty, root, "NetworkIsSleeping", false)
+                                pcall(sethiddenproperty, root, "PhysicsRepRootPart", root)
+                            end
+                        end)
+                    end
+                    task.wait(0.1)
+                    if not SpamFakeposState.Enabled then break end
+                    if SpamFakeposState.HeartbeatConn then
+                        SpamFakeposState.HeartbeatConn:Disconnect()
+                        SpamFakeposState.HeartbeatConn = nil
+                    end
+                    local root = (plr and plr.Character and (plr.Character:FindFirstChild("PhysicsRootPart") or plr.Character:FindFirstChild("HumanoidRootPart"))) or (pp and pp.hrp)
+                    if root then
+                        pcall(sethiddenproperty, root, "NetworkIsSleeping", false)
+                        pcall(sethiddenproperty, root, "PhysicsRepRootPart", root)
+                    end
+                    task.wait(0.1)
+                end
+            end)
+        else
+            if SpamFakeposState.HeartbeatConn then
+                SpamFakeposState.HeartbeatConn:Disconnect()
+                SpamFakeposState.HeartbeatConn = nil
+            end
+            local root = (plr and plr.Character and (plr.Character:FindFirstChild("PhysicsRootPart") or plr.Character:FindFirstChild("HumanoidRootPart"))) or (pp and pp.hrp)
+            if root then
+                pcall(sethiddenproperty, root, "NetworkIsSleeping", false)
+                pcall(sethiddenproperty, root, "PhysicsRepRootPart", root)
+            end
+            if SpamFakeposState.LoopThread then
+                task.cancel(SpamFakeposState.LoopThread)
+                SpamFakeposState.LoopThread = nil
+            end
+        end
+    end
+})
