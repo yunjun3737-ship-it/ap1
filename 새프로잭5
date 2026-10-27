@@ -343,354 +343,28 @@ local function onCharacterAdded(char)
 end
 
 plr.CharacterAdded:Connect(onCharacterAdded)
-                       --- end
-                 ---   end
 
-                    if closestPlayer then
-                        ownerName = string.format("[ %s ] ( @%s )",
-                            closestPlayer.DisplayName,
-                            closestPlayer.Name)
-
-                         boolValue = nil
-                        for _, child in pairs(pcld:GetChildren()) do
-                            if child:IsA("BoolValue") then
-                                boolValue = child
-                                boolValue.Name = ownerName
-                                break
-                            end
-                        end
-
-                        if not boolValue then
-                            boolValue = Instance.new("BoolValue")
-                            boolValue.Name = ownerName
-                            boolValue.Parent = pcld
-                        end
-
-                        task.spawn(function(player, value)
-                            while value.Parent do
-                                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                                     hrp = player.Character.HumanoidRootPart
-                                    
-                                    if hrp.Massless == true then
-                                        if not value.Value then
-                                            value.Value = true
-                                        end
-                                    else
-                                        if value.Value then
-                                            value.Value = false
-                                        end
-                                    end
-
-                                    if not Players:FindFirstChild(player.Name) or 
-                                       not player.Character or 
-                                       player.Character:FindFirstChild("Humanoid") and 
-                                       player.Character.Humanoid.Health <= 0 then
-                                        value:Destroy()
-                                        break
-                                    end
-                                else
-                                    value:Destroy()
-                                    break
-                                end
-
-                                task.wait(0.1)
-                            end
-                        end, closestPlayer, boolValue)
-                    end
-                --end
-            --end
-      --  end
-    --end)
---end
-
-
-function SpawnCFrame()
-    local camPart
-    myDisplayName = plr.DisplayName
-    myUserName = plr.Name
-    myPOIdentifier = string.format("[ %s ] ( @%s )", myDisplayName, myUserName)
-
-    function findMyPO()
-        for _, obj in pairs(workspace:GetChildren()) do
-            if obj.Name == "PlayerCharacterLocationDetector" then
-                for _, child in pairs(obj:GetChildren()) do
-                    if child:IsA("BoolValue") and child.Name == myPOIdentifier then
-                        return obj
-                    end
-                end
-            end
-        end
-        return nil
-    end
-
-    if not workspace:FindFirstChild("CamPart") or workspace:FindFirstChild("CamPart"):FindFirstChild("CamPart") then
-         char = plr.Character or plr.CharacterAdded:Wait()
-        camPart = char:FindFirstChild("CamPart"):Clone()
-        camPart.Name = "CamPart"
-        camPart.Parent = workspace
-        camPart.Transparency = 0.9
-    else
-        camPart = workspace.CamPart
-    end
-
-     lastHRPVelocity = Vector3.new(0, 0, 0)
-
-    task.spawn(function()
-         rayParams = RaycastParams.new()
-        rayParams.FilterType = Enum.RaycastFilterType.Exclude
-
-        while true do
-             ping = plr:GetNetworkPing()
-             myPO = findMyPO()
-             char = plr.Character
-             hrp = char and char:FindFirstChild("HumanoidRootPart")
-
-            if hrp then
-                lastHRPVelocity = hrp.Velocity
-            end
-
-            if myPO and hrp then
-                rayParams.FilterDescendantsInstances = {char, camPart, myPO}
-
-                 offset = myPO.Position + (lastHRPVelocity * (ping + 0.15))
-
-                 rayOrigin = offset
-                 rayDirection = Vector3.new(0, 23, 0)
-                 rayResult = workspace:Raycast(rayOrigin, rayDirection, rayParams)
-
-                local targetPosition
-
-                if rayResult then
-                    targetPosition = rayResult.Position - Vector3.new(0, 0.5, 0)
-                else
-                    targetPosition = offset + rayDirection
-                end
-
-                 originalRotation = myPO.CFrame.Rotation * CFrame.Angles(math.rad(-90), 0, 0)
-                camPart.CFrame = CFrame.new(targetPosition) * originalRotation
-
-                rayParams.FilterDescendantsInstances = {char, camPart}
-
-                 offset = hrp.Position + (lastHRPVelocity * (ping + 0.15))
-                
-                 rayOrigin = offset
-                 rayDirection = Vector3.new(0, 20, 0)
-                 rayResult = workspace:Raycast(rayOrigin, rayDirection, rayParams)
-
-                local targetPosition
-
-                if rayResult then
-                    targetPosition = rayResult.Position - Vector3.new(0, 0.5, 0)
-                else
-                    targetPosition = offset + rayDirection
-                end
-
-                 originalRotation = (hrp.CFrame * CFrame.Angles(math.rad(-90), 0, 0)).Rotation
-                camPart.CFrame = CFrame.new(targetPosition) * originalRotation
-                camPart.Name = "SpawnCF"
-            end
-            task.wait()
-        end
-    end)
-
-    return camPart
-
-    G = rs.GrabEvents end
-G:WaitForChild("EndGrabEarly"):Destroy()
-Instance.new("RemoteEvent", G).Name = "EndGrabEarly"
-local UserInputService = game:GetService("UserInputService")
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
-local RunService = game:GetService("RunService")
-local Lighting = game:GetService("Lighting")
-local Debris = game:GetService("Debris")
-local TweenService = game:GetService("TweenService")
-local HttpService = game:GetService("HttpService")
-local TeleportService = game:GetService("TeleportService")
-local Camera = Workspace.CurrentCamera
-local characterEventsFolder = ReplicatedStorage:WaitForChild("CharacterEvents")
-local ragdollRemoteEvent = characterEventsFolder:WaitForChild("RagdollRemote")
-local struggleEvent = characterEventsFolder:WaitForChild("Struggle")
-local grabEventsFolder = ReplicatedStorage:WaitForChild("GrabEvents")
-local setNetworkOwnerEvent = grabEventsFolder:WaitForChild("SetNetworkOwner")
-local destroyGrabLineEvent = grabEventsFolder:WaitForChild("DestroyGrabLine")
-local menuToysFolder = ReplicatedStorage:WaitForChild("MenuToys")
-local SpawnToyRF = menuToysFolder:WaitForChild("SpawnToyRemoteFunction")
-local DeleteToyRE = menuToysFolder:WaitForChild("DestroyToy")
-local playerEventsFolder = ReplicatedStorage:WaitForChild("PlayerEvents")
-local StickyPartEvent = playerEventsFolder:WaitForChild("StickyPartEvent")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild("Humanoid")
-local RootPart = Character:WaitForChild("HumanoidRootPart")
-
-LocalPlayer.CharacterAdded:Connect(function(newChar)
-    Character = newChar
-    Humanoid = newChar:WaitForChild("Humanoid")
-    RootPart = newChar:WaitForChild("HumanoidRootPart")
-end)
-
-local function resetCharacter()
-    if Character and Humanoid then
-        Humanoid.Health = 0
-        task.wait(0.1)
-        if Humanoid.Health > 0 then
-            Character:BreakJoints()
-        end
-    end
-end
-
-local apagarfogo = nil
-pcall(function()
-    apagarfogo = Workspace.Map.Hole.PoisonBigHole:WaitForChild("ExtinguishPart", 3)
-    if apagarfogo then
-        apagarfogo.Size = Vector3.new(0.5, 0.5, 0.5)
-        apagarfogo.Transparency = 1
-        if apagarfogo:FindFirstChild("Tex") then apagarfogo.Tex.Transparency = 1 end
-    end
-end)
-    local pp = {}
-local PARTS = {
-    {"Humanoid",         "hum"},
-    {"HumanoidRootPart", "hrp"},
-    {"Head",             "head"},
-    {"Torso",            "torso"},
-    {"Left Arm",         "la"},
-    {"Right Arm",        "ra"},
-    {"Left Leg",         "ll"},
-    {"Right Leg",        "rl"},
-}
-
-local LIMB_CHILDREN = {
-    {"Left Arm",  "la"},
-    {"Right Arm", "ra"},
-    {"Left Leg",  "ll"},
-    {"Right Leg", "rl"},
-}
-
-local function fetch(parent, name, key)
-    task.spawn(function()
-        repeat rs2.PreSimulation:Wait() until parent:FindFirstChild(name)
-        pp[key] = parent[name]
-    end)
-end
-
-function clearChar()
-    table.clear(pp)
-end
-
-function plrpart(char)
-    pp.char = char
-
-    for _, v in ipairs(PARTS) do
-        fetch(char, v[1], v[2])
-    end
-
-    task.spawn(function()
-        repeat rs2.PreSimulation:Wait() until char:FindFirstChild("Humanoid")
-        local hum = char.Humanoid
-        fetch(hum, "FireDebounce", "brn")
-        fetch(hum, "Ragdolled",    "rag")
-    end)
-
-        local Players               = game:GetService("Players")
-local RunService            = game:GetService("RunService")
-local ReplicatedStorage     = game:GetService("ReplicatedStorage")
-local Stats                 = game:GetService("Stats")
-local Workspace             = game:GetService("Workspace")
-local UserInputService      = game:GetService("UserInputService")
-local TweenService          = game:GetService("TweenService")
-local Lighting              = game:GetService("Lighting")
-local CoreGui               = game:GetService("CoreGui")
-local SoundService          = game:GetService("SoundService")
-local Debris                = game:GetService("Debris")
-local MarketplaceService    = game:GetService("MarketplaceService")
-local TeleportService       = game:GetService("TeleportService")
-local HttpService           = game:GetService("HttpService")
-local Camera                = Workspace.CurrentCamera
-local LocalPlayer           = Players.LocalPlayer
-local CharacterEvents, GrabEvents, PlayerEvents, BombEvents, MenuToys, HoldEvents
-local Struggle, RagdollRemote, SetNetworkOwner, StickyEvent, BombEvent
-local SpawnRemote, DestroyRemote, CanSpawn, CreateGrabLine, DestroyGrabLine
-local ExtendGrabLine, UseRemote
-
-do
-    CharacterEvents = ReplicatedStorage:FindFirstChild("CharacterEvents")
-    GrabEvents      = ReplicatedStorage:FindFirstChild("GrabEvents")
-    PlayerEvents    = ReplicatedStorage:FindFirstChild("PlayerEvents")
-    BombEvents      = ReplicatedStorage:FindFirstChild("BombEvents")
-    MenuToys        = ReplicatedStorage:FindFirstChild("MenuToys")
-    HoldEvents      = ReplicatedStorage:FindFirstChild("HoldEvents")
-
-    if CharacterEvents then
-        Struggle       = CharacterEvents:FindFirstChild("Struggle")
-        RagdollRemote  = CharacterEvents:FindFirstChild("RagdollRemote")
-    end
-    if GrabEvents then
-        SetNetworkOwner = GrabEvents:FindFirstChild("SetNetworkOwner")
-        CreateGrabLine  = GrabEvents:FindFirstChild("CreateGrabLine")
-        ExtendGrabLine  = GrabEvents:FindFirstChild("ExtendGrabLine")
-        DestroyGrabLine = GrabEvents:FindFirstChild("DestroyGrabLine")
-    end
-    if PlayerEvents then
-        StickyEvent    = PlayerEvents:FindFirstChild("StickyPartEvent")
-    end
-    if BombEvents then
-        BombEvent      = BombEvents:FindFirstChild("BombExplode")
-    end
-    if MenuToys then
-        SpawnRemote    = MenuToys:FindFirstChild("SpawnToyRemoteFunction")
-        DestroyRemote  = MenuToys:FindFirstChild("DestroyToy")
-    end
-    if HoldEvents then
-        UseRemote      = HoldEvents:FindFirstChild("Use")
-    end
-    
-    CanSpawn = LocalPlayer:FindFirstChild("CanSpawnToy")
-        end
-
-        local character, humanoidRootPart, humanoid
-
-do
-    character        = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-    humanoid         = character:WaitForChild("Humanoid")
-end
-
-local charCallbacks = {}
-
-local function onCharacterAdded(char)
-    character        = char
-    humanoidRootPart = char:WaitForChild("HumanoidRootPart")
-    humanoid         = char:WaitForChild("Humanoid")
-    for _, cb in ipairs(charCallbacks) do
-        task.spawn(cb, char)
-    end
-end
-LocalPlayer.CharacterAdded:Connect(onCharacterAdded)
-
-local OrionLib =  loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion."))()
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion."))()
 
 local Window = OrionLib:MakeWindow({
     Name = "TY",
     HidePremium = false,
-    SaveConfig = flase,
+    SaveConfig = false,
     KeyToOpenWindow = "M",
     ConfigFolder = "E",
-    IntroEnabled = flase,
+    IntroEnabled = false,
     IntroText = "4"
 })
 
-
-playerTab:AddLSection({
-    Name = "Player"
+local playerTab = Window:MakeTab({
+    Name = "Player",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
 })
 
-local plr = game.Players.LocalPlayer
-local run = game:GetService("RunService")
+playerTab:AddSection({
+    Name = "Player"
+})
 
 local walkSpeedT = false
 local walkSpeedV = 80
@@ -707,7 +381,6 @@ local function updateWalkSpeedF()
 
     hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
     hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
-    --hum:SetStateEnabled(Enum.HumanoidStateType.Tripping, false)
 
     local speed = (type(walkSpeedV) == "number") and walkSpeedV or 80
 
@@ -729,7 +402,7 @@ local function updateWalkSpeedF()
             end
         end)
 
-        activeLoop = run.Heartbeat:Connect(function()
+        activeLoop = rs2.Heartbeat:Connect(function()
             if not char:IsDescendantOf(workspace) then
                 if activeLoop then activeLoop:Disconnect() end
                 return
@@ -757,8 +430,6 @@ local function updateWalkSpeedF()
     else
         hum.WalkSpeed = 16
         hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
-        --hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
-        --hum:SetStateEnabled(Enum.HumanoidStateType.Tripping, true)
     end
 end
 
@@ -795,7 +466,6 @@ plr.CharacterAdded:Connect(function(char)
     updateWalkSpeedF()
 end)
 
-local plr = game.Players.LocalPlayer
 local jumpPowerT = false
 local jumpPowerV = 50
 
@@ -823,6 +493,7 @@ local function updateJumpPowerF()
 
     plr.CharacterAdded:Connect(apply)
 end
+
 playerTab:AddToggle({
     Name = "Jump",
     Default = false,
@@ -850,9 +521,32 @@ playerTab:AddSlider({
     end    
 })
 
-playerTab:AddRSection({
+playerTab:AddSection({
     Name = "Other"
 })
+
+local noClipT = false
+local noClipConn = nil
+
+local function updateNoClipF()
+    if noClipConn then
+        noClipConn:Disconnect()
+        noClipConn = nil
+    end
+
+    if noClipT then
+        noClipConn = rs2.Stepped:Connect(function()
+            if plr.Character then
+                for _, part in pairs(plr.Character:GetDescendants()) do
+                    if part:IsA("BasePart") and part.CanCollide then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end
+end
+
 playerTab:AddToggle({
     Name = "NoClip",
     Default = false,
@@ -863,8 +557,7 @@ playerTab:AddToggle({
         updateNoClipF()
     end
 })
---local isWaterWalking = false
-do
+
 local function setWaterWalk(state)
     local workspaceMap = workspace:FindFirstChild("Map")
     if workspaceMap then
@@ -897,6 +590,8 @@ playerTab:AddToggle({
     end    
 })
 
+_G.InfiniteJump = false
+
 playerTab:AddToggle({
     Name = "Infinite Jump",
     Default = false,
@@ -908,25 +603,20 @@ playerTab:AddToggle({
 })
 
 game:GetService("UserInputService").JumpRequest:Connect(function()
-    if _G.InfiniteJump then
-        game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    if _G.InfiniteJump and plr.Character then
+        local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum:ChangeState("Jumping")
+        end
     end
 end)
-do
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-
 
 local function getRoot(char)
     if not char then return nil end
     return char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
 end
 
-
 local IsOnMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
-
 
 local FLYING = false
 local QEfly = true
@@ -938,9 +628,8 @@ local mfly1, mfly2
 local velocityHandlerName = "Orion_VelocityHandler"
 local gyroHandlerName = "Orion_GyroHandler"
 
-
 local function sFLY(vfly)
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local char = plr.Character or plr.CharacterAdded:Wait()
     local humanoid = char:FindFirstChildOfClass("Humanoid")
     if not humanoid then
         repeat task.wait() until char:FindFirstChildOfClass("Humanoid")
@@ -1040,12 +729,11 @@ local function NOFLY()
     FLYING = false
     if flyKeyDown then flyKeyDown:Disconnect() end
     if flyKeyUp then flyKeyUp:Disconnect() end
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
-        LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = false
+    if plr.Character and plr.Character:FindFirstChildOfClass('Humanoid') then
+        plr.Character:FindFirstChildOfClass('Humanoid').PlatformStand = false
     end
     pcall(function() workspace.CurrentCamera.CameraType = Enum.CameraType.Custom end)
 end
-
 
 function unmobilefly(speaker)
     pcall(function()
@@ -1075,7 +763,6 @@ local function mobilefly(speaker, vfly)
     local v3zero = Vector3.new(0, 0, 0)
     local v3inf = Vector3.new(9e9, 9e9, 9e9)
 
-    
     local controlModule = require(speaker.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
     
     local bv = Instance.new("BodyVelocity")
@@ -1109,7 +796,7 @@ local function mobilefly(speaker, vfly)
         nbg.D = 50
     end)
 
-    mfly2 = RunService.RenderStepped:Connect(function()
+    mfly2 = rs2.RenderStepped:Connect(function()
         root = getRoot(speaker.Character)
         camera = workspace.CurrentCamera
         
@@ -1136,27 +823,23 @@ local function mobilefly(speaker, vfly)
     end)
 end
 
-
-
 playerTab:AddToggle({
     Name = "Fly (fix)",
     Default = false,
     Callback = function(Value)
         if Value then
-            
             if not IsOnMobile then
                 NOFLY()
                 task.wait()
                 sFLY()
             else
-                mobilefly(LocalPlayer)
+                mobilefly(plr)
             end
         else
-            
             if not IsOnMobile then
                 NOFLY()
             else
-                unmobilefly(LocalPlayer)
+                unmobilefly(plr)
             end
         end
     end    
