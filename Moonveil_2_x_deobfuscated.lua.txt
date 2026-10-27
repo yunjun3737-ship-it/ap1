@@ -1,0 +1,1666 @@
+-- This file was Deobfuscated & Cleaned using SigmaBot V5 | .gg/Zame2JAGDr
+--[[
+   SSSSSSSSSSSSSSS BBBBBBBBBBBBBBBBB   555555555555555555
+  SS:::::::::::::::SB::::::::::::::::B  5::::::::::::::::5
+ S:::::SSSSSS::::::SB::::::BBBBBB:::::B 5::::::::::::::::5
+ S:::::S     SSSSSSSBB:::::B     B:::::B5:::::555555555555
+ S:::::S              B::::B     B:::::B5:::::5
+ S:::::S              B::::B     B:::::B5:::::5
+  S::::SSSS           B::::BBBBBB:::::B 5:::::5555555555
+   SS::::::SSSSS      B:::::::::::::BB  5:::::::::::::::5
+     SSS::::::::SS    B::::BBBBBB:::::B 555555555555:::::5
+        SSSSSS::::S   B::::B     B:::::B            5:::::5
+             S:::::S  B::::B     B:::::B            5:::::5
+             S:::::S  B::::B     B:::::B5555555     5:::::5
+ SSSSSSS     S:::::SBB:::::BBBBBB::::::B5::::::55555::::::5
+ S::::::SSSSSS:::::SB:::::::::::::::::B  55:::::::::::::55
+ S:::::::::::::::SS B::::::::::::::::B     55:::::::::55
+  SSSSSSSSSSSSSSS   BBBBBBBBBBBBBBBBB        555555555
+]]
+
+local v1, v2
+local function waitForChild(v85)
+    v1 = v85
+    v2 = v85:WaitForChild("Humanoid")
+end
+local v3
+local function findChild2()
+    return v3:FindFirstChild("Ghost")
+end
+local v4
+local function findChild3()
+    local v85 = v4()
+    if v85 then
+        return v85:FindFirstChild("Humanoid")
+    else
+        return nil
+    end
+end
+local function waitForChild2()
+    return v3:WaitForChild("GhostOrb")
+end
+local function findChild4()
+    return v3:FindFirstChild("Handprints")
+end
+local function findChild5()
+    return v3:FindFirstChild("Map"):FindFirstChild("Spawns")
+end
+local function computeValue(v85, v86)
+    local v87, v88
+    local function transformValue10(v91)
+        local v92 = v91.Position - v87
+        local scale = v88.X.Scale
+        local v93 = v92.X
+        local v94 = v88.X.Offset + v93
+        local scale2 = v88.Y.Scale
+        v93 = v88.Y.Offset + v92.Y
+        v85.Position = UDim2.new(scale, v94, scale2, v93)
+    end
+local v89, v90
+local function updateState4(v91)
+    local mouseButton1 = Enum.UserInputType.MouseButton1
+    local v92 = v91.UserInputType == mouseButton1
+    if not v92 then
+        mouseButton1 = Enum.UserInputType.Touch
+        v92 = v91.UserInputType == mouseButton1
+    end
+if v92 then
+    v89 = true
+    v87 = v91.Position
+    v88 = v85.Position
+    v90 = v91
+end
+end
+local function updateState5(v91)
+    if v91 == v90 then
+        v89 = false
+    end
+end
+local function transformValue11(v91)
+    local v92 = v89
+    local mouseMovement
+    if v92 then
+        mouseMovement = Enum.UserInputType.MouseMovement
+        v92 = v91.UserInputType == mouseMovement
+    end
+if v92 then
+    return
+end
+end
+v89 = v86 or v85
+v89 = false
+v87 = nil
+v88 = nil
+v90 = nil
+end
+local function computeValue2(v85, v86)
+    local v87, v88, v89
+    local function processItems2(v90)
+        v89 = v89 + v90 * v86
+        if 1 <= v89 then
+            v89 = 0
+            v88 = v88 + 1
+            if #v87 < v88 then
+                v88 = 1
+            end
+    end
+local v91 = v87
+v91 = v91[v88 % #v91 + 1]
+local lerp = v87[v88]:Lerp(v91, v89)
+local v93, v94, v95
+v93, v94, v95 = ipairs(v85)
+local v96, v97
+v96, v97 = v93(v94, v95)
+if not (v96 == nil) then
+    v95 = v96
+    while true do
+        if v97:IsA("TextLabel") then
+            v97.TextColor3 = lerp
+        else
+            v97:IsA("UIStroke")
+        end
+    v96, v97 = v93(v94, v95)
+    if v96 ~= nil then
+        v95 = v96
+        continue
+    end
+break
+end
+end
+end
+v87 = v86 or 0.5
+v86 = v87
+v88 = {}
+v89 = Color3.fromRGB(255, 0, 0)
+local color = Color3.fromRGB(255, 128, 0)
+local color2 = Color3.fromRGB(255, 255, 0)
+local color3 = Color3.fromRGB(0, 255, 0)
+local color4 = Color3.fromRGB(0, 255, 255)
+local color5 = Color3.fromRGB(0, 128, 255)
+local color6 = Color3.fromRGB(128, 0, 255)
+local color7 = Color3.fromRGB(255, 0, 255)
+v88[1] = v89
+v88[2] = color
+v88[3] = color2
+v88[4] = color3
+v88[5] = color4
+v88[6] = color5
+v88[7] = color6
+v88[8] = color7
+v87 = v88
+v88 = 1
+v89 = 0
+end
+local v5, v6
+local function AddStat(v85, v86)
+    local v87, textLabel5, v88
+    if v86 ~= nil then
+        if tostring(v86) == "function" then
+            textLabel5, v88 = pcall(v86)
+            v86 = textLabel5 and v88 or "Error"
+        end
+    v87 = tostring(v85) .. " " .. tostring(v86)
+else
+    v87 = tostring(v85)
+end
+textLabel5 = Instance.new("TextLabel")
+textLabel5.Size = v5.GhostStats.statSize
+textLabel5.BackgroundTransparency = 1
+textLabel5.Text = v87
+textLabel5.TextColor3 = Color3.fromRGB(0, 255, 255)
+textLabel5.RichText = true
+textLabel5.Font = Enum.Font.GothamSemibold
+textLabel5.TextScaled = v5.GhostStats.textScaled
+textLabel5.TextSize = 19
+textLabel5.TextXAlignment = Enum.TextXAlignment.Left
+textLabel5.TextWrapped = true
+textLabel5.Parent = v6
+return textLabel5
+end
+local function computeValue3(v85, v86, v87)
+    local v88 = "rgb(255,255,255)"
+    if v87 == nil then
+        v87 = false
+    end
+if typeof(v87) == "boolean" then
+    if v87 then
+        v87 = "Yes"
+        v88 = "rgb(0,255,0)"
+    else
+        v87 = "No"
+        v88 = "rgb(255,0,0)"
+    end
+end
+local v89 = tostring(v87)
+local v90 = v89 .. "</font>"
+local v91 = "\">" .. v90
+local v92 = v88 .. v91
+local v93 = "<font color=\"" .. v92
+local v94 = " <font color=\"rgb(255,255,255)\"> </font>" .. v93
+local v95 = v86 .. v94
+v85.Text = v95
+return v85, v86, v87, v88, v95, v94, " <font color=\"rgb(255,255,255)\"> </font>", v93, "<font color=\"", v92, v91, "\">", v90, v89
+end
+local function Clear()
+    local v85, v86, v87
+    v85, v86, v87 = ipairs(v6:GetChildren())
+    local v88
+    x1, v88 = v85(v86, v87)
+    if not (x1 == nil) then
+        v87 = x1
+        while true do
+            if v88:IsA("TextLabel") then
+                x1, v88 = v85(v86, v87)
+                if x1 == nil then
+                    v87 = x1
+                else
+                    v87 = x1
+                    continue
+                end
+        else
+            x1, v88 = v85(v86, v87)
+            if x1 == nil then
+                break
+            else
+                v87 = x1
+                continue
+            end
+    end
+return v85, v86, v87, x1, v88
+end
+end
+return v85, v86, x1, x1, v88
+end
+local function transformValue12(v85)
+    if typeof(v85) ~= "number" then
+        return v85
+    else
+        return string.format("%.2f", v85):gsub("0+$", ""):gsub("%.$", "")
+    end
+end
+local v7, v8, v9
+local function processItems3(v85, v86, v87, v88, v89, v90, v91, v92, v93, v104, .. .)
+    local v94
+    local function getAttribute9()
+        v85:GetAttribute(v94)
+    end
+local v95
+local function getValue()
+    if v95.target == "Player" then
+        return v2
+    else
+        return v8()
+    end
+end
+local v96
+local function getValue2()
+    return v96.WalkSpeed
+end
+local v97
+local function performTask7()
+    v9(v97())
+end
+local v98
+local function transformValue6(v106)
+    local v107, v108, v109
+    if v106 then
+        v106:IsA("Model")
+        v109 = "ItemName"
+        v108 = v106
+        v107 = v106.GetAttribute
+    end
+v107 = v107(v108, v109)
+if v107 ~= "EMF Reader" then
+    return v106, v107
+else
+    v107 = v106:FindFirstChild("Handle")
+    if not v107 then
+        return v106, v107
+    else
+        v108 = v107:FindFirstChild("Tone")
+        if not v108 then
+            return v106, v107, v108
+        elseif 1.5 <= v108.PlaybackSpeed then
+            v98 = true
+            return v106, v107, v108
+        else
+            return v106, v107, v108
+        end
+end
+end
+end
+local function processItems()
+    local v106, v107, v108
+    v106, v107, v108 = ipairs(v3:GetDescendants())
+    local v109, v110
+    v109, v110 = v106(v107, v108)
+    if not (v109 == nil) then
+        v108 = v109
+        while true do
+            if v110:IsA("Model") then
+                return v106, v107, v108, v109, v110
+            end
+        v109, v110 = v106(v107, v108)
+        if v109 ~= nil then
+            v108 = v109
+            continue
+        end
+    break
+end
+end
+return v106, v107, v109, v109, v110
+end
+local function checkCondition(v106)
+    return string.sub(v106, 1, #v98) == v98
+end
+local function checkCondition2(v106)
+    return v106.Name == v96
+end
+local function performTask8()
+end
+local v99
+local function checkCondition3()
+    local v106, v107, v108
+    v106, v107, v108 = ipairs(v97:GetChildren())
+    local v109
+    x3, v109 = v106(v107, v108)
+    if not (x3 == nil) then
+        v108 = x3
+        while true do
+            if not v99(v109.Name) then
+                x3, v109 = v106(v107, v108)
+                if x3 ~= nil then
+                    v108 = x3
+                    continue
+                end
+            break
+        end
+    return true
+end
+end
+return false
+end
+local function performTask9()
+end
+local v100
+local function performTask10()
+    v100()
+end
+local function transformValue7(v106)
+    if not v97 then
+        return v106, v99(v106)
+    end
+end
+local function transformValue8(v106)
+    v99(v106.Name)
+end
+local function isInstanceOf2(v106)
+    local function performTask6()
+    end
+if not v98 then
+    return v106, v106:IsA("Model")
+end
+end
+local function updateState3()
+    v96 = v98()
+    local connect
+    if v96 then
+        connect = v96:GetPropertyChangedSignal("WalkSpeed").Connect
+    end
+end
+local function getValue3()
+    local v106 = #v98:GetChildren() == 0
+    return 1700000000 - v96 < 1.5 and v106
+end
+local function transformValue9(v106)
+    v99(v106.Name)
+end
+local function performTask11()
+    v97()
+end
+local function isInstanceOf3(v106)
+    local isA
+    if v106:IsA("Sound") then
+        isA = tick
+    else
+        return
+    end
+v96 = isA()
+end
+local v102, v103
+if v85 then
+    v102 = v86
+    v94, v95 = next(v86, nil)
+    if not (v94 == nil) then
+        v103 = v94
+        while true do
+            if not v95.prefix then
+                v98 = ":"
+            end
+        v96 = v95.source
+        v97 = "Attribute"
+        v98 = v96 == "Attribute"
+        if not v98 then
+            v96 = v95.source
+            v98 = not v96
+        end
+    if v98 then
+        v98 = getAttribute9
+        v99 = v94
+        v97 = v85
+        v96 = v85:GetAttributeChangedSignal(v94)
+        v99 = v98
+        v97 = v96
+        v96 = v96.Connect
+        v94, v95 = next(v102, v103)
+        if v94 ~= nil then
+            v103 = v94
+            continue
+        end
+    return
+end
+v98 = v95.source
+v96 = "Humanoid"
+if v98 == "Humanoid" then
+    v96 = getValue(v93, v104, .. .)
+    v97 = not v96
+    if not v97 then
+        v97 = getValue2
+        v99 = performTask7
+        v100 = v95.target
+        if v100 == "Player" then
+            v100 = v7.CharacterAdded
+            v100 = v100.Connect
+        end
+    v94, v95 = next(v102, v103)
+    if v94 ~= nil then
+        v103 = v94
+        continue
+    end
+return
+end
+return
+end
+v98 = v95.source
+v96 = "ObjectExists"
+if v98 == "ObjectExists" then
+    v98 = v95.object or v94
+    v96 = v95.parent
+    v97 = v96
+    if v97 then
+        v100 = v96
+        v99 = v3
+        v97 = v3:FindFirstChild(v96)
+        v99 = not v97
+        if not v99 then
+            v99 = checkCondition
+            v100 = checkCondition3
+            v94, v95 = next(v102, v103)
+            if v94 ~= nil then
+                v103 = v94
+                continue
+            end
+        return
+    end
+return
+end
+if not v97 then
+    v97 = v3
+end
+v99 = not v97
+if not v99 then
+    v99 = checkCondition
+    v100 = checkCondition3
+    v94, v95 = next(v102, v103)
+    if v94 ~= nil then
+        v103 = v94
+        continue
+    end
+return
+end
+return
+end
+v98 = v95.source
+v96 = "LatchedBoolean"
+if v98 == "LatchedBoolean" then
+    v98 = v95.parent
+    if v98 then
+        v97 = v95.parent
+        v96 = v3
+        v98 = v3:FindFirstChild(v97)
+        v96 = v95.object
+        v97 = not v98
+        if not v97 then
+            v97 = false
+            v99 = checkCondition2
+            v100 = performTask9
+            v94, v95 = next(v102, v103)
+            if v94 ~= nil then
+                v103 = v94
+                continue
+            end
+        return
+    end
+return
+end
+v96 = v95.object
+v97 = not v98
+if not v97 then
+    v97 = false
+    v99 = checkCondition2
+    v100 = performTask9
+    v94, v95 = next(v102, v103)
+    if v94 ~= nil then
+        v103 = v94
+        continue
+    end
+return
+end
+return
+end
+v98 = v95.source
+v96 = "EMFLevel5"
+if v98 == "EMFLevel5" then
+    v98 = false
+    v97 = processItems
+    v99 = performTask8
+    v100 = v3.DescendantAdded
+    v100 = v100.Connect
+    v94, v95 = next(v102, v103)
+    if v94 ~= nil then
+        v103 = v94
+        continue
+    end
+return
+end
+v98 = v95.source
+v96 = "NightmareShatter"
+if v98 == "NightmareShatter" then
+    v98 = v3
+    v97 = v95.parent or "BrokenGlass"
+    v96 = v98
+    v98 = v98.FindFirstChild(v96, v97)
+    v96 = not v98
+    if not v96 then
+        v96 = 0
+        v97 = getValue3
+        v99 = performTask11
+        v100 = v98.ChildRemoved
+        v100 = v100.Connect
+        v94, v95 = next(v102, v103)
+        if v94 ~= nil then
+            v103 = v94
+            continue
+        end
+    return
+end
+return
+end
+v94, v95 = next(v102, v103)
+if v94 ~= nil then
+    v103 = v94
+    continue
+end
+break
+end
+end
+return
+end
+end
+local v10
+local function computeValue4(v85, v86, v87)
+    local function findChild(v91)
+        local map = v3:FindFirstChild("Map")
+        local rooms
+        if map then
+            rooms = map:FindFirstChild("Rooms")
+            if rooms then
+                return rooms:FindFirstChild(v91)
+            end
+    end
+return nil
+end
+local v88
+local function getAttribute7()
+    local v91 = v88(v10:GetAttribute(v87))
+    local v92
+    if v91 then
+        v92 = v9(v91:GetAttribute("Temperature")) .. "°C"
+    end
+end
+local function transformValue5(v91)
+    local function getAttribute6()
+        local v92
+        if v10:GetAttribute(v87) == v91.Name then
+            v92 = v9(v91:GetAttribute("Temperature")) .. "°C"
+        end
+end
+local connect3
+if v91 then
+    connect3 = v91:GetAttributeChangedSignal("Temperature").Connect
+    return
+end
+end
+local function getAttribute8()
+    return v88(v10:GetAttribute(v87))
+end
+v88 = findChild
+v88(v10:GetAttribute(v87))
+local connect2 = v10:GetAttributeChangedSignal(v87).Connect
+end
+local v11, v12
+local function addTextButton(v85, v86)
+    local function createTween(v90, v91, v92)
+        local quad = Enum.EasingStyle.Quad
+        local out = Enum.EasingDirection.Out
+        local play = v11:Create(v90, TweenInfo.new(v92, quad, out), v91).Play
+    end
+local v87, textButton
+local function updateState2()
+    textButton.Text = v85 .. " <font color=\"rgb(255,255,255)\">: </font>" .. "<font color=\"" .. (v87 and "rgb(0,255,0)" or "rgb(255,0,0)") .. "\">" .. (v87 and "ON" or "OFF") .. "</font>"
+end
+local function Set(v90)
+    v87 = v90
+    return v90
+end
+local function performTask3()
+    Color3.fromRGB(45, 45, 45)
+end
+local function performTask4()
+    Color3.fromRGB(30, 30, 30)
+end
+local function performTask5()
+end
+local function Get()
+    return v87
+end
+v87 = false
+textButton = Instance.new("TextButton")
+textButton.Size = v5.Toggle.buttonSize
+textButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+textButton.BorderSizePixel = 0
+textButton.AutoButtonColor = false
+textButton.Font = Enum.Font.GothamSemibold
+textButton.TextScaled = v5.GhostStats.textScaled
+textButton.TextSize = 18
+textButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+textButton.Parent = v12
+Instance.new("UICorner", textButton).CornerRadius = UDim.new(0, 6)
+textButton.RichText = true
+return {Set = Set, Get = Get}
+end
+local v13
+local function findChild6()
+    local v85 = v4()
+    local torso, ghostESP, textLabel6
+    if v85 then
+        v85:FindFirstChild("Head")
+        torso = v85:FindFirstChild("Torso")
+        if torso then
+            ghostESP = Instance.new("BillboardGui")
+            ghostESP.Name = "GhostESP"
+            ghostESP.Size = UDim2.new(0, 60, 0, 20)
+            ghostESP.StudsOffset = Vector3.new(0, 0, 0)
+            ghostESP.AlwaysOnTop = true
+            ghostESP.Brightness = 1
+            ghostESP.DistanceLowerLimit = 0
+            ghostESP.DistanceStep = 0
+            ghostESP.DistanceUpperLimit = -1
+            ghostESP.MaxDistance = math.huge
+            ghostESP.LightInfluence = 0
+            ghostESP.SizeOffset = Vector2.new(0, 0)
+            ghostESP.Parent = torso
+            textLabel6 = Instance.new("TextLabel")
+            textLabel6.Size = UDim2.new(1, 0, 1, 0)
+            textLabel6.BackgroundTransparency = 1
+            textLabel6.Text = "Ghost"
+            textLabel6.TextSize = 10
+            textLabel6.Font = Enum.Font.GothamSemibold
+            textLabel6.TextScaled = true
+            textLabel6.TextStrokeTransparency = 1
+            textLabel6.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+            textLabel6.TextWrapped = true
+            textLabel6.Parent = ghostESP
+            v13.Ghost = ghostESP
+            return
+        end
+end
+end
+local function updateState6()
+    if v13.Ghost then
+        v13.Ghost = nil
+    end
+end
+local v14, v15
+local function addHighlight()
+    local v85 = v14()
+    if not v85 then
+        return
+    end
+if v85.Transparency == 1 then
+    v85.Transparency = 0
+end
+local orbESP = Instance.new("Highlight")
+orbESP.Name = "OrbESP"
+orbESP.Adornee = v85
+orbESP.FillTransparency = 0
+orbESP.OutlineTransparency = 0
+orbESP.FillColor = Color3.fromRGB(0, 180, 255)
+orbESP.OutlineColor = Color3.fromRGB(0, 180, 255)
+orbESP.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+orbESP.Parent = v85
+v15.orb = orbESP
+end
+local function getValue4()
+    local v85 = v14()
+    if v15.orb then
+        v15.orb = nil
+        v85.Transparency = 1
+    end
+end
+local v16, v17
+local function processItems4()
+    local function updateState(parent)
+        local v91, surfaceGui, handprintESP, textLabel7
+        if v17.Enabled then
+            parent:IsA("BasePart")
+            v91 = nil
+            surfaceGui = parent:FindFirstChildWhichIsA("SurfaceGui", true)
+            if surfaceGui then
+                surfaceGui.AlwaysOnTop = true
+                v91 = surfaceGui:FindFirstChildWhichIsA("ImageLabel", true)
+            end
+        handprintESP = Instance.new("BillboardGui")
+        handprintESP.Name = "HandprintESP"
+        handprintESP.Size = UDim2.new(0, 80, 0, 25)
+        handprintESP.StudsOffset = Vector3.new(0, 0.5, 0)
+        handprintESP.AlwaysOnTop = true
+        handprintESP.MaxDistance = math.huge
+        handprintESP.LightInfluence = 0
+        handprintESP.Parent = parent
+        textLabel7 = Instance.new("TextLabel")
+        textLabel7.Size = UDim2.new(1, 0, 1, 0)
+        textLabel7.BackgroundTransparency = 1
+        textLabel7.Text = "Handprint"
+        textLabel7.TextSize = 6
+        textLabel7.TextScaled = true
+        textLabel7.Font = Enum.Font.GothamSemibold
+        textLabel7.TextColor3 = Color3.fromRGB(235, 0, 255)
+        textLabel7.TextStrokeTransparency = 0.8
+        textLabel7.TextStrokeColor3 = Color3.fromRGB(235, 0, 255)
+        textLabel7.Parent = handprintESP
+        v17.Parts[parent] = {Gui = handprintESP, Text = textLabel7, ImageLabel = v91}
+    end
+end
+local function onChildRemoved3(v91)
+    local v92 = v17.Parts[v91]
+    if v92 then
+        if v92.Gui then
+            v17.Parts[v91] = nil
+            return v91, v92
+        else
+            v17.Parts[v91] = nil
+            return
+        end
+end
+end
+local v85 = v16()
+local connections, v87, v88, v89, v90
+if v85 then
+    v17.Enabled = true
+    v17.Parts = {}
+    connections, v87, v88 = ipairs(v85:GetChildren())
+    v89, v90 = connections(v87, v88)
+    if not (v89 == nil) then
+        v88 = v89
+        while true do
+            v89, v90 = connections(v87, v88)
+            if v89 ~= nil then
+                v88 = v89
+                continue
+            end
+        break
+    end
+end
+v87 = v85.ChildAdded
+v17.Connections.ChildAdded = v87:Connect(updateState)
+v17.Connections.ChildRemoved = v85.ChildRemoved:Connect(onChildRemoved3)
+return
+end
+end
+local function processItems5()
+    v17.Enabled = false
+    local v85, v86
+    v85, v86 = next(v17.Connections, nil)
+    if not (v85 == nil) then
+        while next ~= nil do
+        end
+end
+v17.Connections = {}
+local v87, v88, v89
+v87, v88, v89 = pairs(v17.Parts)
+v85, v86 = v87(v88, v89)
+local v90 = {}
+if not (v85 == nil) then
+    v89 = v85
+    local v91 = {}
+    while true do
+        if v86.Gui then
+            v86.ImageLabel.ImageTransparency = 1
+            v85, v86 = v87(v88, v89)
+            if v85 ~= nil then
+                v89 = v85
+                continue
+            end
+        v17.Parts = v90
+        return
+    end
+if v86.ImageLabel then
+    v86.ImageLabel.ImageTransparency = 1
+end
+v86 = v88
+v89 = next
+if v89 ~= nil then
+    if v86.Gui then
+        v86.ImageLabel.ImageTransparency = 1
+        v85, v86 = v87(v88, v89)
+        if v85 ~= nil then
+            v89 = v85
+            continue
+        end
+    v17.Parts = v90
+    return
+end
+if v86.ImageLabel then
+    v86.ImageLabel.ImageTransparency = 1
+end
+v85, v86 = v87(v88, v89)
+if v85 ~= nil then
+    v89 = v85
+    continue
+end
+break
+end
+v17.Parts = v91
+return
+end
+end
+v17.Parts = v90
+end
+local v18
+local function processItems6()
+    local function transformValue2(v91)
+        if v91.PrimaryPart then
+            v91.PrimaryPart:IsA("BasePart")
+            return v91.PrimaryPart
+        else
+            return v91:FindFirstChildWhichIsA("BasePart", true)
+        end
+end
+local v85
+local function transformValue3(v91)
+    local v92, v93, itemESP, textLabel8
+    if not v18.Enabled then
+        return
+    else
+        v91:IsA("Model")
+        v92 = v85(v91)
+        if not v92 then
+            return
+        end
+    v93 = v91:GetAttribute("ItemName") or v91.Name
+    itemESP = Instance.new("BillboardGui")
+    itemESP.Name = "ItemESP"
+    itemESP.Size = UDim2.new(0, 100, 0, 25)
+    itemESP.StudsOffset = Vector3.new(0, 0.5, 0)
+    itemESP.Brightness = 1
+    itemESP.AlwaysOnTop = true
+    itemESP.MaxDistance = math.huge
+    itemESP.LightInfluence = 0
+    itemESP.Parent = v92
+    textLabel8 = Instance.new("TextLabel")
+    textLabel8.Size = UDim2.new(1, 0, 1, 0)
+    textLabel8.BackgroundTransparency = 1
+    textLabel8.Text = tostring(v93)
+    textLabel8.TextSize = 8
+    textLabel8.TextScaled = true
+    textLabel8.Font = Enum.Font.GothamSemibold
+    textLabel8.TextColor3 = Color3.fromRGB(3, 230, 250)
+    textLabel8.TextStrokeTransparency = 1
+    textLabel8.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    textLabel8.TextWrapped = true
+    textLabel8.Parent = itemESP
+    v18.Items[v91] = {Gui = itemESP, Text = textLabel8}
+end
+end
+local function transformValue4(v91)
+    return v91
+end
+local function onChildRemoved2(v91)
+    local v92 = v18.Items[v91]
+    if v92 then
+        if v92.Gui then
+            v18.Items[v91] = nil
+            return v91, v92
+        else
+            v18.Items[v91] = nil
+            return
+        end
+end
+end
+v85 = v3
+local items = v3:FindFirstChild("Items")
+v85 = not items
+local connections2, v87, v88, v89, v90
+if not v85 then
+    v18.Enabled = true
+    v18.Items = {}
+    v85 = transformValue2
+    connections2, v87, v88 = ipairs(items:GetChildren())
+    v89, v90 = connections2(v87, v88)
+    if not (v89 == nil) then
+        v88 = v89
+        while true do
+            v89, v90 = connections2(v87, v88)
+            if v89 ~= nil then
+                v88 = v89
+                continue
+            end
+        break
+    end
+end
+v87 = items.ChildAdded
+v18.Connections.ChildAdded = v87:Connect(transformValue4)
+v18.Connections.ChildRemoved = items.ChildRemoved:Connect(onChildRemoved2)
+return
+end
+end
+local function processItems7()
+    v18.Enabled = false
+    local v85, v86
+    v85, v86 = next(v18.Connections, nil)
+    if not (v85 == nil) then
+        while next ~= nil do
+        end
+end
+v18.Connections = {}
+local v87, v88, v89
+v87, v88, v89 = pairs(v18.Items)
+v85, v86 = v87(v88, v89)
+local v90 = {}
+if not (v85 == nil) then
+    v89 = v85
+    local v91 = {}
+    while true do
+        if v86.Gui then
+            v85, v86 = v87(v88, v89)
+            if v85 ~= nil then
+                v89 = v85
+                continue
+            end
+        v18.Items = v90
+        return
+    end
+v86 = v88
+v89 = next
+if v89 ~= nil then
+    if v86.Gui then
+        v85, v86 = v87(v88, v89)
+        if v85 ~= nil then
+            v89 = v85
+            continue
+        end
+    v18.Items = v90
+    return
+end
+v85, v86 = v87(v88, v89)
+if v85 ~= nil then
+    v89 = v85
+    continue
+end
+break
+end
+v18.Items = v91
+return
+end
+end
+v18.Items = v90
+end
+local v19
+local function processItems8()
+    local function transformValue(v92)
+        if v19.Objects[v92] then
+            v19.Objects[v92] = nil
+            return
+        end
+end
+local function createRewardESP(v92)
+    local function performTask2()
+    end
+local rewardESP, connect4
+if not v19.Enabled then
+    return
+elseif v92:GetAttribute("PhotoRewardAvailable") == true then
+    if v19.Objects[v92] and v19.Objects[v92].Highlight then
+        return
+    else
+        rewardESP = Instance.new("Highlight")
+        rewardESP.Name = "RewardESP"
+        rewardESP.Adornee = v92
+        rewardESP.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        rewardESP.FillColor = Color3.fromRGB(255, 215, 0)
+        rewardESP.OutlineColor = Color3.fromRGB(255, 240, 120)
+        rewardESP.FillTransparency = 0.35
+        rewardESP.OutlineTransparency = 0.25
+        rewardESP.Parent = v92
+        connect4 = v92:GetAttributeChangedSignal("PhotoRewardAvailable"):Connect(performTask2)
+        v19.Objects[v92] = {Highlight = rewardESP, Connection = connect4}
+        return
+    end
+else
+    return
+end
+end
+local function isInstanceOf(v92)
+    local function performTask()
+    end
+local v93 = v92:IsA("Model") or v92:IsA("BasePart")
+local v94 = not v93
+if v94 then
+    return v92, v94, v93
+else
+    return v92
+end
+end
+local function onChildRemoved(v92)
+    return v92
+end
+local interactables = v3:FindFirstChild("Interactables")
+local connections3, v88, v89, v90, v91
+if interactables then
+    v19.Enabled = true
+    connections3, v88, v89 = ipairs(interactables:GetChildren())
+    v90, v91 = connections3(v88, v89)
+    if not (v90 == nil) then
+        v89 = v90
+        while true do
+            v90, v91 = connections3(v88, v89)
+            if v90 ~= nil then
+                v89 = v90
+                continue
+            end
+        break
+    end
+end
+v88 = interactables.ChildAdded
+v19.Connections.ChildAdded = v88:Connect(isInstanceOf)
+v19.Connections.ChildRemoved = interactables.ChildRemoved:Connect(onChildRemoved)
+return
+end
+end
+local function processItems9()
+    v19.Enabled = false
+    local v85, v86
+    v85, v86 = next(v19.Connections, nil)
+    if not (v85 == nil) then
+        while next ~= nil do
+        end
+end
+v19.Connections = {}
+local v87, v88, v89
+v87, v88, v89 = pairs(v19.Objects)
+v85, v86 = v87(v88, v89)
+local v90 = {}
+if not (v85 == nil) then
+    v89 = v85
+    local v91 = {}
+    while true do
+        if v86.Highlight then
+            v85, v86 = v87(v88, v89)
+            if v85 ~= nil then
+                v89 = v85
+                continue
+            end
+        v19.Objects = v90
+        return
+    end
+if v86.Connection then
+    v85, v86 = v87(v88, v89)
+    if v85 ~= nil then
+        v89 = v85
+        continue
+    end
+v19.Objects = v90
+return
+end
+v86 = v88
+v89 = next
+if v89 ~= nil then
+    if v86.Highlight then
+        v85, v86 = v87(v88, v89)
+        if v85 ~= nil then
+            v89 = v85
+            continue
+        end
+    v19.Objects = v90
+    return
+end
+if v86.Connection then
+    v85, v86 = v87(v88, v89)
+    if v85 ~= nil then
+        v89 = v85
+        continue
+    end
+v19.Objects = v90
+return
+end
+v85, v86 = v87(v88, v89)
+if v85 ~= nil then
+    v89 = v85
+    continue
+end
+break
+end
+v19.Objects = v91
+return
+end
+end
+v19.Objects = v90
+end
+local v20
+local function getValue5()
+    local function getAttribute5()
+        local sprinting
+        if not v20.Enabled then
+            return
+        else
+            sprinting = v7:GetAttribute("Sprinting")
+            if sprinting ~= true then
+                return sprinting
+            end
+    end
+end
+if v20.Enabled then
+    return
+else
+    v20.Enabled = true
+    v20.Conn = v7:GetAttributeChangedSignal("Sprinting"):Connect(getAttribute5)
+    return
+end
+end
+local function updateState7()
+    v20.Enabled = false
+    if v20.Conn then
+        v20.Conn = nil
+    end
+end
+local v21, v22
+local function updateState8()
+    if not v22.Saved then
+        v22.Ambient = v21.Ambient
+        v22.OutdoorAmbient = v21.OutdoorAmbient
+        v22.Brightness = v21.Brightness
+        v22.GlobalShadows = v21.GlobalShadows
+        v22.Saved = true
+    end
+v21.Ambient = Color3.fromRGB(255, 255, 255)
+v21.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+v21.Brightness = 4
+v21.GlobalShadows = false
+end
+local function updateState9()
+    local v85, v86
+    if v22.Saved then
+        v85 = v21
+        v86 = v22.Ambient
+        if v86 then
+            v85.Ambient = v86
+        else
+            v85.Ambient = Color3.new(0, 0, 0)
+        end
+    v85 = v21
+    v86 = v22.OutdoorAmbient
+    if v86 then
+        v85.OutdoorAmbient = v86
+    else
+        v85.OutdoorAmbient = Color3.new(0, 0, 0)
+    end
+v21.Brightness = v22.Brightness or 0
+v21.GlobalShadows = v22.GlobalShadows ~= nil and v22.GlobalShadows or true
+end
+end
+local v23
+local function getValue6()
+    local v85 = v23()
+    local v86 = v85
+    local v87, v88
+    if v85 then
+        v86 = v85:FindFirstChildWhichIsA("SpawnLocation", true)
+        if v86 then
+            v87 = v1
+            v88 = v1
+            if v88 then
+                v88 = v87:FindFirstChild("HumanoidRootPart")
+            elseif not v88 then
+                return
+            else
+                v88.CFrame = v86.CFrame
+                return
+            end
+    end
+elseif not v86 then
+    return
+else
+    v87 = v1
+    v88 = v1
+    if v88 then
+        v88 = v87:FindFirstChild("HumanoidRootPart")
+    elseif not v88 then
+        return
+    else
+        v88.CFrame = v86.CFrame
+        return
+    end
+end
+if v88 then
+    v88.CFrame = v86.CFrame
+end
+end
+local v24, v25
+local function getValue7()
+    local function getAttribute4()
+        if not v25.Enabled then
+            return
+        elseif v10:GetAttribute("Hunting") ~= true then
+            v25.Triggered = false
+            return
+        else
+            v25.Triggered = true
+            return
+        end
+end
+local function onHeartbeat()
+end
+local enabled
+if not v25.Enabled then
+    v25.Enabled = true
+    v25.Triggered = false
+    enabled = getAttribute4
+    if v10 then
+        v25.AttrConn = v10:GetAttributeChangedSignal("Hunting"):Connect(enabled)
+    end
+v25.Conn = v24.Heartbeat:Connect(onHeartbeat)
+return
+end
+end
+local function updateState10()
+    v25.Enabled = false
+    v25.Triggered = false
+    if v25.Conn then
+        v25.Conn = nil
+        v25.AttrConn = nil
+    end
+end
+local function transformValue13(v85)
+    return v85
+end
+local function transformValue14(v85)
+end
+local function transformValue15(v85)
+end
+local function transformValue16(v85)
+end
+local function transformValue17(v85)
+end
+local function transformValue18(v85)
+end
+local function transformValue19(v85)
+    return v85
+end
+local function transformValue20(v85)
+    return v85
+end
+local v26, v27, v28
+local function updateState11()
+    v28 = not v28
+    if v26 then
+        v26.Enabled = v28
+    end
+if v27 then
+    v27.Enabled = v28
+end
+end
+local function computeValue5(v85, v86)
+    local v87
+    if not v86 then
+        v87 = Enum.KeyCode.F1
+        if v85.KeyCode == v87 then
+            return v85, v86
+        else
+            return
+        end
+end
+end
+local v29
+local function getValue8()
+    local v85, v86
+    if v28 then
+        v85 = v29
+        v86 = Color3.fromRGB(170, 0, 0)
+    else
+        v85 = v29
+        v86 = Color3.fromRGB(0, 170, 0)
+    end
+v85.BackgroundColor3 = v86
+end
+local function performTask12()
+end
+local v30, v31
+local function transformValue21(v85)
+    local v86 = v85.Position - v30
+    local scale3 = v31.X.Scale
+    local v87 = v86.X
+    local v88 = v31.X.Offset + v87
+    local scale4 = v31.Y.Scale
+    v87 = v31.Y.Offset + v86.Y
+    v29.Position = UDim2.new(scale3, v88, scale4, v87)
+end
+local v32, v33
+local function updateState12(v85)
+    local mouseButton12 = Enum.UserInputType.MouseButton1
+    local v86 = v85.UserInputType == mouseButton12
+    if not v86 then
+        mouseButton12 = Enum.UserInputType.Touch
+        v86 = v85.UserInputType == mouseButton12
+    end
+if v86 then
+    v32 = true
+    v30 = v85.Position
+    v31 = v29.Position
+    v33 = v85
+end
+end
+local function updateState13(v85)
+    if v85 == v33 then
+        v32 = false
+    end
+end
+local function processValues(v85)
+end
+local function performTask13()
+end
+local function updateState14()
+    v29.ImageTransparency = 0
+end
+local function updateState15()
+    v29.ImageTransparency = 0.1
+end
+v24 = "CoreGui"
+local v34
+local CoreGui = game:GetService("CoreGui")
+v11 = "UserInputService"
+v24 = game
+v34 = game:GetService("UserInputService")
+v11 = game
+v24 = game:GetService("RunService")
+v3 = "TweenService"
+v11 = game:GetService("TweenService")
+v21 = "Players"
+v3 = game
+local Players = game:GetService("Players")
+v7 = "Workspace"
+v21 = game
+v3 = game:GetService("Workspace")
+v1 = "Lighting"
+v7 = game
+v21 = game:GetService("Lighting")
+v7 = Players.LocalPlayer
+v1 = v7.Character
+if not v1 then
+    v1 = v7.CharacterAdded
+    v2 = v39
+    v1 = v39.Wait(v2)
+end
+v8 = "Humanoid"
+v4 = v39
+v2 = v39:WaitForChild("Humanoid")
+v4 = v7.CharacterAdded
+v8 = v42
+v4 = v42.Connect
+v4 = findChild2
+v8 = findChild3
+v14 = waitForChild2
+v16 = findChild4
+v23 = findChild5
+v5 = {}
+local v35
+if v34.TouchEnabled and not v34.KeyboardEnabled then
+    local v76 = {}
+    v35 = v76
+    v76.frameSize = UDim2.new(0.182, 0, 0.645, 0)
+    v35.framePos = UDim2.new(0.02, 0, 0.25, 0)
+    v35.titleSize = UDim2.new(1, 0, 0.075, 0)
+    v35.titleTextSize = 20
+    v35.textScaled = true
+    v35.statSize = UDim2.new(1, 0, 0.055, 0)
+    v35.containerPadding = UDim.new(0.01, 0)
+    v5.GhostStats = v35
+    local v77 = {}
+    v35 = v77
+    v77.frameSize = UDim2.new(0.13, 0, 0.6, 0)
+    v35.framePos = UDim2.new(0.82, 0, 0.3, 0)
+    v35.titleSize = UDim2.new(1, 0, 0.1, 0)
+    v35.titleTextSize = 18
+    v6 = 0
+    v35.buttonSize = UDim2.new(0.92, 0, 0.1, 0)
+else
+    local v78 = {}
+    v35 = v78
+    v78.frameSize = UDim2.new(0, 350, 0, 470)
+    v35.framePos = UDim2.new(0.005, 0, 0.522, 0)
+    v35.titleSize = UDim2.new(1, 0, 0.03, 28)
+    v35.titleTextSize = 24
+    v35.textScaled = false
+    v35.statSize = UDim2.new(1, 0, 0, 20)
+    v35.containerPadding = UDim.new(0, 6)
+    v5.GhostStats = v35
+    local v79 = {}
+    v35 = v79
+    v79.frameSize = UDim2.new(0, 250, 0, 350)
+    v35.framePos = UDim2.new(0.865, 0, 0.45, 0)
+    v35.titleSize = UDim2.new(1, 0, 0.12, 0)
+    v35.titleTextSize = 22
+    v6 = 0
+    v35.buttonSize = UDim2.new(0.9, 0, 0, 28)
+end
+v5.Toggle = v35
+if CoreGui:FindFirstChild("GhostStatsGUI") then
+end
+local ghostStatsGUI = Instance.new("ScreenGui")
+ghostStatsGUI.Name = "GhostStatsGUI"
+ghostStatsGUI.ResetOnSpawn = false
+ghostStatsGUI.IgnoreGuiInset = true
+ghostStatsGUI.Parent = CoreGui
+v35 = Instance.new("Frame")
+v35.Size = v5.GhostStats.frameSize
+v35.Position = v5.GhostStats.framePos
+v6 = 18
+v35.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+v35.BorderSizePixel = 0
+v35.Active = true
+v35.Parent = ghostStatsGUI
+v6 = v35
+v6 = 0
+Instance.new("UICorner", v35).CornerRadius = UDim.new(0, 12)
+local uIStroke = Instance.new("UIStroke")
+v6 = 50
+uIStroke.Color = Color3.fromRGB(50, 50, 50)
+uIStroke.Thickness = 3
+uIStroke.Parent = v35
+v6 = "TextLabel"
+local textLabel = Instance.new("TextLabel")
+textLabel.Size = v5.GhostStats.titleSize
+textLabel.Position = UDim2.new(0, 0, 0, 0)
+textLabel.BackgroundTransparency = 1
+textLabel.Text = "Ghost Stats"
+textLabel.TextColor3 = Color3.fromRGB(230, 230, 230)
+textLabel.Font = Enum.Font.GothamBold
+textLabel.TextScaled = v5.GhostStats.textScaled
+v6 = v5.GhostStats.titleTextSize
+textLabel.TextSize = v6
+textLabel.Parent = v35
+v6 = Instance.new("Frame")
+v6.Size = UDim2.new(0.957, 0, 0.9, 0)
+v6.Position = UDim2.new(0.043, 0, 0.1, 0)
+v6.BackgroundTransparency = 1
+v6.Parent = v35
+local uIListLayout = Instance.new("UIListLayout")
+uIListLayout.Padding = v5.GhostStats.containerPadding
+uIListLayout.Parent = v6
+v9 = uIStroke
+local v38 = AddStat
+local v39, v40, v41, v42, v43 = .. .
+v10 = getgenv(v43)
+local v44 = {AddStat = AddStat, UpdateStat = computeValue3, Clear = Clear}
+v9 = v44
+v10.GhostGUI = v44
+v10 = v4()
+v9 = not v10
+local v45, v46, v47, v48, v49, v50, v51, v52, v53, v54, v55, v56, v57, v58, toggleGUI, frame, v59, textLabel2, textLabel3, textLabel4, v60, mobileToggleGUI, uICorner, uIAspectRatioConstraint
+if not v9 then
+    v9 = transformValue12
+    v45 = v38("Current Room:", "Loading...")
+    v46 = v38("Favorite Room:", "Loading...")
+    v47 = v38("Age:", "Loading...")
+    v48 = v38("Gender:", "Loading...")
+    v49 = v38("Hunting:", "Loading...")
+    v50 = v38("Ghost Orbs:", "Loading...")
+    v51 = v38("Handprints:", "Loading...")
+    v52 = v38("EMF Level 5:", "Loading...")
+    v53 = v38("Ghost Footsteps:", "Loading...")
+    v54 = v38("Broken Glass:", "Loading...")
+    v55 = v38("Nightmare Shatter:", "Loading...")
+    v56 = v38("Entity Smoke:", "Loading...")
+    v57 = v38("Ghost Speed:", "Loading...")
+    v58 = v38("Player Speed:", "Loading...")
+    v38("Current Room Temp:", "Loading...")
+    v38("Favorite Room Temp:", "Loading...")
+    local v80 = {}
+    v59 = v80
+    v80.CurrentRoom = {label = v45, prefix = "Current Room:", source = "Attribute"}
+    v80.FavoriteRoom = {label = v46, prefix = "Favorite Room:", source = "Attribute"}
+    v80.Age = {label = v47, prefix = "Age:", source = "Attribute"}
+    v80.Gender = {label = v48, prefix = "Gender:", source = "Attribute"}
+    v59.Hunting = {label = v49, prefix = "Hunting:", source = "Attribute"}
+    v59.GhostOrb = {label = v50, prefix = "Ghost Orbs:", source = "ObjectExists", object = "GhostOrb"}
+    v59.Handprint = {
+    label = v51, prefix = "Handprints:", source = "ObjectExists", object = "Handprint", parent = "Handprints", }
+    v59.EMFLevel5 = {label = v52, prefix = "EMF Level 5:", source = "EMFLevel5"}
+    v59.GhostFootsteps = {
+    label = v53, prefix = "Ghost Footsteps:", source = "ObjectExists", object = "GhostFootsteps", parent = "Ghost", }
+    v59.BrokenGlass = {
+    label = v54, prefix = "Broken Glass:", source = "ObjectExists", object = "BrokenGlass", parent = "BrokenGlass", }
+    v59.NightmareShatter = {
+    label = v55, prefix = "Nightmare Shatter:", source = "NightmareShatter", parent = "BrokenGlass", }
+    v59.EntitySmoke = {
+    label = v56, prefix = "Entity Smoke:", source = "LatchedBoolean", object = "SmokeHolder", parent = "EffectHolder", }
+    v59.WalkSpeed = {label = v57, prefix = "Ghost Speed:", source = "Humanoid"}
+    local v81 = {}
+    v12 = v81
+    v81.label = v58
+    v81.prefix = "Player Speed:"
+    v81.source = "Humanoid"
+    v81.target = "Player"
+    v59.PlayerSpeed = v81
+    if CoreGui:FindFirstChild("ToggleGUI") then
+    end
+toggleGUI = Instance.new("ScreenGui")
+toggleGUI.Name = "ToggleGUI"
+toggleGUI.ResetOnSpawn = false
+toggleGUI.IgnoreGuiInset = true
+toggleGUI.Parent = CoreGui
+frame = Instance.new("Frame")
+frame.Size = v5.Toggle.frameSize
+frame.Position = v5.Toggle.framePos
+frame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Parent = toggleGUI
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+v59 = Instance.new("UIStroke")
+v59.Color = Color3.fromRGB(50, 50, 50)
+v59.Thickness = 3
+v59.Parent = frame
+textLabel2 = Instance.new("TextLabel")
+textLabel2.Size = v5.Toggle.titleSize
+v12 = UDim2.new(0, 0, 0.001, 0)
+textLabel2.Position = v12
+textLabel2.BackgroundTransparency = 1
+textLabel2.Text = "Toggle Buttons"
+textLabel2.TextColor3 = Color3.fromRGB(230, 230, 230)
+textLabel2.Font = Enum.Font.GothamBold
+textLabel2.TextScaled = v5.GhostStats.textScaled
+v12 = v5.Toggle.titleTextSize
+textLabel2.TextSize = v12
+textLabel2.Parent = frame
+v12 = Instance.new("Frame")
+v12.Size = UDim2.new(0.957, 0, 0.875, 0)
+v12.Position = UDim2.new(0.06, 0, 0.13, 0)
+v12.BackgroundTransparency = 1
+v12.Parent = frame
+textLabel3 = Instance.new("TextLabel")
+textLabel3.Size = UDim2.new(1, 0, 0.065, 0)
+textLabel3.Position = UDim2.new(0, 0, 0.935, 0)
+textLabel3.BackgroundTransparency = 1
+textLabel3.Text = "Script  by  tranquiLo"
+textLabel3.TextColor3 = Color3.fromRGB(255, 255, 255)
+textLabel3.TextTransparency = 0.2
+textLabel3.Font = Enum.Font.GothamBold
+textLabel3.TextScaled = v5.GhostStats.textScaled
+textLabel3.TextSize = 14
+textLabel3.TextXAlignment = Enum.TextXAlignment.Center
+textLabel3.Parent = v12
+textLabel4 = Instance.new("TextLabel")
+textLabel4.Size = UDim2.new(1, 0, 0.065, 0)
+textLabel4.Position = UDim2.new(0, 0, 0.935, 0)
+textLabel4.BackgroundTransparency = 1
+textLabel4.Text = "My Discord  :  estranquilo"
+textLabel4.TextColor3 = Color3.fromRGB(255, 255, 255)
+textLabel4.TextTransparency = 0.2
+textLabel4.Font = Enum.Font.GothamBold
+v13 = v5.GhostStats
+textLabel4.TextScaled = v13.textScaled
+textLabel4.TextSize = 14
+textLabel4.TextXAlignment = Enum.TextXAlignment.Center
+v13 = Enum.TextYAlignment
+textLabel4.TextYAlignment = v13.Top
+textLabel4.Parent = v12
+v60 = Instance.new("UIListLayout", v12)
+v13 = UDim.new(0.015, 0)
+v60.Padding = v13
+v60 = addTextButton
+v13 = {}
+v15 = {}
+local v82 = {Enabled = false}
+v82.Parts = {}
+v82.Connections = {}
+v17 = v82
+local v83 = {Enabled = false}
+v83.Items = {}
+v83.Connections = {}
+v18 = v83
+local v84 = {Enabled = false}
+v84.Objects = {}
+v84.Connections = {}
+v19 = v84
+v20 = {Enabled = false, Conn = nil}
+v22 = {Saved = false}
+v25 = {Enabled = false, Conn = nil, AttrConn = nil, Triggered = false}
+v60("Infinite Stamina", v60("Reward Objects ESP", v60("Items ESP", v60("Handprints ESP", v60("Orb ESP", v60("Fullbright", v60("Ghost ESP", transformValue13)))))))
+v26 = "Hunt Escape"
+v60("Hunt Escape", transformValue20)
+v28 = "GhostStatsGUI"
+v27 = CoreGui
+v26 = CoreGui:FindFirstChild("GhostStatsGUI")
+v28 = CoreGui
+v27 = CoreGui:FindFirstChild("ToggleGUI")
+v28 = true
+v29 = computeValue5
+if v34.TouchEnabled then
+    v29 = CoreGui
+    if CoreGui.FindFirstChild(v29, "MobileToggleGUI") then
+    end
+mobileToggleGUI = Instance.new("ScreenGui")
+mobileToggleGUI.Name = "MobileToggleGUI"
+mobileToggleGUI.ResetOnSpawn = false
+mobileToggleGUI.IgnoreGuiInset = true
+mobileToggleGUI.DisplayOrder = 999999
+v29 = Enum.ZIndexBehavior.Global
+mobileToggleGUI.ZIndexBehavior = v29
+mobileToggleGUI.Parent = CoreGui
+v29 = Instance.new("ImageButton")
+v29.Size = UDim2.new(0.08, 0, 0.08, 0)
+v29.Position = UDim2.new(0.92, 0, 0.03, 0)
+v29.AnchorPoint = Vector2.new(1, 0)
+v29.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+v29.BackgroundTransparency = 0.15
+v29.BorderSizePixel = 0
+v29.Image = "rbxassetid://87149917106794"
+v29.ImageColor3 = Color3.fromRGB(255, 255, 255)
+v29.ImageTransparency = 0.1
+v29.ZIndex = 100
+v29.Parent = mobileToggleGUI
+uICorner = Instance.new("UICorner")
+uICorner.CornerRadius = UDim.new(1, 0)
+uICorner.Parent = v29
+uIAspectRatioConstraint = Instance.new("UIAspectRatioConstraint")
+uIAspectRatioConstraint.AspectRatio = 1
+uIAspectRatioConstraint.AspectType = Enum.AspectType.ScaleWithParentSize
+uIAspectRatioConstraint.Parent = v29
+v32 = false
+v30 = nil
+v31 = nil
+v33 = nil
+end
+return
+end
