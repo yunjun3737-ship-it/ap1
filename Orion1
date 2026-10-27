@@ -3682,6 +3682,132 @@ end)
 
 			return SectionFunction
 		end	
+		local TabSplitFrame = nil
+		local TabLeftColumn = nil
+		local TabRightColumn = nil
+
+		local function GetOrInitSplit()
+			if not TabSplitFrame then
+				TabSplitFrame = SetChildren(SetProps(MakeElement("TFrame"), {
+					Size = UDim2.new(1, 0, 0, 0),
+					Parent = Container
+				}), {
+					SetProps(MakeElement("List"), {
+						FillDirection = Enum.FillDirection.Horizontal,
+						SortOrder = Enum.SortOrder.LayoutOrder,
+						Padding = UDim.new(0, 10)
+					})
+				})
+
+				TabLeftColumn = SetChildren(SetProps(MakeElement("TFrame"), {
+					Size = UDim2.new(0.5, -5, 0, 0),
+					Parent = TabSplitFrame
+				}), {
+					MakeElement("List", 0, 6)
+				})
+
+				TabRightColumn = SetChildren(SetProps(MakeElement("TFrame"), {
+					Size = UDim2.new(0.5, -5, 0, 0),
+					Parent = TabSplitFrame
+				}), {
+					MakeElement("List", 0, 6)
+				})
+
+				local function UpdateHeight()
+					local leftHeight = TabLeftColumn:FindFirstChild("UIListLayout") and TabLeftColumn.UIListLayout.AbsoluteContentSize.Y or 0
+					local rightHeight = TabRightColumn:FindFirstChild("UIListLayout") and TabRightColumn.UIListLayout.AbsoluteContentSize.Y or 0
+					local maxHeight = math.max(leftHeight, rightHeight)
+					
+					TabLeftColumn.Size = UDim2.new(0.5, -5, 0, maxHeight)
+					TabRightColumn.Size = UDim2.new(0.5, -5, 0, maxHeight)
+					TabSplitFrame.Size = UDim2.new(1, 0, 0, maxHeight)
+				end
+
+				AddConnection(TabLeftColumn.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), UpdateHeight)
+				AddConnection(TabRightColumn.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), UpdateHeight)
+			end
+			return TabLeftColumn, TabRightColumn
+		end
+
+		function ElementFunction:AddLSection(SectionConfig)
+			local LeftCol, RightCol = GetOrInitSplit()
+			SectionConfig.Name = SectionConfig.Name or "Section"
+
+			local SectionFrame = SetChildren(SetProps(MakeElement("TFrame"), {
+				Size = UDim2.new(1, 0, 0, 26),
+				Parent = LeftCol
+			}), {
+				AddThemeObject(SetProps(MakeElement("Label", SectionConfig.Name, 13), {
+					Size = UDim2.new(1, -12, 0, 16),
+					Position = UDim2.new(0, 0, 0, 3),
+					Font = Enum.Font.Code
+				}), "TextDark"),
+				SetChildren(SetProps(MakeElement("TFrame"), {
+					AnchorPoint = Vector2.new(0, 0),
+					Size = UDim2.new(1, 0, 1, -24),
+					Position = UDim2.new(0, 0, 0, 23),
+					Name = "Holder"
+				}), {
+					MakeElement("List", 0, 6)
+				}),
+			})
+
+			AddConnection(SectionFrame.Holder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+				SectionFrame.Size = UDim2.new(1, 0, 0, SectionFrame.Holder.UIListLayout.AbsoluteContentSize.Y + 31)
+				SectionFrame.Holder.Size = UDim2.new(1, 0, 0, SectionFrame.Holder.UIListLayout.AbsoluteContentSize.Y)
+			end)
+
+			local SectionFunction = {}
+			for i, v in next, GetElements(SectionFrame.Holder) do
+				SectionFunction[i] = v 
+			end
+
+			Sections[TabConfig.Name] = Sections[TabConfig.Name] or {}
+			Sections[TabConfig.Name][SectionConfig.Name] = SectionFrame
+			SectionFrame.Name = SectionConfig.Name
+
+			return SectionFunction
+		end	
+
+		function ElementFunction:AddRSection(SectionConfig)
+			local LeftCol, RightCol = GetOrInitSplit()
+			SectionConfig.Name = SectionConfig.Name or "Section"
+
+			local SectionFrame = SetChildren(SetProps(MakeElement("TFrame"), {
+				Size = UDim2.new(1, 0, 0, 26),
+				Parent = RightCol
+			}), {
+				AddThemeObject(SetProps(MakeElement("Label", SectionConfig.Name, 13), {
+					Size = UDim2.new(1, -12, 0, 16),
+					Position = UDim2.new(0, 0, 0, 3),
+					Font = Enum.Font.Code
+				}), "TextDark"),
+				SetChildren(SetProps(MakeElement("TFrame"), {
+					AnchorPoint = Vector2.new(0, 0),
+					Size = UDim2.new(1, 0, 1, -24),
+					Position = UDim2.new(0, 0, 0, 23),
+					Name = "Holder"
+				}), {
+					MakeElement("List", 0, 6)
+				}),
+			})
+
+			AddConnection(SectionFrame.Holder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+				SectionFrame.Size = UDim2.new(1, 0, 0, SectionFrame.Holder.UIListLayout.AbsoluteContentSize.Y + 31)
+				SectionFrame.Holder.Size = UDim2.new(1, 0, 0, SectionFrame.Holder.UIListLayout.AbsoluteContentSize.Y)
+			end)
+
+			local SectionFunction = {}
+			for i, v in next, GetElements(SectionFrame.Holder) do
+				SectionFunction[i] = v 
+			end
+
+			Sections[TabConfig.Name] = Sections[TabConfig.Name] or {}
+			Sections[TabConfig.Name][SectionConfig.Name] = SectionFrame
+			SectionFrame.Name = SectionConfig.Name
+
+			return SectionFunction
+		end	
 
 		for i, v in next, GetElements(Container) do
 			ElementFunction[i] = v 
@@ -3878,7 +4004,7 @@ function OrionLib:Destroy()
 	Orion:Destroy()
 end
 
---[[
+
 local Window = OrionLib:MakeWindow({Name = "test", HidePremium = true, SaveConfig = false, IntroEnabled = false, FreeMouse = true})
 
 local Main_Tab = Window:MakeTab({
@@ -3887,7 +4013,9 @@ local Main_Tab = Window:MakeTab({
 	PremiumOnly = false,
 	Description = "Welcome to Combat Tab"
 })
-
+Main_Tab:AddLSection({
+    Name = "왼쪽 메뉴"
+})
 Main_Tab:AddDropdown({
     Name = "Weapons",
     Options = {
@@ -3930,8 +4058,24 @@ Main_Tab:AddToggle({
 	Save = true,
 	Flag = "KickNotification_Toggle"      
 })
+-- 예: Main_Tab이라는 탭이 있다고 가정
+Main_Tab:AddLSection({
+    Name = "왼쪽 메뉴"
+})
+Main_Tab:AddButton({
+    Name = "왼쪽 버튼",
+    Callback = function() print("Left clicked") end
+})
+
+Main_Tab:AddRSection({
+    Name = "오른쪽 메뉴"
+})
+Main_Tab:AddButton({
+    Name = "오른쪽 버튼",
+    Callback = function() print("Right clicked") end
+})
 
 Window:AddConfigTab()
-]]--
+
 
 return OrionLib
