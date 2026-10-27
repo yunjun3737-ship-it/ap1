@@ -495,7 +495,7 @@ function SpawnCFrame()
 
     return camPart
 
-    G = rs.GrabEvents
+    G = rs.GrabEvents end
 G:WaitForChild("EndGrabEarly"):Destroy()
 Instance.new("RemoteEvent", G).Name = "EndGrabEarly"
 local UserInputService = game:GetService("UserInputService")
