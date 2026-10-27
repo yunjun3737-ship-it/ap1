@@ -3501,7 +3501,7 @@ end
 function OrionLib:Destroy()
 	Orion:Destroy()
 end
-
+--[[
 local Window = OrionLib:MakeWindow({Name = "test", HidePremium = true, SaveConfig = false, IntroEnabled = false, FreeMouse = true})
 
 local Main_Tab = Window:MakeTab({
@@ -3605,7 +3605,7 @@ Main_Tab:AddSlider({
 		print("Slider Value: ", Value)
 	end
 })
-
+]]
 Window:AddConfigTab()
 
 return OrionLib
