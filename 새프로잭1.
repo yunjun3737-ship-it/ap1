@@ -1475,3 +1475,328 @@ grabTab:AddSlider({
         extendAmount = value
     end
 })
+
+
+function NoClipGrabF()
+    local trackedTargets = {}
+    local playerCheckCooldown = 0
+    
+    local function findAllParts(object, partsList)
+        if object:IsA("BasePart") then
+            partsList[object] = object.CanCollide
+        end
+        
+        for _, child in ipairs(object:GetChildren()) do
+            findAllParts(child, partsList)
+        end
+    end
+    
+    local function setPartsCollision(partsList, enable)
+        for part, originalValue in pairs(partsList) do
+            if part and part.Parent then
+                if enable then
+                    part.CanCollide = originalValue
+                else
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+    
+    while NoClipGrabT and task.wait() do
+        local grabParts = workspace:FindFirstChild("GrabParts")
+        
+        if grabParts then
+            local currentTargets = {}
+            
+            for _, grabPart in ipairs(grabParts:GetChildren()) do
+                if grabPart.Name == "GrabPart" then
+                    local weldConstraint = grabPart:FindFirstChildOfClass("WeldConstraint")
+                    
+                    if weldConstraint and weldConstraint.Part1 then
+                        local target = weldConstraint.Part1
+                        currentTargets[target] = true
+                        
+                        if not trackedTargets[target] then
+                            local partsToDisable = {}
+                            local isPlayer = false
+                            
+                            if target.Parent then
+                                findAllParts(target.Parent, partsToDisable)
+                                local humanoid = target.Parent:FindFirstChildOfClass("Humanoid")
+                                if humanoid then
+                                    isPlayer = true
+                                end
+                            else
+                                if target:IsA("BasePart") then
+                                    partsToDisable[target] = target.CanCollide
+                                end
+                            end
+                            
+                            setPartsCollision(partsToDisable, false)
+                            
+                            local connection
+                            connection = weldConstraint.Destroying:Connect(function()
+                                setPartsCollision(partsToDisable, true)
+                                trackedTargets[target] = nil
+                                if connection then
+                                    connection:Disconnect()
+                                end
+                            end)
+                            
+                            trackedTargets[target] = {
+                                target = target,
+                                connection = connection,
+                                partsToDisable = partsToDisable,
+                                isPlayer = isPlayer,
+                                lastPlayerCheck = os.clock()
+                            }
+                        else
+                            trackedTargets[target].lastPlayerCheck = os.clock()
+                        end
+                    end
+                end
+            end
+            
+            playerCheckCooldown = playerCheckCooldown + task.wait()
+            if playerCheckCooldown >= 0.01 then
+                playerCheckCooldown = 0
+                
+                for target, data in pairs(trackedTargets) do
+                    if data.isPlayer then
+                        
+                    end
+                end
+            end
+        end
+    end
+end
+
+
+function MasslessGrabF()
+    while MasslessGrabT and task.wait() do
+        local grabParts = workspace:FindFirstChild("GrabParts")
+        
+        if grabParts then
+            local dragParts = {grabParts:FindFirstChild("DragPart"), grabParts:FindFirstChild("DragPart1")}
+            
+            for _, dragPart in pairs(dragParts) do
+                if dragPart then
+                    local alignOrientation = dragPart:FindFirstChildOfClass("AlignOrientation")
+                    if alignOrientation then
+                        alignOrientation.MaxAngularVelocity = math.huge
+                        alignOrientation.MaxTorque = math.huge
+                        alignOrientation.Responsiveness = 200
+                    end
+                    
+                    local alignPosition = dragPart:FindFirstChildOfClass("AlignPosition")
+                    if alignPosition then
+                        alignPosition.MaxAxesForce = Vector3.new(math.huge, math.huge, math.huge)
+                        alignPosition.MaxForce = math.huge
+                        alignPosition.MaxVelocity = math.huge
+                        alignPosition.Responsiveness = 200
+                    end
+                end
+            end
+        end
+    end
+end
+
+
+AnhKick = false
+function KickGrabF()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+
+    if not KickGrabT then return end
+
+    local localPlayer = Players.LocalPlayer
+    if not localPlayer or not localPlayer.Character then return end
+
+    local connection
+    connection = RunService.Heartbeat:Connect(function()
+        if not KickGrabT then
+            connection:Disconnect()
+            return
+        end
+
+        local myCharacter = localPlayer.Character
+        local myTorso = myCharacter:FindFirstChild("Torso") or myCharacter:FindFirstChild("HumanoidRootPart")
+        if not myTorso then return end
+
+        local grabParts = workspace:FindFirstChild("GrabParts")
+        if not grabParts then return end
+
+        for _, grabPart in ipairs(grabParts:GetChildren()) do
+            if grabPart.Name == "GrabPart" then
+                local weld = grabPart:FindFirstChildOfClass("WeldConstraint")
+                if not weld then continue end
+
+                local originalPart1 = weld.Part1
+                if not originalPart1 then continue end
+
+                local ownerPlayer
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player ~= localPlayer and player.Character and originalPart1:IsDescendantOf(player.Character) then
+                        ownerPlayer = player
+                        break
+                    end
+                end
+
+                if not ownerPlayer then continue end
+                local tgtTorso = ownerPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if not tgtTorso then continue end
+
+                weld.Part1 = tgtTorso
+
+                if AnhKick then
+                    local tgtHum = ownerPlayer.Character:FindFirstChild("Humanoid")
+                    if not tgtHum then continue end
+
+                    if not tgtHum.Sit then ReplicatedStorage.GrabEvents.SetNetworkOwner:FireServer(tgtTorso, CFrame.lookAt(myTorso.Position, tgtTorso.Position)) end
+                    if tgtHum.Sit then ReplicatedStorage.GrabEvents.DestroyGrabLine:FireServer(tgtTorso) end
+                    if ownerPlayer.IsHeld then ReplicatedStorage.GrabEvents.SetNetworkOwner:FireServer(tgtTorso, CFrame.lookAt(myTorso.Position, tgtTorso.Position)) end
+                    if tgtHum.Sit then ReplicatedStorage.GrabEvents.DestroyGrabLine:FireServer(tgtTorso) end
+                else
+                    ReplicatedStorage.GrabEvents.SetNetworkOwner:FireServer(tgtTorso, CFrame.lookAt(myTorso.Position, tgtTorso.Position))
+                    ReplicatedStorage.GrabEvents.DestroyGrabLine:FireServer(tgtTorso)
+                end
+            end
+        end
+    end)
+end
+
+
+TpKLG = false
+function KillGrabF()
+    while KillGrabT and task.wait() do
+        local grabParts = workspace:FindFirstChild("GrabParts")
+        if not grabParts then continue end
+
+        for _, grabPart in ipairs(grabParts:GetChildren()) do
+            if not KillGrabT then break end
+            if grabPart.Name ~= "GrabPart" then continue end
+
+            local weldConstraint = grabPart:FindFirstChildOfClass("WeldConstraint")
+            if not weldConstraint or not weldConstraint.Part1 then continue end
+
+            local target = weldConstraint.Part1
+            if not target or not target.Parent then continue end
+
+            local targetPlayer = game.Players:FindFirstChild(target.Parent.Name)
+            if not targetPlayer then continue end
+
+            local targetChar = targetPlayer.Character
+            if not targetChar then continue end
+
+            local THead = targetChar:FindFirstChild("Head")
+            local THRP = targetChar:FindFirstChild("HumanoidRootPart")
+            local THum = targetChar:FindFirstChildOfClass("Humanoid")
+
+            if not THead or not THRP or not THum then continue end
+            if THum.Health <= 0 then continue end
+
+            local char = plr.Character
+            if not char then continue end
+
+            local myTorso = char:FindFirstChild("HumanoidRootPart")
+            if not myTorso then continue end
+
+            if (myTorso.Position - target.Position).Magnitude > 30 then continue end
+
+            local partOwner = THead:FindFirstChild("PartOwner")
+
+            if WhiteListMode then
+                local isWhitelisted = false
+                for _, whitelistedName in ipairs(Whitelist) do
+                    if whitelistedName == targetPlayer.Name then
+                        isWhitelisted = true
+                        break
+                    end
+                end
+                if isWhitelisted then continue end
+            end
+
+            if not partOwner or not partOwner:IsA("StringValue") or partOwner.Value ~= plr.Name then
+                pcall(function()
+                    game:GetService("ReplicatedStorage").GrabEvents.SetNetworkOwner:FireServer(THRP, CFrame.lookAt(myTorso.Position, THRP.Position))
+                end)
+                continue
+            end
+
+            game:GetService("ReplicatedStorage").GrabEvents.SetNetworkOwner:FireServer(THRP, CFrame.lookAt(myTorso.Position, THRP.Position))
+            game:GetService("ReplicatedStorage").GrabEvents.DestroyGrabLine:FireServer(THRP)
+
+            weldConstraint.Part0 = nil
+
+            if THum.RigType ~= Enum.HumanoidRigType.R15 and THum.SeatPart == nil then THum.RigType = Enum.HumanoidRigType.R15 end
+            if THum.BreakJointsOnDeath == true and THum.SeatPart == nil then THum.BreakJointsOnDeath = false end
+
+            local FallenY = workspace.FallenPartsDestroyHeight
+            local targetY = (FallenY <= -50000 and -49999.50) or (FallenY <= -100 and -99.50) or -100
+            if TpKLG then THRP.CFrame = CFrame.new(9999, targetY, 9999) end
+        end
+    end
+end
+
+
+function AntiStruggleGrabF()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local SetNetworkOwner = ReplicatedStorage.GrabEvents.SetNetworkOwner
+    local DestroyGrabLine = ReplicatedStorage.GrabEvents.DestroyGrabLine
+    local CreateGrabLine = ReplicatedStorage.GrabEvents.CreateGrabLine
+    local Players = game:GetService("Players")
+
+    if not AntiStruggleGrabT then return end
+
+    task.spawn(function()
+        while AntiStruggleGrabT do
+            local grabParts = workspace:FindFirstChild("GrabParts")
+            if not grabParts then
+                task.wait()
+                continue
+            end
+
+            local gp = grabParts:FindFirstChild("GrabPart")
+            local weld = gp and gp:FindFirstChildOfClass("WeldConstraint")
+            local part1 = weld and weld.Part1
+
+            if part1 then
+                local ownerPlayer = nil
+                for _, pl in ipairs(Players:GetPlayers()) do
+                    if pl.Character and part1:IsDescendantOf(pl.Character) then
+                        ownerPlayer = pl
+                        break
+                    end
+                end
+
+                while AntiStruggleGrabT and workspace:FindFirstChild("GrabParts") do
+                    if ownerPlayer then
+                        local tgtTorso = ownerPlayer.Character:FindFirstChild("HumanoidRootPart") 
+                        local tgtHum = ownerPlayer.Character:FindFirstChild("Humanoid")
+                        local tgtHead = ownerPlayer.Character:FindFirstChild("Head")
+                        local myTorso = plr.Character:FindFirstChild("HumanoidRootPart") 
+
+                        if tgtTorso and myTorso and tgtHead then
+                            local ownerValue = tgtHead:FindFirstChild("PartOwner")
+                            if tgtTorso then --not ownerValue or ownerValue.Value ~= plr.Name then
+                                SetNetworkOwner:FireServer(tgtTorso, CFrame.lookAt(myTorso.Position, tgtTorso.Position))
+                            end
+                        end
+                    else
+                        if part1.Parent then
+                            local myTorso = plr.Character:FindFirstChild("HumanoidRootPart")
+                            if myTorso then
+                                SetNetworkOwner:FireServer(part1, CFrame.lookAt(myTorso.Position, part1.Position))
+                            end
+                        end
+                    end
+                    task.wait()
+                end
+            end
+            task.wait()
+        end
+    end)
+end
+
