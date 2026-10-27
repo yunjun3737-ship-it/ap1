@@ -541,7 +541,7 @@ plr.CharacterAdded:Connect(function(char)
 end)
 
 local jumpPowerT = false
-local jumpPowerV = 50
+local jumpPowerV = 24
 
 local function updateJumpPowerF()
     local function apply(char)
@@ -557,7 +557,7 @@ local function updateJumpPowerF()
             end)
         else
             hum.UseJumpPower = true
-            hum.JumpPower = 50
+            hum.JumpPower = 24
         end
     end
 
@@ -580,7 +580,7 @@ playerTab:AddToggle({
 
 playerTab:AddSlider({
     Name = "Jump",
-    Min = 24,
+    Min = 1,
     Max = 500,
     Default = 50,
     Flag = "1991js",
@@ -1452,6 +1452,7 @@ grabTab:AddSection({
 grabTab:AddToggle({
     Name = "Infinite line",
     Default = false,
+    Flag = "pg8wp8gt2",
     Callback = function(value)
         furtherExtend = value
         toggleExtendButtons(value)
@@ -1467,6 +1468,7 @@ grabTab:AddSlider({
     Min = 1,
     Max = 25,
     Default = 3,
+    Flag = "hehsisi",
     Increment = 1,
     ValueName = "Studs",
     Callback = function(value)
