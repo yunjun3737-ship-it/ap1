@@ -1105,15 +1105,13 @@ playerTab:AddToggle({
 				end
 			end)
 		else
-			if Config.spincconnn then
-				Config.spincconnn:Disconnect()
-				Config.spincconnn = nil
+		
 			end
 		end
 	end
 })
 
-playerTanb:AddSlider({
+playerTab:AddSlider({
 	Name = "Spin speed",
 	Default = 5,
     Flag = "eud91ndjd",
