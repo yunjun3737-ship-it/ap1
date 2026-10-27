@@ -343,8 +343,8 @@ local function onCharacterAdded(char)
 end
 
 plr.CharacterAdded:Connect(onCharacterAdded)
-                        end
-                    end
+                       --- end
+                 ---   end
 
                     if closestPlayer then
                         ownerName = string.format("[ %s ] ( @%s )",
