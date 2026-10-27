@@ -398,10 +398,10 @@ plr.CharacterAdded:Connect(onCharacterAdded)
                         end, closestPlayer, boolValue)
                     end
                 --end
-            end
-        end
-    end)
-end
+            --end
+      --  end
+    --end)
+--end
 
 
 function SpawnCFrame()
