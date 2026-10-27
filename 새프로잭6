@@ -356,11 +356,8 @@ local Window = OrionLib:MakeWindow({
     IntroText = "4"
 })
 
-local playerTab = Window:MakeTab({
-    Name = "Player",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
+local playerTab = Window:MakeTab({Name = "Player", Icon = "rbxassetid://6034281935", PremiumOnly = false, Description = "Customize your character's speed, jump power, and core physics."})    
+
 
 playerTab:AddSection({
     Name = "Player"
