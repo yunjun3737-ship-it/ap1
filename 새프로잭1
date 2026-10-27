@@ -427,6 +427,7 @@ function Utils.ROS(part, ignoreDistance)
 end
 
 return Utils
+
 local GetPlayerCharacter = u.GetPlayerCharacter
 local GetCharacter = u.GetCharacter
 local PLCF = u.PLCF
