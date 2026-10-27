@@ -1091,35 +1091,47 @@ playerTab:AddToggle({
     end    
 })
 
+
+
 playerTab:AddToggle({
-	Name = "spin",
-	Default = false,
-    Flag = "shw8dhdh2",
-	Callback = function(Value)
-		if Value then
-			Config.spincconnn = service.RunService.Heartbeat:Connect(function()
-				local character = localPlayer.Character
-				local root = character and character:FindFirstChild("HumanoidRootPart")
-				if root then
-					root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(Config.spinsp), 0)
-				end
-			end)
-		else
-		
-			end
-		end})
+    Name = "Spin Character",
+    Default = false,
+   Flag = "outgqw",
+    Callback = function(Value)
+        SpinEnabled = Value
+    end
+})
 
 playerTab:AddSlider({
-	Name = "Spin speed",
-	Default = 5,
-    Flag = "eud91ndjd",
-	Min = 1,
-	Max = 50,
-	Rounding = 1,
-	Callback = function(Value)
-		Config.spinsp = Value
-	end
+    Name = "Spin Speed",
+    Min = 1,
+    Max = 100,
+    Default = 25,
+    Flag = "8d861ipgg1",
+    Increment = 1,
+    ValueName = "Speed",
+    Callback = function(Value)
+        SpinSpeed = Value
+    end
 })
+
+local RunService = game:GetService("RunService")
+local Player = game:GetService("Players").LocalPlayer
+
+RunService.RenderStepped:Connect(function(DeltaTime)
+    if not SpinEnabled then
+        return
+    end
+
+    local Character = Player.Character
+    local Root = Character and Character:FindFirstChild("HumanoidRootPart")
+
+    if Root then
+        Root.CFrame = Root.CFrame
+            * CFrame.Angles(0, math.rad(SpinSpeed * 36 * DeltaTime), 0)
+    end
+end)
+
 
 playerTab:AddSlider({
     Name = "FPS booster",
