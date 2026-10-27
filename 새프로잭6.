@@ -433,7 +433,7 @@ end
 playerTab:AddToggle({
     Name = "Walk speed",
     Default = false,
-    Flag = "u9r1dr68hv",
+    Flag = "qhisid",
     Callback = function(v)
         walkSpeedT = v
         updateWalkSpeedF()
@@ -441,11 +441,13 @@ playerTab:AddToggle({
 })
 
 playerTab:AddSlider({
-    Name = "Walk speed ",
+    Name = "Walk speed",
     Min = 16,
     Max = 500,
     Default = 80,
-    Flag = "furiqffuow",
+    Flag = "2kjddehwijs",
+    Color = Color3.fromRGB(225,155,0),
+
     Increment = 10,
     ValueName = "Speed",
     Callback = function(v)
@@ -494,7 +496,7 @@ end
 playerTab:AddToggle({
     Name = "Jump",
     Default = false,
-    Flag = "udid8ow",
+    Flag = "ueuwiw",
     Callback = function(Value)
         jumpPowerT = Value
         updateJumpPowerF()
@@ -506,8 +508,8 @@ playerTab:AddSlider({
     Min = 24,
     Max = 500,
     Default = 50,
-    Flag = "qodojici",
-    Color = Color3.fromRGB(255,255,255),
+    Flag = "1991js",
+    Color = Color3.fromRGB(100,0,225),
     Increment = 1,
     ValueName = "Power",
     Callback = function(Value)
@@ -548,7 +550,7 @@ playerTab:AddToggle({
     Name = "NoClip",
     Default = false,
     save = true,
-    Flag = "32999",
+    Flag = "qi8s82",
     Callback = function(Value)
         noClipT = Value
         updateNoClipF()
@@ -581,7 +583,7 @@ end
 playerTab:AddToggle({
     Name = "Ocean Walk",
     Default = false,
-    Flag = "wipspyhi",
+    Flag = "u3iww",
     Callback = function(Value)
         setWaterWalk(Value)
     end    
@@ -593,7 +595,7 @@ playerTab:AddToggle({
     Name = "Infinite Jump",
     Default = false,
     save = true,
-    Flag = "sosowp0q",
+    Flag = "u21u2",
     Callback = function(v)
         _G.InfiniteJump = v
     end
@@ -821,8 +823,9 @@ local function mobilefly(speaker, vfly)
 end
 
 playerTab:AddToggle({
-    Name = "Fly (fix)",
+    Name = "Fly",
     Default = false,
+    Flag = "whieodjw",
     Callback = function(Value)
         if Value then
             if not IsOnMobile then
@@ -843,11 +846,12 @@ playerTab:AddToggle({
 })
 
 playerTab:AddSlider({
-    Name = "Fly ",
+    Name = "fly speed",
     Min = 1,
     Max = 100, 
     Default = 1,
-    Color = Color3.fromRGB(255,255,255),
+    Flag = "wud92hebxow",
+    Color = Color3.fromRGB(0,155,225),
     Increment = 1, 
     ValueName = "Speed",
     Callback = function(Value)
