@@ -1256,9 +1256,17 @@ local playerGui = localPlayer:WaitForChild("PlayerGui")
 local reachScreenGui = Instance.new("ScreenGui")
 reachScreenGui.ResetOnSpawn = false
 
-if userInputService.TouchEnabled then
+
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+if UserInputService.TouchEnabled then
     reachScreenGui.Parent = playerGui
 end
+
 
 local function makeImageButton(yPosition, imageId)
     local imgButton = Instance.new("ImageButton")
