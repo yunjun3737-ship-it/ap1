@@ -344,7 +344,7 @@ end
 
 plr.CharacterAdded:Connect(onCharacterAdded)
 
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion."))()
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion"))()
 
 local Window = OrionLib:MakeWindow({
     Name = "TY",
