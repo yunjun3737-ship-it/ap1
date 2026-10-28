@@ -1624,6 +1624,204 @@ end
 
 --===== Combat 및 Grab 기능 =====
 do
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local plr = Players.LocalPlayer
+local cam = workspace.CurrentCamera
+local mouse = plr:GetMouse()
+local uis = game:GetService("UserInputService")
+local inv = workspace:WaitForChild(plr.Name.."SpawnedInToys")
+local rs = game:GetService("ReplicatedStorage")
+local RepStorage = game:GetService("ReplicatedStorage")
+local rs2 = game:GetService("RunService")
+local deb = game:GetService("Debris")
+local SetNetworkOwner = rs.GrabEvents.SetNetworkOwner
+local DestroyGrabLine = rs.GrabEvents.DestroyGrabLine
+local Auto = syn and syn.queue_on_teleport or fluxus and fluxus.queue_on_teleport or queue_on_teleport
+local Whitelist = {}
+local playersInLoop1V = {}
+local playersInLoop2V = {}
+local PPs = workspace:WaitForChild("PlotItems"):WaitForChild("PlayersInPlots")
+
+function PcldOwner()
+    task.spawn(function()
+        while task.wait(0.1) do
+            local usedNames = {}
+            for _, pcld in pairs(workspace:GetChildren()) do
+                if pcld.Name == "PlayerCharacterLocationDetector" then
+                    if pcld.CFrame == CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1) then
+                        continue
+                    end
+                    local hasOwner = false
+                    local existingBoolValues = {}
+                    for _, child in pairs(pcld:GetChildren()) do
+                        if child:IsA("BoolValue") then
+                            table.insert(existingBoolValues, child)
+                        end
+                    end
+                    if #existingBoolValues >= 2 then
+                        for _, boolValue in pairs(existingBoolValues) do
+                            boolValue:Destroy()
+                        end
+                    elseif #existingBoolValues == 1 then
+                        hasOwner = true
+                    end
+                    if hasOwner then
+                        continue
+                    end
+                    local closestPlayer = nil
+                    local closestDist = 30
+                    local candidates = {}
+                    for _, player in pairs(Players:GetPlayers()) do
+                        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                            local hrp = player.Character.HumanoidRootPart
+                            local dist = (pcld.Position - hrp.Position).Magnitude
+                            if dist < closestDist then
+                                table.insert(candidates, {
+                                    player = player,
+                                    dist = dist,
+                                    hrp = hrp
+                                })
+                            end
+                        end
+                    end
+                    table.sort(candidates, function(a, b)
+                        return a.dist < b.dist
+                    end)
+                    for _, candidate in pairs(candidates) do
+                        local ownerName = string.format("[ %s ] ( @%s )", candidate.player.DisplayName, candidate.player.Name)
+                        if not usedNames[ownerName] then
+                            closestPlayer = candidate.player
+                            closestDist = candidate.dist
+                            usedNames[ownerName] = true
+                            break
+                        end
+                    end
+                    if closestPlayer then
+                        local ownerName = string.format("[ %s ] ( @%s )", closestPlayer.DisplayName, closestPlayer.Name)
+                        local boolValue = nil
+                        for _, child in pairs(pcld:GetChildren()) do
+                            if child:IsA("BoolValue") then
+                                boolValue = child
+                                boolValue.Name = ownerName
+                                break
+                            end
+                        end
+                        if not boolValue then
+                            boolValue = Instance.new("BoolValue")
+                            boolValue.Name = ownerName
+                            boolValue.Parent = pcld
+                        end
+                        task.spawn(function(player, value)
+                            while value.Parent do
+                                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                                    local hrp = player.Character.HumanoidRootPart
+                                    if hrp.Massless == true then
+                                        if not value.Value then
+                                            value.Value = true
+                                        end
+                                    else
+                                        if value.Value then
+                                            value.Value = false
+                                        end
+                                    end
+                                    if not Players:FindFirstChild(player.Name) or
+                                        not player.Character or
+                                        (player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health <= 0) then
+                                        value:Destroy()
+                                        break
+                                    end
+                                else
+                                    value:Destroy()
+                                    break
+                                end
+                                task.wait(0.1)
+                            end
+                        end, closestPlayer, boolValue)
+                    end
+                end
+            end
+        end
+    end)
+end
+
+function SpawnCFrame()
+    local camPart
+    local myDisplayName = plr.DisplayName
+    local myUserName = plr.Name
+    local myPOIdentifier = string.format("[ %s ] ( @%s )", myDisplayName, myUserName)
+    function findMyPO()
+        for _, obj in pairs(workspace:GetChildren()) do
+            if obj.Name == "PlayerCharacterLocationDetector" then
+                for _, child in pairs(obj:GetChildren()) do
+                    if child:IsA("BoolValue") and child.Name == myPOIdentifier then
+                        return obj
+                    end
+                end
+            end
+        end
+        return nil
+    end
+    if not workspace:FindFirstChild("CamPart") or workspace:FindFirstChild("CamPart"):FindFirstChild("CamPart") then
+        local char = plr.Character or plr.CharacterAdded:Wait()
+        camPart = char:FindFirstChild("CamPart"):Clone()
+        camPart.Name = "CamPart"
+        camPart.Parent = workspace
+        camPart.Transparency = 0.9
+    else
+        camPart = workspace.CamPart
+    end
+
+    local lastHRPVelocity = Vector3.new(0, 0, 0)
+    task.spawn(function()
+        local rayParams = RaycastParams.new()
+        rayParams.FilterType = Enum.RaycastFilterType.Exclude
+        while true do
+            local ping = plr:GetNetworkPing()
+            local myPO = findMyPO()
+            local char = plr.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                lastHRPVelocity = hrp.Velocity
+            end
+            if myPO and hrp then
+                rayParams.FilterDescendantsInstances = {char, camPart, myPO}
+                local offset = myPO.Position + (lastHRPVelocity * (ping + 0.15))
+                local rayOrigin = offset
+                local rayDirection = Vector3.new(0, 23, 0)
+                local rayResult = workspace:Raycast(rayOrigin, rayDirection, rayParams)
+                local targetPosition
+                if rayResult then
+                    targetPosition = rayResult.Position - Vector3.new(0, 0.5, 0)
+                else
+                    targetPosition = offset + rayDirection
+                end
+
+                local originalRotation = myPO.CFrame.Rotation * CFrame.Angles(math.rad(-90), 0, 0)
+                camPart.CFrame = CFrame.new(targetPosition) * originalRotation
+                rayParams.FilterDescendantsInstances = {char, camPart}
+
+                offset = hrp.Position + (lastHRPVelocity * (ping + 0.15))
+                rayOrigin = offset
+                rayDirection = Vector3.new(0, 20, 0)
+                rayResult = workspace:Raycast(rayOrigin, rayDirection, rayParams)
+                if rayResult then
+                    targetPosition = rayResult.Position - Vector3.new(0, 0.5, 0)
+                else
+                    targetPosition = offset + rayDirection
+                end
+
+                originalRotation = (hrp.CFrame * CFrame.Angles(math.rad(-90), 0, 0)).Rotation
+                camPart.CFrame = CFrame.new(targetPosition) * originalRotation
+                camPart.Name = "SpawnCF"
+            end
+            task.wait()
+        end
+    end)
+    return camPart
+end
 function UpdateCurrentBlobman()
 	char = plr.Character
 	hrp = char and char:FindFirstChild("HumanoidRootPart")
