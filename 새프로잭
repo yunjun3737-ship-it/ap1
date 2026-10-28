@@ -3767,7 +3767,473 @@ antiTab:AddSection({
         end
     })
 end
+RunService = game:GetService("RunService")
+isvs = false
 
+function AntiGrabF(enable)
+    if antiGrabConn then
+        antiGrabConn:Disconnect()
+        antiGrabConn = nil
+    end
+
+    if not enable then 
+        local char = plr.Character
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChild("Humanoid")
+
+        if hrp and hrp.Anchored then hrp.Anchored = false end
+        if hum then
+            hum.RequiresNeck = true
+            hum.Sit = false
+            hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+        end
+        return 
+    end
+
+    local lastHeldState = false
+    local sitHoldTimer = 0
+    local shouldKeepSit = false
+    local wasHeld = false
+    local lastRagdollTime = 0
+    local ragdollDuration = 0.48
+
+    antiGrabConn = RunService.Heartbeat:Connect(function(deltaTime)
+        local char = plr.Character
+        if not char then return end
+
+        local hum = char:FindFirstChild("Humanoid")
+        isvs = hum and hum.SeatPart ~= nil
+
+        local isHeld = plr:FindFirstChild("IsHeld")
+        if not isHeld then return end
+
+        local head = char:FindFirstChild("Head")
+        local POR = head and head:FindFirstChild("PartOwner")
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hrp2 = char:FindFirstChild("Torso")
+        if not hum then return end
+
+        local FPDH = workspace.FallenPartsDestroyHeight
+        local DY = (FPDH <= -50000 and -49999) or (FPDH <= -100 and -99) or -100
+        local now = tick()
+
+        if hum then
+            hum.RequiresNeck = false
+            hum.AutoRotate = true
+        end
+
+        if isvs and POR then
+        task.wait(0.0003)
+        end
+
+        if POR and POR.Value then
+            local attackerName = POR.Value
+
+            if attackerName and WhiteListMode then
+                local inWhitelist = false
+                for _, whiteName in ipairs(Whitelist) do
+                    if whiteName == attackerName then
+                        inWhitelist = true
+                        break
+                    end
+                end
+                if inWhitelist then 
+                    return 
+                end
+            end
+        end
+
+        if isvs then task.wait(0.003) end
+
+        local rag = hum:FindFirstChild("Ragdolled")
+        if isHeld.Value == true and rag and rag.Value == true then
+            for _, limbName in ipairs({"Head", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}) do
+                local limb = char:FindFirstChild(limbName)
+                if limb then
+                    local ragdollPart = limb:FindFirstChild("RagdollLimbPart")
+                    local ragdollCons = limb:FindFirstChild("BallSocketConstraint")
+                    if ragdollCons then ragdollCons.Enabled = false end
+                    if ragdollPart then ragdollPart.CanCollide = false end
+                end
+            end
+        end
+
+        if hum.Health <= 0 then
+            lastHeldState = false
+            shouldKeepSit = false
+            sitHoldTimer = 0
+            wasHeld = false
+            hum.Sit = false
+            hum.AutoRotate = true
+        end
+
+        if not hrp or hum.Health <= 0 then
+        --hum:ChangeState(Enum.HumanoidStateType.Dead)
+           --char:BreakJoints()
+            rs.CharacterEvents.Struggle:FireServer()
+           -- if hrp2 then hrp2.CFrame = CFrame.new(9999, DY, 9999) end
+        end
+
+        if isHeld.Value == true then
+            if hum.MoveDirection.Magnitude > 0 then
+                local moveSpeed = 10
+                local moveVector = hum.MoveDirection * deltaTime * moveSpeed
+
+                hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+
+                moveVector = Vector3.new(moveVector.X, 0, moveVector.Z)
+                hrp.CFrame = hrp.CFrame + moveVector
+                hrp2.CFrame = hrp2.CFrame + moveVector
+            end
+        end
+
+        if isHeld.Value ~= lastHeldState then
+            if isHeld.Value == true then
+                wasHeld = true
+                shouldKeepSit = true
+                sitHoldTimer = 0.3
+                hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
+                hum.Sit = true
+                hum.AutoRotate = true
+
+                lastRagdollTime = now
+                if POR and hrp then
+                    rs.CharacterEvents.Struggle:FireServer()
+                    rs.CharacterEvents.RagdollRemote:FireServer(hrp, 0)
+                end
+
+                if hrp then
+                    setRagdollF(true)
+                end
+            else
+                if wasHeld then
+                    shouldKeepSit = true
+                    sitHoldTimer = 0.3
+                end
+            end
+            lastHeldState = isHeld.Value
+        end
+
+        if lastRagdollTime > 0 and now - lastRagdollTime >= ragdollDuration then
+            setRagdollF(false)
+            lastRagdollTime = 0
+        end
+
+        if isHeld.Value == true and lastRagdollTime > 0 and now - lastRagdollTime < ragdollDuration then
+            if hrp then 
+                setRagdollF(true)
+            end
+        end
+
+        if sitHoldTimer > 0 then
+            sitHoldTimer = sitHoldTimer - deltaTime
+
+            if isHeld.Value == true or POR or (rag and rag.Value == true) then
+                shouldKeepSit = true
+                sitHoldTimer = 0.3
+                hum.Sit = true
+                if isHeld.Value == true then
+                    hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
+                end
+            else
+                hum.Sit = true
+            end
+        end
+
+        if sitHoldTimer <= 0 and shouldKeepSit then
+            local currentRagdolled = hum:FindFirstChild("Ragdolled")
+            if not currentRagdolled or currentRagdolled.Value == false then
+                hum.Sit = false
+                hum:ChangeState(Enum.HumanoidStateType.Running)
+                shouldKeepSit = false
+                wasHeld = false
+            else
+                sitHoldTimer = 0.3
+            end
+        end
+
+        if shouldKeepSit then
+            hum.Sit = true
+        end
+
+        if POR then
+            local attackerName = POR.Value
+
+            if attackerName and WhiteListMode then
+                local inWhitelist = false
+                for _, whiteName in ipairs(Whitelist) do
+                    if whiteName == attackerName then
+                        inWhitelist = true
+                        break
+                    end
+                end
+                if inWhitelist then 
+                    return 
+                end
+            end
+
+            rs.CharacterEvents.Struggle:FireServer()
+            rs.CharacterEvents.RagdollRemote:FireServer(hrp, 0)
+            shouldKeepSit = true
+            sitHoldTimer = 0.3
+            hum.Sit = true
+            hum.AutoRotate = true
+            lastRagdollTime = now
+            if hrp then
+                setRagdollF(true)
+            end
+        end
+    end)
+end
+
+antiTab:AddToggle({
+    Name = "Anti grab (ragdoll)",
+    
+    save = true,
+    Flag = "9264",
+    Callback = function(Value)
+        AntiGrabF(Value)
+    end
+})
+function AntiGrabStickyF()
+    local plr = game.Players.LocalPlayer
+    
+    while AntiGrabStickyT and plr do
+        task.wait(0.1)
+
+        local char = plr.Character
+        if not char or not char.Parent then
+            continue
+        end
+
+        local inv = workspace:WaitForChild(plr.Name.."SpawnedInToys")
+        local rs = game:GetService("ReplicatedStorage")
+        local StickyPartEvent = rs.PlayerEvents.StickyPartEvent
+        local SetNetworkOwner = rs.GrabEvents.SetNetworkOwner
+        local SpawnToyRemoteFunction = rs.MenuToys.SpawnToyRemoteFunction 
+        local DestroyToy = rs.MenuToys.DestroyToy
+
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        local head = char:FindFirstChild("Head")
+        if not hrp or not hum or not head then
+            continue
+        end
+
+        local agFolder = inv:FindFirstChild("AG")
+        local stickyPart = agFolder and agFolder:FindFirstChild("StickyPart")
+
+        local headPartOwner = head:FindFirstChild("PartOwner")
+        local stickyWeld = stickyPart and stickyPart:FindFirstChild("StickyWeld")
+        local targetPart = hrp:FindFirstChild("RagdollTouchedHitbox")
+
+        if headPartOwner and stickyWeld and targetPart and stickyWeld.Part1 == targetPart then
+            pcall(function()
+                SetNetworkOwner:FireServer(stickyPart, stickyPart.CFrame)
+            end)
+
+            if hum.Sit then
+                hum.Sit = false
+            end
+            if not hum.AutoRotate then
+                hum.AutoRotate = true
+            end
+
+            headPartOwner:Destroy()
+        end
+
+        if stickyWeld and targetPart and stickyWeld.Part1 ~= targetPart then
+            pcall(function()
+                SetNetworkOwner:FireServer(stickyPart, stickyPart.CFrame)
+            end)
+        end
+
+        if stickyPart then
+            local distance = (hrp.Position - stickyPart.Position).Magnitude
+            if distance > 25 then
+                pcall(function()
+                    DestroyToy:FireServer(agFolder)
+                end)
+                task.wait(0.00001)
+            else
+                local partOwner = stickyPart:FindFirstChild("PartOwner")
+                if not partOwner or partOwner.Value ~= plr.Name then
+                    pcall(function()
+                        SetNetworkOwner:FireServer(stickyPart, hrp.CFrame)
+                    end)
+                end
+
+                local targetPart = hrp:FindFirstChild("RagdollTouchedHitbox")
+                local stickyWeld = stickyPart:FindFirstChild("StickyWeld")
+
+                if targetPart and stickyPart then
+                    if not stickyWeld or stickyWeld.Part1 ~= targetPart then
+                        pcall(function()
+                            StickyPartEvent:FireServer(stickyPart, targetPart, CFrame.new(0, -0.3, 0.3) * CFrame.Angles(190, 0, 0))
+                        end)
+                    end
+                end
+            end
+        else
+            local existingNinja = inv:FindFirstChild("AG")
+            if not existingNinja then
+
+                task.spawn(function()
+                    pcall(function()
+                        SpawnToyRemoteFunction:InvokeServer("NinjaShuriken", hrp.CFrame * CFrame.new(0,10,20), Vector3.new(0,0,0))
+                    end)
+                end)
+
+                task.wait(0.00001)
+
+                local newNinjaFolder = inv:FindFirstChild("NinjaShuriken")
+                if newNinjaFolder then
+                    local newStickyPart = newNinjaFolder:FindFirstChild("StickyPart")
+                    if newStickyPart then
+                        local distance = (hrp.Position - newStickyPart.Position).Magnitude
+                        if distance <= 30 then
+                            newNinjaFolder.Name = "AG"
+                        else
+                            pcall(function()
+                                DestroyToy:FireServer(newNinjaFolder)
+                            end)
+                        end
+                    end
+                end
+            else
+                local newStickyPart = existingNinja:FindFirstChild("StickyPart")
+                if newStickyPart then
+                    local distance = (hrp.Position - newStickyPart.Position).Magnitude
+                    if distance <= 30 then
+                        existingNinja.Name = "AG"
+                    end
+                end
+            end
+        end
+    end
+end
+
+antiTab:AddToggle({
+    Name = "Anti Grab (StickyPart)",
+    
+    save = true,
+    Flag = "kqhxusi",
+    Callback = function(Value)
+        AntiGrabStickyT = Value
+        if Value then
+            AntiGrabStickyF()
+        end
+    end
+})
+
+antiTab:AddToggle({
+	Name = "Anti Grab (sealt",
+	Default = false,
+    Flag = "ehsiwiqkw9202",
+	Callback = function(Value)
+		antiGrabV2Active = Value
+		
+		if Value then
+			antiGrabV2Task = task.spawn(function()
+				hkAGSt = nil
+				hkAGModel = nil
+				hkPlot = nil
+				
+				while antiGrabV2Active do
+					pcall(function()
+						plr = game:GetService("Players").LocalPlayer
+						
+						for _, home in pairs(workspace.Plots:GetChildren()) do
+							for _, person in pairs(home.PlotSign.ThisPlotsOwners:GetChildren()) do
+								if person.Value == plr.Name then
+									hkPlot = home.Name
+								end
+							end
+							for _, person in pairs(home.PlotSign:GetChildren()) do
+								if person.Name == "Sign" then
+									if person.Screen.SurfaceGui.Frame.Visible and person.Screen.SurfaceGui.Frame.PlayerDisplayName.Text == plr.DisplayName then
+										hkPlot = home.Name
+									end
+								end
+							end
+						end
+						
+						hkAGModel = workspace[plr.Name .. "SpawnedInToys"]:FindFirstChild("InstrumentWoodwindOcarina")
+							or (hkPlot and workspace.PlotItems[hkPlot]:FindFirstChild("InstrumentWoodwindOcarina"))
+
+						if hkAGModel then
+							if plr.Character then
+								for _, prt in pairs(plr.Character:GetChildren()) do
+									if prt:FindFirstChild("PartOwner") and prt.PartOwner.Value ~= "" then
+										if hkAGModel:FindFirstChild("HoldPart") and hkAGModel.HoldPart:FindFirstChild("HoldItemRemoteFunction") then
+											task.spawn(function()
+												hkAGModel.HoldPart.HoldItemRemoteFunction:InvokeServer(hkAGModel, plr.Character)
+											end)
+											game.ReplicatedStorage.MenuToys.DestroyToy:FireServer(hkAGModel)
+											if plr.Character:FindFirstChild("Humanoid") then
+												plr.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+												plr.Character.Humanoid.AutoRotate = true
+											end
+											prt.PartOwner.Value = ""
+											if plr.Character.Humanoid.Sit then
+												plr.Character.Humanoid.Sit = false
+											end
+										end
+									end
+								end
+							end
+						else
+							if plr.Character and plr:FindFirstChild("CanSpawnToy") and plr.CanSpawnToy.Value and not hkAGSt then
+								hkAGSt = tick()
+								task.spawn(function()
+									game.ReplicatedStorage.MenuToys.SpawnToyRemoteFunction:InvokeServer(
+										"InstrumentWoodwindOcarina",
+										CFrame.new(1e5, 1e5, 1e5),
+										Vector3.new(0, 0, 0)
+									)
+								end)
+							elseif hkAGSt and tick() - hkAGSt > 1 and not workspace[plr.Name .. "SpawnedInToys"]:FindFirstChild("InstrumentWoodwindOcarina") then
+								hkAGSt = nil
+							end
+
+							grabbed = false
+							if plr.Character then
+								for _, prt in pairs(plr.Character:GetChildren()) do
+									if prt:FindFirstChild("PartOwner") and prt.PartOwner.Value ~= "" then
+										grabbed = true
+									end
+								end
+							end
+
+							if grabbed then
+								game.ReplicatedStorage.CharacterEvents.Struggle:FireServer(plr)
+								if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
+									game.ReplicatedStorage.CharacterEvents.RagdollRemote:FireServer(plr.Character.HumanoidRootPart, 0.00000000001)
+									for _, track in ipairs(plr.Character.Humanoid:GetPlayingAnimationTracks()) do
+										if track.Animation.AnimationId == "rbxassetid://7047322890" then track:Stop() end
+									end
+								end
+							end
+						end
+
+						if plr.Character and plr.Character:FindFirstChild("Humanoid") and antiGrabV2Active then
+							for _, track in ipairs(plr.Character.Humanoid:GetPlayingAnimationTracks()) do
+								if track.Animation.AnimationId == "rbxassetid://7047322890" then track:Stop() end
+							end
+						end
+					end)
+					task.wait()
+				end
+			end)
+		else
+			if antiGrabV2Task then
+				task.cancel(antiGrabV2Task)
+				antiGrabV2Task = nil
+			end
+		end
+	end    
+})
 antiTab:AddSection({
 	Name = "anti blob"
 })
