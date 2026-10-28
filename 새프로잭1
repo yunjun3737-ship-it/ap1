@@ -4698,7 +4698,7 @@ antiTab:AddToggle({
     Default = false,
     Flag = "AntiOwnewyrship2",
     Callback = function(v)
-        Settings.Anti.AntiOwnership2 = v
+        --Settings.Anti.AntiOwnership2 = v
         if v then
             pcall(function()
                 local plr = LocalPlayer
