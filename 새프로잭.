@@ -1,4 +1,4 @@
-
+do
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = {}
 local SpinEnabled = false
@@ -2632,6 +2632,7 @@ grabTab:AddToggle({
       end
    end,
 })
+end
 grabTab:AddSection({
     Name = "Aim"
 })
