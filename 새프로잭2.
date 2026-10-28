@@ -3047,7 +3047,7 @@ antiTab:AddToggle({
 		Default = false,
 		Flag = "AntiStsickyToggle",
 		Callback = function(value49)
-			local playerScripts2 = v1:WaitForChild("PlayerScripts")
+			--local playerScripts2 = v1:WaitForChild("PlayerScripts")
 
 			if value49 then
 				local stickyPartsTouchDetection = playerScripts2:FindFirstChild("StickyPartsTouchDetection")
