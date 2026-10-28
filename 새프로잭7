@@ -5663,7 +5663,7 @@ antiTab:AddToggle({
     })
 
 end
-do
+
 antiTab:AddSection({
 	Name = "anti Loop&Paint"
 })
@@ -5784,7 +5784,7 @@ antiTab:AddToggle({
 })
 
 
-end
+
 
 --===== Anti Explode 기능 =====
 do
@@ -6491,6 +6491,7 @@ antiTab:AddSection({
             startAntiKick()
         end
     end)
+end
 end
 
 do
