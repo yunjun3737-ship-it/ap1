@@ -2808,4 +2808,431 @@ grabTab:AddToggle({
    end,
 
 })
+local myToysFolder = Workspace:WaitForChild(LocalPlayer.Name .. "SpawnedInToys")
 
+local function getCharacter(player)
+    local char = player.Character
+    if not char then
+        if player.CharacterAdded then
+            char = player.CharacterAdded:Wait() or nil
+        else
+            char = nil
+        end
+    end
+    return char
+end
+
+local function getHumanoidRootPart(character)
+    return character and character:FindFirstChild("HumanoidRootPart") or nil
+end
+
+local function ragdollFall()
+    local rootPart = getHumanoidRootPart(getCharacter(LocalPlayer))
+    if rootPart and RagdollRemote then
+        RagdollRemote:FireServer(rootPart, 1)
+    end
+end
+
+local function spawnToy(toyName, cframe)
+    if SpawnRemote then
+        task.spawn(function()
+            pcall(function()
+                SpawnRemote:InvokeServer(toyName, cframe, Vector3.new(0, 0, 0))
+            end)
+        end)
+
+        local startTime = tick()
+        local toy = myToysFolder:FindFirstChild(toyName)
+
+        while not toy and (tick() - startTime < 3) do
+            task.wait(0.05)
+            toy = myToysFolder:FindFirstChild(toyName)
+        end
+
+        return toy
+    end
+end
+
+local function destroyToy(toy)
+    task.spawn(function()
+        pcall(function()
+            if DestroyRemote and toy and toy.Parent then
+                DestroyRemote:FireServer(toy)
+            end
+        end)
+    end)
+end
+
+local function setNetworkOwner(part, cframe)
+    task.spawn(function()
+        pcall(function()
+            if SetNetworkOwner then
+                SetNetworkOwner:FireServer(part, cframe)
+            end
+        end)
+    end)
+end
+
+local function antiBananaDeleteLegs()
+    local char = getCharacter(LocalPlayer)
+    if not char then return end
+
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.PlatformStand = false
+    end
+
+    task.spawn(function()
+        ragdollFall()
+    end)
+
+    task.wait(0.4)
+
+    char = getCharacter(LocalPlayer)
+    if not char then return end
+
+    local rightLeg = char:FindFirstChild("Right Leg") or char:FindFirstChild("RightUpperLeg")
+    local leftLeg = char:FindFirstChild("Left Leg") or char:FindFirstChild("LeftUpperLeg")
+
+    if rightLeg and leftLeg then
+        local clonedLeg = rightLeg:Clone()
+        clonedLeg.Parent = char
+
+        for _, v in ipairs(clonedLeg:GetChildren()) do
+            if v:IsA("Constraint") or v.Name:find("Socket") then
+                v:Destroy()
+            end
+        end
+
+        task.wait(0.1)
+        rightLeg.CFrame = CFrame.new(0, -59999, 0)
+        leftLeg.CFrame = CFrame.new(0, -59999, 0)
+        task.wait(0.1)
+
+        local hrp = getHumanoidRootPart(char)
+        if hrp then
+            local highCFrame = CFrame.new(hrp.Position.X, 999999, hrp.Position.Z)
+            local cup = spawnToy("CupMugBrown", highCFrame)
+
+            if cup and cup:FindFirstChild("Hitbox") then
+                setNetworkOwner(hrp, CFrame.new(cup.Hitbox.Position))
+                task.wait(0.1)
+                destroyToy(cup)
+            end
+        end
+
+        clonedLeg.CFrame = CFrame.new(0, 9999999, 0)
+
+        pcall(function()
+            clonedLeg.Massless = true
+        end)
+
+        if hum then
+            hum.AutoRotate = true
+            hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+        end
+    end
+end
+
+local antiBananaEnabled = false
+
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    if not antiBananaEnabled then return end
+
+    local hrp = newCharacter:WaitForChild("HumanoidRootPart", 3)
+    local humanoid = newCharacter:WaitForChild("Humanoid", 3)
+
+    if hrp and humanoid then
+        task.wait(0.3)
+        antiBananaDeleteLegs()
+    end
+end)
+
+antiTab:AddToggle({
+    Name = "Anti Banana",
+    Default = false,
+    Callback = function(Value)
+        antiBananaEnabled = Value
+
+        if Value then
+            antiBananaDeleteLegs()
+        else
+            local char = getCharacter(LocalPlayer)
+
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+
+                if hum then
+                    hum.Health = 0
+                end
+            end
+        end
+    end
+})
+
+local antiLagT = false
+local autoAntiLagT = true
+local fps = 60
+local pingThreshold = 200
+local fpsThreshold = 30
+
+local function antiLagF()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+    local scriptTarget = LocalPlayer.PlayerScripts:FindFirstChild("CharacterAndBeamMove")
+    if not scriptTarget then return end
+
+    scriptTarget.Disabled = antiLagT
+end
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+
+    if antiLagT then
+        antiLagF()
+    end
+end)
+
+
+
+antiTab:AddToggle({
+    Name = "Anti Lag",
+    Default = false,
+    Callback = function(Value)
+        antiLagT = Value
+        antiLagF()
+    end
+})
+
+RunService.RenderStepped:Connect(function(dt)
+    if dt > 0 then
+        fps = math.floor(1 / dt)
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if autoAntiLagT and not antiLagT then
+            local currentPing = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+            local reason = ""
+
+            if currentPing >= pingThreshold then
+                reason = "High Ping (" .. currentPing .. "ms)"
+            elseif fps <= fpsThreshold then
+                reason = "Low FPS (" .. fps .. ")"
+            end
+
+            if reason ~= "" then
+                antiLagT = true
+
+                if Toggle then
+                    Toggle:SetValue(true)
+                end
+
+                antiLagF()
+
+                local sound = Instance.new("Sound")
+                sound.SoundId = "rbxassetid://17208361335"
+                sound.Volume = 10
+                sound.Parent = game.Players.LocalPlayer.PlayerGui
+                sound:Play()
+                game.Debris:AddItem(sound, 5)
+
+                Library:Notify({
+                    Title = "<b>Auto Anti Lag</b>",
+                    Description = "<b>" .. reason .. "</b> — Anti Lag enabled.",
+                    Icon = "11738671901",
+                    Time = 5,
+                })
+            end
+        end
+    end
+end)
+
+antiTab:AddToggle({
+    Name = "Auto Anti Lag",
+    Default = true,
+    Callback = function(Value)
+        autoAntiLagT = Value
+
+        if not Value and antiLagT and not Toggle.Value then
+            antiLagT = false
+            antiLagF()
+            Toggle:SetValue(false)
+        end
+    end
+})
+
+if not _G.cons then
+    _G.cons = {}
+end
+
+antiTab:AddToggle({
+    Name = "Anti Loop Kill",
+    Default = false,
+    Callback = function(v)
+        if _G.cons["antiloopkill"] then
+            _G.cons["antiloopkill"]:Disconnect()
+            _G.cons["antiloopkill"] = nil
+        end
+
+        if v then
+            _G.cons["antiloopkill"] = LocalPlayer.CharacterAdded:Connect(function(char)
+                local hrp = char:WaitForChild("HumanoidRootPart", 5)
+
+                if hrp then
+                    RunService.RenderStepped:Wait()
+
+                    local target = CFrame.new(524.703979, 93.7120056, -375.040985)
+                    hrp.CFrame = target
+
+                    for i = 1, 2 do
+                        RunService.RenderStepped:Wait()
+                        hrp.CFrame = target
+                    end
+                end
+            end)
+        end
+    end
+})
+
+local paintPartsBackup = {}
+local paintConnections = {}
+
+local function deleteAllPaintParts()
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Name == "PaintPlayerPart" then
+            local clone = obj:Clone()
+            clone.Archivable = true
+
+            paintPartsBackup[obj:GetDebugId()] = {
+                clone = clone,
+                parent = obj.Parent
+            }
+
+            obj:Destroy()
+        end
+    end
+end
+
+local function restorePaintParts()
+    for _, data in pairs(paintPartsBackup) do
+        if data.clone and data.parent then
+            data.clone.Parent = data.parent
+        end
+    end
+
+    paintPartsBackup = {}
+end
+
+local function watchNewPaintParts()
+    table.insert(paintConnections, Workspace.DescendantAdded:Connect(function(obj)
+        if obj:IsA("BasePart") and obj.Name == "PaintPlayerPart" then
+            task.defer(function()
+                if obj and obj.Parent then
+                    local clone = obj:Clone()
+                    clone.Archivable = true
+
+                    paintPartsBackup[obj:GetDebugId()] = {
+                        clone = clone,
+                        parent = obj.Parent
+                    }
+
+                    obj:Destroy()
+                end
+            end)
+        end
+    end))
+end
+
+local function disconnectWatchers()
+    for _, conn in ipairs(paintConnections) do
+        if conn.Connected then
+            conn:Disconnect()
+        end
+    end
+
+    paintConnections = {}
+end
+
+antiTab:AddToggle({
+    Name = "Anti Paint",
+    Default = false,
+    Callback = function(state)
+        if state then
+            deleteAllPaintParts()
+            watchNewPaintParts()
+
+            if setTouchQuery then
+                setTouchQuery(false)
+            end
+        else
+            restorePaintParts()
+            disconnectWatchers()
+
+            if setTouchQuery then
+                setTouchQuery(true)
+            end
+        end
+    end
+})
+
+local connectionsExplosion = {
+    Connection = nil
+}
+
+antiTab:AddToggle({
+    Name = "Anti Explode",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            if connectionsExplosion.Connection then
+                connectionsExplosion.Connection:Disconnect()
+            end
+
+            if BombEvent then
+                connectionsExplosion.Connection = BombEvent.OnClientEvent:Connect(function(data, position)
+                    local character = LocalPlayer.Character
+                    if not character then return end
+
+                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                    local humanoid = character:FindFirstChild("Humanoid")
+
+                    if not humanoidRootPart or not humanoid or humanoid.Health <= 0 then
+                        return
+                    end
+
+                    local radius = (data and data.Radius) or 0
+
+                    if radius + 10 > (position - humanoidRootPart.Position).Magnitude then
+                        task.spawn(function()
+                            humanoidRootPart.Anchored = true
+                            task.wait()
+
+                            if humanoid.Parent then
+                                humanoid:ChangeState(Enum.HumanoidStateType.Running)
+                            end
+
+                            for index = 1, 6 do
+                                if humanoidRootPart and humanoid and humanoidRootPart.Parent then
+                                    humanoidRootPart.CFrame = humanoidRootPart.CFrame + humanoid.MoveDirection
+                                end
+
+                                task.wait()
+                            end
+
+                            if humanoidRootPart and humanoidRootPart.Parent then
+                                humanoidRootPart.Anchored = false
+                            end
+                        end)
+                    end
+                end)
+            end
+        else
+            if connectionsExplosion.Connection then
+                connectionsExplosion.Connection:Disconnect()
+                connectionsExplosion.Connection = nil
+            end
+        end
+    end
+})
