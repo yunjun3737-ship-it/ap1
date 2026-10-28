@@ -1,4 +1,4 @@
-
+do
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local plr = Players.LocalPlayer
@@ -417,7 +417,7 @@ local function sno(part)
     SetNetworkOwner:FireServer(part, part.CFrame)
 end
 
-
+end
 
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion.txt"))()
 
@@ -446,7 +446,7 @@ local activeLoop = nil
 local speedConn = nil
 
 local function updateWalkSpeedF()
-    local char = plr.Character
+    --local char = plr.Character
     if not char then return end
 
     local hum = char:FindFirstChildOfClass("Humanoid")
