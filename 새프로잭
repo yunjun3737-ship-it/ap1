@@ -3768,7 +3768,157 @@ antiTab:AddSection({
     })
 end
 
+antiTab:AddSection({
+	Name = "anti blob"
+})
 
+do
+local pp = {}
+local PARTS = {
+    {"Humanoid",         "hum"},
+    {"HumanoidRootPart", "hrp"},
+    {"Head",             "head"},
+    {"Torso",            "torso"},
+    {"Left Arm",         "la"},
+    {"Right Arm",        "ra"},
+    {"Left Leg",         "ll"},
+    {"Right Leg",        "rl"},
+}
+
+local LIMB_CHILDREN = {
+    {"Left Arm",  "la"},
+    {"Right Arm", "ra"},
+    {"Left Leg",  "ll"},
+    {"Right Leg", "rl"},
+}
+
+local function fetch(parent, name, key)
+    task.spawn(function()
+        repeat rs2.PreSimulation:Wait() until parent:FindFirstChild(name)
+        pp[key] = parent[name]
+    end)
+end
+    local antiBlobmanConnection = nil
+    local massConnection = nil
+    local AntiBlobC = nil
+
+    local function isWeld(object, ignoreFolder)
+        return object:IsA("BasePart")
+            and (
+                object.Name == "LeftWeld"
+                or object.Name == "RightWeld"
+                or object.Name == "LeftAlignOrientation"
+                or object.Name == "RightAlignOrientation"
+            )
+            and object.Parent
+            and object.Parent.Parent
+            and object.Parent.Parent.Parent ~= ignoreFolder
+    end
+
+    local function toggleWelds(state, ignoreFolder)
+        for _, object in ipairs(Workspace:GetDescendants()) do
+            if isWeld(object, ignoreFolder) then
+                object.Enabled = state
+            end
+        end
+    end
+
+    local function removeAttach()
+        for _, object in ipairs(Workspace:GetDescendants()) do
+            if object.Name == "AttachPlayer" then
+                object:Destroy()
+            end
+        end
+    end
+
+    local function fixMass(character)
+        if not character then
+            return
+        end
+
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") and part.Massless then
+                part.Massless = false
+            end
+        end
+    end
+
+    antiTab:AddToggle({
+        Name = "Anti Blobman",
+        Default = false,
+        Flag = "7r28tfofw9",
+        Callback = function(Value)
+            local ignoreFolder = Workspace:FindFirstChild(
+                LocalPlayer.Name .. "SpawnedInToys"
+            )
+
+            if Value then
+                if antiBlobmanConnection then
+                    antiBlobmanConnection:Disconnect()
+                    antiBlobmanConnection = nil
+                end
+
+                if massConnection then
+                    massConnection:Disconnect()
+                    massConnection = nil
+                end
+
+                if AntiBlobC then
+                    AntiBlobC:Disconnect()
+                    AntiBlobC = nil
+                end
+
+                toggleWelds(false, ignoreFolder)
+                removeAttach()
+
+                antiBlobmanConnection = Workspace.DescendantAdded:Connect(function(object)
+                    if isWeld(object, ignoreFolder) then
+                        object.Enabled = false
+                    end
+
+                    if object.Name == "AttachPlayer" then
+                        task.wait()
+
+                        if object and object.Parent then
+                            object:Destroy()
+                        end
+                    end
+                end)
+
+                massConnection = RunService.Heartbeat:Connect(function()
+                    fixMass(LocalPlayer.Character)
+                end)
+
+                AntiBlobC = rs2.PreSimulation:Connect(function()
+                    if not pp.char or not pp.hrp then
+                        return
+                    end
+
+                    if pp.att then
+                        pp.att:Destroy()
+                    end
+                end)
+            else
+                toggleWelds(true, ignoreFolder)
+
+                if antiBlobmanConnection then
+                    antiBlobmanConnection:Disconnect()
+                    antiBlobmanConnection = nil
+                end
+
+                if massConnection then
+                    massConnection:Disconnect()
+                    massConnection = nil
+                end
+
+                if AntiBlobC then
+                    AntiBlobC:Disconnect()
+                    AntiBlobC = nil
+                end
+            end
+        end
+    })
+end
 
 		
 --===== Anti Banana 기능 =====
