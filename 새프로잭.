@@ -5665,9 +5665,9 @@ antiTab:AddToggle({
 end
 
 antiTab:AddSection({
-	Name = "anti Loop&Paint"
+	Name = "anti Paint"
 })
-
+--[[
 antiTab:AddToggle({
     Name = "Anti Loop Kill (go to house)",
     Default = false,
@@ -5696,7 +5696,7 @@ antiTab:AddToggle({
         end
     end
 })
-
+]]
 
 
 --===== Anti Paint 기능 =====
