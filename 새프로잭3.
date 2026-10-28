@@ -5532,7 +5532,7 @@ end
 
 --===== Anti Sticky 기능 =====
 antiTab:AddSection({
-	Name = "Anti Sticky"
+	Name = "Anti Sticky&Burn"
 })
 do
 local playerScripts2 = LocalPlayer:WaitForChild("PlayerScripts")
@@ -5565,110 +5565,107 @@ antiTab:AddToggle({
 })
 
 
+    local antiBurnConnection = nil
+    local antiBurnCharacterConnection = nil
 
+    local function setupAntiBurnLogic(character)
+        if antiBurnConnection then
+            antiBurnConnection:Disconnect()
+            antiBurnConnection = nil
+        end
 
-end
-do
-local antiLagT = false
-local autoAntiLagT = true
-local fps = 60
-local pingThreshold = 200
-local fpsThreshold = 30
+        if not character then
+            return
+        end
 
-function antiLagF()
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid", 5)
+        local humanoidRootPart = character:WaitForChild("HumanoidRootPart", 5)
 
-    local scriptTarget = LocalPlayer.PlayerScripts:FindFirstChild("CharacterAndBeamMove")
-    if not scriptTarget then return end
+        if not humanoid or not humanoidRootPart then
+            return
+        end
 
-    scriptTarget.Disabled = antiLagT
-end
+        local fireDebounce = humanoid:WaitForChild("FireDebounce", 5)
+        if not fireDebounce then
+            return
+        end
 
-LocalPlayer.CharacterAdded:Connect(function()
-    task.wait(1)
+        antiBurnConnection = fireDebounce.Changed:Connect(function()
+            if fireDebounce.Value == true then
+                local plot1 = Workspace:FindFirstChild("Plots")
+                    and Workspace.Plots:FindFirstChild("Plot1")
 
-    if antiLagT then
-        antiLagF()
-    end
-end)
+                local barrier = plot1
+                    and plot1:FindFirstChild("Barrier")
+                    and plot1.Barrier:FindFirstChild("PlotBarrier")
 
-local Stats = game:GetService("Stats")
+                if barrier then
+                    local originalPosition = barrier.CFrame
 
-antiTab:AddToggle({
-    Name = "Anti Lag",
-    Default = false,
-    Callback = function(Value)
-        antiLagT = Value
-        antiLagF()
-    end
-})
+                    task.spawn(function()
+                        repeat
+                            task.wait()
 
-RunService.RenderStepped:Connect(function(dt)
-    if dt > 0 then
-        fps = math.floor(1 / dt)
-    end
-end)
+                            if humanoidRootPart
+                                and humanoidRootPart.Parent
+                                and barrier
+                            then
+                                barrier.CFrame = humanoidRootPart.CFrame
+                            end
+                        until not fireDebounce
+                            or fireDebounce.Parent == nil
+                            or fireDebounce.Value == false
+                    end)
 
-task.spawn(function()
-    while task.wait(0.5) do
-        if autoAntiLagT and not antiLagT then
-            local currentPing = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
-            local reason = ""
+                    task.wait(1)
 
-            if currentPing >= pingThreshold then
-                reason = "High Ping (" .. currentPing .. "ms)"
-            elseif fps <= fpsThreshold then
-                reason = "Low FPS (" .. fps .. ")"
+                    if fireDebounce and fireDebounce.Parent then
+                        fireDebounce.Value = false
+                    end
+
+                    task.wait()
+
+                    if barrier then
+                        barrier.CFrame = originalPosition
+                    end
+                end
             end
+        end)
+    end
 
-            if reason ~= "" then
-                antiLagT = true
+    antiTab:AddToggle({
+        Name = "Anti Burn",
+        Default = false,
+        Flag = "9wv7297vt02",
+        Callback = function(value)
+            if value then
+                setupAntiBurnLogic(LocalPlayer.Character)
 
-                if Toggle then
-                    Toggle:SetValue(true)
+                if antiBurnCharacterConnection then
+                    antiBurnCharacterConnection:Disconnect()
                 end
 
-                antiLagF()
+                antiBurnCharacterConnection = LocalPlayer.CharacterAdded:Connect(
+                    setupAntiBurnLogic
+                )
+            else
+                if antiBurnConnection then
+                    antiBurnConnection:Disconnect()
+                    antiBurnConnection = nil
+                end
 
-              --  local sound = Instance.new("Sound")
-               -- sound.SoundId = "rbxassetid://17208361335"
-                --sound.Volume = 10
-                ---sound.Parent = game.Players.LocalPlayer.PlayerGui
-              --  sound:Play()
-                --game.Debris:AddItem(sound, 5)
-
-                OrionLib:MakeNotification({
-                    Name = "Auto Anti Lag",
-                    Content = reason .. " — Anti Lag enabled.",
-                    Image = "rbxassetid://11738671901",
-                    Time = 5
-                })
+                if antiBurnCharacterConnection then
+                    antiBurnCharacterConnection:Disconnect()
+                    antiBurnCharacterConnection = nil
+                end
             end
         end
-    end
-end)
+    })
 
-
-
-antiTab:AddToggle({
-    Name = "Auto Anti Lag",
-    Default = true,
-    Callback = function(Value)
-        autoAntiLagT = Value
-
-        if not Value and antiLagT and not Toggle.Value then
-            antiLagT = false
-            antiLagF()
-            Toggle:SetValue(false)
-        end
-    end
-})
-
-if not _G.cons then
-    _G.cons = {}
 end
+
 antiTab:AddSection({
-	Name = "anti paint&onther"
+	Name = "anti Loop&Paint"
 })
 do
 antiTab:AddToggle({
@@ -5792,6 +5789,9 @@ end
 
 --===== Anti Explode 기능 =====
 do
+antiTab:AddSection({
+	Name = "anti Explode"
+})
 local connectionsExplosion = {
     Connection = nil
 }
@@ -6259,4 +6259,341 @@ antiTab:AddToggle({
         end)
     end
 })
+end
+
+do
+antiTab:AddSection({
+	Name = "anti Kick"
+})
+    local tpActive = false
+    local antiKickThread = nil
+    
+    local function ClearKunai()
+        local plr = Players.LocalPlayer
+        local inv = Workspace:FindFirstChild(plr.Name .. "SpawnedInToys")
+        if inv and DestroyRemote then
+            for _, v in pairs(inv:GetChildren()) do
+                if v.Name == "AntiKick" or v.Name == "NinjaShuriken" then
+                    pcall(function()
+                        DestroyRemote:FireServer(v)
+                    end)
+                end
+            end
+        end
+    end
+
+    local function startAntiKick()
+        if antiKickThread then
+            task.cancel(antiKickThread)
+            antiKickThread = nil
+        end
+
+        antiKickThread = task.spawn(function()
+            local plr = Players.LocalPlayer
+            
+            local function getHRP()
+                if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                    return plr.Character.HumanoidRootPart
+                else
+                    local character = plr.CharacterAdded:Wait()
+                    return character:WaitForChild("HumanoidRootPart")
+                end
+            end
+            
+            local function CheckForHome()
+                if not Workspace.PlotItems.PlayersInPlots:FindFirstChild(plr.Name) then
+                    return false
+                end
+                for _, v in pairs(Workspace.Plots:GetChildren()) do
+                    local sign = v:FindFirstChild("PlotSign")
+                    local owners = sign and sign:FindFirstChild("ThisPlotsOwners")
+                    if owners then
+                        for _, b in pairs(owners:GetChildren()) do
+                            if b.Value == plr.Name then
+                                local folder = Workspace.PlotItems:FindFirstChild(v.Name)
+                                if folder then
+                                    return true, folder
+                                end
+                            end
+                        end
+                    end
+                end
+                return false
+            end
+            
+            local function StickKunai(kunai)
+                if not kunai or not kunai:FindFirstChild("StickyPart") then
+                    return
+                end
+                local currentHRP = getHRP()
+                if not currentHRP then
+                    return
+                end
+                if kunai:FindFirstChild("SoundPart") then
+                    if not kunai.SoundPart:FindFirstChild("PartOwner") or kunai.SoundPart.PartOwner.Value ~= plr.Name then
+                        if SetNetworkOwner then
+                            SetNetworkOwner:FireServer(kunai.SoundPart, kunai.SoundPart.CFrame)
+                        end
+                    end
+                end
+                local firePart = currentHRP:FindFirstChild("FirePlayerPart") or currentHRP:WaitForChild("FirePlayerPart", 5)
+                if firePart and StickyEvent then
+                    StickyEvent:FireServer(
+                        kunai.StickyPart,
+                        firePart,
+                        CFrame.new(0, 0, 0) * CFrame.Angles(0, math.rad(90), math.rad(90))
+                    )
+                end
+                for _, obj in pairs(kunai:GetChildren()) do
+                    if obj.Name == "Pyramid" then
+                        obj.CanTouch = false
+                        obj.CanCollide = false
+                        obj.CanQuery = false
+                        obj.Transparency = 0
+                        if not obj:FindFirstChild("Highlight") then
+                            local high = Instance.new("Highlight", obj)
+                            high.FillColor = Color3.fromRGB(0, 0, 0)
+                        end
+                    elseif obj.Name == "Main" then
+                        obj.CanTouch = false
+                        obj.CanCollide = false
+                        obj.CanQuery = false
+                        obj.Transparency = 0
+                        if not obj:FindFirstChild("Highlight") then
+                            local high = Instance.new("Highlight", obj)
+                            high.FillColor = Color3.fromRGB(255, 255, 255)
+                        end
+                    elseif obj:IsA("BasePart") then
+                        obj.CanTouch = false
+                        obj.CanCollide = false
+                        obj.CanQuery = false
+                        obj.Transparency = 1
+                    end
+                end
+            end
+            
+            local function SpawnToy(name)
+                local t = tick()
+                while CanSpawn and not CanSpawn.Value do
+                    if not _G.ShurikenAntiKick or tick() - t > 5 then
+                        return nil
+                    end
+                    task.wait(0.1)
+                end
+                local currentHRP = getHRP()
+                if currentHRP and SpawnRemote then
+                    task.spawn(function()
+                        pcall(function()
+                            SpawnRemote:InvokeServer(name, currentHRP.CFrame * CFrame.new(0, 12, 20), Vector3.new(0, 0, 0))
+                        end)
+                    end)
+                end
+                local boolik, house = CheckForHome()
+                local inv = Workspace:FindFirstChild(plr.Name .. "SpawnedInToys")
+                if boolik and house then
+                    return house:WaitForChild(name, 2)
+                elseif not Workspace.PlotItems.PlayersInPlots:FindFirstChild(plr.Name) and inv then
+                    return inv:WaitForChild(name, 2)
+                end
+                return nil
+            end
+            
+            while _G.ShurikenAntiKick do
+                task.wait(0.005)
+                if not plr.Character or not plr.Character:FindFirstChild("Humanoid") or plr.Character.Humanoid.Health <= 0 then
+                    continue
+                end
+                local inv = Workspace:FindFirstChild(plr.Name .. "SpawnedInToys")
+                local kunai = inv and inv:FindFirstChild("NinjaShuriken")
+                if Workspace.PlotItems.PlayersInPlots:FindFirstChild(plr.Name) then
+                    local boolik, house = CheckForHome()
+                    if boolik and house and Workspace.Plots:FindFirstChild(house.Name) then
+                        local sign = Workspace.Plots[house.Name]:FindFirstChild("PlotSign")
+                        if sign and sign.ThisPlotsOwners.Value.TimeRemainingNum.Value > 89 then
+                            kunai = SpawnToy("NinjaShuriken")
+                            if kunai == nil then
+                                continue
+                            end
+                            kunai.Name = "AntiKick"
+                            StickKunai(kunai)
+                        end
+                    end
+                end
+                if not kunai then
+                    if Workspace.PlotItems.PlayersInPlots:FindFirstChild(plr.Name) then
+                        continue
+                    end
+                    kunai = SpawnToy("NinjaShuriken")
+                    if kunai == nil then
+                        continue
+                    end
+                    kunai.Name = "AntiKick"
+                    if not kunai then
+                        continue
+                    end
+                end
+                repeat
+                    if kunai and kunai:FindFirstChild("StickyPart") and kunai.StickyPart.CanTouch == true then
+                        StickKunai(kunai)
+                        kunai.Name = "AntiKick"
+                    end
+                    task.wait(0.3)
+                until not kunai or not _G.ShurikenAntiKick
+                    or not kunai:FindFirstChild("StickyPart")
+                    or kunai.StickyPart.CanTouch == false 
+                    or not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") 
+                    or not kunai:FindFirstChild("StickyPart") 
+                    or (plr.Character.HumanoidRootPart.Position - kunai.StickyPart.Position).Magnitude >= 20
+                if not kunai or not kunai:FindFirstChild("StickyPart") or not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") or (plr.Character.HumanoidRootPart.Position - kunai.StickyPart.Position).Magnitude >= 20 then
+                    ClearKunai()
+                end
+                pcall(function()
+                    repeat
+                        task.wait(0.05)
+                    until not _G.ShurikenAntiKick or not plr.Character or not plr.Character:FindFirstChild("Humanoid") or not kunai or not kunai:FindFirstChild("StickyPart") or not kunai.StickyPart:FindFirstChild("StickyWeld") or not kunai.StickyPart.StickyWeld.Part1
+                    if not kunai or not kunai:FindFirstChild("StickyPart") or (plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health <= 0) or not kunai["StickyPart"]:FindFirstChild("StickyWeld").Part1 then
+                        ClearKunai()
+                    end
+                end)
+            end
+        end)
+    end
+
+    antiTab:AddToggle({
+        Name = "Anti Kick",
+        Default = false,
+        Flag = "97ft2279tf",
+        Callback = function(Value)
+            _G.ShurikenAntiKick = Value
+            
+            if Value then
+                startAntiKick()
+            else
+                _G.ShurikenAntiKick = false
+                if antiKickThread then
+                    task.cancel(antiKickThread)
+                    antiKickThread = nil
+                end
+                ClearKunai()
+            end
+        end
+    })
+
+    LocalPlayer.CharacterAdded:Connect(function(char)
+        if _G.ShurikenAntiKick then
+
+            if antiKickThread then
+                task.cancel(antiKickThread)
+                antiKickThread = nil
+            end
+
+            ClearKunai()
+            task.wait(0.5)
+            startAntiKick()
+        end
+    end)
+end
+
+
+antiTab:AddSection({
+	Name = "anti lag"
+})
+do
+local antiLagT = false
+local autoAntiLagT = true
+local fps = 60
+local pingThreshold = 200
+local fpsThreshold = 30
+
+function antiLagF()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+    local scriptTarget = LocalPlayer.PlayerScripts:FindFirstChild("CharacterAndBeamMove")
+    if not scriptTarget then return end
+
+    scriptTarget.Disabled = antiLagT
+end
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+
+    if antiLagT then
+        antiLagF()
+    end
+end)
+
+local Stats = game:GetService("Stats")
+
+antiTab:AddToggle({
+    Name = "Anti Lag",
+    Default = false,
+    Callback = function(Value)
+        antiLagT = Value
+        antiLagF()
+    end
+})
+
+RunService.RenderStepped:Connect(function(dt)
+    if dt > 0 then
+        fps = math.floor(1 / dt)
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if autoAntiLagT and not antiLagT then
+            local currentPing = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+            local reason = ""
+
+            if currentPing >= pingThreshold then
+                reason = "High Ping (" .. currentPing .. "ms)"
+            elseif fps <= fpsThreshold then
+                reason = "Low FPS (" .. fps .. ")"
+            end
+
+            if reason ~= "" then
+                antiLagT = true
+
+                if Toggle then
+                    Toggle:SetValue(true)
+                end
+
+                antiLagF()
+
+              --  local sound = Instance.new("Sound")
+               -- sound.SoundId = "rbxassetid://17208361335"
+                --sound.Volume = 10
+                ---sound.Parent = game.Players.LocalPlayer.PlayerGui
+              --  sound:Play()
+                --game.Debris:AddItem(sound, 5)
+
+                OrionLib:MakeNotification({
+                    Name = "Auto Anti Lag",
+                    Content = reason .. " — Anti Lag enabled.",
+                    Image = "rbxassetid://11738671901",
+                    Time = 5
+                })
+            end
+        end
+    end
+end)
+
+
+
+antiTab:AddToggle({
+    Name = "Auto Anti Lag",
+    Default = true,
+    Callback = function(Value)
+        autoAntiLagT = Value
+
+        if not Value and antiLagT and not Toggle.Value then
+            antiLagT = false
+            antiLagF()
+            Toggle:SetValue(false)
+        end
+    end
+})
+
+if not _G.cons then
+    _G.cons = {}
 end
