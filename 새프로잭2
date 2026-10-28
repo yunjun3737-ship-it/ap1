@@ -3311,9 +3311,7 @@ grabTab:AddToggle({
 
 end
 
-    
-
---===== Anti-Grab 독립 초기화 =====
+    --===== Anti-Grab 독립 초기화 =====
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -4162,11 +4160,18 @@ function ApplyClassicAntiGrab(char)
                         task.spawn(function()
                             while AntiGrabProc and MasterEnabled do
                                 hrp.Anchored = true
-                                hrp.CFrame = hrp.CFrame + hum.MoveDirection * 0.43
+                                local dt = RunService.RenderStepped:Wait()
+                                local moveDir = hum.MoveDirection
+                                local flat = Vector3.new(moveDir.X, 0, moveDir.Z)
+                                if flat.Magnitude > 0.01 then
+                                    local targetRot = CFrame.lookAt(Vector3.zero, flat.Unit).Rotation
+                                    local newPos = hrp.Position + (flat.Unit * (hum.WalkSpeed * dt))
+                                    hrp.CFrame = CFrame.new(newPos) * hrp.CFrame.Rotation:Lerp(targetRot, math.clamp(12 * dt, 0, 1))
+                                end
                                 SafeCFrame = hrp.CFrame
                                 ResetHRPState(hrp)
-                                task.wait(0.05)
                             end
+                            AGWalk = false
                         end)
                     end
                 end)
@@ -4334,23 +4339,23 @@ function StopTractorEscape()
         TractorEscapeConn:Disconnect()
         TractorEscapeConn = nil
     end
-    local function removeAntiNetOwner(DestroyRemote)    local Players = game:GetService("Players")
-    local Workspace = game:GetService("Workspace")
-    local LocalPlayer = Players.LocalPlayer
+    local function removeAntiNetOwner(DestroyRemote)    
+        local Players = game:GetService("Players")
+        local Workspace = game:GetService("Workspace")
+        local LocalPlayer = Players.LocalPlayer
 
         if not LocalPlayer then 
-        warn(".")
-        return 
-    end
+            warn(".")
+            return 
+        end
 
         local inv = Workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
-    
-    if inv and inv:FindFirstChild("antinetowner") and DestroyRemote then
-        pcall(function() 
-            DestroyRemote:FireServer(inv.antinetowner) 
-        end)
+        if inv and inv:FindFirstChild("antinetowner") and DestroyRemote then
+            pcall(function() 
+                DestroyRemote:FireServer(inv.antinetowner) 
+            end)
+        end
     end
-end
 end
 
 
@@ -4546,7 +4551,7 @@ function StartAllAntiGrab()
         if heldNow and pp.hrp and (SelectedModes["Anchored"] or SelectedModes["AnchorWalk"] or SelectedModes["AntiSetOwner"]) then
             pp.hrp.Anchored = true
             ResetHRPState(pp.hrp)
-            if SafeCFrame then
+                        if SafeCFrame and (pp.hrp.Position - SafeCFrame.Position).Magnitude > 3 then
                 pp.hrp.CFrame = SafeCFrame
             end
         end
@@ -4676,29 +4681,31 @@ function StartAllAntiGrab()
                     end
 
                     if SelectedModes["AnchorWalk"] then
-                        local moveDir = hum.MoveDirection
-                        local flat = Vector3.new(moveDir.X, 0, moveDir.Z)
-                        local baseCF = SafeCFrame or hrp.CFrame
-                        if flat.Magnitude > 0.01 then
-                            local spd = (hum.WalkSpeed and hum.WalkSpeed > 16) and hum.WalkSpeed or 16
-                            local nextPos = baseCF.Position + flat.Unit * spd * deltaTime
-                            local nextRot = baseCF.Rotation:Lerp(CFrame.lookAt(Vector3.zero, flat.Unit).Rotation, math.clamp(14 * deltaTime, 0, 1))
-                            baseCF = CFrame.new(nextPos) * nextRot
-                        end
-                        if SelectedModes["Shuffle"] then
-                            baseCF = baseCF * CFrame.new(math.random(-10, 10) * 0.025, 0, math.random(-10, 10) * 0.025)
-                        end
-                        hrp.CFrame = baseCF
-                        SafeCFrame = baseCF
-                        if SelectedModes["FreezeLimbs"] then
-                            LockLimbs(Char, hrp, GetIdleOffsets(Char, hrp), 1)
+                                if not FreezeConnection and not AGWalk then
+                            local moveDir = hum.MoveDirection
+                            local flat = Vector3.new(moveDir.X, 0, moveDir.Z)
+                            local baseCF = SafeCFrame or hrp.CFrame
+                            if flat.Magnitude > 0.01 then
+                                local spd = (hum.WalkSpeed and hum.WalkSpeed > 16) and hum.WalkSpeed or 16
+                                local nextPos = baseCF.Position + flat.Unit * spd * deltaTime
+                                local nextRot = baseCF.Rotation:Lerp(CFrame.lookAt(Vector3.zero, flat.Unit).Rotation, math.clamp(14 * deltaTime, 0, 1))
+                                baseCF = CFrame.new(nextPos) * nextRot
+                            end
+                            if SelectedModes["Shuffle"] then
+                                baseCF = baseCF * CFrame.new(math.random(-10, 10) * 0.025, 0, math.random(-10, 10) * 0.025)
+                            end
+                            hrp.CFrame = hrp.CFrame:Lerp(baseCF, 0.8) 
+                            SafeCFrame = baseCF
+                            if SelectedModes["FreezeLimbs"] then
+                                LockLimbs(Char, hrp, GetIdleOffsets(Char, hrp), 1)
+                            end
                         end
                     else
                         hrp.Anchored = false
                         SafeCFrame = hrp.CFrame
                     end
                 elseif hrp.ReceiveAge == 0 and not targeted then
-                    if not FreezeConnection then
+                        if not FreezeConnection and not AntiGrabProc then
                         hrp.Anchored = false
                     end
                     SafeCFrame = hrp.CFrame
@@ -4722,7 +4729,7 @@ end)
 antiTab:AddDropdown({
     Name = "Anti-Grab Mode",
     Default = "Default",
-    Options = {"Default", "No Ragdoll", "IfEscape Anything", "Ocarina Mode"},
+    Options = {"Default", "No Ragdoll", "Escape Anything", "Ocarina Mode"},
     Callback = function(Value)
         table.clear(SelectedModes)
         SelectedModes["Anchored"] = true
@@ -4737,7 +4744,7 @@ antiTab:AddDropdown({
         if Value == "No Ragdoll" then
             SelectedModes["No Ragdoll"] = true
             SelectedModes["AntiGrabRag"] = true
-        elseif Value == "IfEscape Anything" then
+        elseif Value == "Escape Anything" then
             SelectedModes["TractorEscape"] = true
             SelectedModes["Escape Anything"] = true
         elseif Value == "Ocarina Mode" then
@@ -4761,9 +4768,8 @@ end
 
 
 
-
-
-								
+ 
+		
 --===== Anti Banana 기능 =====
 do
 local players = game:GetService("Players")
