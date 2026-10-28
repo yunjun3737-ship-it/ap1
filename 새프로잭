@@ -4688,6 +4688,275 @@ antiTab:AddToggle({
         end
     end
 })
+do
+
+antiTab:AddSection({
+	Name = "Anti onwer"
+})
+antiTab:AddToggle({
+    Name = "Anti spam ",
+    Default = false,
+    Flag = "AntiOwnewyrship2",
+    Callback = function(v)
+        Settings.Anti.AntiOwnership2 = v
+        if v then
+            pcall(function()
+                local plr = LocalPlayer
+                local isHeld = plr:WaitForChild("IsHeld", 10)
+                if not isHeld then warn("Anti Ownership 2: IsHeld not found") return end
+                local struggleEvent = ReplicatedStorage:WaitForChild("CharacterEvents"):WaitForChild("Struggle")
+                local savedCFrame = nil
+                State.antiOwnershipConns["AntiOwn2Conn"] = isHeld.Changed:Connect(function(heldState)
+                    local char = plr.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                    if heldState then
+                        if hrp then savedCFrame = hrp.CFrame pcall(function() hrp.Anchored = true end) end
+                        State.antiOwnershipConns["AntiOwn2Task"] = task.spawn(function()
+                            while isHeld and isHeld.Value and Settings.Anti.AntiOwnership2 do
+                                pcall(function() struggleEvent:FireServer(plr) end)
+                                task.wait(0.05)
+                            end
+                            if hrp and hrp.Parent then
+                                pcall(function() hrp.Anchored = false end)
+                                if savedCFrame then pcall(function() hrp.CFrame = savedCFrame end) end
+                            end
+                        end)
+                    else
+                        if hrp and hrp.Parent then
+                            pcall(function() hrp.Anchored = false end)
+                            if savedCFrame then pcall(function() hrp.CFrame = savedCFrame end) end
+                        end
+                    end
+                end)
+                State.antiOwnershipConns["AntiOwn2CharConn"] = plr.CharacterAdded:Connect(function(char)
+                    task.wait(0.05)
+                    pcall(function()
+                        local hrp = char:WaitForChild("HumanoidRootPart", 5)
+                        if hrp then savedCFrame = hrp.CFrame end
+                    end)
+                end)
+                if isHeld.Value then
+                    local char = plr.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                    if hrp then savedCFrame = hrp.CFrame pcall(function() hrp.Anchored = true end) end
+                    State.antiOwnershipConns["AntiOwn2Task"] = task.spawn(function()
+                        while isHeld and isHeld.Value and Settings.Anti.AntiOwnership2 do
+                            pcall(function() struggleEvent:FireServer(plr) end)
+                            task.wait(0.05)
+                        end
+                        if hrp and hrp.Parent then
+                            pcall(function() hrp.Anchored = false end)
+                            if savedCFrame then pcall(function() hrp.CFrame = savedCFrame end) end
+                        end
+                    end)
+                end
+            end)
+        else
+            if State.antiOwnershipConns["AntiOwn2Conn"] then pcall(function() State.antiOwnershipConns["AntiOwn2Conn"]:Disconnect() end) State.antiOwnershipConns["AntiOwn2Conn"] = nil end
+            if State.antiOwnershipConns["AntiOwn2Task"] then task.cancel(State.antiOwnershipConns["AntiOwn2Task"]) State.antiOwnershipConns["AntiOwn2Task"] = nil end
+            if State.antiOwnershipConns["AntiOwn2CharConn"] then pcall(function() State.antiOwnershipConns["AntiOwn2CharConn"]:Disconnect() end) State.antiOwnershipConns["AntiOwn2CharConn"] = nil end
+            local char = LocalPlayer.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if hrp then pcall(function() hrp.Anchored = false end) end
+        end
+    end
+})
+
+
+
+
+
+local isHeldLoop = nil
+
+antiTab:AddToggle({
+    Name = "Anti ownership spam",
+    Default = false,
+    Flag = "f971rfutcss",
+    Callback = function(Value)
+        if Value then
+            local plr = game:GetService("Players").LocalPlayer
+            local isHeld = plr:WaitForChild("IsHeld", 5)
+            local struggleEvent = game:GetService("ReplicatedStorage"):WaitForChild("CharacterEvents"):WaitForChild("Struggle")
+            local savedCFrame = nil
+            
+            _G.AntiOwn2 = isHeld.Changed:Connect(function(heldState)
+                local char = plr.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                
+                if heldState then
+                    if hrp then 
+                        savedCFrame = hrp.CFrame
+                        hrp.Anchored = true 
+                    end
+                    
+                    isHeldLoop = task.spawn(function()
+                        while isHeld and isHeld.Value and _G.AntiOwn2Enabled do 
+                            struggleEvent:FireServer(plr)
+                            task.wait() 
+                        end
+                        if hrp and hrp.Parent then 
+                            hrp.Anchored = false 
+                            if savedCFrame then hrp.CFrame = savedCFrame end
+                        end
+                    end)
+                else
+                    if hrp and hrp.Parent then 
+                        hrp.Anchored = false 
+                        if savedCFrame then hrp.CFrame = savedCFrame end
+                    end
+                end
+            end)
+            
+            _G.AntiOwn2Char = plr.CharacterAdded:Connect(function(char)
+                task.wait(0.5)
+                local hrp = char:WaitForChild("HumanoidRootPart")
+                savedCFrame = hrp.CFrame
+            end)
+            
+            _G.AntiOwn2Enabled = true
+
+            if isHeld and isHeld.Value then
+                local char = plr.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if hrp then 
+                    savedCFrame = hrp.CFrame
+                    hrp.Anchored = true 
+                end
+                isHeldLoop = task.spawn(function()
+                    while isHeld and isHeld.Value and _G.AntiOwn2Enabled do 
+                        struggleEvent:FireServer(plr)
+                        task.wait() 
+                    end
+                    if hrp and hrp.Parent then 
+                        hrp.Anchored = false 
+                        if savedCFrame then hrp.CFrame = savedCFrame end
+                    end
+                end)
+            end
+        else
+            _G.AntiOwn2Enabled = false
+            
+            if _G.AntiOwn2 then _G.AntiOwn2:Disconnect() _G.AntiOwn2 = nil end
+            if _G.AntiOwn2Char then _G.AntiOwn2Char:Disconnect() _G.AntiOwn2Char = nil end
+            if isHeldLoop then task.cancel(isHeldLoop) isHeldLoop = nil end
+            
+            local char = game:GetService("Players").LocalPlayer.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.Anchored = false
+            end
+        end
+    end
+})
+
+
+antiTab:AddToggle({
+	Name = "Anti Ownership",
+	Default = false,
+    Flag = "ehiwoqwkdbfef",
+	Callback = function(Value)
+		antiOwnershipActive = Value
+		if Value then
+			antiOwnershipTask = task.spawn(function()
+				Struggle = game:GetService("ReplicatedStorage").CharacterEvents.Struggle
+				while antiOwnershipActive do
+					pcall(function()
+						character = LocalPlayer.Character
+						if character and character:FindFirstChild("Head") then
+							head = character.Head
+							if head:FindFirstChild("PartOwner") then
+								Struggle:FireServer(LocalPlayer)
+								for _, part in pairs(character:GetChildren()) do
+									if part:IsA("BasePart") then
+										part.Anchored = true
+									end
+								end
+								isHeld = LocalPlayer:FindFirstChild("IsHeld")
+								while isHeld and isHeld.Value and antiOwnershipActive do
+									task.wait()
+								end
+								for _, part in pairs(character:GetChildren()) do
+									if part:IsA("BasePart") then
+										part.Anchored = false
+									end
+								end
+							end
+						end
+					end)
+					task.wait(0.1)
+				end
+			end)
+		else
+			if antiOwnershipTask then
+				task.cancel(antiOwnershipTask)
+				antiOwnershipTask = nil
+			end
+			char = LocalPlayer.Character
+			if char then
+				for _, part in pairs(char:GetChildren()) do
+					if part:IsA("BasePart") then
+						part.Anchored = false
+					end
+				end
+			end
+		end
+	end    
+})
+end
+do
+antiTab:AddSection({
+	Name = "Anti Ragdoll"
+})
+
+antiTab:AddToggle({
+    Name = "Anti Ragdoll",
+    Default = false,
+    Flag = "9ww7gr0wuwgt",
+    Callback = function(Value)
+        cleanConnections()
+        if not Value then return end
+
+        local function applyProtection(char)
+            if not char then return end
+            local hum = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid", 5)
+            if not hum or hum.Health <= 0 then return end
+
+            hum.BreakJointsOnDeath = false
+            hum.AutoRotate = true
+            if hum.PlatformStand then hum.PlatformStand = false end
+
+            table.insert(connections, hum:GetPropertyChangedSignal("AutoRotate"):Connect(function()
+                if hum.Health > 0 and hum.AutoRotate == false and not (type(getgenv) == "function" and getgenv().FTAP_SpinbotActive) then
+                    hum.AutoRotate = true
+                end
+            end))
+
+            table.insert(connections, hum:GetPropertyChangedSignal("PlatformStand"):Connect(function()
+                if hum.Health > 0 and hum.PlatformStand == true then
+                    hum.PlatformStand = false
+                end
+            end))
+
+            table.insert(connections, RunService.RenderStepped:Connect(function()
+                if hum.Health > 0 and hum.Sit and hum.SeatPart == nil then
+                    hum.Sit = false
+                end
+            end))
+
+            table.insert(connections, hum.Died:Connect(function()
+                hum.BreakJointsOnDeath = true
+                cleanConnections()
+            end))
+        end
+
+        if LocalPlayer.Character then applyProtection(LocalPlayer.Character) end
+        table.insert(connections, LocalPlayer.CharacterAdded:Connect(function(char)
+            task.wait(0.6)
+            applyProtection(char)
+        end))
+    end
+})
+end
 antiTab:AddSection({
 	Name = "anti blob"
 })
@@ -5311,7 +5580,118 @@ antiTab:AddToggle({
         end)
     end
 })
+do
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
 
+local GrabEventsObj = ReplicatedStorage:FindFirstChild("GrabEvents")
+local EndGrabRemote = GrabEventsObj and GrabEventsObj:FindFirstChild("EndGrabEarly")
+
+local targetPos = CFrame.new(0, -9.9e9, 0)
+local isMonitoring = false
+local descendantConnection = nil
+local processedItems = {}
+
+local function SafeInvoke(remote, ...)
+    if not remote then return end
+    local args = {...}
+    task.spawn(function()
+        pcall(function()
+            remote:InvokeServer(unpack(args))
+        end)
+    end)
+end
+
+local function ProcessItem(item)
+    if not item or not item:IsA("Instance") then return end
+    if processedItems[item] then return end
+    
+    local myToyFolder = Workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+    if myToyFolder and item:IsDescendantOf(myToyFolder) then
+        return
+    end
+
+    processedItems[item] = true
+
+    task.spawn(function()
+        local holdPart = item:FindFirstChild("HoldPart") or item:WaitForChild("HoldPart", 2)
+        if not holdPart then 
+            processedItems[item] = nil
+            return 
+        end
+
+        local grabFunc = holdPart:WaitForChild("HoldItemRemoteFunction", 3)
+        local dropFunc = holdPart:WaitForChild("DropItemRemoteFunction", 3)
+
+        if grabFunc and dropFunc then
+            while isMonitoring and item.Parent and holdPart.Parent == item do
+                local char = LocalPlayer.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    SafeInvoke(grabFunc, item, char)
+                    
+                    task.wait(0.05)
+
+                    for _ = 1, 2 do
+                        SafeInvoke(dropFunc, item, targetPos, targetPos)
+                    end
+
+                    if EndGrabRemote then
+                        pcall(function()
+                            EndGrabRemote:FireServer()
+                        end)
+                    end
+                end
+                task.wait(0.1)
+            end
+        end
+        
+        processedItems[item] = nil
+    end)
+end
+
+local function ScanAndProcess()
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if not isMonitoring then break end
+        if obj.Name == "HoldPart" and obj.Parent then
+            ProcessItem(obj.Parent)
+        end
+    end
+end
+
+antiTab:AddToggle({
+    Name = "Anti spawn Food",
+    CurrentValue = false,
+    Flag = "AntiNetwwforkBrefeak",
+    Callback = function(Value)
+        isMonitoring = Value
+
+        if descendantConnection then
+            descendantConnection:Disconnect()
+            descendantConnection = nil
+        end
+
+        if not isMonitoring then
+            table.clear(processedItems)
+            return
+        end
+
+        task.spawn(ScanAndProcess)
+
+        descendantConnection = Workspace.DescendantAdded:Connect(function(obj)
+            if not isMonitoring then return end
+            if obj.Name == "HoldPart" then
+                task.defer(function()
+                    if obj.Parent and isMonitoring then
+                        ProcessItem(obj.Parent)
+                    end
+                end)
+            end
+        end)
+    end
+})
+end
 --===== Anti Banana 기능 =====
 antiTab:AddSection({
 	Name = "Anti banana"
@@ -5663,11 +6043,12 @@ antiTab:AddToggle({
     })
 
 end
-
+do
 antiTab:AddSection({
-	Name = "anti Paint"
+	Name = "anti Loop&Paint"
 })
---[[
+if not _G.cons then _G.cons = {} end
+
 antiTab:AddToggle({
     Name = "Anti Loop Kill (go to house)",
     Default = false,
@@ -5696,7 +6077,7 @@ antiTab:AddToggle({
         end
     end
 })
-]]
+
 
 
 --===== Anti Paint 기능 =====
@@ -5783,7 +6164,7 @@ antiTab:AddToggle({
     end
 })
 
-
+end
 
 
 --===== Anti Explode 기능 =====
