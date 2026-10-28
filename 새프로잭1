@@ -4838,6 +4838,9 @@ antiTab:AddSection({
 
  local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local character = LocalPlayer.Character
+local humanoidRootPart = character
+    and character:FindFirstChild("HumanoidRootPart")
 
 local Defense = {
     AntiRagdoll = false,
