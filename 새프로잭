@@ -5483,3 +5483,188 @@ antiTab:AddToggle({
 end
 end
 
+antiTab:AddSection({
+	Name = "anti helper"
+})
+do
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local connections = {}
+
+local function monitorHRP(character)
+    local hrp = character:WaitForChild("HumanoidRootPart", 5)
+    local humanoid = character:WaitForChild("Humanoid", 5)
+    
+    if hrp and humanoid then
+        if hrp.Massless and not humanoid.Sit then
+            hrp.Massless = false
+        end
+        
+        local c1 = hrp:GetPropertyChangedSignal("Massless"):Connect(function()
+            if hrp.Massless and not humanoid.Sit then
+                hrp.Massless = false
+            end
+        end)
+        
+        local c2 = humanoid:GetPropertyChangedSignal("Sit"):Connect(function()
+            if not humanoid.Sit and hrp.Massless then
+                hrp.Massless = false
+            end
+        end)
+        
+        table.insert(connections, c1)
+        table.insert(connections, c2)
+    end
+end
+
+antiTab:AddToggle({
+    Name = "Anti Massless",
+    Default = false,
+    Flag = "FixMasslesgssToggle",
+    Callback = function(Value)
+        if Value then
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer then
+                    if player.Character then
+                        task.spawn(monitorHRP, player.Character)
+                    end
+                    local c = player.CharacterAdded:Connect(function(character)
+                        task.spawn(monitorHRP, character)
+                    end)
+                    table.insert(connections, c)
+                end
+            end
+            
+            local playerAddedConn = Players.PlayerAdded:Connect(function(player)
+                if player ~= LocalPlayer then
+                    local c = player.CharacterAdded:Connect(function(character)
+                        task.spawn(monitorHRP, character)
+                    end)
+                    table.insert(connections, c)
+                end
+            end)
+            table.insert(connections, playerAddedConn)
+        else
+            for _, conn in ipairs(connections) do
+                conn:Disconnect()
+            end
+            table.clear(connections)
+        end
+    end    
+})
+
+local AntiInPlotsValues = {["Players & Toy"] = false, ["Toy Grab"] = false, ["VehicleSeat"] = false}
+
+antiTab:AddToggle({
+    Name = "Anti in plot",
+    Default = false,
+    Flag = "AntiInPeglowgtsToggle",
+    Save = true,
+    Callback = function(Value)
+        if Value then
+            if AntiInPlotsC then AntiInPlotsC:Disconnect() end
+
+            AntiInPlotsC = rs2.PreSimulation:Connect(function()
+                if not AntiInPlotsEnabled or not AntiInPlotsValues["Players & Toy"] then return end
+
+                for _, player in pairs(game.Players:GetPlayers()) do
+                    if player == plr then continue end
+                    local char = player.Character
+                    if not char then continue end
+                    if inplot:FindFirstChild(player.Name) then char.Parent = inv end
+                end
+
+                for i = 1, 5 do
+                    local plot = workspace.PlotItems:FindFirstChild("Plot" .. i)
+                    if not plot then continue end
+                    for _, model in ipairs(plot:GetChildren()) do
+                        if model:IsA("Model") then model.Parent = workspace end
+                    end
+                end
+            end)
+
+            for _, seat in pairs(workspace.PlotItems:GetDescendants()) do
+                if not seat:IsA("VehicleSeat") then continue end
+                local prompt = seat:FindFirstChildWhichIsA("ProximityPrompt")
+                if not prompt then continue end
+                prompt.Triggered:Connect(function(player)
+                    if not AntiInPlotsEnabled or not AntiInPlotsValues["VehicleSeat"] then return end
+                    if player ~= plr then return end
+                    seat:Sit(pp.hum)
+                end)
+            end
+
+            workspace.ChildAdded:Connect(function(child)
+                if not AntiInPlotsEnabled or not AntiInPlotsValues["Toy Grab"] then return end
+                if child.Name ~= "GrabParts" then return end
+                if pp.hum.Sit and pp.hum.SeatPart then return end
+                if not iplot.Value then return end
+                if AntiInPlotsExec then return end
+
+                AntiInPlotsExec = true
+
+                task.spawn(function()
+                    if not Plot then AntiInPlotsExec = false return end
+
+                    local myPlot = workspace.Plots:FindFirstChild("Plot" .. Plot)
+                    if not myPlot then AntiInPlotsExec = false return end
+
+                    local metal = myPlot:FindFirstChild("TeslaCoil") and myPlot.TeslaCoil:FindFirstChild("Metal")
+                    if not metal then AntiInPlotsExec = false return end
+
+                    local grabPart = child:FindFirstChild("GrabPart")
+                    local weld = grabPart and grabPart:FindFirstChild("WeldConstraint")
+                    if not weld then AntiInPlotsExec = false return end
+                    local part1 = weld.Part1
+                    if not part1 then AntiInPlotsExec = false return end
+
+                    Fake(true)
+                    ServerHrp = metal.CFrame
+                    task.wait(plr:GetNetworkPing() + 0.2)
+                    Fake(false)
+                    task.wait(plr:GetNetworkPing() + 0.12)
+                    if weld.Part1 then rs.GrabEvents.SetNetworkOwner:FireServer(weld.Part1, CFrame.lookAt(pp.torso.Position, weld.Part1.Position)) end
+                    task.wait(plr:GetNetworkPing() + 0.1)
+
+                    repeat rs2.PreSimulation:Wait() until (pp.hum and pp.hum.Health <= 0) or not Plot or not workspace:FindFirstChild("GrabParts")
+                    AntiInPlotsExec = false
+                end)
+            end)
+
+            AntiInPlotsEnabled = true
+        else
+            AntiInPlotsEnabled = false
+            if AntiInPlotsC then AntiInPlotsC:Disconnect() AntiInPlotsC = nil end
+        end
+    end
+})
+
+antiTab:AddDropdown({
+    Name = "AntiInPlotsType",
+    Default = {},
+    Options = {"Players & Toy", "Toy Grab", "VehicleSeat"},
+    Multiple = true,
+    Flag = "AntiInPeflotsTywvpeDropdown",
+    Save = true,
+    Callback = function(Value)
+        AntiInPlotsValues = {["Players & Toy"] = false, ["Toy Grab"] = false, ["VehicleSeat"] = false}
+        for _, v in pairs(Value) do
+            AntiInPlotsValues[v] = true
+        end
+    end
+})
+
+antiTab:AddToggle({
+    Name = "Anti void",
+    
+    save = true,
+    Flag = "uwwuddvwiwiw",
+    Callback = function(Value)
+        if Value then
+            workspace.FallenPartsDestroyHeight = -50000
+        else
+            workspace.FallenPartsDestroyHeight = -100
+        end
+    end,
+})
