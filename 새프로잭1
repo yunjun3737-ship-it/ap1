@@ -4936,10 +4936,35 @@ antiTab:AddToggle({
         end
     end
 })
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local isRunning = false
+local thread = nil
+
+local function cleanup()
+    local char = LocalPlayer.Character
+    if char then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local truePosPart = char:FindFirstChild("TruePositionPart")
+        if hrp and truePosPart then
+            local rootAttachment = truePosPart:FindFirstChild("RootAttachment")
+            if rootAttachment then
+                rootAttachment.Parent = hrp
+            end
+        end
+        if truePosPart then
+            truePosPart:Destroy()
+        end
+    end
+end
+
 antiTab:AddToggle({
     Name = "Anti Bring",
     Default = false,
-    Flag = "octuwg2pitf179t",
+    Flag = "octuwg2pditfe179t",
     Callback = function(Value)
         isRunning = Value
         if not Value then
@@ -5047,8 +5072,246 @@ antiTab:AddToggle({
 
 
 end
+antiTab:AddSection({
+	Name = "Anti input"
+})
 
-		
+local itemTranslation = {
+    ["Banana"] = "FoodBanana",
+    ["Bread"] = "FoodBread",
+    ["Broccoli"] = "FoodBroccoli",
+    ["Cake"] = "FoodCakePink",
+    ["Coconut"] = "FoodCoconut",
+    ["Fried egg"] = "FoodDippyEgg",
+    ["Donut"] = "FoodDonut",
+    ["French frie"] = "FoodFrenchFries",
+    ["Hot dog"] = "FoodHotdog",
+    ["Meat skewers"] = "FoodMeatStick",
+    ["mushroom"] = "FoodMushroomPoison",
+    ["Cheese Pizza"] = "FoodPizzaCheese",
+    ["Pepperoni Pizza"] = "FoodPizzaPepperoni",
+    ["Coke"] = "FoodSodaCan",
+    ["trumpet"] = "InstrumentBrassBugle",
+    ["trumpet2"] = "InstrumentBrassTrumpet",
+    ["Bongo drum"] = "InstrumentDrumBongos",
+    ["snare drum"] = "InstrumentDrumSnare",
+    ["Acoustic guitar"] = "InstrumentGuitarAcoustic",
+    ["Benzo"] = "InstrumentGuitarBanjo",
+    ["Lyre"] = "InstrumentGuitarLyre",
+    ["Ukulelele"] = "InstrumentGuitarUkulele",
+    ["Violin"] = "InstrumentGuitarViolin",
+    ["Electronic piano"] = "InstrumentPianoKeyboard",
+    ["Melodica"] = "InstrumentPianoMelodica",
+    ["Mike"] = "InstrumentVoiceMicrophone",
+    ["Ocarina"] = "InstrumentWoodwindOcarina",
+    ["Saxophone"] = "InstrumentWoodwindSaxophone",
+    ["Vuvuzela"] = "InstrumentBrassVuvuzela"
+}
+
+function AntiDeathF(itemName)
+    if activeConnection then
+        activeConnection:Disconnect()
+        activeConnection = nil
+    end
+
+    activeConnection = rs2.Heartbeat:Connect(function()
+        if not AntiDeathT then
+            if activeConnection then
+                activeConnection:Disconnect()
+                activeConnection = nil
+            end
+            return
+        end
+
+        local Character = plr.Character
+        if not Character then return end
+
+        local donut = inv:FindFirstChild(itemName)
+
+        if not donut then
+            pcall(function()
+                rs.MenuToys.SpawnToyRemoteFunction:InvokeServer(itemName, CFrame.new(0,0,0), Vector3.new(0,0,0))
+            end)
+            return
+        end
+
+        if not donut:FindFirstChild("HoldPart") then return end
+
+        local HoldItemRemoteFunction = donut.HoldPart:FindFirstChild("HoldItemRemoteFunction")
+        local DropItemRemoteFunction = donut.HoldPart:FindFirstChild("DropItemRemoteFunction")
+
+        if HoldItemRemoteFunction and DropItemRemoteFunction then
+            HoldItemRemoteFunction:InvokeServer(donut, Character)
+            DropItemRemoteFunction:InvokeServer(donut, CFrame.new(999999, 999999, 999999), Vector3.new(999999, 999999, 999999))
+        end
+    end)
+end
+
+RunService = game:GetService("RunService")
+Camera = workspace.CurrentCamera
+
+local currentSelectedOption = "FoodBanana"
+
+antiTab:AddToggle({
+    Name = "Anti Network ownership",
+    
+    save = true,
+    Flag = "AntiDefgathTogwfgiwleFlag",
+    Callback = function(Value)
+        AntiDeathT = Value
+        if AntiDeathT then
+            task.spawn(function()
+                AntiDeathF(currentSelectedOption)
+            end)
+        else
+            if activeConnection then
+                activeConnection:Disconnect()
+                activeConnection = nil
+            end
+        end
+    end,
+})
+
+antiTab:AddDropdown({
+    Name = "Select Item",
+    Options = {
+        "Banana", "Bread", "Broccoli", "Pink Cake", "Coconut", "Soft Boiled Egg", "Donut", 
+        "French Fries", "Hot Dog", "Ukulele", "Meat Skewer", "Poison Mushroom", "Cheese Pizza", 
+        "Pepperoni Pizza", "Can of Soda", "Bugle", "Trumpet", "Bongo Drum", "Snare Drum", 
+        "Acoustic Guitar", "Banjo", "Lyre", "Violin", "Electric Piano", "Melodica", 
+        "Microphone", "Ocarina", "Saxophone", "Vuvuzela"
+    },
+
+    Default = "Banana", 
+    save = true,
+    Flag = "ItemDropwfdwiowgnFlag",
+    Callback = function(Option)
+        local rawSelection = type(Option) == "table" and Option[1] or Option
+        if type(rawSelection) == "string" then
+            local englishName = itemTranslation[rawSelection]
+            if englishName then
+                currentSelectedOption = englishName
+                if AntiDeathT then
+                    task.spawn(function()
+                        AntiDeathF(englishName)
+                    end)
+                end
+            end
+        end
+    end,
+})	
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+local connection = nil
+
+local function findOwnBurger(folder, markerName)
+    for _, item in pairs(folder:GetChildren()) do
+        if item.Name == "FoodHamburger" or item.Name == "FoodHamburger_Hold" or item:FindFirstChild(markerName) then
+            return item
+        end
+    end
+    return nil
+end
+
+local function claimBurger(burger, markerName)
+    if not burger:FindFirstChild(markerName) then
+        local marker = Instance.new("BoolValue")
+        marker.Name = markerName
+        marker.Parent = burger
+    end
+    return true
+end
+
+local function getBurgerHolder(burger)
+    local holdPart = burger:FindFirstChild("HoldPart")
+    if holdPart then
+        for _, child in pairs(holdPart:GetChildren()) do
+            if child:IsA("Weld") or child:IsA("Motor6D") or child:IsA("WeldConstraint") then
+                local part = child.Part1 or child.Part0
+                if part and part.Parent and part.Parent:FindFirstChild("Humanoid") then
+                    return part.Parent
+                end
+            end
+        end
+    end
+    return nil
+end
+
+antiTab:AddToggle({
+    Name = "Anti Hold Hamburger",
+    Default = false,
+    Flag = "gyw80hwqt8f",
+    Callback = function(Value)
+        if not Value then
+            if connection then
+                connection:Disconnect()
+                connection = nil
+            end
+            return
+        end
+
+        if connection then
+            connection:Disconnect()
+            connection = nil
+        end
+
+        local lastHold = 0
+        local HOLD_INTERVAL = 0.05
+
+        connection = RunService.Heartbeat:Connect(function()
+            local now = tick()
+            if now - lastHold < HOLD_INTERVAL then return end
+            lastHold = now
+
+            local character = LocalPlayer.Character
+            if not character or not character:FindFirstChild("Humanoid") or character.Humanoid.Health <= 0 then return end
+
+            local spawnedFolder = Workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+            local hamburger = spawnedFolder and findOwnBurger(spawnedFolder, "AntiHoldBurgerMarker")
+            if hamburger and not claimBurger(hamburger, "AntiHoldBurgerMarker") then
+                hamburger = nil
+            end
+            if hamburger and hamburger.Name == "FoodHamburger" then
+                hamburger.Name = "FoodHamburger_Hold"
+            end
+
+            if not hamburger or not hamburger:FindFirstChild("HoldPart") then
+                pcall(function()
+                    ReplicatedStorage.MenuToys.SpawnToyRemoteFunction:InvokeServer(
+                        "FoodHamburger",
+                        CFrame.new(0, 300, 0),
+                        Vector3.new(0, 0, 0)
+                    )
+                end)
+                return
+            end
+
+            local holder = getBurgerHolder(hamburger)
+            if holder and holder ~= character then
+                pcall(function()
+                    ReplicatedStorage.MenuToys.DestroyToy:FireServer(hamburger)
+                end)
+                return
+            elseif holder == character then
+                return
+            end
+
+            for _, part in pairs(hamburger:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = false end
+            end
+
+            pcall(function()
+                hamburger.HoldPart.HoldItemRemoteFunction:InvokeServer(hamburger, character)
+            end)
+        end)
+    end
+})
+
 --===== Anti Banana 기능 =====
 antiTab:AddSection({
 	Name = "Anti banana"
