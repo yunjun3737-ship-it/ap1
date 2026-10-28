@@ -369,8 +369,7 @@ local service=setmetatable({},{
 		return s
 	end,
 })
-do
-end
+
 wait(2)
 
 PLOT_MAP = {
