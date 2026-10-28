@@ -2808,167 +2808,305 @@ grabTab:AddToggle({
    end,
 
 })
-local myToysFolder = Workspace:WaitForChild(LocalPlayer.Name .. "SpawnedInToys")
 
-local function getCharacter(player)
-    local char = player.Character
-    if not char then
-        if player.CharacterAdded then
-            char = player.CharacterAdded:Wait() or nil
-        else
-            char = nil
-        end
-    end
-    return char
-end
 
-local function getHumanoidRootPart(character)
-    return character and character:FindFirstChild("HumanoidRootPart") or nil
-end
 
-local function ragdollFall()
-    local rootPart = getHumanoidRootPart(getCharacter(LocalPlayer))
-    if rootPart and RagdollRemote then
-        RagdollRemote:FireServer(rootPart, 1)
-    end
-end
 
-local function spawnToy(toyName, cframe)
-    if SpawnRemote then
-        task.spawn(function()
-            pcall(function()
-                SpawnRemote:InvokeServer(toyName, cframe, Vector3.new(0, 0, 0))
-            end)
-        end)
 
-        local startTime = tick()
-        local toy = myToysFolder:FindFirstChild(toyName)
+connect9 = nil
 
-        while not toy and (tick() - startTime < 3) do
-            task.wait(0.05)
-            toy = myToysFolder:FindFirstChild(toyName)
-        end
+connect10 = nil
 
-        return toy
-    end
-end
+v13 = false
 
-local function destroyToy(toy)
-    task.spawn(function()
-        pcall(function()
-            if DestroyRemote and toy and toy.Parent then
-                DestroyRemote:FireServer(toy)
-            end
-        end)
-    end)
-end
 
-local function setNetworkOwner(part, cframe)
-    task.spawn(function()
-        pcall(function()
-            if SetNetworkOwner then
-                SetNetworkOwner:FireServer(part, cframe)
-            end
-        end)
-    end)
-end
+antiTab:AddToggle({  
+	Name = "Anti Banana  (REMOVE-LEGS)",  
+	Default = false,  
+	Flag = "RemovewfwLegs",  
+	Callback = function(value41)  
+		local function f32(p24)  
+			if connect9 then  
+				connect9:Disconnect()  
+			end  
 
-local function antiBananaDeleteLegs()
-    local char = getCharacter(LocalPlayer)
-    if not char then return end
+			connect9 = runService.Heartbeat:Connect(function()  
+				if not v13 then  
+					return  
+				else  
+					local character18 = p24 or v1.Character  
 
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.PlatformStand = false
-    end
+					if not character18 then  
+						return  
+					else  
+						local v142 = character18:FindFirstChild("Humanoid")  
+						local v143 = not v142  
+						local v144 = character18:FindFirstChild("HumanoidRootPart")  
 
-    task.spawn(function()
-        ragdollFall()
-    end)
+						if v143 or not v144 then  
+							return  
+						else  
+							local rightLeg = character18:FindFirstChild("Right Leg")  
+							local leftLeg = character18:FindFirstChild("Left Leg")  
 
-    task.wait(0.4)
+							if rightLeg or leftLeg then  
+								workspace.FallenPartsDestroyHeight = -10  
+								v142:ChangeState(Enum.HumanoidStateType.GettingUp)  
 
-    char = getCharacter(LocalPlayer)
-    if not char then return end
+								if replicatedStorage:FindFirstChild("CharacterEvents") then  
+									local ragdollRemote2 =  
+										replicatedStorage.CharacterEvents:FindFirstChild("RagdollRemote")  
 
-    local rightLeg = char:FindFirstChild("Right Leg") or char:FindFirstChild("RightUpperLeg")
-    local leftLeg = char:FindFirstChild("Left Leg") or char:FindFirstChild("LeftUpperLeg")
+									if ragdollRemote2 then  
+										ragdollRemote2:FireServer(v144, 1)  
+									end  
+								end  
 
-    if rightLeg and leftLeg then
-        local clonedLeg = rightLeg:Clone()
-        clonedLeg.Parent = char
+								task.wait(0.2)  
 
-        for _, v in ipairs(clonedLeg:GetChildren()) do
-            if v:IsA("Constraint") or v.Name:find("Socket") then
-                v:Destroy()
-            end
-        end
+								if rightLeg then  
+									rightLeg:PivotTo(CFrame.new(-9999, -99999999, -9999))  
+								end  
 
-        task.wait(0.1)
-        rightLeg.CFrame = CFrame.new(0, -59999, 0)
-        leftLeg.CFrame = CFrame.new(0, -59999, 0)
-        task.wait(0.1)
+								if leftLeg then  
+									leftLeg:PivotTo(CFrame.new(-9999, -99999999, -9999))  
+								end  
 
-        local hrp = getHumanoidRootPart(char)
-        if hrp then
-            local highCFrame = CFrame.new(hrp.Position.X, 999999, hrp.Position.Z)
-            local cup = spawnToy("CupMugBrown", highCFrame)
+								task.wait(2)  
+								v144.CFrame = CFrame.new(-86.8966, -10.1004, 7.777)  
+								return  
+							end  
 
-            if cup and cup:FindFirstChild("Hitbox") then
-                setNetworkOwner(hrp, CFrame.new(cup.Hitbox.Position))
-                task.wait(0.1)
-                destroyToy(cup)
-            end
-        end
+							v142.HipHeight = 2  
+							workspace.FallenPartsDestroyHeight = -500  
+							return  
+						end  
+					end  
+				end  
+			end)  
+		end  
 
-        clonedLeg.CFrame = CFrame.new(0, 9999999, 0)
+		v13 = value41  
 
-        pcall(function()
-            clonedLeg.Massless = true
-        end)
+		function onCharacterAdded(p25)  
+			if not v13 then  
+				return  
+			end  
 
-        if hum then
-            hum.AutoRotate = true
-            hum:ChangeState(Enum.HumanoidStateType.GettingUp)
-        end
-    end
-end
+			p25.ChildAdded:Connect(function(child)  
+				if child.Name == "Right Leg" or child.Name == "Left Leg" then  
+					if v13 then  
+						f32(p25)  
+					end  
+				end  
+			end)  
 
-local antiBananaEnabled = false
+			p25.ChildRemoved:Connect(function(child2)  
+				if child2.Name == "Right Leg" or child2.Name == "Left Leg" then  
+					local v145 = p25:FindFirstChild("Humanoid")  
 
-LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-    if not antiBananaEnabled then return end
+					if v145 then  
+						v145.HipHeight = 2  
+					end  
+				end  
+			end)  
 
-    local hrp = newCharacter:WaitForChild("HumanoidRootPart", 3)
-    local humanoid = newCharacter:WaitForChild("Humanoid", 3)
+			f32(p25)  
+		end  
 
-    if hrp and humanoid then
-        task.wait(0.3)
-        antiBananaDeleteLegs()
-    end
-end)
+		if v13 and v1.Character then  
+			onCharacterAdded(v1.Character)  
+		end  
+
+		if v13 then  
+			connect10 = v1.CharacterAdded:Connect(function(character19)  
+				if v13 then  
+					onCharacterAdded(character19)  
+				end  
+			end)  
+		elseif not v13 then  
+			if connect9 then  
+				connect9:Disconnect()  
+				connect9 = nil  
+			end  
+
+			if connect10 then  
+				connect10:Disconnect()  
+				connect10 = nil  
+			end  
+
+			workspace.FallenPartsDestroyHeight = -500  
+		end  
+	end,  
+})  
+
+antiTab:AddToggle({  
+	Name = 'Anti Banana (EAT)',  
+	Default = false,  
+    Flag = "hwisisj",
+	Callback = function(value42)  
+		local v146 = 0  
+
+		if value42 then  
+			task.spawn(function()  
+				while value42 do  
+					local v147 = tick()  
+
+					if v147 - v146 < 0.2 then  
+						runService.Heartbeat:Wait()  
+					else  
+						v146 = v147  
+
+						for index14, value43 in ipairs(workspace:GetChildren()) do  
+							local v148 = value43  
+
+							if v148.Parent.Name ~= v1.Name .. "SpawnedInToys" then  
+								if  
+									v148:IsA("Model")  
+									and v148.Name == "FoodBanana"  
+									and v148:FindFirstChild("HoldPart")  
+								then  
+									local holdPart = v148.HoldPart  
+									local holdItemRemoteFunction = holdPart:FindFirstChild("HoldItemRemoteFunction")  
+
+									if holdItemRemoteFunction then  
+										pcall(function()  
+											holdItemRemoteFunction:InvokeServer(v148, v1.Character)  
+										end)  
+									end  
+
+									task.wait(0.01)  
+									local dropItemRemoteFunction = holdPart:FindFirstChild("DropItemRemoteFunction")  
+
+									if dropItemRemoteFunction then  
+										pcall(function()  
+											dropItemRemoteFunction:InvokeServer(  
+												v148,  
+												CFrame.new(0, -500, 0),  
+												Vector3.new(0, 97.69, 0)  
+											)  
+										end)  
+									end  
+								end  
+
+								for index15, value44 in ipairs(v148:GetChildren()) do  
+									local v149 = value44  
+
+									if  
+										v149:IsA("Model")  
+										and v149.Name == "FoodBanana"  
+										and v149:FindFirstChild("HoldPart")  
+									then  
+										local v150 = v1.Name .. "SpawnedInToys"  
+
+										if v149.Parent.Name ~= v150 then  
+											local holdPart2 = v149.HoldPart  
+											local holdItemRemoteFunction2 =  
+												holdPart2:FindFirstChild("HoldItemRemoteFunction")  
+
+											if holdItemRemoteFunction2 then  
+												pcall(function()  
+													holdItemRemoteFunction2:InvokeServer(v149, v1.Character)  
+												end)  
+											end  
+
+											task.wait(0.01)  
+											local dropItemRemoteFunction2 =  
+												holdPart2:FindFirstChild("DropItemRemoteFunction")  
+
+											if dropItemRemoteFunction2 then  
+												pcall(function()  
+													dropItemRemoteFunction2:InvokeServer(  
+														v149,  
+														CFrame.new(0, -500, 0),  
+														Vector3.new(0, 97.69, 0)  
+													)  
+												end)  
+											end  
+										end  
+									end  
+								end  
+							end  
+						end  
+
+						runService.Heartbeat:Wait()  
+					end  
+				end  
+			end)  
+		end  
+
+		v146 = 0  
+	end,  
+})  
 
 antiTab:AddToggle({
-    Name = "Anti Banana",
-    Default = false,
-    Callback = function(Value)
-        antiBananaEnabled = Value
 
-        if Value then
-            antiBananaDeleteLegs()
-        else
-            local char = getCharacter(LocalPlayer)
+Name = 'Anti Poison',
 
-            if char then
-                local hum = char:FindFirstChildOfClass("Humanoid")
+Default = false,
 
-                if hum then
-                    hum.Health = 0
-                end
-            end
-        end
-    end
-})
+Flag = "AntiPwdoison",
+
+Callback = function(value37)
+
+if value37 then
+
+v12 = {}
+
+
+			for index13, value38 in ipairs(workspace:GetDescendants()) do  
+				if value38:IsA("BasePart") and value38.Name == "PoisonHurtPart" then  
+					v12[value38] = value38.CFrame  
+					value38.CFrame = value38.CFrame + Vector3.new(0, 10000, 0)  
+				end  
+			end  
+		else  
+			for key7, value39 in pairs(v12) do  
+				if key7 and key7.Parent then  
+					key7.CFrame = value39  
+				end  
+			end  
+
+			v12 = {}  
+		end  
+	end,  
+})  
+
+
+
+antiTab:AddToggle({
+		Name = 'Anti Sticky',
+		Default = false,
+		Flag = "AntiStsickyToggle",
+		Callback = function(value49)
+			local playerScripts2 = v1:WaitForChild("PlayerScripts")
+
+			if value49 then
+				local stickyPartsTouchDetection = playerScripts2:FindFirstChild("StickyPartsTouchDetection")
+
+				if stickyPartsTouchDetection then
+					stickyPartsTouchDetection.Disabled = true
+				end
+			else
+				local stickyPartsTouchDetection2 = playerScripts2:FindFirstChild("StickyPartsTouchDetection")
+
+				if stickyPartsTouchDetection2 then
+					stickyPartsTouchDetection2:Destroy()
+				end
+
+				local stickyPartsTouchDetection3 = replicatedStorage:FindFirstChild("StickyPartsTouchDetection")
+
+				if stickyPartsTouchDetection3 then
+					stickyPartsTouchDetection3:Clone().Parent = playerScripts2
+				end
+			end
+		end,
+	})
+
+
+
+
+
 
 local antiLagT = false
 local autoAntiLagT = true
