@@ -5630,12 +5630,12 @@ task.spawn(function()
 
                 antiLagF()
 
-                local sound = Instance.new("Sound")
-                sound.SoundId = "rbxassetid://17208361335"
-                sound.Volume = 10
-                sound.Parent = game.Players.LocalPlayer.PlayerGui
-                sound:Play()
-                game.Debris:AddItem(sound, 5)
+              --  local sound = Instance.new("Sound")
+               -- sound.SoundId = "rbxassetid://17208361335"
+                --sound.Volume = 10
+                ---sound.Parent = game.Players.LocalPlayer.PlayerGui
+              --  sound:Play()
+                --game.Debris:AddItem(sound, 5)
 
                 OrionLib:MakeNotification({
                     Name = "Auto Anti Lag",
