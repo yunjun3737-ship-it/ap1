@@ -1391,8 +1391,6 @@ local Workspace = game:GetService("Workspace")
 local localPlayer = Players.LocalPlayer
 local playerGui = localPlayer:WaitForChild("PlayerGui")
 
---===== Reach 기능 =====
-do
 local furtherExtend = false
 local extendAmount = 3
 local currentMagnitude = 0
@@ -1407,7 +1405,7 @@ if UserInputService.TouchEnabled then
     reachScreenGui.Parent = playerGui
 end
 
-function makeImageButton(yPosition, imageId)
+local function makeImageButton(yPosition, imageId)
     local imgButton = Instance.new("ImageButton")
     imgButton.Size = UDim2.new(0, 45, 0, 45)
     imgButton.Position = UDim2.new(1, -70, 1, yPosition)
@@ -1431,20 +1429,20 @@ end
 local extendUpBtn = makeImageButton(-259, "rbxassetid://9603831913")
 local extendDownBtn = makeImageButton(-211, "rbxassetid://9603826756")
 
-function toggleExtendButtons(isVisible)
+local function toggleExtendButtons(isVisible)
     extendUpBtn.Visible = isVisible and UserInputService.TouchEnabled
     extendUpBtn.Active = extendUpBtn.Visible
     extendDownBtn.Visible = isVisible and UserInputService.TouchEnabled
     extendDownBtn.Active = extendDownBtn.Visible
 end
 
-function decreaseExtendAmount()
+local function decreaseExtendAmount()
     if furtherExtend then
         currentMagnitude = math.max(3, currentMagnitude - extendAmount)
     end
 end
 
-function increaseExtendAmount()
+local function increaseExtendAmount()
     if furtherExtend then
         currentMagnitude = math.max(3, currentMagnitude + extendAmount)
     end
@@ -1519,7 +1517,7 @@ Workspace.ChildRemoved:Connect(function(child)
     end
 end)
 
-function loopExtendUpdate(actionFunc)
+local function loopExtendUpdate(actionFunc)
     while isHoldingButton do
         actionFunc()
         task.wait(0.1)
@@ -1580,11 +1578,6 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
-
-end
-
---===== Infinite Line 기능 =====
-do
 grabTab:AddSection({
     Name = "Infinite line"
 })
@@ -1615,8 +1608,6 @@ grabTab:AddSlider({
         extendAmount = value
     end
 })
-
-
 end
 
 
@@ -1955,7 +1946,160 @@ function BlobDropR()
         end
     end
 end
+function RagdollGrabF()
+    if not RagdollGrabT then
+        local deskToRemove = inv:FindFirstChild("RB")
+        if deskToRemove then
+            local destroyRemote = rs:FindFirstChild("MenuToys") and rs.MenuToys:FindFirstChild("DestroyToy")
+            if destroyRemote then
+                destroyRemote:FireServer(deskToRemove)
+            end
+        end
+        return
+    end
 
+    while RagdollGrabT and task.wait() do
+        local char = plr.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp then
+            continue
+        end
+
+        local desk = inv:FindFirstChild("RB")
+
+        if not desk then
+            local spawnRemote = rs.MenuToys.SpawnToyRemoteFunction
+            if spawnRemote then
+                local offset = hrp.CFrame.LookVector * -24
+                local spawnCF = hrp.CFrame + offset
+
+                task.spawn(function()
+                    pcall(function()
+                        spawnRemote:InvokeServer("PalletLightBrown", spawnCF, spawnCF.Position)
+task.wait(0.1)
+                    end)
+
+                    for attempt = 3, 3 do
+                        for _, item in pairs(inv:GetChildren()) do
+                            if item.Name == "PalletLightBrown" then
+                                local soundPart = item:FindFirstChild("SoundPart")
+                                if soundPart then
+                                    for i = 3, 3 do
+                                        pcall(function()
+                                            rs.GrabEvents.SetNetworkOwner:FireServer(soundPart, soundPart.CFrame)
+                                            rs.GrabEvents.SetNetworkOwner:FireServer(soundPart, hrp.CFrame)
+                                        end)
+                                    end
+
+                                    local partOwner = soundPart:FindFirstChild("PartOwner")
+                                    if partOwner and partOwner.Value == plr.Name then
+                                        item.Name = "RB"
+                                        return
+                                    end
+                                end
+                            end
+                        end
+                        task.wait()
+                    end
+                end)
+
+                task.wait()
+                desk = inv:FindFirstChild("RB")
+            end
+        end
+
+        if not desk then 
+            continue 
+        end
+
+        pcall(function()
+            for _, part in ipairs(desk:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end)
+
+        local soundPart = desk:FindFirstChild("SoundPart")
+        if not soundPart then
+            local destroyRemote = rs:FindFirstChild("MenuToys") and rs.MenuToys:FindFirstChild("DestroyToy")
+            if destroyRemote then
+                destroyRemote:FireServer(desk)
+            end
+            continue
+        end
+
+        local partOwner = soundPart:FindFirstChild("PartOwner")
+        if not partOwner or partOwner.Value ~= plr.Name then
+            local destroyRemote = rs:FindFirstChild("MenuToys") and rs.MenuToys:FindFirstChild("DestroyToy")
+            if destroyRemote then
+                destroyRemote:FireServer(desk)
+            end
+            continue
+        end
+
+        local targetFound = false
+
+        for _, other in pairs(game:GetService("Players"):GetPlayers()) do
+            if other ~= plr and other.Character and other.Character:FindFirstChild("Head") then
+                local head = other.Character.Head
+                local headPartOwner = head:FindFirstChild("PartOwner")
+                local FreeKick = head:FindFirstChild("OwnerKickRagdoll")
+
+                if (headPartOwner and headPartOwner:IsA("StringValue") and headPartOwner.Value == plr.Name) or 
+                   (FreeKick and FreeKick:IsA("StringValue")) then
+
+                    local humanoid = other.Character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        local ragdolled = humanoid:FindFirstChild("Ragdolled")
+                        if ragdolled and ragdolled:IsA("BoolValue") and ragdolled.Value then
+                            continue
+                        end
+                    end
+
+                    local otherHrp = other.Character:FindFirstChild("HumanoidRootPart")
+                    if otherHrp then
+                        soundPart.CFrame = CFrame.new(0,9999,0)
+                        task.wait(0.01)
+                        soundPart.CFrame = otherHrp.CFrame * CFrame.Angles(math.rad(-90), math.rad(0), math.rad(0))
+                        targetFound = true
+                        break
+                    end
+                end
+            end
+        end
+
+        local main = desk:FindFirstChild("Main")
+        if main then
+            local bp = main:FindFirstChildOfClass("BodyPosition")
+            if not bp then
+                bp = Instance.new("BodyPosition")
+                bp.MaxForce = Vector3.new(999999, 999999, 999999)
+                bp.P = 500000
+                bp.D = 5000
+                bp.Parent = main
+            end
+
+            if not targetFound then
+                local highPosition = Vector3.new(0, 9999, 0)
+                bp.Position = highPosition
+                soundPart.CFrame = CFrame.new(highPosition)
+            else
+                bp.Position = soundPart.Position
+            end
+        end
+    end
+
+    if not RagdollGrabT then
+        local deskToRemove = inv:FindFirstChild("RB")
+        if deskToRemove then
+            local destroyRemote = rs:FindFirstChild("MenuToys") and rs.MenuToys:FindFirstChild("DestroyToy")
+            if destroyRemote then
+                destroyRemote:FireServer(deskToRemove)
+            end
+        end
+    end
+end
 function NoClipGrabF()
     local trackedTargets = {}
     local playerCheckCooldown = 0
