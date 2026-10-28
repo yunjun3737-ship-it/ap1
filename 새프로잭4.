@@ -3982,11 +3982,25 @@ function StopTractorEscape()
         TractorEscapeConn:Disconnect()
         TractorEscapeConn = nil
     end
-    local inv = Workspace:FindFirstChild(Services.LocalPlayer.Name .. "SpawnedInToys")
+    local function removeAntiNetOwner(DestroyRemote)
+        local Players = game:GetService("Players")
+    local Workspace = game:GetService("Workspace")
+    local LocalPlayer = Players.LocalPlayer
+
+        if not LocalPlayer then 
+        warn(".")
+        return 
+    end
+
+        local inv = Workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+    
     if inv and inv:FindFirstChild("antinetowner") and DestroyRemote then
-        pcall(function() DestroyRemote:FireServer(inv.antinetowner) end)
+        pcall(function() 
+            DestroyRemote:FireServer(inv.antinetowner) 
+        end)
     end
 end
+
 
 function StartOcarinaLoop()
     if ACGE then return end
