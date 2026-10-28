@@ -1611,7 +1611,7 @@ grabTab:AddSlider({
 end
 
 
-end
+
 
 --===== Combat 및 Grab 기능 =====
 do
