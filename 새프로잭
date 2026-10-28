@@ -1,4 +1,4 @@
---===== 공통 초기화 및 공유 서비스 =====
+
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = {}
@@ -4677,9 +4677,9 @@ task.spawn(function()
 end)
 
 antiTab:AddToggle({
-    Name = "안티킬 (셋오너)",
+    Name = "Anti kill (SetOwner)",
     Default = false,
-    Flag = "ou2rx2o7fr",
+    Flag = "ou2wghrx2o7fr",
     Callback = function(value)
         runtimeFlags.AntiGrab = value
 
