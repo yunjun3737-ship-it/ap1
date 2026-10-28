@@ -6492,7 +6492,7 @@ antiTab:AddSection({
         end
     end)
 end
-end
+
 
 do
 antiTab:AddSection({
