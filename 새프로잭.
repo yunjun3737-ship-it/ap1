@@ -4128,7 +4128,7 @@ antiTab:AddToggle({
 })
 
 antiTab:AddToggle({
-	Name = "Anti Grab (sealt",
+	Name = "Anti Grab (Seatless)",
 	Default = false,
     Flag = "ehsiwiqkw9202",
 	Callback = function(Value)
