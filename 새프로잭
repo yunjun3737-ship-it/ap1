@@ -1,5 +1,8 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Config = {}
+local SpinEnabled = false
+local SpinSpeed = 25
 local Players = game:GetService("Players")
 local plr = Players.LocalPlayer
 local cam = workspace.CurrentCamera
@@ -415,6 +418,20 @@ AntiShuriLag = PlayerScripts:WaitForChild("StickyPartsTouchDetection")
 
 local function sno(part)
     SetNetworkOwner:FireServer(part, part.CFrame)
+end
+
+local function spawntoy(toyName, spawnCFrame, velocity)
+    local remote = SpawnToyRemoteFunction or SpawnRemote or SpawnToyRF
+    if not remote or not remote:IsA("RemoteFunction") then
+        return nil
+    end
+    local ok, result = pcall(function()
+        return remote:InvokeServer(toyName, spawnCFrame, velocity or Vector3.zero)
+    end)
+    if ok then
+        return result
+    end
+    return nil
 end
 
 
@@ -1000,7 +1017,6 @@ local SpamFakeposState = { Enabled = false, HeartbeatConn = nil, LoopThread = ni
     Name = "Fake Force",
     Default = false,
     Callback = function(Value)
-        --SpamFakeposState.Enabled = Value
         if Value then
             if SpamFakeposState.LoopThread then task.cancel(SpamFakeposState.LoopThread) end
             SpamFakeposState.LoopThread = task.spawn(function()
@@ -1048,7 +1064,17 @@ local SpamFakeposState = { Enabled = false, HeartbeatConn = nil, LoopThread = ni
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local lp = Players.LocalPlayer
-local SetProperty = sethiddenproperty
+local SetProperty
+if type(sethiddenproperty) == "function" then
+    SetProperty = function(...)
+        local ok, result = pcall(sethiddenproperty, ...)
+        return ok and result or false
+    end
+else
+    SetProperty = function()
+        return false
+    end
+end
 
 
 local desync1Enabled = false
@@ -1199,7 +1225,7 @@ playerTab:AddSlider({
     Flag = "hehdj2o",
     Rounding = 1,
     Callback = function(fpsCap1)
-        setfpscap(fpsCap1)
+        if type(setfpscap) == "function" then pcall(setfpscap, fpsCap1) end
     end
 })
 
@@ -1969,7 +1995,7 @@ function AntiStruggleGrabF()
 
                         if tgtTorso and myTorso and tgtHead then
                             local ownerValue = tgtHead:FindFirstChild("PartOwner")
-                            if tgtTorso then --not ownerValue or ownerValue.Value ~= plr.Name then
+                            if tgtTorso then
                                 SetNetworkOwner:FireServer(tgtTorso, CFrame.lookAt(myTorso.Position, tgtTorso.Position))
                             end
                         end
@@ -2013,7 +2039,6 @@ grabTab:AddTextbox({
     end
 })
 local nageru = 800
---local lastThrowTime = 0
 
 grabTab:AddToggle({
     Name = "Super Throw V2   <font color='rgb(0,255,0)'>[Mobile]</font>",
@@ -2274,7 +2299,6 @@ local skinSettings = {
     },
     ["Xeron Line"] = {
         Texture = "rbxassetid://77989137998499", Speed = -5, Width0 = 1.4, Width1 = 0.6,
-        --Color = ColorSequence.new(Color3.fromRGB(255,40,0)), Brightness = 3.5
     },
     ["Void"] = {
         Texture = "rbxassetid://106048110", Speed = 4, Width0 = 1.6, Width1 = 1.6,
@@ -2884,7 +2908,7 @@ local function GetCharacter()
     return LocalPlayer.Character
 end
 
-local Config = {
+Config = {
     AntigrabCon = nil,
     AntiGrabRag = false,
     Contuuti = {},
@@ -3903,7 +3927,7 @@ local function StartOcarinaLoop()
                                 pcall(function() RagdollRemote:FireServer(LocalPlayer.Character.HumanoidRootPart, 0.00000000001) end)
                             end
                             for _, track in ipairs(LocalPlayer.Character.Humanoid:GetPlayingAnimationTracks()) do
-                                if track.Animation.AnimationId == "rbxassetid://7047322890" then
+                                if track.Animation and track.Animation.AnimationId == "rbxassetid://7047322890" then
                                     track:Stop()
                                 end
                             end
@@ -3915,7 +3939,7 @@ local function StartOcarinaLoop()
 
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and (AGE or ACGE) and SelectedModes["No Ragdoll"] then
                 for _, track in ipairs(LocalPlayer.Character.Humanoid:GetPlayingAnimationTracks()) do
-                    if track.Animation.AnimationId == "rbxassetid://7047322890" then
+                    if track.Animation and track.Animation.AnimationId == "rbxassetid://7047322890" then
                         track:Stop()
                     end
                 end
