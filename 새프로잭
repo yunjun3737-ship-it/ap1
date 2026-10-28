@@ -2993,7 +2993,7 @@ LocalPlayer.CharacterAdded:Connect(function()
     end
 end)
 
-
+local Stats = game:GetService("Stats")
 
 antiTab:AddToggle({
     Name = "Anti Lag",
@@ -3013,8 +3013,22 @@ end)
 task.spawn(function()
     while task.wait(0.5) do
         if autoAntiLagT and not antiLagT then
-            local currentPing = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
-            local reason = ""
+            local currentPing = nil
+
+pcall(function()
+    local network = Stats:FindFirstChild("Network")
+    local serverStats = network and network:FindFirstChild("ServerStatsItem")
+    local pingStat = serverStats and serverStats:FindFirstChild("Data Ping")
+
+    if pingStat then
+        currentPing = math.floor(pingStat:GetValue())
+    end
+end)
+
+if not currentPing then
+    continue
+end
+    local reason = ""
 
             if currentPing >= pingThreshold then
                 reason = "High Ping (" .. currentPing .. "ms)"
