@@ -3039,38 +3039,6 @@ antiTab:AddToggle({
 	end,  
 })  
 
-antiTab:AddToggle({
-
-Name = 'Anti Poison',
-
-Default = false,
-
-Flag = "AntiPwdoison",
-
-Callback = function(value37)
-
-if value37 then
-
-v12 = {}
-
-
-			for index13, value38 in ipairs(workspace:GetDescendants()) do  
-				if value38:IsA("BasePart") and value38.Name == "PoisonHurtPart" then  
-					v12[value38] = value38.CFrame  
-					value38.CFrame = value38.CFrame + Vector3.new(0, 10000, 0)  
-				end  
-			end  
-		else  
-			for key7, value39 in pairs(v12) do  
-				if key7 and key7.Parent then  
-					key7.CFrame = value39  
-				end  
-			end  
-
-			v12 = {}  
-		end  
-	end,  
-})  
 
 
 
