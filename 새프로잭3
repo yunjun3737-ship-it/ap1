@@ -3311,10 +3311,8 @@ grabTab:AddToggle({
 
 end
 
-
-
+    
 --===== Anti-Grab 독립 초기화 =====
-do
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -3361,7 +3359,7 @@ end)
 if LocalPlayer.Character then plrpart(LocalPlayer.Character) end
 
 --===== Anti Grab 코어 기능 =====
-
+do
 local charCallbacks = {}
 
 local function onCharacterAdded(char)
@@ -3606,9 +3604,6 @@ function ResetHRPState(hrp)
     hrp.AssemblyAngularVelocity = Vector3.zero
     hrp.Velocity = Vector3.zero
     hrp.RotVelocity = Vector3.zero
-    pcall(function()
-        hrp:SetNetworkOwner(LocalPlayer)
-    end)
 end
 
 function SaveOriginalState(hum, hrp)
@@ -3646,9 +3641,6 @@ function EndFreeze(hrp, char)
         hrp.Anchored = false
     end
 
-    pcall(function()
-        hrp:SetNetworkOwner(LocalPlayer)
-    end)
 
     if char then
         local hum = char:FindFirstChildOfClass("Humanoid")
@@ -3680,6 +3672,7 @@ end
 
 function PurgeForeignConstraints(char)
     if not char then return end
+
     for _, desc in ipairs(char:GetDescendants()) do
         if desc.Name == "PartOwner" then
             pcall(function() desc.Value = "" end)
@@ -3688,17 +3681,35 @@ function PurgeForeignConstraints(char)
             pcall(function() desc:Destroy() end)
         end
     end
+
     local grabParts = Workspace:FindFirstChild("GrabParts")
     if grabParts then
         for _, gp in ipairs(grabParts:GetChildren()) do
-            local weld = gp:FindFirstChild("WeldConstraint") or gp:FindFirstChildOfClass("WeldConstraint")
+            local weld = gp:FindFirstChildOfClass("WeldConstraint")
             if weld and weld.Part1 and weld.Part1:IsDescendantOf(char) then
-                weld.Part1 = nil
-                pcall(function() weld:Destroy() end)
+                pcall(function()
+                    weld.Part1 = nil
+                    weld:Destroy()
+                end)
             end
-            local align = gp:FindFirstChildOfClass("AlignPosition") or gp:FindFirstChildOfClass("BodyPosition")
-            if align then
-                pcall(function() align:Destroy() end)
+
+            for _, constraint in ipairs(gp:GetDescendants()) do
+                if constraint:IsA("AlignPosition") or constraint:IsA("AlignOrientation") or constraint:IsA("BodyPosition") or constraint:IsA("BodyGyro") then
+                    local affectsCharacter = false
+                    for _, propertyName in ipairs({"Attachment0", "Attachment1"}) do
+                        local attachment
+                        pcall(function()
+                            attachment = constraint[propertyName]
+                        end)
+                        if attachment and attachment.Parent and attachment.Parent:IsDescendantOf(char) then
+                            affectsCharacter = true
+                            break
+                        end
+                    end
+                    if affectsCharacter then
+                        pcall(function() constraint:Destroy() end)
+                    end
+                end
             end
         end
     end
@@ -4322,26 +4333,11 @@ function StopTractorEscape()
         TractorEscapeConn:Disconnect()
         TractorEscapeConn = nil
     end
-    local function removeAntiNetOwner(DestroyRemote)
-        local Players = game:GetService("Players")
-    local Workspace = game:GetService("Workspace")
-    local LocalPlayer = Players.LocalPlayer
-
-        if not LocalPlayer then 
-        warn(".")
-        return 
-    end
-
-        local inv = Workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
-    
+    local inv = Workspace:FindFirstChild(Services.LocalPlayer.Name .. "SpawnedInToys")
     if inv and inv:FindFirstChild("antinetowner") and DestroyRemote then
-        pcall(function() 
-            DestroyRemote:FireServer(inv.antinetowner) 
-        end)
+        pcall(function() DestroyRemote:FireServer(inv.antinetowner) end)
     end
 end
-end
-
 
 function StartOcarinaLoop()
     if ACGE then return end
@@ -4708,8 +4704,6 @@ table.insert(charCallbacks, function(newChar)
 end)
 
 
-
-
 antiTab:AddDropdown({
     Name = "Anti-Grab Mode",
     Default = "Default",
@@ -4728,7 +4722,7 @@ antiTab:AddDropdown({
         if Value == "No Ragdoll" then
             SelectedModes["No Ragdoll"] = true
             SelectedModes["AntiGrabRag"] = true
-        elseif Value == "IfEscape Anything" then
+        elseif Value == "Escape Anything" then
             SelectedModes["TractorEscape"] = true
             SelectedModes["Escape Anything"] = true
         elseif Value == "Ocarina Mode" then
