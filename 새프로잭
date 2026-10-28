@@ -446,7 +446,7 @@ local activeLoop = nil
 local speedConn = nil
 
 local function updateWalkSpeedF()
-    --local char = plr.Character
+    local char = plr.Character
     if not char then return end
 
     local hum = char:FindFirstChildOfClass("Humanoid")
