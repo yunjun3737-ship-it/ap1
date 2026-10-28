@@ -1,0 +1,435 @@
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Config = {}
+local SpinEnabled = false
+local SpinSpeed = 25
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+local cam = workspace.CurrentCamera
+local mouse = plr:GetMouse()
+local uis = game:GetService("UserInputService")
+local inv = workspace:WaitForChild(plr.Name.."SpawnedInToys")
+local rs = game:GetService("ReplicatedStorage")
+local RepStorage = game:GetService("ReplicatedStorage")
+local rs2 = game:GetService("RunService")
+local deb = game:GetService("Debris")
+local SetNetworkOwner = rs.GrabEvents.SetNetworkOwner
+local DestroyGrabLine = rs.GrabEvents.DestroyGrabLine
+local Auto = syn and syn.queue_on_teleport or fluxus and fluxus.queue_on_teleport or queue_on_teleport
+local Whitelist = {}
+local playersInLoop1V = {}
+local playersInLoop2V = {}
+local PPs = workspace:WaitForChild("PlotItems"):WaitForChild("PlayersInPlots")
+
+function PcldOwner()
+    task.spawn(function()
+        while task.wait(0.1) do
+            local usedNames = {}
+            for _, pcld in pairs(workspace:GetChildren()) do
+                if pcld.Name == "PlayerCharacterLocationDetector" then
+                    if pcld.CFrame == CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1) then
+                        continue
+                    end
+                    local hasOwner = false
+                    local existingBoolValues = {}
+                    for _, child in pairs(pcld:GetChildren()) do
+                        if child:IsA("BoolValue") then
+                            table.insert(existingBoolValues, child)
+                        end
+                    end
+                    if #existingBoolValues >= 2 then
+                        for _, boolValue in pairs(existingBoolValues) do
+                            boolValue:Destroy()
+                        end
+                    elseif #existingBoolValues == 1 then
+                        hasOwner = true
+                    end
+                    if hasOwner then
+                        continue
+                    end
+                    local closestPlayer = nil
+                    local closestDist = 30
+                    local candidates = {}
+                    for _, player in pairs(Players:GetPlayers()) do
+                        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                            local hrp = player.Character.HumanoidRootPart
+                            local dist = (pcld.Position - hrp.Position).Magnitude
+                            if dist < closestDist then
+                                table.insert(candidates, {
+                                    player = player,
+                                    dist = dist,
+                                    hrp = hrp
+                                })
+                            end
+                        end
+                    end
+                    table.sort(candidates, function(a, b)
+                        return a.dist < b.dist
+                    end)
+                    for _, candidate in pairs(candidates) do
+                        local ownerName = string.format("[ %s ] ( @%s )", candidate.player.DisplayName, candidate.player.Name)
+                        if not usedNames[ownerName] then
+                            closestPlayer = candidate.player
+                            closestDist = candidate.dist
+                            usedNames[ownerName] = true
+                            break
+                        end
+                    end
+                    if closestPlayer then
+                        local ownerName = string.format("[ %s ] ( @%s )", closestPlayer.DisplayName, closestPlayer.Name)
+                        local boolValue = nil
+                        for _, child in pairs(pcld:GetChildren()) do
+                            if child:IsA("BoolValue") then
+                                boolValue = child
+                                boolValue.Name = ownerName
+                                break
+                            end
+                        end
+                        if not boolValue then
+                            boolValue = Instance.new("BoolValue")
+                            boolValue.Name = ownerName
+                            boolValue.Parent = pcld
+                        end
+                        task.spawn(function(player, value)
+                            while value.Parent do
+                                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                                    local hrp = player.Character.HumanoidRootPart
+                                    if hrp.Massless == true then
+                                        if not value.Value then
+                                            value.Value = true
+                                        end
+                                    else
+                                        if value.Value then
+                                            value.Value = false
+                                        end
+                                    end
+                                    if not Players:FindFirstChild(player.Name) or
+                                        not player.Character or
+                                        (player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health <= 0) then
+                                        value:Destroy()
+                                        break
+                                    end
+                                else
+                                    value:Destroy()
+                                    break
+                                end
+                                task.wait(0.1)
+                            end
+                        end, closestPlayer, boolValue)
+                    end
+                end
+            end
+        end
+    end)
+end
+
+function SpawnCFrame()
+    local camPart
+    local myDisplayName = plr.DisplayName
+    local myUserName = plr.Name
+    local myPOIdentifier = string.format("[ %s ] ( @%s )", myDisplayName, myUserName)
+    local function findMyPO()
+        for _, obj in pairs(workspace:GetChildren()) do
+            if obj.Name == "PlayerCharacterLocationDetector" then
+                for _, child in pairs(obj:GetChildren()) do
+                    if child:IsA("BoolValue") and child.Name == myPOIdentifier then
+                        return obj
+                    end
+                end
+            end
+        end
+        return nil
+    end
+    if not workspace:FindFirstChild("CamPart") or workspace:FindFirstChild("CamPart"):FindFirstChild("CamPart") then
+        local char = plr.Character or plr.CharacterAdded:Wait()
+        camPart = char:FindFirstChild("CamPart"):Clone()
+        camPart.Name = "CamPart"
+        camPart.Parent = workspace
+        camPart.Transparency = 0.9
+    else
+        camPart = workspace.CamPart
+    end
+
+    local lastHRPVelocity = Vector3.new(0, 0, 0)
+    task.spawn(function()
+        local rayParams = RaycastParams.new()
+        rayParams.FilterType = Enum.RaycastFilterType.Exclude
+        while true do
+            local ping = plr:GetNetworkPing()
+            local myPO = findMyPO()
+            local char = plr.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                lastHRPVelocity = hrp.Velocity
+            end
+            if myPO and hrp then
+                rayParams.FilterDescendantsInstances = {char, camPart, myPO}
+                local offset = myPO.Position + (lastHRPVelocity * (ping + 0.15))
+                local rayOrigin = offset
+                local rayDirection = Vector3.new(0, 23, 0)
+                local rayResult = workspace:Raycast(rayOrigin, rayDirection, rayParams)
+                local targetPosition
+                if rayResult then
+                    targetPosition = rayResult.Position - Vector3.new(0, 0.5, 0)
+                else
+                    targetPosition = offset + rayDirection
+                end
+
+                local originalRotation = myPO.CFrame.Rotation * CFrame.Angles(math.rad(-90), 0, 0)
+                camPart.CFrame = CFrame.new(targetPosition) * originalRotation
+                rayParams.FilterDescendantsInstances = {char, camPart}
+
+                offset = hrp.Position + (lastHRPVelocity * (ping + 0.15))
+                rayOrigin = offset
+                rayDirection = Vector3.new(0, 20, 0)
+                rayResult = workspace:Raycast(rayOrigin, rayDirection, rayParams)
+                if rayResult then
+                    targetPosition = rayResult.Position - Vector3.new(0, 0.5, 0)
+                else
+                    targetPosition = offset + rayDirection
+                end
+
+                originalRotation = (hrp.CFrame * CFrame.Angles(math.rad(-90), 0, 0)).Rotation
+                camPart.CFrame = CFrame.new(targetPosition) * originalRotation
+                camPart.Name = "SpawnCF"
+            end
+            task.wait()
+        end
+    end)
+    return camPart
+end
+
+local G = rs:WaitForChild("GrabEvents")
+if G:FindFirstChild("EndGrabEarly") then
+    G.EndGrabEarly:Destroy()
+end
+Instance.new("RemoteEvent", G).Name = "EndGrabEarly"
+
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Camera = workspace.CurrentCamera
+
+local characterEventsFolder = ReplicatedStorage:WaitForChild("CharacterEvents")
+local ragdollRemoteEvent = characterEventsFolder:WaitForChild("RagdollRemote")
+local struggleEvent = characterEventsFolder:WaitForChild("Struggle")
+local grabEventsFolder = ReplicatedStorage:WaitForChild("GrabEvents")
+local setNetworkOwnerEvent = grabEventsFolder:WaitForChild("SetNetworkOwner")
+local destroyGrabLineEvent = grabEventsFolder:WaitForChild("DestroyGrabLine")
+local menuToysFolder = ReplicatedStorage:WaitForChild("MenuToys")
+local SpawnToyRF = menuToysFolder:WaitForChild("SpawnToyRemoteFunction")
+local DeleteToyRE = menuToysFolder:WaitForChild("DestroyToy")
+local playerEventsFolder = ReplicatedStorage:WaitForChild("PlayerEvents")
+local StickyPartEvent = playerEventsFolder:WaitForChild("StickyPartEvent")
+
+local Character = plr.Character or plr.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local RootPart = Character:WaitForChild("HumanoidRootPart")
+
+plr.CharacterAdded:Connect(function(newChar)
+    Character = newChar
+    Humanoid = newChar:WaitForChild("Humanoid")
+    RootPart = newChar:WaitForChild("HumanoidRootPart")
+end)
+
+local function resetCharacter()
+    if Character and Humanoid then
+        Humanoid.Health = 0
+        task.wait(0.1)
+        if Humanoid.Health > 0 then
+            Character:BreakJoints()
+        end
+    end
+end
+
+local apagarfogo = nil
+pcall(function()
+    apagarfogo = workspace.Map.Hole.PoisonBigHole:WaitForChild("ExtinguishPart", 3)
+    if apagarfogo then
+        apagarfogo.Size = Vector3.new(0.5, 0.5, 0.5)
+        apagarfogo.Transparency = 1
+        if apagarfogo:FindFirstChild("Tex") then apagarfogo.Tex.Transparency = 1 end
+    end
+end)
+
+local pp = {}
+local PARTS = {
+    {"Humanoid",         "hum"},
+    {"HumanoidRootPart", "hrp"},
+    {"Head",             "head"},
+    {"Torso",            "torso"},
+    {"Left Arm",         "la"},
+    {"Right Arm",        "ra"},
+    {"Left Leg",         "ll"},
+    {"Right Leg",        "rl"}
+}
+
+local LIMB_CHILDREN = {
+    {"Left Arm",  "la"},
+    {"Right Arm", "ra"},
+    {"Left Leg",  "ll"},
+    {"Right Leg", "rl"}
+}
+
+local function fetch(parent, name, key)
+    task.spawn(function()
+        repeat rs2.PreSimulation:Wait() until parent:FindFirstChild(name)
+        pp[key] = parent[name]
+    end)
+end
+
+function clearChar()
+    table.clear(pp)
+end
+
+function plrpart(char)
+    pp.char = char
+    for _, v in ipairs(PARTS) do
+        fetch(char, v[1], v[2])
+    end
+    task.spawn(function()
+        repeat rs2.PreSimulation:Wait() until char:FindFirstChild("Humanoid")
+        local hum = char.Humanoid
+        fetch(hum, "FireDebounce", "brn")
+        fetch(hum, "Ragdolled",    "rag")
+    end)
+end
+
+local CharacterEvents = ReplicatedStorage:FindFirstChild("CharacterEvents")
+local GrabEvents      = ReplicatedStorage:FindFirstChild("GrabEvents")
+local PlayerEvents    = ReplicatedStorage:FindFirstChild("PlayerEvents")
+local BombEvents      = ReplicatedStorage:FindFirstChild("BombEvents")
+local MenuToys        = ReplicatedStorage:FindFirstChild("MenuToys")
+local HoldEvents      = ReplicatedStorage:FindFirstChild("HoldEvents")
+
+local Struggle, RagdollRemote, SetNetworkOwnerVar, StickyEvent, BombEvent
+local SpawnRemote, DestroyRemote, CreateGrabLine, DestroyGrabLineVar, ExtendGrabLine, UseRemote
+
+if CharacterEvents then
+    Struggle      = CharacterEvents:FindFirstChild("Struggle")
+    RagdollRemote = CharacterEvents:FindFirstChild("RagdollRemote")
+end
+if GrabEvents then
+    SetNetworkOwnerVar = GrabEvents:FindFirstChild("SetNetworkOwner")
+    CreateGrabLine     = GrabEvents:FindFirstChild("CreateGrabLine")
+    ExtendGrabLine     = GrabEvents:FindFirstChild("ExtendGrabLine")
+    DestroyGrabLineVar = GrabEvents:FindFirstChild("DestroyGrabLine")
+end
+if PlayerEvents then
+    StickyEvent = PlayerEvents:FindFirstChild("StickyPartEvent")
+end
+if BombEvents then
+    BombEvent = BombEvents:FindFirstChild("BombExplode")
+end
+if MenuToys then
+    SpawnRemote   = MenuToys:FindFirstChild("SpawnToyRemoteFunction")
+    DestroyRemote = MenuToys:FindFirstChild("DestroyToy")
+end
+if HoldEvents then
+    UseRemote = HoldEvents:FindFirstChild("Use")
+end
+
+local CanSpawn = plr:FindFirstChild("CanSpawnToy")
+
+local character = plr.Character or plr.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
+
+local charCallbacks = {}
+local function onCharacterAdded(char)
+    character        = char
+    humanoidRootPart = char:WaitForChild("HumanoidRootPart")
+    humanoid         = char:WaitForChild("Humanoid")
+    for _, cb in ipairs(charCallbacks) do
+        task.spawn(cb, char)
+    end
+end
+
+plr.CharacterAdded:Connect(onCharacterAdded)
+
+
+local u = loadstring(game:HttpGet("https://raw.githubusercontent.com/qwerqwerg1u/RRTS/main/모듈"))()
+
+
+
+local GetPlayerCharacter = u.GetPlayerCharacter
+local GetCharacter = u.GetCharacter
+local PLCF = u.PLCF
+local HRP = u.HRP
+local Charrrrrr = u.Charrrrrr
+local ROS = u.ROS
+local lookAt = u.lookAt
+local CNWOSHIPOPl = u.CNWOSHIPOPl
+local GetLocalCharAndHum = u.GetLocalCharAndHum
+local ROS = u.ROS
+local LastTime = tick()
+
+local service=setmetatable({},{
+	__index=function(self,k)
+		local s=game:GetService(k)
+		rawset(self,k,s)
+		return s
+	end,
+})
+
+wait(2)
+
+PLOT_MAP = {
+    ["Purple-Plot"]  = "Plot3",
+    ["Red-Plot"]     = "Plot2",
+    ["Green-Plot"]   = "Plot1",
+    ["Blue-Plot"]    = "Plot4",
+    ["Chinese-Plot"] = "Plot5",
+}
+
+UseRemote = service.ReplicatedStorage.HoldEvents:WaitForChild("Use")
+FurtherReachBoughtNotifier = service.ReplicatedStorage.GamepassEvents:WaitForChild("FurtherReachBoughtNotifier")
+Struggle = service.ReplicatedStorage.CharacterEvents:WaitForChild("Struggle")
+GameCorrectionsNotify = service.ReplicatedStorage.GameCorrectionEvents:WaitForChild("GameCorrectionsNotify")
+RagdollRemote = service.ReplicatedStorage.CharacterEvents:WaitForChild("RagdollRemote")
+CreateGrabLine  = service.ReplicatedStorage.GrabEvents:WaitForChild("CreateGrabLine")
+DestroyGrabLine = service.ReplicatedStorage.GrabEvents:WaitForChild("DestroyGrabLine")
+SetNetworkOwner = service.ReplicatedStorage.GrabEvents:WaitForChild("SetNetworkOwner")
+ExtendGrabLine = service.ReplicatedStorage.GrabEvents:WaitForChild("ExtendGrabLine")
+MenuToys = service.ReplicatedStorage:WaitForChild("MenuToys")
+BuyToyRemoteFunction = MenuToys:WaitForChild("BuyToyRemoteFunction")
+SpawnToyRemoteFunction = service.ReplicatedStorage.MenuToys:WaitForChild("SpawnToyRemoteFunction")
+DestroyToy = MenuToys:WaitForChild("DestroyToy")
+StickyPartEvent = service.ReplicatedStorage.PlayerEvents:WaitForChild("StickyPartEvent")
+UpdateLineColorsEvent = service.ReplicatedStorage.DataEvents:WaitForChild("UpdateLineColorsEvent")
+bombExplode = service.ReplicatedStorage.BombEvents:WaitForChild("BombExplode")
+
+originalFallenHeight = service.Workspace.FallenPartsDestroyHeight
+Camera = service.Workspace.CurrentCamera
+local localPlayer = service.Players.LocalPlayer
+Map = service.Workspace:FindFirstChild("Map")
+SpawnedInToys = service.Workspace:WaitForChild(localPlayer.Name .. "SpawnedInToys")
+local inv = service.Workspace:FindFirstChild(localPlayer.Name .. "SpawnedInToys") or service.Workspace:WaitForChild(localPlayer.Name .. "SpawnedInToys")
+PlayerGui = localPlayer:WaitForChild("PlayerGui")
+InOwnedPlot = localPlayer:WaitForChild("InOwnedPlot")
+InPlot = localPlayer:WaitForChild("InPlot")
+CanSpawnToy = localPlayer:WaitForChild("CanSpawnToy")
+PlotItems = service.Workspace:FindFirstChild("PlotItems")
+PlayerScripts = localPlayer:WaitForChild("PlayerScripts")
+CharacterAndBeamMove = PlayerScripts:WaitForChild("CharacterAndBeamMove")
+isHeld = localPlayer:WaitForChild("IsHeld")
+AntiShuriLag = PlayerScripts:WaitForChild("StickyPartsTouchDetection")
+
+local function sno(part)
+    SetNetworkOwner:FireServer(part, part.CFrame)
+end
+
+local function spawntoy(toyName, spawnCFrame, velocity)
+    local remote = SpawnToyRemoteFunction or SpawnRemote or SpawnToyRF
+    if not remote or not remote:IsA("RemoteFunction") then
+        return nil
+    end
+    local ok, result = pcall(function()
+        return remote:InvokeServer(toyName, spawnCFrame, velocity or Vector3.zero)
+    end)
+    if ok then
+        return result
+    end
+    return nil
+end
