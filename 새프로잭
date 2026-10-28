@@ -3991,7 +3991,7 @@ antiTab:AddToggle({
     Name = "Anti grab (ragdoll)",
     
     save = true,
-    Flag = "9264",
+    Flag = "92wg2idixbc64",
     Callback = function(Value)
         AntiGrabF(Value)
     end
@@ -4118,7 +4118,7 @@ antiTab:AddToggle({
     Name = "Anti Grab (StickyPart)",
     
     save = true,
-    Flag = "kqhxusi",
+    Flag = "e8fr2fo7t2it2",
     Callback = function(Value)
         AntiGrabStickyT = Value
         if Value then
@@ -4130,7 +4130,7 @@ antiTab:AddToggle({
 antiTab:AddToggle({
 	Name = "Anti Grab (Seatless)",
 	Default = false,
-    Flag = "ehsiwiqkw9202",
+    Flag = "ehsiwiwuqkw9202",
 	Callback = function(Value)
 		antiGrabV2Active = Value
 		
@@ -4233,6 +4233,460 @@ antiTab:AddToggle({
 			end
 		end
 	end    
+})
+
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local runtimeFlags = {
+    AntiGrab = false,
+}
+
+local state = {
+    States = {
+        ["Anti Grab"] = false,
+        Escaping = false,
+        Spawning = false,
+        Owning = false,
+    },
+    FailedToys = {},
+    LimbOffsetsRL = {
+        Head = CFrame.new(0, 1.5, 0),
+        ["Left Arm"] = CFrame.new(-1.5, 0, 0),
+        ["Right Arm"] = CFrame.new(1.5, 0, 0),
+        ["Left Leg"] = CFrame.new(-0.5, -2, 0),
+        ["Right Leg"] = CFrame.new(0.5, -2, 0),
+        Torso = CFrame.new(),
+    },
+}
+
+local remotes = {}
+local remoteRoot = nil
+local antiGrabConnection = nil
+
+local function locateRemoteRoot()
+    local function isRemoteRoot(candidate)
+        return candidate
+            and candidate:FindFirstChild("GrabEvents")
+            and candidate:FindFirstChild("MenuToys")
+            and candidate:FindFirstChild("CharacterEvents")
+    end
+
+    if isRemoteRoot(ReplicatedStorage) then
+        return ReplicatedStorage
+    end
+    for _, descendant in ipairs(ReplicatedStorage:GetDescendants()) do
+        if isRemoteRoot(descendant) then
+            return descendant
+        end
+    end
+    return ReplicatedStorage
+end
+
+local function refreshRemotes()
+    remoteRoot = locateRemoteRoot()
+    local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
+    local menuToys = remoteRoot and remoteRoot:FindFirstChild("MenuToys")
+    local characterEvents = remoteRoot and remoteRoot:FindFirstChild("CharacterEvents")
+
+    remotes.sno = grabEvents and grabEvents:FindFirstChild("SetNetworkOwner") or nil
+    remotes.cgl = grabEvents and grabEvents:FindFirstChild("CreateGrabLine") or nil
+    remotes.dgl = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine") or nil
+    remotes.Struggle = characterEvents and characterEvents:FindFirstChild("Struggle") or nil
+    remotes.RagdollRemote = characterEvents and characterEvents:FindFirstChild("RagdollRemote") or nil
+    remotes.spawnEvent = menuToys and menuToys:FindFirstChild("SpawnToyRemoteFunction") or nil
+    remotes.destroyToyEvent = menuToys and menuToys:FindFirstChild("DestroyToy") or nil
+    return remoteRoot
+end
+
+refreshRemotes()
+
+local function fireRemote(remote, ...)
+    if not remote then
+        return false, nil
+    end
+    local ok, result = pcall(function(...)
+        if remote:IsA("RemoteFunction") then
+            return remote:InvokeServer(...)
+        end
+        remote:FireServer(...)
+        return true
+    end, ...)
+    return ok, result
+end
+
+local H = {}
+
+function H.charp(player)
+    player = player or localPlayer
+    local character = player and player.Character
+    if not character then
+        return nil, nil, nil
+    end
+    local rootPart = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso")
+    local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+    return character, rootPart, humanoid
+end
+
+function H.resetVelocity(part)
+    if part and part:IsA("BasePart") then
+        part.AssemblyLinearVelocity = Vector3.zero
+        part.AssemblyAngularVelocity = Vector3.zero
+    end
+end
+
+function H.teleport(subject, target, offset)
+    if not subject then
+        return false
+    end
+    local part = subject
+    if typeof(subject) == "Instance" and subject:IsA("Model") then
+        part = subject.PrimaryPart or subject:FindFirstChildWhichIsA("BasePart", true)
+    end
+    if typeof(part) ~= "Instance" or not part:IsA("BasePart") then
+        return false
+    end
+    local targetCFrame = nil
+    if typeof(target) == "CFrame" then
+        targetCFrame = target
+    elseif typeof(target) == "Vector3" then
+        targetCFrame = CFrame.new(target)
+    elseif typeof(target) == "Instance" then
+        if target:IsA("BasePart") then
+            targetCFrame = target.CFrame
+        elseif target:IsA("Model") then
+            targetCFrame = target:GetPivot()
+        end
+    end
+    if not targetCFrame then
+        return false
+    end
+    if typeof(offset) == "CFrame" then
+        targetCFrame = targetCFrame * offset
+    end
+    part.CFrame = targetCFrame
+    H.resetVelocity(part)
+    return true
+end
+
+function H.ToggleCollisions(character, enabled, skipRagdollLimb, lowPhysical)
+    if typeof(character) ~= "Instance" or not character:IsA("Model") then
+        return
+    end
+
+    for _, child in pairs(character:GetChildren()) do
+        if child:IsA("BasePart") then
+            if enabled then
+                if child.Name == "Torso" or child.Name == "Head" then
+                    child.CanCollide = true
+                end
+            else
+                child.CanCollide = false
+                if not skipRagdollLimb then
+                    local ragdollPart = child:FindFirstChild("RagdollLimbPart")
+                    if ragdollPart then
+                        ragdollPart.CanCollide = false
+                    end
+                end
+            end
+
+            if child.Name ~= "HumanoidRootPart" then
+                local properties = nil
+                if lowPhysical then
+                    properties = PhysicalProperties.new(0.01, 0.01, 0.01, 0.01, 0.01)
+                end
+                child.CustomPhysicalProperties = properties
+            end
+        end
+    end
+end
+
+function H.RepositionLimbs(character, resetVel)
+    if typeof(character) ~= "Instance" or not character:IsA("Model") then
+        return false
+    end
+
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then
+        return false
+    end
+
+    local torso = character:FindFirstChild("Torso")
+    if not torso then
+        return false
+    end
+
+    local neck = torso:FindFirstChild("Neck")
+    if neck and neck.Enabled == true then
+        return false
+    end
+
+    for limbName, offset in pairs(state.LimbOffsetsRL) do
+        local part = character:FindFirstChild(limbName)
+        if part and part:IsA("BasePart") then
+            part.CFrame = root.CFrame * offset
+            if resetVel then
+                H.resetVelocity(part)
+            end
+        end
+    end
+
+    return true
+end
+
+function H.st(name, cframe)
+    if type(name) ~= "string" or state.FailedToys[name] then return nil end
+    local _, root = H.charp()
+    if not root or state.States.Spawning then return nil end
+
+    local inPlot = localPlayer:FindFirstChild("InPlot")
+    local inOwned = localPlayer:FindFirstChild("InOwnedPlot")
+    local hiddenSpawn = inPlot ~= nil and inPlot.Value == true
+    if hiddenSpawn then hiddenSpawn = not (inOwned ~= nil and inOwned.Value == true) end
+    if hiddenSpawn and state.States.Owning then return nil end
+
+    refreshRemotes()
+    if not remotes.spawnEvent or not remotes.spawnEvent:IsA("RemoteFunction") then return nil end
+    local spawnedFolder = Workspace:FindFirstChild(localPlayer.Name .. "SpawnedInToys")
+    if not spawnedFolder then return nil end
+
+    state.States.Spawning = true
+    if hiddenSpawn then state.States.Owning = true end
+    local childConn, heartbeatConn = nil, nil
+    local renderBound = false
+    local savedCF = root.CFrame
+    local result = nil
+
+    local function cleanup()
+        if renderBound then pcall(function() service.RunService:UnbindFromRenderStep("STClient") end); renderBound = false end
+        if heartbeatConn then heartbeatConn:Disconnect(); heartbeatConn = nil end
+        if childConn then childConn:Disconnect(); childConn = nil end
+        if hiddenSpawn and root and root.Parent then root.CFrame = savedCF end
+        state.States.Spawning = false
+        if hiddenSpawn then state.States.Owning = false end
+    end
+
+    local ok, err = pcall(function()
+        local canSpawnToy = localPlayer:FindFirstChild("CanSpawnToy")
+        if canSpawnToy then
+            while canSpawnToy.Value == false do
+                task.wait()
+                if not root.Parent then return end
+            end
+        end
+        local base = hiddenSpawn and CFrame.new(0, 25, 0) or (root.CFrame + Vector3.new(0, 15, 0))
+        local requested = typeof(cframe) == "CFrame" and cframe or base
+        local spawnCF = CFrame.new(requested.Position) + Vector3.new(0, 0, 20)
+        local rotate = Workspace:FindFirstChild("RotateOrientPart")
+        local rotation = rotate and rotate.Rotation or Vector3.zero
+
+        childConn = spawnedFolder.ChildAdded:Connect(function(child)
+            if child.Name == name then
+                result = child
+                if childConn then childConn:Disconnect(); childConn = nil end
+            end
+        end)
+        savedCF = root.CFrame
+        if hiddenSpawn then
+            local hiddenCF = CFrame.new(0, 10, 0)
+            pcall(function() service.RunService:UnbindFromRenderStep("STClient") end)
+            service.RunService:BindToRenderStep("STClient", Enum.RenderPriority.Camera.Value - 1, function()
+                if root.Parent then root.CFrame = savedCF end
+            end)
+            renderBound = true
+            heartbeatConn = service.RunService.Heartbeat:Connect(function()
+                if root.Parent then savedCF = root.CFrame; root.CFrame = hiddenCF end
+            end)
+        end
+        local function invokeSpawn()
+            fireRemote(remotes.spawnEvent, name, spawnCF, rotation)
+        end
+        task.spawn(invokeSpawn)
+        local started = tick()
+        while true do
+            RunService.Heartbeat:Wait()
+            if hiddenSpawn then task.spawn(invokeSpawn) end
+            if result or tick() - started > 1.3 then break end
+        end
+    end)
+    cleanup()
+    if not ok then warn(("[AntiGrab st] %s"):format(tostring(err))); return nil end
+    if not result then
+        state.FailedToys[name] = true
+        task.delay(2, function() state.FailedToys[name] = nil end)
+    end
+    return result
+end
+
+function H.dt(model)
+    if typeof(model) ~= "Instance" or not model:IsA("Model") then return false end
+    refreshRemotes()
+    if not remotes.destroyToyEvent then return false end
+    local ok = fireRemote(remotes.destroyToyEvent, model)
+    return ok == true
+end
+
+local function recoveredYield(duration)
+    local waitTime = duration or 0
+    local started = tick()
+    repeat
+        service.RunService.Heartbeat:Wait()
+    until tick() - started >= waitTime
+    return true
+end
+
+function H.ExtraEscape(returnCFrame)
+    local _, rootPart, humanoid = H.charp()
+
+    if not rootPart
+        or not humanoid
+        or humanoid.Health == 0
+        or state.States.Escaping
+    then
+        return
+    end
+
+    local inPlot = localPlayer:FindFirstChild("InPlot")
+    if not inPlot or inPlot.Value then
+        return
+    end
+
+    state.States.Escaping = true
+
+    local waypoints = Workspace:FindFirstChild("Waypoints")
+    local tudorHouse = waypoints and waypoints:FindFirstChild("TudorHouse")
+
+    if not tudorHouse then
+        state.States.Escaping = false
+        return
+    end
+
+    local toy = H.st("TractorGreen", tudorHouse.CFrame)
+
+    if not toy then
+        state.States.Escaping = false
+        return
+    end
+
+    local seat = toy:WaitForChild("VehicleSeat", 1)
+
+    if not seat then
+        state.States.Escaping = false
+        return H.dt(toy)
+    end
+
+    local started = tick()
+    local escaped = false
+
+    humanoid.Sit = false
+    seat:Sit(humanoid)
+
+    local connection = seat.ChildAdded:Connect(function(child)
+        if child.Name == "SeatWeld" then
+            child.Enabled = false
+            escaped = true
+            child:Destroy()
+        end
+    end)
+
+    while true do
+        recoveredYield()
+        if escaped then break end
+        if tick() - started > 0.7 then break end
+    end
+
+    connection:Disconnect()
+    humanoid.Sit = false
+
+        H.dt(toy)
+    if returnCFrame then
+        H.teleport(rootPart, returnCFrame)
+    end
+
+    state.States.Escaping = false
+    return true
+end
+
+local function stopAntiGrab()
+    if antiGrabConnection then
+        antiGrabConnection:Disconnect()
+        antiGrabConnection = nil
+    end
+
+    state.States["Anti Grab"] = false
+end
+
+local function startAntiGrabIfNeeded()
+    if not runtimeFlags.AntiGrab
+        or not isHeld.Value
+        or state.States["Anti Grab"]
+    then
+        return
+    end
+
+    refreshRemotes()
+
+    if remotes.Struggle then
+        fireRemote(remotes.Struggle)
+    end
+
+    local character, rootPart, humanoid = H.charp()
+
+    if not humanoid or not rootPart then
+        return
+    end
+
+    state.States["Anti Grab"] = true
+
+
+    local originalCF = rootPart.CFrame
+    task.spawn(H.ExtraEscape, originalCF)
+
+    local lastExtraEscape = tick()
+
+    antiGrabConnection = service.RunService.Heartbeat:Connect(function(dt)
+        if remotes.Struggle then
+            fireRemote(remotes.Struggle)
+        end
+
+        local now = tick()
+        if now - lastExtraEscape > 2 then
+           task.spawn(H.ExtraEscape, originalCF)
+            lastExtraEscape = tick()
+        end
+
+        if not isHeld.Value or not runtimeFlags.AntiGrab then
+            state.States["Anti Grab"] = false
+
+            if antiGrabConnection then
+                antiGrabConnection:Disconnect()
+                antiGrabConnection = nil
+            end
+        end
+    end)
+end
+
+task.spawn(function()
+    while task.wait(0.03) do
+        if runtimeFlags.AntiGrab then
+            startAntiGrabIfNeeded()
+        elseif state.States["Anti Grab"] then
+            stopAntiGrab()
+        end
+    end
+end)
+
+antiTab:AddToggle({
+    Name = "안티킬 (셋오너)",
+    Default = false,
+    Flag = "ou2rx2o7fr",
+    Callback = function(value)
+        runtimeFlags.AntiGrab = value
+
+        if not value then
+            stopAntiGrab()
+        end
+    end
 })
 antiTab:AddSection({
 	Name = "anti blob"
@@ -4384,6 +4838,109 @@ end
             end
         end
     })
+
+antiTab:AddToggle({
+    Name = "Anti blob kill",
+    Default = false,
+    Flag = "whw9zh29w9di2b",
+    Callback = function(Value)
+        Config.Blobkilltest = Value
+
+        if Value then
+            Config.BlobkilltestCon = task.spawn(function()
+                while Config.Blobkilltest do
+                    local char = GetCharacter()
+                    if char then
+                        local hum = char:FindFirstChild("Humanoid")
+                        local hrp = char:FindFirstChild("HumanoidRootPart")
+
+                        if hum and hrp and hum.Health > 0 then
+                            hum.Sit = true
+
+                            pcall(function()
+                                hum:ChangeState(Enum.HumanoidStateType.Running)
+                            end)
+
+                            if Camera then
+                                local lookVec = Camera.CFrame.LookVector
+                                hrp.CFrame = CFrame.new(
+                                    hrp.Position,
+                                    hrp.Position + Vector3.new(lookVec.X, 0, lookVec.Z)
+                                )
+                            end
+                        end
+                    end
+
+                    task.wait()
+                end
+            end)
+        else
+            if Config.BlobkilltestCon then
+                task.cancel(Config.BlobkilltestCon)
+                Config.BlobkilltestCon = nil
+            end
+
+            local char = GetCharacter()
+            local hum = char and char:FindFirstChild("Humanoid")
+
+            if hum and hum.Health > 0 then
+                hum.Sit = false
+
+                pcall(function()
+                    hum:ChangeState(Enum.HumanoidStateType.Running)
+                end)
+            end
+        end
+    end,
+})
+antiTab:AddToggle({
+    Name = "Anti blob Aura",
+    Default = false,
+    Flag = "928tg208tg80hyw",
+    Callback = function(enabled)
+        if enabled then
+            if Config.AntiblobauraCon then
+                Config.AntiblobauraCon:Disconnect()
+            end
+
+            Config.AntiblobauraCon = service.RunService.Heartbeat:Connect(function()
+                local myCharacter = GetCharacter()
+                local myRootPart = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
+                if not myRootPart then return end
+
+                for _, player in pairs(service.Players:GetPlayers()) do
+                    if player ~= localPlayer then
+                        local playerCharacter = player.Character
+                        local playerRootPart = playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart")
+                        local playerHumanoid = playerCharacter and playerCharacter:FindFirstChild("Humanoid")
+
+                        if playerRootPart and playerHumanoid and playerHumanoid.SeatPart then
+                            local seatParent = playerHumanoid.SeatPart.Parent
+
+                            if seatParent and seatParent.Name == "CreatureBlobman" then
+                                local distance = (playerRootPart.Position - myRootPart.Position).Magnitude
+
+                                if distance <= 25 then
+                                    SetNetworkOwner:FireServer(playerRootPart, playerRootPart.CFrame)
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        else
+            if Config.AntiblobauraCon then
+                Config.AntiblobauraCon:Disconnect()
+                Config.AntiblobauraCon = nil
+            end
+        end
+    end
+})
+
+
+
+
+
 end
 
 		
