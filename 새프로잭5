@@ -5663,11 +5663,11 @@ antiTab:AddToggle({
     })
 
 end
-
+do
 antiTab:AddSection({
 	Name = "anti Loop&Paint"
 })
-do
+
 antiTab:AddToggle({
     Name = "Anti Loop Kill (go to house)",
     Default = false,
@@ -5698,11 +5698,10 @@ antiTab:AddToggle({
 })
 
 
-end
 
 --===== Anti Paint 기능 =====
 
-do
+
 local paintPartsBackup = {}
 local paintConnections = {}
 
@@ -6598,4 +6597,4 @@ if not _G.cons then
     _G.cons = {}
 end
 
-end
+
