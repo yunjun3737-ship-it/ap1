@@ -4841,7 +4841,7 @@ antiTab:AddToggle({
     Default = false,
     Flag = "9ww7gr0wuwgt",
     Callback = function(Value)
-        cleanConnections()
+        --cleanConnections()
         if not Value then return end
 
         local function applyProtection(char)
