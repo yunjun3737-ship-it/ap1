@@ -4070,22 +4070,8 @@ end)
 task.spawn(function()
     while task.wait(0.5) do
         if autoAntiLagT and not antiLagT then
-            local currentPing = nil
-
-pcall(function()
-    local network = Stats:FindFirstChild("Network")
-    local serverStats = network and network:FindFirstChild("ServerStatsItem")
-    local pingStat = serverStats and serverStats:FindFirstChild("Data Ping")
-
-    if pingStat then
-        currentPing = math.floor(pingStat:GetValue())
-    end
-end)
-
-if not currentPing then
-    continue
-end
-    local reason = ""
+            local currentPing = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+            local reason = ""
 
             if currentPing >= pingThreshold then
                 reason = "High Ping (" .. currentPing .. "ms)"
@@ -4109,16 +4095,18 @@ end
                 sound:Play()
                 game.Debris:AddItem(sound, 5)
 
-                Library:Notify({
-                    Title = "<b>Auto Anti Lag</b>",
-                    Description = "<b>" .. reason .. "</b> — Anti Lag enabled.",
-                    Icon = "11738671901",
-                    Time = 5,
+                OrionLib:MakeNotification({
+                    Name = "Auto Anti Lag",
+                    Content = reason .. " — Anti Lag enabled.",
+                    Image = "rbxassetid://11738671901",
+                    Time = 5
                 })
             end
         end
     end
 end)
+
+
 
 antiTab:AddToggle({
     Name = "Auto Anti Lag",
