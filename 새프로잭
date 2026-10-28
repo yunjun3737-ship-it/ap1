@@ -2971,8 +2971,6 @@ end
 
 
 
-        
-
 --===== Anti-Grab 독립 초기화 =====
 do
 local Players = game:GetService("Players")
@@ -4000,6 +3998,7 @@ function StopTractorEscape()
         end)
     end
 end
+end
 
 
 function StartOcarinaLoop()
@@ -4408,6 +4407,7 @@ antiTab:AddToggle({
     end
 })
 end
+
 
 
 
