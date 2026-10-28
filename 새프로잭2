@@ -4301,85 +4301,8 @@ table.insert(charCallbacks, function(newChar)
     end
 end)
 
-function ResolveObsidianGroupbox()
-    local g = (getgenv and getgenv()) or _G or {}
-    local candidates = {
-        LBox, LeftGroupBox, AntiGroupbox, ClassicDefense,
-        g.LBox, g.LeftGroupBox, g.AntiGroupbox, g.ClassicDefense,
-        shared and shared.LBox, shared and shared.LeftGroupBox
-    }
-    for _, box in ipairs(candidates) do
-        if type(box) == "table" and (box.AddToggle or box.AddCheckbox) and box.AddDropdown then
-            return box
-        end
-    end
 
-    local tabsTable = Tabs or g.Tabs or (shared and shared.Tabs)
-    if type(tabsTable) == "table" then
-        for _, tab in pairs(tabsTable) do
-            if type(tab) == "table" and tab.AddLeftGroupbox then
-                local ok, newBox = pcall(function()
-                    return tab:AddLeftGroupbox("Anti-Grab Defense")
-                end)
-                if ok and newBox then return newBox end
-            end
-        end
-    end
-
-    local win = Window or g.Window or (shared and shared.Window)
-    if type(win) == "table" and win.AddTab then
-        local ok, newBox = pcall(function()
-            local tab = win:AddTab("Defense", "shield")
-            return tab:AddLeftGroupbox("Anti-Grab Master")
-        end)
-        if ok and newBox then return newBox end
-    end
-
-    local okLib, Library = pcall(function()
-        return g.Library or loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/main/Library.lua"))()
-    end)
-    if okLib and type(Library) == "table" and Library.CreateWindow then
-        local okWin, createdBox = pcall(function()
-            local newWin = Library:CreateWindow({
-                Title = "Obsidian Anti-Grab Hub",
-                Footer = "Supreme Defense Engine",
-                Center = true,
-                AutoShow = true
-            })
-            if getgenv then
-                getgenv().Library = Library
-                getgenv().Window = newWin
-            end
-            local defTab = newWin:AddTab("Defense", "shield")
-            local grp = defTab:AddLeftGroupbox("Anti-Grab Master")
-            if getgenv then
-                getgenv().LBox = grp
-            end
-            return grp
-        end)
-        if okWin and createdBox then
-            return createdBox
-        end
-    end
-
-    local dummy = {}
-    function dummy:AddDropdown(_, opts)
-        if opts and opts.Default and opts.Callback then
-            task.spawn(opts.Callback, opts.Default)
-        end
-        return { SetDisabled = function() end, OnChanged = function(_, cb) end }
-    end
-    function dummy:AddToggle(_, opts)
-        if opts and opts.Callback then
-            task.spawn(opts.Callback, true)
-        end
-        return { SetValue = function() end, OnChanged = function(_, cb) end }
-    end
-    return dummy
-end
-
-local TargetGroupbox = ResolveObsidianGroupbox()
-
+        
 antiTab:AddDropdown({
     Name = "Anti-Grab Mode",
     Values = {
