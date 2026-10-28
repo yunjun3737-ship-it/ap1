@@ -440,6 +440,12 @@ playerTab:AddSection({
     Name = "Player"
 })
 
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local plr = Players.LocalPlayer
+local rs2 = RunService
+
 local walkSpeedT = false
 local walkSpeedV = 80
 local activeLoop = nil
@@ -447,64 +453,112 @@ local speedConn = nil
 
 local function updateWalkSpeedF()
     local char = plr.Character
-    if not char then return end
+    if not char then
+        return
+    end
 
     local hum = char:FindFirstChildOfClass("Humanoid")
     local root = char:FindFirstChild("HumanoidRootPart")
-    if not hum or not root then return end
 
-    hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-    hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
-
-    local speed = (type(walkSpeedV) == "number") and walkSpeedV or 80
+    if not hum or not root then
+        return
+    end
 
     if activeLoop then
         activeLoop:Disconnect()
         activeLoop = nil
     end
+
     if speedConn then
         speedConn:Disconnect()
         speedConn = nil
     end
 
-    if walkSpeedT then
+    hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, not walkSpeedT)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, not walkSpeedT)
+
+    if not walkSpeedT then
         hum.WalkSpeed = 16
-
-        speedConn = hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-            if walkSpeedT and hum.WalkSpeed ~= 16 then
-                hum.WalkSpeed = 16
-            end
-        end)
-
-        activeLoop = rs2.Heartbeat:Connect(function()
-            if not char:IsDescendantOf(workspace) then
-                if activeLoop then activeLoop:Disconnect() end
-                return
-            end
-
-            if walkSpeedT then
-                local dir = hum.MoveDirection
-                if dir.Magnitude == 0 then
-                    root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
-                else
-                    root.AssemblyLinearVelocity = Vector3.new(dir.X * speed, root.AssemblyLinearVelocity.Y, dir.Z * speed)
-                end
-
-                for _, track in ipairs(hum:GetPlayingAnimationTracks()) do
-                    local name = track.Name:lower()
-                    local id = track.Animation and track.Animation.AnimationId:lower() or ""
-                    if name:find("walk") or name:find("run") or id:find("walk") or id:find("run") then
-                        track:AdjustSpeed(1)
-                    end
-                end
-            else
-                if activeLoop then activeLoop:Disconnect() end
-            end
-        end)
-    else
-        hum.WalkSpeed = 16
-        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+        return
     end
+
+    hum.WalkSpeed = 16
+
+    speedConn = hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+        if walkSpeedT and hum.Parent and hum.WalkSpeed ~= 16 then
+            hum.WalkSpeed = 16
+        end
+    end)
+
+    activeLoop = rs2.Heartbeat:Connect(function()
+        if not walkSpeedT or not char:IsDescendantOf(workspace) then
+            if activeLoop then
+                activeLoop:Disconnect()
+                activeLoop = nil
+            end
+            return
+        end
+
+        if not hum.Parent or not root.Parent then
+            return
+        end
+
+        local speed = tonumber(walkSpeedV) or 80
+        local dir = hum.MoveDirection
+        local velocity = root.AssemblyLinearVelocity
+
+        if dir.Magnitude > 0 then
+            root.AssemblyLinearVelocity = Vector3.new(
+                dir.X * speed,
+                velocity.Y,
+                dir.Z * speed
+            )
+        else
+            root.AssemblyLinearVelocity = Vector3.new(
+                0,
+                velocity.Y,
+                0
+            )
+        end
+
+        for _, track in ipairs(hum:GetPlayingAnimationTracks()) do
+            local name = track.Name:lower()
+            local id = track.Animation
+                and track.Animation.AnimationId:lower()
+                or ""
+
+            if name:find("walk") or name:find("run")
+                or id:find("walk") or id:find("run") then
+                track:AdjustSpeed(1)
+            end
+        end
+    end)
+end
+
+plr.CharacterAdded:Connect(function(char)
+    if activeLoop then
+        activeLoop:Disconnect()
+        activeLoop = nil
+    end
+
+    if speedConn then
+        speedConn:Disconnect()
+        speedConn = nil
+    end
+
+    char:WaitForChild("Humanoid")
+    char:WaitForChild("HumanoidRootPart")
+
+    task.wait(0.1)
+    updateWalkSpeedF()
+end)
+
+if plr.Character then
+    task.spawn(function()
+        plr.Character:WaitForChild("Humanoid")
+        plr.Character:WaitForChild("HumanoidRootPart")
+        updateWalkSpeedF()
+    end)
 end
 
 playerTab:AddToggle({
