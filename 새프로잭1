@@ -4963,105 +4963,156 @@ antiTab:AddToggle({
     end
 })
 
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+
+local Player = Players.LocalPlayer
+
+local function notify(title, text, duration)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = tostring(title or "Notification"),
+            Text = tostring(text or ""),
+            Duration = tonumber(duration) or 3
+        })
+    end)
+end
+
+local function ResetPlayer(targetPlayer)
+    targetPlayer = targetPlayer or Player
+    local char = targetPlayer and targetPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.Dead)
+            hum.Health = 0
+        else
+            char:BreakJoints()
+        end
+    end
+end
+
 local antiGucciConnectionTrain
 local safePositionTrain
 local restoreFramesTrain = 0
+local autoGucciActiveTrain = false
+
 local function startAntiGucciTrain()
-	local character = Player.Character or Player.CharacterAdded:Wait()
-	local humanoid = character:WaitForChild("Humanoid")
-	local rootPart = character:WaitForChild("HumanoidRootPart")
-	safePositionTrain = rootPart.Position
-	local folder = workspace.Map.AlwaysHereTweenedObjects
-	local train = folder and folder:FindFirstChild("Train")
-	local seat
-	if train then
-		for _, d in ipairs(train:GetDescendants()) do
-			if d:IsA("Seat") then
-				seat = d
-				break
-			end
-		end
-	end
-	if seat then
-		rootPart.CFrame = seat.CFrame + Vector3.new(0, 2, 0)
-		seat:Sit(humanoid)
-	end
-	humanoid:GetPropertyChangedSignal("Jump"):Connect(function()
-		if humanoid.Jump and humanoid.Sit then
-			restoreFramesTrain = 15
-			safePositionTrain = rootPart.Position
-		end
-	end)
-	if antiGucciConnectionTrain then
-		antiGucciConnectionTrain:Disconnect()
-	end
-	antiGucciConnectionTrain = R.Heartbeat:Connect(function()
-		if not rootPart or not humanoid then
-			return
-		end
-		ReplicatedStorage.CharacterEvents.RagdollRemote:FireServer(rootPart, 0)
-		if restoreFramesTrain > 0 then
-			rootPart.CFrame = CFrame.new(safePositionTrain)
-			restoreFramesTrain = restoreFramesTrain - 1
-		end
-	end)
-	task.spawn(function()
-		while humanoid.Sit do
-			task.wait(1)
-		end
-		task.wait(0.5)
-		rootPart.CFrame = CFrame.new(safePositionTrain)
-	end)
-end
-local function stopAntiGucciTrain()
-	if antiGucciConnectionTrain then
-		antiGucciConnectionTrain:Disconnect()
-		antiGucciConnectionTrain = nil
-	end
-	local trainFolder = workspace.Map.AlwaysHereTweenedObjects
-	if trainFolder and trainFolder:FindFirstChild("Train") then
-		ResetPlayer(game.Players.LocalPlayer)
-	end
+    local character = Player.Character or Player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+    local rootPart = character:WaitForChild("HumanoidRootPart")
+    safePositionTrain = rootPart.Position
+
+    local map = workspace:FindFirstChild("Map")
+    local folder = map and map:FindFirstChild("AlwaysHereTweenedObjects")
+    local train = folder and folder:FindFirstChild("Train")
+    local seat
+
+    if train then
+        for _, d in ipairs(train:GetDescendants()) do
+            if d:IsA("Seat") then
+                seat = d
+                break
+            end
+        end
+    end
+
+    if seat then
+        rootPart.CFrame = seat.CFrame + Vector3.new(0, 2, 0)
+        seat:Sit(humanoid)
+    end
+
+    humanoid:GetPropertyChangedSignal("Jump"):Connect(function()
+        if humanoid.Jump and humanoid.Sit then
+            restoreFramesTrain = 15
+            safePositionTrain = rootPart.Position
+        end
+    end)
+
+    if antiGucciConnectionTrain then
+        antiGucciConnectionTrain:Disconnect()
+    end
+
+    antiGucciConnectionTrain = RunService.Heartbeat:Connect(function()
+        if not rootPart or not rootPart.Parent or not humanoid or not humanoid.Parent then
+            return
+        end
+
+        local charEvents = ReplicatedStorage:FindFirstChild("CharacterEvents")
+        local ragdollRemote = charEvents and charEvents:FindFirstChild("RagdollRemote")
+        if ragdollRemote and ragdollRemote:IsA("RemoteEvent") then
+            ragdollRemote:FireServer(rootPart, 0)
+        end
+
+        if restoreFramesTrain > 0 and safePositionTrain then
+            rootPart.CFrame = CFrame.new(safePositionTrain)
+            restoreFramesTrain = restoreFramesTrain - 1
+        end
+    end)
+
+    task.spawn(function()
+        while humanoid and humanoid.Parent and humanoid.Sit do
+            task.wait(1)
+        end
+        task.wait(0.5)
+        if rootPart and rootPart.Parent and safePositionTrain then
+            rootPart.CFrame = CFrame.new(safePositionTrain)
+        end
+    end)
 end
 
-local autoGucciActiveTrain =  false
+local function stopAntiGucciTrain()
+    if antiGucciConnectionTrain then
+        antiGucciConnectionTrain:Disconnect()
+        antiGucciConnectionTrain = nil
+    end
+
+    local map = workspace:FindFirstChild("Map")
+    local trainFolder = map and map:FindFirstChild("AlwaysHereTweenedObjects")
+    if trainFolder and trainFolder:FindFirstChild("Train") then
+        ResetPlayer(Player)
+    end
+end
+
 antiTab:AddToggle({
-	Name = "Gucci Anti grab (Train)",
+    Name = "Gucci Anti grab (Train)",
     Flag = "Anti Gucci (Train)",
-	Default = false,
-	Callback = function(Value)
-       -- SetToggleState("Anti Gucci (Train)", Value)
-		autoGucciActiveTrain = Value
-		if Value then
-			startAntiGucciTrain()
-			--notify("system", "Gucci active (monitoring)", 3)
-			task.spawn(function()
-				while autoGucciActiveTrain do
-					local trainFolder = workspace.Map.AlwaysHereTweenedObjects
-					local trainExists = trainFolder and trainFolder:FindFirstChild("Train")
-					if not trainExists then
-						stopAntiGucciTrain()
-						notify("System", "Train lost", 3)
-						local retries = 0
-						repeat
-							task.wait(0.2)
-							retries = retries + 1
-							trainFolder = workspace.Map.AlwaysHereTweenedObjects
-						until (trainFolder and trainFolder:FindFirstChild("Train")) or retries > 25 or not autoGucciActiveTrain
-						if autoGucciActiveTrain and trainFolder and trainFolder:FindFirstChild("Train") then
-							startAntiGucciTrain()
-							notify("System", "Train restored.", 3)
-						end
-					end
-					task.wait(0.5)
-				end
-			end)
-		else
-			autoGucciActiveTrain = false
-			stopAntiGucciTrain()
-			notify("System", "Gucci disabled.", 3)
-		end
-	end
+    Default = false,
+    Callback = function(Value)
+        autoGucciActiveTrain = Value
+        if Value then
+            startAntiGucciTrain()
+            task.spawn(function()
+                while autoGucciActiveTrain do
+                    local map = workspace:FindFirstChild("Map")
+                    local trainFolder = map and map:FindFirstChild("AlwaysHereTweenedObjects")
+                    local trainExists = trainFolder and trainFolder:FindFirstChild("Train")
+                    if not trainExists then
+                        stopAntiGucciTrain()
+                        notify("System", "Train lost", 3)
+                        local retries = 0
+                        repeat
+                            task.wait(0.2)
+                            retries = retries + 1
+                            map = workspace:FindFirstChild("Map")
+                            trainFolder = map and map:FindFirstChild("AlwaysHereTweenedObjects")
+                        until (trainFolder and trainFolder:FindFirstChild("Train")) or retries > 25 or not autoGucciActiveTrain
+                        if autoGucciActiveTrain and trainFolder and trainFolder:FindFirstChild("Train") then
+                            startAntiGucciTrain()
+                            notify("System", "Train restored.", 3)
+                        end
+                    end
+                    task.wait(0.5)
+                end
+            end)
+        else
+            autoGucciActiveTrain = false
+            stopAntiGucciTrain()
+            notify("System", "Gucci disabled.", 3)
+        end
+    end
 })
 
 antiTab:AddSection({
