@@ -4833,57 +4833,116 @@ antiTab:AddToggle({
 end
 do
 antiTab:AddSection({
-	Name = "Anti Ragdoll"
+	Name = "Anti Ragdoll&Fling"
 })
 
+ 
 antiTab:AddToggle({
-    Name = "Anti Ragdoll",
-    Default = false,
-    Flag = "9ww7gr0wuwgt",
-    Callback = function(Value)
-        --cleanConnections()
-        if not Value then return end
+                                                                Name = "Anti Ragdoll",
+                                                                Default = false,                                                               Flag = "Anti_Ragdoll",
+                                                                Callback = function(antiRagdoll)
+                                                                    upv0.Defense.AntiRagdoll = antiRagdoll
 
-        local function applyProtection(char)
-            if not char then return end
-            local hum = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid", 5)
-            if not hum or hum.Health <= 0 then return end
+                                                                    if not antiRagdoll then
+                                                                        upv2.Cleanup.Disconnect(
+                                                                            "AR_CharacterAdded"
+                                                                        )
 
-            hum.BreakJointsOnDeath = false
-            hum.AutoRotate = true
-            if hum.PlatformStand then hum.PlatformStand = false end
+                                                                        upv2.Cleanup.Disconnect(
+                                                                            "AR_Sit"
+                                                                        )
+                                                                    else
+                                                                        local tbl5 = {
+                                                                            f = function()
+                                                                                if upv0 then
+                                                                                    if upv0:IsDescendantOf(
+                                                                                        workspace
+                                                                                    ) then
+                                                                                        local humanoid = upv0:WaitForChild(
+                                                                                            "Humanoid",
+                                                                                            3
+                                                                                        )
 
-            table.insert(connections, hum:GetPropertyChangedSignal("AutoRotate"):Connect(function()
-                if hum.Health > 0 and hum.AutoRotate == false and not (type(getgenv) == "function" and getgenv().FTAP_SpinbotActive) then
-                    hum.AutoRotate = true
-                end
-            end))
+                                                                                        local humanoidRootPart = humanoid and upv0:WaitForChild(
+                                                                                            "HumanoidRootPart",
+                                                                                            3
+                                                                                        )
 
-            table.insert(connections, hum:GetPropertyChangedSignal("PlatformStand"):Connect(function()
-                if hum.Health > 0 and hum.PlatformStand == true then
-                    hum.PlatformStand = false
-                end
-            end))
+                                                                                        if not (humanoidRootPart and humanoidRootPart:WaitForChild(
+                                                                                            "RagdollTouchedHitbox",
+                                                                                            3
+                                                                                        )) then
+                                                                                            return
+                                                                                        end
 
-            table.insert(connections, RunService.RenderStepped:Connect(function()
-                if hum.Health > 0 and hum.Sit and hum.SeatPart == nil then
-                    hum.Sit = false
-                end
-            end))
+                                                                                        upv1.Cleanup.Disconnect(
+                                                                                            "AR_Sit"
+                                                                                        )
 
-            table.insert(connections, hum.Died:Connect(function()
-                hum.BreakJointsOnDeath = true
-                cleanConnections()
-            end))
-        end
+                                                                                        upv1.Connections.AR_Sit = humanoid:GetPropertyChangedSignal(
+                                                                                            "Sit"
+                                                                                        ):Connect(
+                                                                                            function()
+                                                                                                wait()
 
-        if LocalPlayer.Character then applyProtection(LocalPlayer.Character) end
-        table.insert(connections, LocalPlayer.CharacterAdded:Connect(function(char)
-            task.wait(0.6)
-            applyProtection(char)
-        end))
-    end
-})
+                                                                                                if upv0.Value then
+                                                                                                    if not upv1.BlobmanManager.GetController() then
+                                                                                                        upv2.Sit = false
+                                                                                                        upv3.CanTouch = false
+                                                                                                    end
+                                                                                                end
+                                                                                            end
+                                                                                        )
+
+                                                                                        return
+                                                                                    end
+                                                                                end
+                                                                            end,
+                                                                        }
+
+                                                                        task.spawn(
+                                                                            tbl5.f,
+                                                                            upv4.Character
+                                                                        )
+
+                                                                        upv2.Connections.AR_CharacterAdded = upv4.CharacterAdded:Connect(
+                                                                            tbl5.f
+                                                                        )
+                                                                    end
+                                                                end,
+                                                            })
+antiTab:AddToggle({
+                                                                Name = "Anti Fling (Teleport Back)",
+                                                                Flag = "Anti flinwg",
+                                                                Default = false,                                                               Callback = function(antiThrow)
+                                                                    upv0.Defense.AntiThrow = antiThrow
+
+                                                                    if not antiThrow then
+                                                                        upv1.ClientManager.OnGrab.AntiThrow = nil
+                                                                    else
+                                                                        upv1.ClientManager.OnGrab.AntiThrow = function()
+                                                                            if upv0.Value then
+                                                                                local cFrame = upv1.CFrame
+
+                                                                                while upv0.Value do
+                                                                                    task.wait()
+                                                                                end
+
+                                                                                upv2.NetworkOwnership.StopVelocity(
+                                                                                    upv1,
+                                                                                    0
+                                                                                )
+
+                                                                                upv1.CFrame = cFrame
+                                                                            end
+                                                                        end
+
+                                                                        task.spawn(
+                                                                            upv1.ClientManager.OnGrab.AntiThrow
+                                                                        )
+                                                                    end
+                                                                end,
+                                                            })
 end
 antiTab:AddSection({
 	Name = "anti blob"
