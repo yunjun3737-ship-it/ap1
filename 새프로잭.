@@ -1,4 +1,4 @@
-do  
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local plr = Players.LocalPlayer
@@ -418,7 +418,7 @@ local function sno(part)
 end
 
 
-end
+
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion.txt"))()
 
 local Window = OrionLib:MakeWindow({
@@ -2812,7 +2812,7 @@ grabTab:AddToggle({
 })
 
 
-
+do
 local charCallbacks = {}
 
 local function onCharacterAdded(char)
@@ -4271,7 +4271,7 @@ antiTab:AddToggle({
         end
     end
 })
-
+end
 
 
 
