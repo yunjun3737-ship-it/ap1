@@ -2813,12 +2813,17 @@ grabTab:AddToggle({
 
 
 
-connect9 = nil
 
-connect10 = nil
+								
+local players = game:GetService("Players")
+local runService = game:GetService("RunService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local v1 = players.LocalPlayer
+local playerScripts2 = v1:WaitForChild("PlayerScripts")
 
-v13 = false
-
+local connect9 = nil
+local connect10 = nil
+local v13 = false
 
 antiTab:AddToggle({  
 	Name = "Anti Banana  (REMOVE-LEGS)",  
@@ -2854,8 +2859,7 @@ antiTab:AddToggle({
 								v142:ChangeState(Enum.HumanoidStateType.GettingUp)  
 
 								if replicatedStorage:FindFirstChild("CharacterEvents") then  
-									local ragdollRemote2 =  
-										replicatedStorage.CharacterEvents:FindFirstChild("RagdollRemote")  
+									local ragdollRemote2 = replicatedStorage.CharacterEvents:FindFirstChild("RagdollRemote")  
 
 									if ragdollRemote2 then  
 										ragdollRemote2:FireServer(v144, 1)  
@@ -2888,7 +2892,7 @@ antiTab:AddToggle({
 
 		v13 = value41  
 
-		function onCharacterAdded(p25)  
+		local function onCharacterAdded(p25)  
 			if not v13 then  
 				return  
 			end  
@@ -2943,7 +2947,7 @@ antiTab:AddToggle({
 antiTab:AddToggle({  
 	Name = 'Anti Banana (EAT)',  
 	Default = false,  
-    Flag = "hwisisj",
+	Flag = "hwisisj",
 	Callback = function(value42)  
 		local v146 = 0  
 
@@ -2961,11 +2965,7 @@ antiTab:AddToggle({
 							local v148 = value43  
 
 							if v148.Parent.Name ~= v1.Name .. "SpawnedInToys" then  
-								if  
-									v148:IsA("Model")  
-									and v148.Name == "FoodBanana"  
-									and v148:FindFirstChild("HoldPart")  
-								then  
+								if v148:IsA("Model") and v148.Name == "FoodBanana" and v148:FindFirstChild("HoldPart") then  
 									local holdPart = v148.HoldPart  
 									local holdItemRemoteFunction = holdPart:FindFirstChild("HoldItemRemoteFunction")  
 
@@ -2980,11 +2980,7 @@ antiTab:AddToggle({
 
 									if dropItemRemoteFunction then  
 										pcall(function()  
-											dropItemRemoteFunction:InvokeServer(  
-												v148,  
-												CFrame.new(0, -500, 0),  
-												Vector3.new(0, 97.69, 0)  
-											)  
+											dropItemRemoteFunction:InvokeServer(v148, CFrame.new(0, -500, 0), Vector3.new(0, 97.69, 0))  
 										end)  
 									end  
 								end  
@@ -2992,17 +2988,12 @@ antiTab:AddToggle({
 								for index15, value44 in ipairs(v148:GetChildren()) do  
 									local v149 = value44  
 
-									if  
-										v149:IsA("Model")  
-										and v149.Name == "FoodBanana"  
-										and v149:FindFirstChild("HoldPart")  
-									then  
+									if v149:IsA("Model") and v149.Name == "FoodBanana" and v149:FindFirstChild("HoldPart") then  
 										local v150 = v1.Name .. "SpawnedInToys"  
 
 										if v149.Parent.Name ~= v150 then  
 											local holdPart2 = v149.HoldPart  
-											local holdItemRemoteFunction2 =  
-												holdPart2:FindFirstChild("HoldItemRemoteFunction")  
+											local holdItemRemoteFunction2 = holdPart2:FindFirstChild("HoldItemRemoteFunction")  
 
 											if holdItemRemoteFunction2 then  
 												pcall(function()  
@@ -3011,16 +3002,11 @@ antiTab:AddToggle({
 											end  
 
 											task.wait(0.01)  
-											local dropItemRemoteFunction2 =  
-												holdPart2:FindFirstChild("DropItemRemoteFunction")  
+											local dropItemRemoteFunction2 = holdPart2:FindFirstChild("DropItemRemoteFunction")  
 
 											if dropItemRemoteFunction2 then  
 												pcall(function()  
-													dropItemRemoteFunction2:InvokeServer(  
-														v149,  
-														CFrame.new(0, -500, 0),  
-														Vector3.new(0, 97.69, 0)  
-													)  
+													dropItemRemoteFunction2:InvokeServer(v149, CFrame.new(0, -500, 0), Vector3.new(0, 97.69, 0))  
 												end)  
 											end  
 										end  
@@ -3039,37 +3025,32 @@ antiTab:AddToggle({
 	end,  
 })  
 
-
-
-
 antiTab:AddToggle({
-		Name = 'Anti Sticky',
-		Default = false,
-		Flag = "AntiStsickyToggle",
-		Callback = function(value49)
-			--local playerScripts2 = v1:WaitForChild("PlayerScripts")
+	Name = 'Anti Sticky',
+	Default = false,
+	Flag = "AntiStsickyToggle",
+	Callback = function(value49)
+		if value49 then
+			local stickyPartsTouchDetection = playerScripts2:FindFirstChild("StickyPartsTouchDetection")
 
-			if value49 then
-				local stickyPartsTouchDetection = playerScripts2:FindFirstChild("StickyPartsTouchDetection")
-
-				if stickyPartsTouchDetection then
-					stickyPartsTouchDetection.Disabled = true
-				end
-			else
-				local stickyPartsTouchDetection2 = playerScripts2:FindFirstChild("StickyPartsTouchDetection")
-
-				if stickyPartsTouchDetection2 then
-					stickyPartsTouchDetection2:Destroy()
-				end
-
-				local stickyPartsTouchDetection3 = replicatedStorage:FindFirstChild("StickyPartsTouchDetection")
-
-				if stickyPartsTouchDetection3 then
-					stickyPartsTouchDetection3:Clone().Parent = playerScripts2
-				end
+			if stickyPartsTouchDetection then
+				stickyPartsTouchDetection.Disabled = true
 			end
-		end,
-	})
+		else
+			local stickyPartsTouchDetection2 = playerScripts2:FindFirstChild("StickyPartsTouchDetection")
+
+			if stickyPartsTouchDetection2 then
+				stickyPartsTouchDetection2:Destroy()
+			end
+
+			local stickyPartsTouchDetection3 = replicatedStorage:FindFirstChild("StickyPartsTouchDetection")
+
+			if stickyPartsTouchDetection3 then
+				stickyPartsTouchDetection3:Clone().Parent = playerScripts2
+			end
+		end
+	end,
+})
 
 
 
