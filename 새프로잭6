@@ -6493,11 +6493,11 @@ antiTab:AddSection({
     end)
 end
 
-
+do
 antiTab:AddSection({
 	Name = "anti lag"
 })
-do
+
 local antiLagT = false
 local autoAntiLagT = true
 local fps = 60
@@ -6596,5 +6596,5 @@ antiTab:AddToggle({
 if not _G.cons then
     _G.cons = {}
 end
-
+end
 
