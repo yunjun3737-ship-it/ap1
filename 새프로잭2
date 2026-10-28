@@ -5311,7 +5311,7 @@ antiTab:AddToggle({
         end)
     end
 })
-end
+
 --===== Anti Banana 기능 =====
 antiTab:AddSection({
 	Name = "Anti banana"
