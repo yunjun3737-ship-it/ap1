@@ -3312,6 +3312,7 @@ grabTab:AddToggle({
 end
 
     
+
 --===== Anti-Grab 독립 초기화 =====
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -4350,6 +4351,7 @@ function StopTractorEscape()
         end)
     end
 end
+end
 
 
 function StartOcarinaLoop()
@@ -4735,7 +4737,7 @@ antiTab:AddDropdown({
         if Value == "No Ragdoll" then
             SelectedModes["No Ragdoll"] = true
             SelectedModes["AntiGrabRag"] = true
-        elseif Value == "Escape Anything" then
+        elseif Value == "IfEscape Anything" then
             SelectedModes["TractorEscape"] = true
             SelectedModes["Escape Anything"] = true
         elseif Value == "Ocarina Mode" then
@@ -4756,6 +4758,7 @@ antiTab:AddToggle({
     end
 })
 end
+
 
 
 
