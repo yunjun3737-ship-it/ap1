@@ -5852,7 +5852,7 @@ antiTab:AddToggle({
     end
 })
 end
-end
+
 
 antiTab:AddSection({
 	Name = "anti helper"
