@@ -4894,7 +4894,7 @@ local function StopAntiRagdoll()
 end
 
 antiTab:AddToggle({
-    Name = "Anti Ragdoll",
+    Name = "Anti Ragdoll (grab)",
     Default = false,
     Flag = "Anti_Ragdoll",
 
@@ -4913,7 +4913,31 @@ antiTab:AddToggle({
             LocalPlayer.CharacterAdded:Connect(SetupAntiRagdoll)
     end
 })
+    local antiRagdollActive = false
+    local antiRagdollConnection = nil
 
+    antiTab:AddToggle({
+        Name = "anti Ragdoll",
+        Default = false,
+        Flag = "97gt2u9rc2",
+        Callback = function(on)
+            antiRagdollActive = on
+            if antiRagdollConnection then
+                antiRagdollConnection:Disconnect()
+                antiRagdollConnection = nil
+            end
+            if on then
+                antiRagdollConnection = RunService.Heartbeat:Connect(function()
+                    local char = LocalPlayer.Character
+                    if not char then return end
+                    local hum = char:FindFirstChildOfClass("Humanoid")
+                    if not hum then return end
+                    hum.PlatformStand = false
+                    hum.Sit = false
+                end)
+            end
+        end
+    })
 antiTab:AddToggle({
     Name = "Anti Fling (Teleport Back)",
     Default = false,
@@ -6810,7 +6834,7 @@ antiTab:AddSection({
     end
 
     antiTab:AddToggle({
-        Name = "Anti Kick",
+        Name = "Anti Kick (part)",
         Default = false,
         Flag = "97ft2279tf",
         Callback = function(Value)
@@ -6843,7 +6867,105 @@ antiTab:AddSection({
         end
     end)
 end
+local flyingResetConn = nil
 
+antiTab:AddToggle({
+    Name = "Auto reset",
+    Default = false,
+    Flag = "owideguxj",
+    Callback = function(Value)
+        if flyingResetConn then
+            flyingResetConn:Disconnect()
+            flyingResetConn = nil
+        end
+
+        if Value then
+            flyingResetConn = rs.GameCorrectionEvents.GameCorrectionsNotify.OnClientEvent:Connect(function(Type)
+                if Type ~= "Flying" then
+                    return
+                end
+
+                local char = plr.Character
+                if not char then
+                    return
+                end
+
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if not hum then
+                    return
+                end
+
+                pcall(function()
+                    rs.CharacterEvents.Struggle:FireServer()
+                end)
+
+                hum.Health = 0
+                hum:ChangeState(Enum.HumanoidStateType.Dead)
+                char:BreakJoints()
+            end)
+        end
+    end
+})
+
+local hkExpectDeath = false
+local hkSalmonList = {} 
+local breakPcldConnection = nil
+
+antiTab:AddToggle({
+    Name = "Break Pcld",
+    Default = false,
+    Flag = "c782r2cuf9",
+    Callback = function(Value)
+        
+        hkSalmonList[LocalPlayer.UserId] = Value and true or nil
+        
+        local function hkApplySalmon(char)
+            if not char then return end
+            local newHum = char:WaitForChild("Humanoid", 5)
+            if not newHum then return end
+
+            if hkSalmonList[LocalPlayer.UserId] and not hkExpectDeath then
+                hkExpectDeath = true
+                newHum:ChangeState(Enum.HumanoidStateType.Dead)
+            else
+                hkExpectDeath = false
+            end
+        end
+        
+        if Value then
+            hkExpectDeath = false
+            
+        
+            if breakPcldConnection then
+                breakPcldConnection:Disconnect()
+            end
+            
+            
+            breakPcldConnection = LocalPlayer.CharacterAdded:Connect(function(char)
+                hkApplySalmon(char)
+            end)
+
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum.Health = 0
+            end
+        else
+            
+            if breakPcldConnection then
+                breakPcldConnection:Disconnect()
+                breakPcldConnection = nil
+            end
+            
+            
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum.Health = 0
+            end
+        end
+    end
+})
 
 do
 antiTab:AddSection({
