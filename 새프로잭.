@@ -5030,11 +5030,11 @@ antiTab:AddToggle({
     Flag = "Anti Gucci (Train)",
 	Default = false,
 	Callback = function(Value)
-        SetToggleState("Anti Gucci (Train)", Value)
+       -- SetToggleState("Anti Gucci (Train)", Value)
 		autoGucciActiveTrain = Value
 		if Value then
 			startAntiGucciTrain()
-			notify("system", "Gucci active (monitoring)", 3)
+			--notify("system", "Gucci active (monitoring)", 3)
 			task.spawn(function()
 				while autoGucciActiveTrain do
 					local trainFolder = workspace.Map.AlwaysHereTweenedObjects
