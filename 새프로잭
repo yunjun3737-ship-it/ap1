@@ -9897,9 +9897,10 @@ LoopTab:AddToggle({
 LoopTab:AddSection({
 	Name = "Onwer kick Best"
 })
-local LoopKickGrabToggle
+
+ local LoopKickGrabToggle
 local RagdollGrabToggle
-local KickPlayerDropdown
+local AddPlayersDropdown 
 local currentDropdownValue = "---"
 local currentDropdownOptions = {}
 
@@ -9993,12 +9994,15 @@ LoopTab:AddPlayersDropdown({
 task.spawn(function()
     while true do
         task.wait(1) 
+        
+        if not AddPlayersDropdown then continue end 
+
         local updatedNames = getPlayerList()
         local currentValue = currentDropdownValue
 
         if currentValue == "---" or not currentValue or not playerMap[currentValue] then
-            KickPlayerDropdown:Refresh(updatedNames, true)
-            KickPlayerDropdown:Set("---")
+            AddPlayersDropdown:Refresh(updatedNames, true)
+            AddPlayersDropdown:Set("---")
             currentDropdownOptions = updatedNames
             selectedKickPlayer = nil
             getgenv().SelectedPlayer = nil
@@ -10018,15 +10022,15 @@ task.spawn(function()
             end
             
             if needsUpdate then
-                KickPlayerDropdown:Refresh(updatedNames, true)
+                AddPlayersDropdown:Refresh(updatedNames, true)
                 currentDropdownOptions = updatedNames
 
                 if playerMap[currentValue] then
-                    KickPlayerDropdown:Set(currentValue)
+                    AddPlayersDropdown:Set(currentValue)
                     selectedKickPlayer = playerMap[currentValue]
                     getgenv().SelectedPlayer = selectedKickPlayer.Name
                 else
-                    KickPlayerDropdown:Set("---")
+                    AddPlayersDropdown:Set("---")
                     selectedKickPlayer = nil
                     getgenv().SelectedPlayer = nil
                 end
@@ -10247,7 +10251,7 @@ local function startKickV1()
 end
 
 LoopTab:AddToggle({
-    Name = "Set Owner Kick",
+    Name = "Owner Kick",
     Default = false,
     Callback = function(on)
         kickLoopEnabled = on
@@ -10295,7 +10299,6 @@ end
 LoopTab:AddToggle({
     Name = "Pallet Ragdoll",
     Default = false,
-    Flag = "29g7t28y",
     Callback = function(v)
         ragdollEnabled = v
 
@@ -10362,4 +10365,4 @@ LocalPlayer.CharacterAdded:Connect(function(char)
         startKickV1()
     end
 end)
-
+                   
