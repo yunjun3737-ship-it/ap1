@@ -9901,7 +9901,7 @@ LoopTab:AddToggle({
                 Config.aa73 = nil
             end
         end
-    end
+    
 })
 
             
