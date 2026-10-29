@@ -8679,6 +8679,137 @@ end)
 LoopTab:AddSection({
     Name = "Auto blob"
 })
+function AutoSitF()
+    if currentConnection then
+        currentConnection:Disconnect()
+        currentConnection = nil
+    end
+
+    if not AutoSitT then return end
+
+    currentConnection = RunService.Heartbeat:Connect(function()
+        local char = plr.Character
+        if not char or not char:FindFirstChild("Humanoid") or not char:FindFirstChild("HumanoidRootPart") then
+            return
+        end
+
+        local hum = char.Humanoid
+        local root = char.HumanoidRootPart
+
+        if hum.SeatPart ~= nil and hum.Sit == true then
+            return
+        end
+
+        if BLOBSIT then
+            return
+        end
+
+        local allSeats = {}
+
+        local myInv = workspace:FindFirstChild(plr.Name.."SpawnedInToys")
+        if myInv then
+            for _, item in pairs(myInv:GetChildren()) do
+                if item.Name == "CreatureBlobman" then
+                    local seat = item:FindFirstChild("VehicleSeat")
+                    if seat then
+                        table.insert(allSeats, {
+                            seat = seat,
+                            isMine = true,
+                            occupant = seat.Occupant
+                        })
+                    end
+                end
+            end
+        end
+
+        for _, otherPlayer in ipairs(game.Players:GetPlayers()) do
+            if otherPlayer ~= plr then
+                local otherInv = workspace:FindFirstChild(otherPlayer.Name.."SpawnedInToys")
+                if otherInv then
+                    for _, item in pairs(otherInv:GetChildren()) do
+                        if item.Name == "CreatureBlobman" then
+                            local seat = item:FindFirstChild("VehicleSeat")
+                            if seat and seat.Occupant == nil then
+                                table.insert(allSeats, {
+                                    seat = seat,
+                                    isMine = false,
+                                    owner = otherPlayer,
+                                    occupant = nil
+                                })
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        local targetSeat = nil
+        local seatType = nil
+
+        for _, seatInfo in ipairs(allSeats) do
+            if seatInfo.isMine and seatInfo.occupant == nil then
+                targetSeat = seatInfo.seat
+                seatType = "myEmpty"
+                break
+            end
+        end
+
+        if not targetSeat then
+            for _, seatInfo in ipairs(allSeats) do
+                if seatInfo.isMine and seatInfo.occupant ~= nil then
+                    targetSeat = seatInfo.seat
+                    seatType = "myOccupied"
+                    break
+                end
+            end
+        end
+
+        if not targetSeat then
+            for _, seatInfo in ipairs(allSeats) do
+                if not seatInfo.isMine then
+                    targetSeat = seatInfo.seat
+                    seatType = "otherEmpty"
+                    break
+                end
+            end
+        end
+
+        if not targetSeat then
+            if #allSeats == 0 then
+                task.spawn(function()
+                    rs:WaitForChild("MenuToys"):WaitForChild("SpawnToyRemoteFunction"):InvokeServer(
+                        "CreatureBlobman",
+                        root.CFrame * CFrame.new(0, 0, 20),
+                        Vector3.new(0, 0, 0)
+                    )
+                end)
+            end
+            return
+        end
+
+        local seat = targetSeat
+        local dist = (root.Position - seat.Position).Magnitude
+        local _, onScreen = Camera:WorldToViewportPoint(seat.Position)
+        
+        if dist > 20 then
+            root.CFrame = CFrame.new(seat.Position + Vector3.new(0, 3, 0))
+        elseif dist > 10 or not onScreen then
+            if hum.Sit then 
+                hum.Sit = false 
+            end
+            seat:Sit(hum)
+        else
+            local prompt = seat:FindFirstChild("ProximityPrompt")
+            if prompt then
+                if hum.Sit then hum.Sit = false end
+                if hum then rs.CharacterEvents.Struggle:FireServer() end
+                fireproximityprompt(prompt)
+            else
+                seat:Sit(hum)
+            end
+        end
+    end)
+end
 LoopTab:AddToggle({
     Name = "Auto blob sit",
     
@@ -9372,7 +9503,7 @@ LoopTab:AddToggle({
           
 end
 LoopTab:AddToggle({
-    Text = "Set Owner Kick (ragdoll)",
+    Name = "Set Owner Kick (ragdoll)",
     Default = false,
     Callback = function(aa61)
         Config.aa6 = aa61
@@ -9534,7 +9665,7 @@ LoopTab:AddToggle({
             if not Config.PlayerList or #Config.PlayerList == 0 then
                 return
             end
-            task.wait(0.5)
+            task.wait(9999)
             task.defer(function()
                 startLagSpam()
             end)
@@ -9558,7 +9689,7 @@ LoopTab:AddToggle({
                                     aa25(aa62, aa64)
                                 end
                                 
-                                for _ = 1, 9 do
+                                for _ = 1, 6.5 do
                                     SetNetworkOwner:FireServer(aa66, aa66.CFrame)
                                     if DestroyGrabLine then
                                         DestroyGrabLine:FireServer(aa66)
