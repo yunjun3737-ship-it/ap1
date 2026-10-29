@@ -9404,7 +9404,7 @@ local function loopBestKickF()
 
                 local grabStartTime = tick()
                 while (tick() - grabStartTime) < 0.3 and oatsKickActive do
-                    task.wait()
+                    task.wait(0.01)
                     sno(tHRP)
                     pcall(function()
                         local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
@@ -9472,7 +9472,7 @@ local function loopBestKickF()
                 rot.CFrame = CFrame.Angles(0, 0, 0) 
             end
 
-            if tick() - lastRemoteFire > 0.00005 and oatsKickActive then
+            if tick() - lastRemoteFire > 0.005 and oatsKickActive then
                 pcall(function()
                     local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
                     local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
