@@ -457,6 +457,7 @@ local grabTab = Window:MakeTab({Name = "Combat", Icon = "rbxassetid://6026568198
 local antiTab = Window:MakeTab({Name = "Invincibility", Icon = "rbxassetid://6034831332", PremiumOnly = false, Description = "Ultimate defense systems: Anti-Grab, Anti-Kick, and Anti-Explosion shields."})               
 local LoopTab = Window:MakeTab({Name = "Loop", Icon = "rbxassetid://6023426923", PremiumOnly = false, Description = "Automated destruction: Loop attacks, loop kills, and loop kicks."})   
 local FDTab = Window:MakeTab({Name = "protection", Icon = "rbxassetid://6034831332", PremiumOnly = false, Description = "Defend your friends and allies from enemy attacks, kicks, and targeted threats."})        
+local plotTab = Window:MakeTab({Name = "plot", Icon = "rbxassetid://6031094678", PremiumOnly = false, Description = "Own plots, remove barriers, and use barrier breakers to control the building area."})
 
 
 --===== Player 이동, 점프, NoClip 및 Fly 기능 =====
@@ -11762,4 +11763,690 @@ end)
 
 
     
+end
+
+
+
+
+do
+
+plotTab:AddSection({
+    Name = "plot"
+})
+
+local BarrierNoclip = plotTab:AddToggle({
+    Name = "Delete House barrier",
+    CurrentValue = false,
+    save = true,
+    Flag = "BarrierNoclipToggle",
+    Callback = function(Value)
+        BarrierCanCollideT = Value
+        BarrierCanCollideF()
+    end
+})
+
+--BarrierNoclip:SetValue(true)
+
+plotTab:AddButton({
+    Name = "House Breaker (Hamburger)",
+    Callback = function()
+        PlotBarrierDelete()
+    end
+})
+
+
+local isExecuting = false
+
+local function getMyPlot()
+    for i = 1, 5 do
+        local plot = workspace.Plots:FindFirstChild("Plot" .. i)
+        if plot then
+            local plotSign = plot:FindFirstChild("PlotSign")
+            if plotSign then
+                local thisPlotsOwners = plotSign:FindFirstChild("ThisPlotsOwners")
+                if thisPlotsOwners then
+                    for _, child in ipairs(thisPlotsOwners:GetChildren()) do
+                        if child:IsA("StringValue") and child.Value == game.Players.LocalPlayer.Name then
+                            return plot.PlotArea
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+function PlotBarrierDelete()
+if PBDrun then return end
+PBDrun = true
+
+local char = plr.Character
+if not char then PBDrun = false return end
+
+local hrp = char:FindFirstChild("HumanoidRootPart")
+if not hrp then PBDrun = false return end
+
+local metal = workspace.Plots.Plot1.TeslaCoil.Metal
+if not metal then PBDrun = false return end
+
+local TP = metal.CFrame
+local OCF = hrp.CFrame
+
+task.spawn(function()
+rs.MenuToys.SpawnToyRemoteFunction:InvokeServer("FoodHamburger", hrp.CFrame, Vector3.new(0,0,0))
+end)
+
+task.wait(0.2)
+
+local foodHamburger = inv:FindFirstChild("FoodHamburger")
+if not foodHamburger then PBDrun = false return end
+
+if foodHamburger then
+task.spawn(function()
+foodHamburger.HoldPart.HoldItemRemoteFunction:InvokeServer(foodHamburger, char)
+end)
+end
+
+task.wait(0.1)
+
+hrp.CFrame = TP
+task.wait(0.17)
+
+if foodHamburger then
+rs.MenuToys.DestroyToy:FireServer(foodHamburger)
+end
+
+hrp.CFrame = OCF
+task.wait(0.4)
+
+PBDrun = false
+end
+do
+
+local SelectedHouse = "Green House"
+
+local HouseData = {
+	["Green House"] = {
+		GetPart = function() return workspace.Plots.Plot1.Barrier.PlotBarrier end,
+		CF = CFrame.new(-514.83178710938, -5.9183144569397, 72.807891845703, -0.37030425667763, 0.12616515159607, 0.92030280828476, 0, 0.99073350429535, -0.13582056760788, -0.92891055345535, -0.050294935703278, -0.36687284708023)
+	},
+	["Pink House"] = {
+		GetPart = function() return workspace.Plots.Plot2.Barrier.PlotBarrier end,
+		CF = CFrame.new(-455.51058959961, -4.197717666626, -113.81318664551, 0.79666173458099, 0.14610970020294, 0.58649981021881, 0, 0.97034275531769, -0.24173320829868, -0.60442543029785, 0.19257959723473, 0.77303493022919)
+	},
+	["Blue  House"] = {
+		GetPart = function() return workspace.Plots.Plot4.Barrier.PlotBarrier end,
+		CF = CFrame.new(504.84017944336, 86.419357299805, -295.31713867188, 0.61027485132217, 0.13163983821869, -0.7811758518219, 0, 0.98609691858292, 0.16617208719254, 0.79218983650208, -0.10141064226627, 0.60179007053375)
+	},
+	["Red House"] = {
+		GetPart = function() return workspace.Plots.Plot5.Barrier.PlotBarrier end,
+		CF = CFrame.new(522.59588623047, 126.34990692139, -129.14604187012, -0.14430214464664, 0.027158763259649, -0.9891608953476, 0, 0.99962317943573, 0.027446024119854, 0.98953360319138, 0.003960520029068, -0.14424778521061)
+	},
+	["Witch House"] = {
+		GetPart = function() return workspace.Plots.Plot3.Barrier:GetChildren()[5] end,
+		CF = CFrame.new(315.01977539062, -4.3777370452881, 393.75573730469, -0.97576177120209, -0.0090569537132978, -0.21864798665047, 0, 0.999143242836, -0.041387043893337, 0.21883547306061, -0.040383893996477, -0.97492581605911)
+	}
+}
+
+local Processing = false
+
+local function ExecuteOriginalNoClip(tt, overrideCF)
+	if Processing then return end
+	Processing = true
+
+	local Players = game:GetService("Players")
+	local rs = game:GetService("ReplicatedStorage")
+	local plr = Players.LocalPlayer
+
+	local char = plr.Character
+	if not char then
+		Processing = false
+		return
+	end
+
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+	if not hrp or not torso then
+		Processing = false
+		return
+	end
+
+	if not tt or not tt:IsA("BasePart") then 
+		Processing = false
+		return
+	end
+
+	local invFolder = workspace:FindFirstChild(plr.Name .. "SpawnedInToys")
+	if not invFolder then
+		Processing = false
+		return
+	end
+
+	
+	rs.GrabEvents.SetNetworkOwner:FireServer(tt, overrideCF)
+
+	task.spawn(function()
+		pcall(function()
+			rs.MenuToys.SpawnToyRemoteFunction:InvokeServer("NinjaShuriken", hrp.CFrame * CFrame.new(0, 5, 20), Vector3.zero)
+		end)
+	end)
+
+	local shuriken = nil
+	for i = 1, 30 do
+		task.wait(0.1)
+		shuriken = invFolder:FindFirstChild("NinjaShuriken")
+		if shuriken then break end
+	end
+
+	if not shuriken then 
+		Processing = false
+		return 
+	end
+
+	local stickyPart = shuriken:FindFirstChild("StickyPart")
+	local soundPart = shuriken:FindFirstChild("SoundPart")
+
+	local isSuccess = false
+	if stickyPart and soundPart then
+		local ok = pcall(function()
+			rs.GrabEvents.SetNetworkOwner:FireServer(soundPart, CFrame.lookAt(torso.Position, soundPart.Position))
+			task.wait(0.1)
+			rs.PlayerEvents.StickyPartEvent:FireServer(stickyPart, tt, CFrame.new(107.5, 9.00000049e+33, -3.86856262e+25, 1, 0, 0, 0, 0.0662516952, -0.997802973, 0, 0.997802973, 0.0662516952))
+		end)
+		if ok then
+			isSuccess = true
+		end
+	end
+
+	shuriken.Name = ""
+	Processing = false
+
+	if isSuccess then
+		OrionLib:MakeNotification({
+			Name = "[ success ]",
+			Content = SelectedHouse .. " destroy barrier",
+			Image = "rbxassetid://4483345998",
+			Time = 3
+		})
+	end
+end
+
+plotTab:AddSection({
+	Name = "Barrier Breaker V2 "
+})
+do
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Workspace = game:GetService("Workspace")
+
+    local StatusLabel = plotTab:AddLabel("Broken: False")
+
+    local destroyBarrierActive = false
+    local destroyBarrierThread = nil
+    local plotsBroken = false
+
+    plotTab:AddToggle({
+        Name = "Destroy Barrier (FoodMayonnaise)",
+        Default = false,
+        Callback = function(Value)
+            if Value and plotsBroken then
+                OrionLib:MakeNotification({
+                    Name = "Already Broken",
+                    Content = "Plots are already broken!",
+                    Image = "rbxassetid://4483345998",
+                    Time = 5
+                })
+                return
+            end
+
+            destroyBarrierActive = Value
+
+            if destroyBarrierThread then
+                task.cancel(destroyBarrierThread)
+                destroyBarrierThread = nil
+            end
+
+            if Value then
+                local spawnedToysFolder = workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+                if spawnedToysFolder then
+                    for _, item in ipairs(spawnedToysFolder:GetChildren())do
+                        if item.Name == "FoodMayonnaise" then
+                            ReplicatedStorage.MenuToys.DestroyToy:FireServer(item)
+                        end
+                    end
+                end
+
+                if not plotsBroken then
+                    StatusLabel:Set("Broken: False")
+                end
+
+                destroyBarrierThread = task.spawn(function()
+                    local MenuToys = ReplicatedStorage:WaitForChild("MenuToys")
+                    local SetNetworkOwner = ReplicatedStorage:WaitForChild("GrabEvents"):WaitForChild("SetNetworkOwner")
+                    
+                    local targetCFrame = CFrame.new(264.5792541503906, - 5.477070331573486, 433.4557800292969)
+
+                    local function getMayo()
+                        local mayoList = {}
+                        local spawnedToysFolder = workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+                        if spawnedToysFolder then
+                            for _, toy in ipairs(spawnedToysFolder:GetChildren())do
+                                if toy.Name == "FoodMayonnaise" then
+                                    table.insert(mayoList, toy)
+                                end
+                            end
+                        end
+                        return mayoList
+                    end
+
+                    local function spawnMayo()
+                        if not destroyBarrierActive then return end
+                        local playerPosition = LocalPlayer.Character and LocalPlayer.Character.PrimaryPart.Position or Vector3.new(0, 0, 0)
+                        local initialCFrame = CFrame.new(playerPosition) * CFrame.Angles( - 0.807, - 0.884, - 0.679)
+                        task.spawn(function()
+                            MenuToys.SpawnToyRemoteFunction:InvokeServer("FoodMayonnaise", initialCFrame, Vector3.new(0, - 120.21099853515625, 0))
+                        end)
+                    end
+
+                    local function processMayo(mayo)
+                        if not destroyBarrierActive then return end
+                        local soundPart = mayo:FindFirstChild("SoundPart")
+                        if soundPart then
+                            task.spawn(function()
+                                SetNetworkOwner:FireServer(soundPart, soundPart.CFrame)
+                            end)
+                        end
+                    end
+
+                    local function teleportMayo(mayoList)
+                        if not destroyBarrierActive then return end
+                        for _, mayo in ipairs(mayoList)do
+                            task.spawn(function()
+                                for _, part in ipairs(mayo:GetDescendants())do
+                                    if part:IsA("BasePart")then
+                                        part.CFrame = targetCFrame
+                                    end
+                                end
+                            end)
+                        end
+                    end
+
+                    local function testWithOven()
+                        if not destroyBarrierActive then return false end
+
+                        local targetPosition = CFrame.new(242.66055297851562, - 9.196549415588379, 444.3758850097656)
+                        MenuToys.SpawnToyRemoteFunction:InvokeServer("OvenDarkGray", targetPosition, Vector3.new(0, - 74.0790023803711, 0))
+
+                        task.wait(0.5)
+                        local spawnedToysFolder = workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+                        local oven
+
+                        if spawnedToysFolder then
+                            for _, child in ipairs(spawnedToysFolder:GetChildren())do
+                                if child.Name == "OvenDarkGray" and child:GetAttribute("AtSpawned") == nil then
+                                    oven = child
+                                    break
+                                end
+                            end
+                        end
+
+                        local stillExists = oven ~= nil
+
+                        if stillExists then
+                            StatusLabel:Set("Broken: True")
+                            plotsBroken = true
+                            OrionLib:MakeNotification({
+                                Name = "Success!",
+                                Content = "The plots have been broken successfully!",
+                                Image = "rbxassetid://4483345998",
+                                Time = 5
+                            })
+                        end
+
+                        return stillExists
+                    end
+
+                    while destroyBarrierActive do
+                        local mayoList = getMayo()
+
+                        if #mayoList < 2 then
+                            if #mayoList < 1 then
+                                spawnMayo()
+                                task.wait(0.02)
+                            end
+                            spawnMayo()
+                            task.wait(0.02)
+                            mayoList = getMayo()
+                        end
+
+                        if #mayoList == 2 then
+                            for _, mayo in ipairs(mayoList)do
+                                processMayo(mayo)
+                            end
+
+                            teleportMayo(mayoList)
+
+                            local ovenResult = testWithOven()
+                            if ovenResult then
+                                break
+                            else
+                                task.wait(0.05)
+                            end
+                        end
+
+                        task.wait(0.05)
+                    end
+                end)
+            else
+                local spawnedToysFolder = workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+                if spawnedToysFolder then
+                    for _, item in ipairs(spawnedToysFolder:GetChildren())do
+                        if item.Name == "FoodMayonnaise" or item.Name == "OvenDarkGray" then
+                            ReplicatedStorage.MenuToys.DestroyToy:FireServer(item)
+                        end
+                    end
+                end
+                if not plotsBroken then
+                    StatusLabel:Set("Broken: False")
+                end
+            end
+        end
+    })
+end
+
+
+local teleportLocations = {
+    ["Spawn"] = {0, -7, 0},
+    ["Spawn Mountain"] = {494, 163, 175},
+    ["Snow Mountain"] = {-394, 230, 509},
+    ["Barn (Farmland)"] = {-156, 59, -291},
+    ["Danger Zone"] = {125, -7, 241},
+    ["Sky Island"] = {63, 346, 309},
+    ["Big Cave"] = {-240, 29, 554},
+    ["Small Cave"] = {-84, 14, -310},
+    ["Train Cave"] = {602, 45, -175},
+    ["Mine"] = {-308, -7, 506},
+    ["Green House"] = {-352, 98, 353},
+    ["(Green House)"] = {-532, -7, 92},
+    ["(Pink House)"] = {-484, -7, -165},
+    ["(Purple House)"] = {249, -7, 461},
+    ["(Blue House)"] = {513, 83, -341},
+    ["(Red House)"] = {551, 123, -73},
+    ["Slot 1"] = {51, 11, -118},
+    ["Slot 2"] = {-543, 11, -40},
+    ["Slot 3"] = {169, 11, 530},
+    ["Slot 4"] = {-214, 102, 423},
+    ["Slot 5"] = {563, 102, -218},
+    ["Under Poison Well"] = {121, -56, 251},
+}
+
+local selectedLocation = "Spawn"
+
+local Dropdown = plotTab:AddDropdown({
+    Name = "Select Location",
+    Options = {"Spawn","Spawn Mountain","Mine","Big Cave","Small Cave","Train Cave","Danger Zone","Snow Mountain","Barn (Farmland)","Sky Island","Green House","(Green House)","(Pink House)","(Purple House)","(Blue House)","(Red House)","Slot 1","Slot 2","Slot 3","Slot 4","Slot 5","Under Poison Well"},
+    CurrentOption = "Spawn",
+    MultipleOptions = false,
+    Callback = function(Value)
+        if typeof(Value) == "table" then
+            selectedLocation = Value[1] or "Spawn"
+        else
+            selectedLocation = Value
+        end
+    end,
+})
+
+plotTab:AddButton({
+    Name = "TP",
+    Callback = function()
+local plr = game.Players.LocalPlayer
+local char = plr.Character or plr.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local pos = teleportLocations[selectedLocation]  
+    if not pos then  
+        return  
+    end  
+
+    hrp.CFrame = CFrame.new(pos[1], pos[2], pos[3])  
+end,
+
+})
+       -- local Players = game:GetService("Players")
+--local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local HRP
+local enabled = false
+local returnPos
+
+function waitExact(t)
+    local s = os.clock()
+    repeat task.wait() until os.clock() - s >= t
+end
+
+local function setChar(c)
+    HRP = c:WaitForChild("HumanoidRootPart",5)
+end
+
+if player.Character then setChar(player.Character) end
+player.CharacterAdded:Connect(setChar)
+
+local function getSlot()
+    local f = Workspace:FindFirstChild("Slots")
+    if not f then return end
+    local t = f:GetChildren()
+    if #t == 0 then return end
+    return t[math.random(1,#t)]
+end
+
+ function getTime(slot)
+    return slot:FindFirstChild("TimeText",true)
+end
+
+local function loop(label)
+    task.spawn(function()
+        while true do
+            if not enabled then waitExact(1) continue end
+
+            local s = getSlot()
+            local h = s and s:FindFirstChild("Handle",true)
+            local t = s and getTime(s)
+
+            if h and t and HRP then
+                while t.Text ~= "0:00" and enabled do
+                    label:Set("Time: "..t.Text)
+                    waitExact(0.3)
+                end
+
+                if not enabled then continue end
+
+                returnPos = HRP.CFrame
+
+                HRP.CFrame = CFrame.new(h.Position + Vector3.new(0,-3,0))
+                waitExact(0.5)
+                HRP.Anchored = true
+                waitExact(0.5)
+
+                ReplicatedStorage:WaitForChild("GrabEvents"):WaitForChild("SetNetworkOwner"):FireServer(h,CFrame.new(h.Position))
+
+                waitExact(0.8)
+                HRP.Anchored = false
+
+                waitExact(1)
+
+                if returnPos then
+                    HRP.CFrame = returnPos
+                    returnPos = nil
+                end
+            else
+                label:Set("Time: ...")
+                waitExact(0.5)
+            end
+        end
+    end)
+end
+do
+plotTab:AddSection({
+    Name = "get plot"
+})
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local repStorage = game:GetService("ReplicatedStorage")
+
+local plotCFrames = {
+    [1] = CFrame.new(-532.0158081054688, -5.591518878936768, 95.6521987915039, -0.865190327167511, -0.2596333920955658, 0.42899444699287415, 0, 0.8555188179016113, 0.51777184009552, -0.50144362449646, 0.4479711949825287, -0.7401865720748901),
+    [2] = CFrame.new(-493.17340087890625, -5.653066158294678, -164.51084899902344, 0.30851930379867554, -0.37542006373405457, 0.8739997744560242, 0, 0.9188216924667358, 0.3946729600429535, -0.9512181282043457, -0.12176422774791718, 0.2834742069244385),
+    [3] = CFrame.new(256.76751708984375, -5.380659103393555, 466.65625, -0.8961027264595032, 0.30602845549583435, -0.321475625038147, 0, 0.7242941856384277, 0.6894912123680115, 0.44384679198265076, 0.6178549528121948, -0.6490419507026672),
+    [4] = CFrame.new(513.7680053710938, 85.13038635253906, -345.8212585449219, 0.4605468213558197, 0.5212469696998596, -0.7184693813323975, 0, 0.8094194531440735, 0.5872309803962708, 0.887635350227356, -0.27044737339019775, 0.3727755844593048),
+    [5] = CFrame.new(559.8180541992188, 125.14988708496094, -76.7403335571289, 0.02620585821568966, 0.622352659702301, -0.7822982668876648, 0, 0.7825670838356018, 0.6225664615631104, 0.999656617641449, -0.01631488837301731, 0.02050784043967724)
+}
+
+local selectedPlotNum = 1
+
+plotTab:AddDropdown({
+    Name = "Select House",
+    Default = "Green House",
+    Options = {"Green House", "Pink House", "Witch House (Purple)", "Blue House", "Red House"},
+    Callback = function(Value)
+        local num = string.match(Value, "%d+")
+        if num then
+            selectedPlotNum = tonumber(num)
+        end
+    end
+})
+
+
+plotTab:AddButton({
+    Name = "get plot",
+    Callback = function()
+        local character = player.Character or player.CharacterAdded:Wait()
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        local setNetworkOwner = repStorage:FindFirstChild("GrabEvents") and repStorage.GrabEvents:FindFirstChild("SetNetworkOwner")
+        
+        if not rootPart or not setNetworkOwner then return end
+
+        local ownedPlot = nil
+        for i = 1, 5 do
+            local plot = workspace.Plots:FindFirstChild("Plot" .. i)
+            if plot then
+                local ownersFolder = plot:FindFirstChild("PlotSign") and plot.PlotSign:FindFirstChild("ThisPlotsOwners")
+                if ownersFolder then
+                    for _, child in pairs(ownersFolder:GetChildren()) do
+                        local success, val = pcall(function() return tostring(child.Value) end)
+                        if (success and string.find(val, player.Name)) or string.find(child.Name, player.Name) then
+                            ownedPlot = i
+                            break
+                        end
+                    end
+                end
+            end
+            if ownedPlot then break end
+        end
+
+        if ownedPlot then
+            if OrionLib then
+                OrionLib:MakeNotification({
+                    Name = "[  I've already acquired the house. ]",
+                    Content = " Plot" .. ownedPlot .. "",
+                    Time = 4
+                })
+            end
+            return
+        end
+
+        local targetPlotNum = selectedPlotNum
+        local originalPosition = rootPart.CFrame
+        local targetCFrame = plotCFrames[targetPlotNum]
+        
+        local plotFolder = workspace.Plots:FindFirstChild("Plot" .. targetPlotNum)
+        local grabPart = plotFolder and plotFolder:FindFirstChild("PlotSign") and plotFolder.PlotSign:FindFirstChild("Sign") and plotFolder.PlotSign.Sign:FindFirstChild("Plus") and plotFolder.PlotSign.Sign.Plus:FindFirstChild("PlusGrabPart")
+
+        if not grabPart then return end
+
+        local maxAttempts = 3
+        local acquired = false
+
+        for attempt = 1, maxAttempts do
+            rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            rootPart.CFrame = targetCFrame
+
+            task.wait(0.07)
+
+            local timeElapsed = 0
+            local duration = 0.3
+
+            while timeElapsed < duration do
+                pcall(function()
+                    setNetworkOwner:FireServer(grabPart, targetCFrame)
+                end)
+                timeElapsed = timeElapsed + task.wait(0.03)
+            end
+
+            rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            rootPart.CFrame = originalPosition
+
+            local checkTimeout = 0.5
+            local checkTimeElapsed = 0
+
+            while checkTimeElapsed < checkTimeout do
+                local plotToCheck = workspace.Plots:FindFirstChild("Plot" .. targetPlotNum)
+                if plotToCheck then
+                    local ownersFolder = plotToCheck:FindFirstChild("PlotSign") and plotToCheck.PlotSign:FindFirstChild("ThisPlotsOwners")
+                    if ownersFolder then
+                        for _, child in pairs(ownersFolder:GetChildren()) do
+                            local success, val = pcall(function() return tostring(child.Value) end)
+                            if (success and string.find(val, player.Name)) or string.find(child.Name, player.Name) then
+                                acquired = true
+                                break
+                            end
+                        end
+                    end
+                end
+
+                if acquired then break end
+                checkTimeElapsed = checkTimeElapsed + task.wait(0.03)
+            end
+
+            if acquired then break end
+        end
+
+        if OrionLib then
+            if acquired then
+                OrionLib:MakeNotification({
+                    Name = "[ get plot ]",
+                    Content = "Plot" .. targetPlotNum .. " ",
+                    Time = 4
+                })
+            else
+                OrionLib:MakeNotification({
+                    Name = "[ get plot ]",
+                    Content = "fail",
+                    Time = 4
+                })
+            end
+        end
+    end
+})
+end
+plotTab:AddSection({
+    Name = "auto slot"
+})
+local label = plotTab:AddLabel("Time: ...")
+
+plotTab:AddToggle({
+    Name="Auto slot",
+    Default=false,
+    Flag = "uotwg1fugwo",
+    Callback=function(v)
+        enabled = v
+        if v then loop(label) end
+    end
+})
+
 end
