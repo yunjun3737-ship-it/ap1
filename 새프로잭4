@@ -8554,6 +8554,7 @@ end
 
 
 do
+--[[
 local Players = game:GetService("Players")
 
 local TargetDropdown = LoopTab:AddPlayersDropdown({
@@ -8588,7 +8589,52 @@ end
 
 Players.PlayerAdded:Connect(RefreshTargetDropdown)
 Players.PlayerRemoving:Connect(RefreshTargetDropdown)
+]]
 ---------------- [타겟설정]
+
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local workspace = game:GetService("Workspace")
+
+Config = Config or {}
+Config.PlayerList = Config.PlayerList or {}
+playersInLoop2V = playersInLoop2V or {}
+
+local TargetDropdown = Targ:AddDropdown({
+    Name = "타겟 설정",
+    Default = {},
+    Options = GetPlayersList(),
+    Multi = true,
+    Callback = function(Value)
+        Config.PlayerList = {}
+
+        if type(Value) == "table" then
+            for _, selectedName in pairs(Value) do
+                if type(selectedName) == "string" then
+                    table.insert(Config.PlayerList, selectedName)
+                elseif type(selectedName) == "Instance" then
+                    table.insert(Config.PlayerList, selectedName.Name)
+                end
+            end
+        elseif type(Value) == "string" and Value ~= "" then
+            Config.PlayerList = {Value}
+        end
+    end
+})
+
+local function RefreshTargetDropdown()
+    if TargetDropdown and TargetDropdown.Refresh then
+        TargetDropdown:Refresh(GetPlayersList(), true)
+    elseif TargetDropdown and TargetDropdown.SetValues then
+        TargetDropdown:SetValues(GetPlayersList())
+    end
+end
+
+Players.PlayerAdded:Connect(RefreshTargetDropdown)
+Players.PlayerRemoving:Connect(RefreshTargetDropdown)
 
 LoopTab:AddButton({
     Name = "Bring   <font color='rgb(255,154,123)'>[Blobman]</font>",
@@ -8596,64 +8642,64 @@ LoopTab:AddButton({
         UpdateCurrentBlobman()
         local processedHumanoids = {}
 
-        local function processPlayer(player)
-            if not player then return false end
+        local function processPlayer(player)  
+            if not player then return false end  
 
-            local character, hrp, head = safeGetCharacterParts(player)
-            if not hrp or not head then return false end
+            local character, hrp, head = safeGetCharacterParts(player)  
+            if not hrp or not head then return false end  
 
-            local myChar = plr.Character
-            local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
-            if not myHrp then return false end
-            local originCF = myHrp.CFrame
+            local myChar = plr.Character  
+            local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")  
+            if not myHrp then return false end  
+            local originCF = myHrp.CFrame  
 
-        TP(player)
-        task.wait(0.25)
-        BlobGrab(currentBlobS, hrp, "Right")
-        BlobRelease(currentBlobS, hrp, "Right")
+            TP(player)  
+            task.wait(0.25)  
+            BlobGrab(currentBlobS, hrp, "Right")  
+            BlobRelease(currentBlobS, hrp, "Right")  
 
-        task.wait(0.15)
+            task.wait(0.15)  
 
-        if originCF then
-            hrp.CFrame = originCF * CFrame.new(0,5,0)
-            myHrp.CFrame = originCF
-        end
+            if originCF then  
+                hrp.CFrame = originCF * CFrame.new(0,5,0)  
+                myHrp.CFrame = originCF  
+            end  
 
-        task.wait(0.3)
+            task.wait(0.3)  
 
-        rs.GrabEvents.SetNetworkOwner:FireServer(hrp, hrp.CFrame)
-        rs.GrabEvents.DestroyGrabLine:FireServer(hrp, hrp.CFrame)
+            rs.GrabEvents.SetNetworkOwner:FireServer(hrp, hrp.CFrame)  
+            rs.GrabEvents.DestroyGrabLine:FireServer(hrp, hrp.CFrame)  
 
-            if originCF then BACK(originCF) end
-            return true
-        end
+            if originCF then BACK(originCF) end  
+            return true  
+        end  
 
-        table.clear(playersInLoop2V)
-        for i, e in ipairs(playersInLoop1V) do
-            local nameOnly = e:match("^(.-) %(") or e
-            table.insert(playersInLoop2V, nameOnly)
-        end
+        table.clear(playersInLoop2V)  
+        for i, e in ipairs(Config.PlayerList) do  
+            local nameOnly = tostring(e):match("^(.-) %(") or tostring(e)  
+            table.insert(playersInLoop2V, nameOnly)  
+        end  
 
-        for _, name in ipairs(playersInLoop2V) do
-            local player = game.Players:FindFirstChild(name)
-            if player and not table.find(Whitelist, player.Name) then
-                local character = player.Character
-                local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-                if PPs:FindFirstChild(name) then continue end
+        for _, name in ipairs(playersInLoop2V) do  
+            local player = game.Players:FindFirstChild(name)  
+            if player and not table.find(Whitelist, player.Name) then  
+                local character = player.Character  
+                local humanoid = character and character:FindFirstChildOfClass("Humanoid")  
+                if PPs:FindFirstChild(name) then continue end  
 
-                if humanoid and humanoid.Health > 0 then
-                    if processedHumanoids[player] ~= humanoid then
-                        local success = processPlayer(player)
-                        if success then
-                            processedHumanoids[player] = humanoid
-                        end
-                    end
-                else
-                    processedHumanoids[player] = nil
-                end
-                task.wait()
-            end
-        end
+                if humanoid and humanoid.Health > 0 then  
+                    if processedHumanoids[player] ~= humanoid then  
+                        local success = processPlayer(player)  
+                        if success then  
+                            processedHumanoids[player] = humanoid  
+                        end  
+                    end  
+                else  
+                    processedHumanoids[player] = nil  
+                end  
+                task.wait()  
+            end  
+        end  
     end
 })
 
@@ -8664,172 +8710,161 @@ LoopTab:AddButton({
         local processedHumanoids = {}
         local activeThreads = {}
 
-        local function processPlayer(player)
-            if not player then return false end
+        local function processPlayer(player)  
+            if not player then return false end  
 
-            local myChar = plr.Character
-            local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
-            local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
-            if not myChar or not myHrp or not myHum or myHum.Health <= 0 then
-                return false
-            end
+            local myChar = plr.Character  
+            local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")  
+            local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")  
+            if not myChar or not myHrp or not myHum or myHum.Health <= 0 then  
+                return false  
+            end  
 
-            local character, hrp, head = safeGetCharacterParts(player)
-            if not hrp or not head then return false end
+            local character, hrp, head = safeGetCharacterParts(player)  
+            if not hrp or not head then return false end  
 
-            local characterParts = {}
+            local characterParts = {}  
+            table.insert(characterParts, hrp)  
 
-            table.insert(characterParts, hrp)
+            if character:FindFirstChild("Head") then  
+                table.insert(characterParts, character.Head)  
+            end  
 
-            if character:FindFirstChild("Head") then
-                table.insert(characterParts, character.Head)
-            end
+            local torsoParts = {"Torso"}  
+            for _, partName in ipairs(torsoParts) do  
+                local part = character:FindFirstChild(partName)  
+                if part then  
+                    table.insert(characterParts, part)  
+                end  
+            end  
 
-            local torsoParts = {"Torso"}
-            for _, partName in ipairs(torsoParts) do
-                local part = character:FindFirstChild(partName)
-                if part then
-                    table.insert(characterParts, part)
-                end
-            end
+            local armParts = {"Left Arm", "Right Arm"}  
+            for _, partName in ipairs(armParts) do  
+                local part = character:FindFirstChild(partName)  
+                if part then  
+                    table.insert(characterParts, part)  
+                end  
+            end  
 
-            local armParts = {
-                "Left Arm", "Right Arm"
-            }
-            for _, partName in ipairs(armParts) do
-                local part = character:FindFirstChild(partName)
-                if part then
-                    table.insert(characterParts, part)
-                end
-            end
+            local legParts = {"Left Leg", "Right Leg"}  
+            for _, partName in ipairs(legParts) do  
+                local part = character:FindFirstChild(partName)  
+                if part then  
+                    table.insert(characterParts, part)  
+                end  
+            end  
 
-            local legParts = {
-                "Left Leg", "Right Leg"
-            }
-            for _, partName in ipairs(legParts) do
-                local part = character:FindFirstChild(partName)
-                if part then
-                    table.insert(characterParts, part)
-                end
-            end
+            local originCF = myHrp.CFrame  
 
-            local originCF = myHrp.CFrame
+            local tpRunning = true  
+            local tpThread = task.spawn(function()  
+                while tpRunning do  
+                    if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") or   
+                       (plr.Character:FindFirstChildOfClass("Humanoid") and plr.Character:FindFirstChildOfClass("Humanoid").Health <= 0) then  
+                        break  
+                    end  
 
-            local tpRunning = true
-            local tpThread = task.spawn(function()
-                while tpRunning do
-                    if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") or 
-                       (plr.Character:FindFirstChildOfClass("Humanoid") and plr.Character:FindFirstChildOfClass("Humanoid").Health <= 0) then
-                        break
-                    end
+                    local ok, cf = TP(player)  
+                    if ok and cf then  
+                        CF = cf  
+                    end  
+                    task.wait()  
+                end  
+            end)  
+            table.insert(activeThreads, tpThread)  
 
-                    local ok, cf = TP(player)
-                    if ok and cf then
-                        CF = cf
-                    end
-                    task.wait()
-                end
-            end)
-            table.insert(activeThreads, tpThread)
+            local success = false  
+            local startTime = tick()  
+            local timeout = 10  
 
-            local success = false
-            local startTime = tick()
-            local timeout = 10
+            while tpRunning and tick() - startTime < timeout do  
+                if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") or   
+                   (plr.Character:FindFirstChildOfClass("Humanoid") and plr.Character:FindFirstChildOfClass("Humanoid").Health <= 0) then  
+                    break  
+                end  
 
-            while tpRunning and tick() - startTime < timeout do
-                if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") or 
-                   (plr.Character:FindFirstChildOfClass("Humanoid") and plr.Character:FindFirstChildOfClass("Humanoid").Health <= 0) then
-                    break
-                end
+                if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or   
+                   (player.Character:FindFirstChildOfClass("Humanoid") and player.Character:FindFirstChildOfClass("Humanoid").Health <= 0) then  
+                    break  
+                end  
 
-                if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or 
-                   (player.Character:FindFirstChildOfClass("Humanoid") and player.Character:FindFirstChildOfClass("Humanoid").Health <= 0) then
-                    break
-                end
+                for _, part in ipairs(characterParts) do  
+                    if part and part.Parent then  
+                        rs.GrabEvents.SetNetworkOwner:FireServer(part, part.CFrame)  
+                    end  
+                end  
+                  
+                local ownerTag = head:FindFirstChild("PartOwner")  
+                if ownerTag and ownerTag:IsA("StringValue") and ownerTag.Value == plr.Name then  
+                    success = true  
+                    break  
+                end  
+                task.wait()  
+            end  
 
-                for _, part in ipairs(characterParts) do
-                    if part and part.Parent then
-                        rs.GrabEvents.SetNetworkOwner:FireServer(part, part.CFrame)
-                    end
-                end
-                
-                local ownerTag = head:FindFirstChild("PartOwner")
-                if ownerTag and ownerTag:IsA("StringValue") and ownerTag.Value == plr.Name then
-                    success = true
-                    break
-                end
-                task.wait()
-            end
+            tpRunning = false  
 
-            tpRunning = false
+            for _, thread in ipairs(activeThreads) do  
+                if coroutine.status(thread) ~= "dead" then  
+                    task.cancel(thread)  
+                end  
+            end  
+            table.clear(activeThreads)  
 
-            for _, thread in ipairs(activeThreads) do
-                if coroutine.status(thread) ~= "dead" then
-                    task.cancel(thread)
-                end
-            end
-            table.clear(activeThreads)
+            if originCF and myHrp and myHrp.Parent then  
+                myHrp.CFrame = originCF  
+                task.wait()  
+            end  
 
-            if originCF and myHrp and myHrp.Parent then
-                myHrp.CFrame = originCF
-                task.wait()
-            end
+            if success then  
+                for _, part in ipairs(characterParts) do  
+                    if part and part.Parent and myHrp and myHrp.Parent then  
+                        part.CFrame = myHrp.CFrame  
+                    end  
+                end  
+            end  
 
-            if success then
-                for _, part in ipairs(characterParts) do
-                    if part and part.Parent and myHrp and myHrp.Parent then
-                        part.CFrame = myHrp.CFrame
-                    end
-                end
-            end
+            if originCF and myHrp and myHrp.Parent then   
+                BACK(originCF)   
+            end  
+              
+            return success  
+        end  
 
-            if originCF and myHrp and myHrp.Parent then 
-                BACK(originCF) 
-            end
-            
-            return success
-        end
+        table.clear(playersInLoop2V)  
+        for i, e in ipairs(Config.PlayerList) do  
+            local nameOnly = tostring(e):match("^(.-) %(") or tostring(e)  
+            table.insert(playersInLoop2V, nameOnly)  
+        end  
 
-        table.clear(playersInLoop2V)
-        for i, e in ipairs(playersInLoop1V) do
-            local nameOnly = e:match("^(.-) %(") or e
-            table.insert(playersInLoop2V, nameOnly)
-        end
+        for _, name in ipairs(playersInLoop2V) do  
+            local myChar = plr.Character  
+            local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")  
+            if not myChar or not myHum or myHum.Health <= 0 then  
+                break  
+            end  
 
-        for _, name in ipairs(playersInLoop2V) do
-            local myChar = plr.Character
-            local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
-            if not myChar or not myHum or myHum.Health <= 0 then
-                break
-            end
+            local player = game.Players:FindFirstChild(name)  
+            if player and not table.find(Whitelist, player.Name) then  
+                local character = player.Character  
+                local humanoid = character and character:FindFirstChildOfClass("Humanoid")  
+                if PPs:FindFirstChild(name) or inv:FindFirstChild(name) then continue end  
 
-            local player = game.Players:FindFirstChild(name)
-            if player and not table.find(Whitelist, player.Name) then
-                local character = player.Character
-                local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-                if PPs:FindFirstChild(name) or inv:FindFirstChild(name) then continue end
-
-                if humanoid and humanoid.Health > 0 then
-                    if processedHumanoids[player] ~= humanoid then
-                        local success = processPlayer(player)
-                        if success then
-                            processedHumanoids[player] = humanoid
-                        end
-                    end
-                else
-                    processedHumanoids[player] = nil
-                end
-                task.wait(0.003)
-            end
-        end
+                if humanoid and humanoid.Health > 0 then  
+                    if processedHumanoids[player] ~= humanoid then  
+                        local success = processPlayer(player)  
+                        if success then  
+                            processedHumanoids[player] = humanoid  
+                        end  
+                    end  
+                else  
+                    processedHumanoids[player] = nil  
+                end  
+                task.wait(0.003)  
+            end  
+        end  
     end
 })
-
-local Players = game:GetService("Players")
-local Player = Players.LocalPlayer
-local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local workspace = game:GetService("Workspace")
 
 local function getPlayer(name)
     if not name or name == "" then return nil end
@@ -8884,303 +8919,303 @@ end
 
 local function loopBestKickF()
     if oatsKickTask then task.cancel(oatsKickTask) oatsKickTask = nil end
-    
-    oatsKickTask = task.spawn(function()
-        local myChar = Player.Character
-        local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
-        if not (myChar and myHRP) then
-            oatsKickActive = false
-            manageLag()
-            return
-        end
 
-        local lastRemoteFire = tick()
+    oatsKickTask = task.spawn(function()  
+        local myChar = Player.Character  
+        local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")  
+        if not (myChar and myHRP) then  
+            oatsKickActive = false  
+            manageLag()  
+            return  
+        end  
 
-        local function sno(part)
-            pcall(function()
-                local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
-                local setNetOwner = grabEvents and grabEvents:FindFirstChild("SetNetworkOwner")
-                if setNetOwner then
-                    setNetOwner:FireServer(part, part.CFrame)
-                end
-            end)
-        end
+        local lastRemoteFire = tick()  
 
-        while oatsKickActive and RunService.Heartbeat:Wait() do
-            if playersInLoop1V then
-                table.clear(playersInLoop2V)
-                for i, e in ipairs(playersInLoop1V) do
-                    local nameOnly = tostring(e):match("^(.-) %(") or tostring(e)
-                    table.insert(playersInLoop2V, nameOnly)
-                end
-            end
+        local function sno(part)  
+            pcall(function()  
+                local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")  
+                local setNetOwner = grabEvents and grabEvents:FindFirstChild("SetNetworkOwner")  
+                if setNetOwner then  
+                    setNetOwner:FireServer(part, part.CFrame)  
+                end  
+            end)  
+        end  
 
-            local targetPlayer, tChar, tHRP, tHum
-            if playersInLoop2V then
-                for _, name in ipairs(playersInLoop2V) do
-                    local p = getPlayer(name)
-                    if p and p.Character then
-                        local hrp = p.Character:FindFirstChild("HumanoidRootPart")
-                        local hum = p.Character:FindFirstChild("Humanoid")
-                        if hrp and hum and hum.Health > 0 then
-                            targetPlayer = p
-                            tChar = p.Character
-                            tHRP = hrp
-                            tHum = hum
-                            break
-                        end
-                    end
-                end
-            end
-            
-            if not targetPlayer then
-                continue
-            end
+        while oatsKickActive and RunService.Heartbeat:Wait() do  
+            if Config.PlayerList then  
+                table.clear(playersInLoop2V)  
+                for i, e in ipairs(Config.PlayerList) do  
+                    local nameOnly = tostring(e):match("^(.-) %(") or tostring(e)  
+                    table.insert(playersInLoop2V, nameOnly)  
+                end  
+            end  
 
-            myChar = Player.Character
-            myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
-            local myHead = myChar and myChar:FindFirstChild("Head")
-            local inv = Player:FindFirstChild("Backpack")
+            local targetPlayer, tChar, tHRP, tHum  
+            if playersInLoop2V then  
+                for _, name in ipairs(playersInLoop2V) do  
+                    local p = getPlayer(name)  
+                    if p and p.Character then  
+                        local hrp = p.Character:FindFirstChild("HumanoidRootPart")  
+                        local hum = p.Character:FindFirstChild("Humanoid")  
+                        if hrp and hum and hum.Health > 0 then  
+                            targetPlayer = p  
+                            tChar = p.Character  
+                            tHRP = hrp  
+                            tHum = hum  
+                            break  
+                        end  
+                    end  
+                end  
+            end  
+              
+            if not targetPlayer then  
+                continue  
+            end  
 
-            if not (myChar and myHRP and myHead and inv) then
-                continue
-            end
+            myChar = Player.Character  
+            myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")  
+            local myHead = myChar and myChar:FindFirstChild("Head")  
+            local inv = Player:FindFirstChild("Backpack")  
 
-            if oatsKickRagdollOpt then
-                local desk = inv:FindFirstChild("RB")
-                if not desk then
-                    local rsToys = ReplicatedStorage:FindFirstChild("MenuToys")
-                    local spawnRemote = rsToys and rsToys:FindFirstChild("SpawnToyRemoteFunction")
-                    if spawnRemote then
-                        local offset = myHRP.CFrame.LookVector * -24
-                        local spawnCF = myHRP.CFrame + offset
-                        task.spawn(function()
-                            pcall(function()
-                                spawnRemote:InvokeServer("PalletLightBrown", spawnCF, spawnCF.Position)
-                            end)
-                            task.wait(0.1)
-                            for attempt = 1, 3 do
-                                for _, item in pairs(inv:GetChildren()) do
-                                    if item.Name == "PalletLightBrown" then
-                                        local soundPart = item:FindFirstChild("SoundPart")
-                                        if soundPart then
-                                            for i = 1, 3 do
-                                                pcall(function()
-                                                    local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
-                                                    if grabEvents and grabEvents:FindFirstChild("SetNetworkOwner") then
-                                                        grabEvents.SetNetworkOwner:FireServer(soundPart, soundPart.CFrame)
-                                                        grabEvents.SetNetworkOwner:FireServer(soundPart, myHRP.CFrame)
-                                                    end
-                                                end)
-                                            end
-                                            local partOwner = soundPart:FindFirstChild("PartOwner")
-                                            if partOwner and partOwner.Value == Player.Name then
-                                                item.Name = "RB"
-                                                return
-                                            end
-                                        end
-                                    end
-                                end
-                                task.wait()
-                            end
-                        end)
-                    end
-                end
+            if not (myChar and myHRP and myHead and inv) then  
+                continue  
+            end  
 
-                if desk then
-                    pcall(function()
-                        for _, part in ipairs(desk:GetDescendants()) do
-                            if part:IsA("BasePart") then
-                                part.CanCollide = false
-                            end
-                        end
-                    end)
+            if oatsKickRagdollOpt then  
+                local desk = inv:FindFirstChild("RB")  
+                if not desk then  
+                    local rsToys = ReplicatedStorage:FindFirstChild("MenuToys")  
+                    local spawnRemote = rsToys and rsToys:FindFirstChild("SpawnToyRemoteFunction")  
+                    if spawnRemote then  
+                        local offset = myHRP.CFrame.LookVector * -24  
+                        local spawnCF = myHRP.CFrame + offset  
+                        task.spawn(function()  
+                            pcall(function()  
+                                spawnRemote:InvokeServer("PalletLightBrown", spawnCF, spawnCF.Position)  
+                            end)  
+                            task.wait(0.1)  
+                            for attempt = 1, 3 do  
+                                for _, item in pairs(inv:GetChildren()) do  
+                                    if item.Name == "PalletLightBrown" then  
+                                        local soundPart = item:FindFirstChild("SoundPart")  
+                                        if soundPart then  
+                                            for i = 1, 3 do  
+                                                pcall(function()  
+                                                    local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")  
+                                                    if grabEvents and grabEvents:FindFirstChild("SetNetworkOwner") then  
+                                                        grabEvents.SetNetworkOwner:FireServer(soundPart, soundPart.CFrame)  
+                                                        grabEvents.SetNetworkOwner:FireServer(soundPart, myHRP.CFrame)  
+                                                    end  
+                                                end)  
+                                            end  
+                                            local partOwner = soundPart:FindFirstChild("PartOwner")  
+                                            if partOwner and partOwner.Value == Player.Name then  
+                                                item.Name = "RB"  
+                                                return  
+                                            end  
+                                        end  
+                                    end  
+                                end  
+                                task.wait()  
+                            end  
+                        end)  
+                    end  
+                end  
 
-                    local soundPart = desk:FindFirstChild("SoundPart")
-                    local main = desk:FindFirstChild("Main")
-                    
-                    if soundPart and main then
-                        local partOwner = soundPart:FindFirstChild("PartOwner")
-                        if partOwner and partOwner.Value == Player.Name then
-                            local bp = main:FindFirstChildOfClass("BodyPosition")
-                            if not bp then
-                                bp = Instance.new("BodyPosition")
-                                bp.MaxForce = Vector3.new(999999, 999999, 999999)
-                                bp.P = 500000
-                                bp.D = 5000
-                                bp.Parent = main
-                            end
+                if desk then  
+                    pcall(function()  
+                        for _, part in ipairs(desk:GetDescendants()) do  
+                            if part:IsA("BasePart") then  
+                                part.CanCollide = false  
+                            end  
+                        end  
+                    end)  
 
-                            soundPart.CFrame = CFrame.new(0, 9999, 0)
-                            task.wait(0.01)
-                            soundPart.CFrame = tHRP.CFrame * CFrame.Angles(math.rad(-90), 0, 0)
-                            bp.Position = soundPart.Position
-                        else
-                            cleanupRagdoll()
-                        end
-                    else
-                        cleanupRagdoll()
-                    end
-                end
-            else
-                cleanupRagdoll()
-            end
+                    local soundPart = desk:FindFirstChild("SoundPart")  
+                    local main = desk:FindFirstChild("Main")  
+                      
+                    if soundPart and main then  
+                        local partOwner = soundPart:FindFirstChild("PartOwner")  
+                        if partOwner and partOwner.Value == Player.Name then  
+                            local bp = main:FindFirstChildOfClass("BodyPosition")  
+                            if not bp then  
+                                bp = Instance.new("BodyPosition")  
+                                bp.MaxForce = Vector3.new(999999, 999999, 999999)  
+                                bp.P = 500000  
+                                bp.D = 5000  
+                                bp.Parent = main  
+                            end  
 
-            local dist = (tHRP.Position - myHRP.Position).Magnitude
+                            soundPart.CFrame = CFrame.new(0, 9999, 0)  
+                            task.wait(0.01)  
+                            soundPart.CFrame = tHRP.CFrame * CFrame.Angles(math.rad(-90), 0, 0)  
+                            bp.Position = soundPart.Position  
+                        else  
+                            cleanupRagdoll()  
+                        end  
+                    else  
+                        cleanupRagdoll()  
+                    end  
+                end  
+            else  
+                cleanupRagdoll()  
+            end  
 
-            if dist > 30 then
-                local currentSavedPos = myHRP.CFrame
+            local dist = (tHRP.Position - myHRP.Position).Magnitude  
 
-                pcall(function()
-                    myChar:PivotTo(tHRP.CFrame * CFrame.new(0, 2, 4))
-                end)
-                
-                sno(tHRP)
+            if dist > 30 then  
+                local currentSavedPos = myHRP.CFrame  
 
-                if not tHRP:FindFirstChild("KickAlign") then
-                    pcall(function()
-                        local oldBp = tHRP:FindFirstChildOfClass("BodyPosition")
-                        if oldBp then oldBp:Destroy() end
+                pcall(function()  
+                    myChar:PivotTo(tHRP.CFrame * CFrame.new(0, 2, 4))  
+                end)  
+                  
+                sno(tHRP)  
 
-                        local att0 = Instance.new("Attachment", tHRP)
-                        att0.Name = "KickAtt0"
-                        
-                        local att1 = Instance.new("Attachment", workspace.Terrain)
-                        att1.Name = "KickAtt1"
+                if not tHRP:FindFirstChild("KickAlign") then  
+                    pcall(function()  
+                        local oldBp = tHRP:FindFirstChildOfClass("BodyPosition")  
+                        if oldBp then oldBp:Destroy() end  
 
-                        local alignPos = Instance.new("AlignPosition")
-                        alignPos.Name = "KickAlign"
-                        alignPos.Attachment0 = att0
-                        alignPos.Attachment1 = att1
-                        alignPos.MaxForce = math.huge
-                        alignPos.Responsiveness = 200
-                        alignPos.Parent = tHRP
+                        local att0 = Instance.new("Attachment", tHRP)  
+                        att0.Name = "KickAtt0"  
+                          
+                        local att1 = Instance.new("Attachment", workspace.Terrain)  
+                        att1.Name = "KickAtt1"  
 
-                        local alignRot = Instance.new("AlignOrientation")
-                        alignRot.Name = "KickRot"
-                        alignRot.Attachment0 = att0
-                        alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment
-                        alignRot.CFrame = CFrame.new() 
-                        alignRot.MaxTorque = math.huge
-                        alignRot.Responsiveness = 200
-                        alignRot.Parent = tHRP
-                    end)
-                end
+                        local alignPos = Instance.new("AlignPosition")  
+                        alignPos.Name = "KickAlign"  
+                        alignPos.Attachment0 = att0  
+                        alignPos.Attachment1 = att1  
+                        alignPos.MaxForce = math.huge  
+                        alignPos.Responsiveness = 200  
+                        alignPos.Parent = tHRP  
 
-                local grabStartTime = tick()
-                while (tick() - grabStartTime) < 0.3 and oatsKickActive do
-                    task.wait(0.05)
-                    sno(tHRP)
-                    pcall(function()
-                        local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
-                        local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
-                        if destroyLine then
-                            destroyLine:FireServer(tHRP)
-                        end
-                    end)
-                    
-                    local align = tHRP:FindFirstChild("KickAlign")
-                    if myHead and align and align.Attachment1 then
-                        align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, 15, 0)
-                    end
-                end
+                        local alignRot = Instance.new("AlignOrientation")  
+                        alignRot.Name = "KickRot"  
+                        alignRot.Attachment0 = att0  
+                        alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment  
+                        alignRot.CFrame = CFrame.new()   
+                        alignRot.MaxTorque = math.huge  
+                        alignRot.Responsiveness = 200  
+                        alignRot.Parent = tHRP  
+                    end)  
+                end  
 
-                if oatsKickActive then
-                    pcall(function()
-                        myChar:PivotTo(currentSavedPos)
-                        tHRP.CFrame = currentSavedPos * CFrame.new(0, 15, 0)
-                    end)
-                end
-                
-                continue
-            end
+                local grabStartTime = tick()  
+                while (tick() - grabStartTime) < 0.3 and oatsKickActive do  
+                    task.wait(0.05)  
+                    sno(tHRP)  
+                    pcall(function()  
+                        local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")  
+                        local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")  
+                        if destroyLine then  
+                            destroyLine:FireServer(tHRP)  
+                        end  
+                    end)  
+                      
+                    local align = tHRP:FindFirstChild("KickAlign")  
+                    if myHead and align and align.Attachment1 then  
+                        align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, 15, 0)  
+                    end  
+                end  
 
-            if not tHRP:FindFirstChild("KickAlign") then
-                pcall(function()
-                    local oldBp = tHRP:FindFirstChildOfClass("BodyPosition")
-                    if oldBp then oldBp:Destroy() end
+                if oatsKickActive then  
+                    pcall(function()  
+                        myChar:PivotTo(currentSavedPos)  
+                        tHRP.CFrame = currentSavedPos * CFrame.new(0, 15, 0)  
+                    end)  
+                end  
+                  
+                continue  
+            end  
 
-                    local att0 = Instance.new("Attachment", tHRP)
-                    att0.Name = "KickAtt0"
-                        
-                    local att1 = Instance.new("Attachment", workspace.Terrain)
-                    att1.Name = "KickAtt1"
+            if not tHRP:FindFirstChild("KickAlign") then  
+                pcall(function()  
+                    local oldBp = tHRP:FindFirstChildOfClass("BodyPosition")  
+                    if oldBp then oldBp:Destroy() end  
 
-                    local alignPos = Instance.new("AlignPosition")
-                    alignPos.Name = "KickAlign"
-                    alignPos.Attachment0 = att0
-                    alignPos.Attachment1 = att1
-                    alignPos.MaxForce = math.huge
-                    alignPos.Responsiveness = 200
-                    alignPos.Parent = tHRP
+                    local att0 = Instance.new("Attachment", tHRP)  
+                    att0.Name = "KickAtt0"  
+                          
+                    local att1 = Instance.new("Attachment", workspace.Terrain)  
+                    att1.Name = "KickAtt1"  
 
-                    local alignRot = Instance.new("AlignOrientation")
-                    alignRot.Name = "KickRot"
-                    alignRot.Attachment0 = att0
-                    alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment
-                    alignRot.CFrame = CFrame.new() 
-                    alignRot.MaxTorque = math.huge
-                    alignRot.Responsiveness = 200
-                    alignRot.Parent = tHRP
-                end)
-            end
+                    local alignPos = Instance.new("AlignPosition")  
+                    alignPos.Name = "KickAlign"  
+                    alignPos.Attachment0 = att0  
+                    alignPos.Attachment1 = att1  
+                    alignPos.MaxForce = math.huge  
+                    alignPos.Responsiveness = 200  
+                    alignPos.Parent = tHRP  
 
-            sno(tHRP)
+                    local alignRot = Instance.new("AlignOrientation")  
+                    alignRot.Name = "KickRot"  
+                    alignRot.Attachment0 = att0  
+                    alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment  
+                    alignRot.CFrame = CFrame.new()   
+                    alignRot.MaxTorque = math.huge  
+                    alignRot.Responsiveness = 200  
+                    alignRot.Parent = tHRP  
+                end)  
+            end  
 
-            local align = tHRP:FindFirstChild("KickAlign")
-            if align and align.Attachment1 and oatsKickActive then
-                align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, 20, 0)
-            end
+            sno(tHRP)  
 
-            local rot = tHRP:FindFirstChild("KickRot")
-            if rot then 
-                rot.CFrame = CFrame.Angles(0, 0, 0) 
-            end
+            local align = tHRP:FindFirstChild("KickAlign")  
+            if align and align.Attachment1 and oatsKickActive then  
+                align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, 20, 0)  
+            end  
 
-            if tick() - lastRemoteFire > 0.05 and oatsKickActive then
-                pcall(function()
-                    local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
-                    local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
-                    if destroyLine then
-                        destroyLine:FireServer(tHRP)
-                    end
-                end)
-                lastRemoteFire = tick()
-            end
-        end
+            local rot = tHRP:FindFirstChild("KickRot")  
+            if rot then   
+                rot.CFrame = CFrame.Angles(0, 0, 0)   
+            end  
 
-        if playersInLoop2V then
-            for _, currentTargetName in ipairs(playersInLoop2V) do
-                local targetPlayer = getPlayer(currentTargetName)
-                if targetPlayer and targetPlayer.Character then
-                    local tH = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                    if tH then
-                        local align = tH:FindFirstChild("KickAlign")
-                        local rot = tH:FindFirstChild("KickRot")
-                        local att0 = tH:FindFirstChild("KickAtt0")
-                        
-                        if align then 
-                            if align.Attachment1 then align.Attachment1:Destroy() end
-                            align:Destroy() 
-                        end
-                        if rot then rot:Destroy() end
-                        if att0 then att0:Destroy() end
+            if tick() - lastRemoteFire > 0.05 and oatsKickActive then  
+                pcall(function()  
+                    local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")  
+                    local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")  
+                    if destroyLine then  
+                        destroyLine:FireServer(tHRP)  
+                    end  
+                end)  
+                lastRemoteFire = tick()  
+            end  
+        end  
 
-                        pcall(function()
-                            local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
-                            local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
-                            if destroyLine then
-                                destroyLine:FireServer(tH)
-                            end
-                        end)
-                    end
-                end
-            end
-        end
-        
-        cleanupRagdoll()
-        oatsKickActive = false
-        manageLag()
+        if playersInLoop2V then  
+            for _, currentTargetName in ipairs(playersInLoop2V) do  
+                local targetPlayer = getPlayer(currentTargetName)  
+                if targetPlayer and targetPlayer.Character then  
+                    local tH = targetPlayer.Character:FindFirstChild("HumanoidRootPart")  
+                    if tH then  
+                        local align = tH:FindFirstChild("KickAlign")  
+                        local rot = tH:FindFirstChild("KickRot")  
+                        local att0 = tH:FindFirstChild("KickAtt0")  
+                          
+                        if align then   
+                            if align.Attachment1 then align.Attachment1:Destroy() end  
+                            align:Destroy()   
+                        end  
+                        if rot then rot:Destroy() end  
+                        if att0 then att0:Destroy() end  
+
+                        pcall(function()  
+                            local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")  
+                            local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")  
+                            if destroyLine then  
+                                destroyLine:FireServer(tH)  
+                            end  
+                        end)  
+                    end  
+                end  
+            end  
+        end  
+          
+        cleanupRagdoll()  
+        oatsKickActive = false  
+        manageLag()  
     end)
 end
 
@@ -9190,69 +9225,62 @@ LoopTab:AddToggle({
     Callback = function(Value)
         oatsKickActive = Value
         manageLag()
-        
-        if oatsKickActive then
-            table.clear(playersInLoop2V)
-            if playersInLoop1V then
-                for i, e in ipairs(playersInLoop1V) do
-                    local nameOnly = tostring(e):match("^(.-) %(") or tostring(e)
-                    table.insert(playersInLoop2V, nameOnly)
-                end
-            end
-            
-            loopBestKickF()
-        else
-            oatsKickActive = false
-            manageLag()
-            if oatsKickTask then
-                task.cancel(oatsKickTask)
-                oatsKickTask = nil
-            end
-            
-            if playersInLoop2V then
-                for _, currentTargetName in ipairs(playersInLoop2V) do
-                    local targetPlayer = getPlayer(currentTargetName)
-                    
-                    if targetPlayer and targetPlayer.Character then
-                        local tH = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                        if tH then
-                            local align = tH:FindFirstChild("KickAlign")
-                            local rot = tH:FindFirstChild("KickRot")
-                            local att0 = tH:FindFirstChild("KickAtt0")
-                            
-                            if align then 
-                                if align.Attachment1 then align.Attachment1:Destroy() end
-                                align:Destroy() 
-                            end
-                            if rot then rot:Destroy() end
-                            if att0 then att0:Destroy() end
 
-                            pcall(function()
-                                local grabEvents = game:GetService("ReplicatedStorage"):FindFirstChild("GrabEvents")
-                                local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
-                                if destroyLine then
-                                    destroyLine:FireServer(tH)
-                                end
-                            end)
-                        end
-                    end
-                end
-                table.clear(playersInLoop2V)
-            end
-            cleanupRagdoll()
-        end
+        if oatsKickActive then  
+            table.clear(playersInLoop2V)  
+            if Config.PlayerList then  
+                for i, e in ipairs(Config.PlayerList) do  
+                    local nameOnly = tostring(e):match("^(.-) %(") or tostring(e)  
+                    table.insert(playersInLoop2V, nameOnly)  
+                end  
+            end  
+              
+            loopBestKickF()  
+        else  
+            oatsKickActive = false  
+            manageLag()  
+            if oatsKickTask then  
+                task.cancel(oatsKickTask)  
+                oatsKickTask = nil  
+            end  
+              
+            if playersInLoop2V then  
+                for _, currentTargetName in ipairs(playersInLoop2V) do  
+                    local targetPlayer = getPlayer(currentTargetName)  
+                      
+                    if targetPlayer and targetPlayer.Character then  
+                        local tH = targetPlayer.Character:FindFirstChild("HumanoidRootPart")  
+                        if tH then  
+                            local align = tH:FindFirstChild("KickAlign")  
+                            local rot = tH:FindFirstChild("KickRot")  
+                            local att0 = tH:FindFirstChild("KickAtt0")  
+                              
+                            if align then   
+                                if align.Attachment1 then align.Attachment1:Destroy() end  
+                                align:Destroy()   
+                            end  
+                            if rot then rot:Destroy() end  
+                            if att0 then att0:Destroy() end  
+
+                            pcall(function()  
+                                local grabEvents = game:GetService("ReplicatedStorage"):FindFirstChild("GrabEvents")  
+                                local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")  
+                                if destroyLine then  
+                                    destroyLine:FireServer(tH)  
+                                end  
+                            end)  
+                        end  
+                    end  
+                end  
+                table.clear(playersInLoop2V)  
+            end  
+            cleanupRagdoll()  
+        end  
     end
 })
 
-
-LoopTab:AddToggle({
-    Name = " ┗ Options: Line Lag",
-    Default = false,
-    Callback = function(Value)
-        oatsKickLagOpt = Value
-        manageLag()
-    end
-})
+                
+          
 end
 LoopTab:AddToggle({
     Text = "Set Owner Kick (ragdoll)",
