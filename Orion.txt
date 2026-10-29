@@ -448,6 +448,7 @@ local OrionLib = {
 	ThemeObjects = {},
 	Connections = {},
 	Flags = {},
+	Keybinding = false,
 	Themes = {
 		Default = {
 			Main = Color3.fromRGB(15, 15, 15),
@@ -3642,8 +3643,11 @@ end)
 				BindConfig.SetCb = BindConfig.SetCb or function() end
 				BindConfig.Flag = BindConfig.Flag or nil
 				BindConfig.Save = BindConfig.Save or false
+				BindConfig.AllowBlacklisted = BindConfig.AllowBlacklisted or {}
+				BindConfig.ExtraBlacklist = BindConfig.ExtraBlacklist or {}
 
-				local Bind = {Value, Binding = false, Type = "Bind", Save = BindConfig.Save}
+				local Bind = {Value = BindConfig.Default.Name or BindConfig.Default, Binding = false, Type = "Bind", Save = BindConfig.Save}
+				local justBound = false
 				local Holding = false
 
 				local Click = SetProps(MakeElement("Button"), {
@@ -3685,8 +3689,9 @@ end)
 
 				AddConnection(Click.InputEnded, function(Input)
 					if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-						if Bind.Binding then return end
+						if Bind.Binding or justBound then return end
 						Bind.Binding = true
+						OrionLib.Keybinding = true
 						BindBox.Value.Text = ""
 					end
 				end)
@@ -3704,21 +3709,40 @@ end)
 						local Key
 
 						pcall(function()
-							if not CheckKey(BlacklistedKeys, Input.KeyCode) then
+							local isGlobalBlacklisted = CheckKey(BlacklistedKeys, Input.KeyCode)
+							local isExtraBlacklisted = CheckKey(BindConfig.ExtraBlacklist, Input.KeyCode)
+							local isExplicitlyAllowed = CheckKey(BindConfig.AllowBlacklisted, Input.KeyCode)
+
+							if (not isGlobalBlacklisted and not isExtraBlacklisted) or isExplicitlyAllowed then
 								Key = Input.KeyCode
 							end
 						end)
 
 						pcall(function()
-							if CheckKey(WhitelistedMouse, Input.UserInputType) and not Key then
+							local isMouseExtraBlacklisted = CheckKey(BindConfig.ExtraBlacklist, Input.UserInputType)
+
+							if CheckKey(WhitelistedMouse, Input.UserInputType) and not isMouseExtraBlacklisted and not Key then
 								Key = Input.UserInputType
 							end
 						end)
 
 						Key = Key or Bind.Value
+					justBound = true
+					task.delay(0.15, function()
+							justBound = false
+						end)
+
+						if typeof(Key) == "EnumItem" then
+							Bind.Value = Key.Name
+						end
+
 						BindConfig.SetCb(Key)
 						Bind:Set(Key)
 						SaveCfg(game.GameId)
+
+						task.delay(0.2, function()
+							OrionLib.Keybinding = false
+						end)
 					end
 				end)
 
@@ -3841,7 +3865,451 @@ end)
 				end)
 			end
 
+			function ElementFunction:AddMultiColorpicker(ColorpickerConfig)
+                ColorpickerConfig = ColorpickerConfig or {}
+                ColorpickerConfig.Name = ColorpickerConfig.Name or "Colorpicker"
+                local isMulti = type(ColorpickerConfig.Default) == "table"
+                local Defaults = ColorpickerConfig.Default
+                if not isMulti then
+                    Defaults = {Defaults or Color3.fromRGB(255, 255, 255)}
+                end
+                ColorpickerConfig.Callback = ColorpickerConfig.Callback or function() end
+                ColorpickerConfig.Save = ColorpickerConfig.Save or false
+                ColorpickerConfig.Mode = ColorpickerConfig.Mode or 1
+                local MultiColorpicker = {
+                    Pickers = {},
+                    ActiveIndex = 1,
+                    Toggled = false,
+                    Type = isMulti and "MultiColorpicker" or "Colorpicker",
+                    Save = ColorpickerConfig.Save
+                }
+                local ColorSelection = Create("ImageLabel", {
+                    Size = UDim2.new(0, 10, 0, 10),
+                    ScaleType = Enum.ScaleType.Stretch,
+                    AnchorPoint = Vector2.new(0.5, 0.5),
+                    BackgroundTransparency = 1,
+                    Image = "http://www.roblox.com/asset/?id=4805639000"
+                })
+                local HueSelection = Create("ImageLabel", {
+                    Size = UDim2.new(0, 10, 0, 10),
+                    ScaleType = Enum.ScaleType.Stretch,
+                    AnchorPoint = Vector2.new(0.5, 0.5),
+                    BackgroundTransparency = 1,
+                    Image = "http://www.roblox.com/asset/?id=4805639000"
+                })
+                local Color = Create("ImageLabel", {
+                    Size = UDim2.new(1, -25, 1, 0),
+                    Visible = false,
+                    Image = "rbxassetid://4155801252",
+                    ScaleType = Enum.ScaleType.Stretch,
+                    BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+                }, {Create("UICorner", {CornerRadius = UDim.new(0, 5)}), ColorSelection})
+                local Hue = Create("Frame", {
+                    Size = UDim2.new(0, 20, 1, 0),
+                    Position = UDim2.new(1, -20, 0, 0),
+                    Visible = false
+                }, {
+                    Create("UIGradient", {
+                        Rotation = 270,
+                        Color = ColorSequence.new{
+                            ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 4)),
+                            ColorSequenceKeypoint.new(0.20, Color3.fromRGB(234, 255, 0)),
+                            ColorSequenceKeypoint.new(0.40, Color3.fromRGB(21, 255, 0)),
+                            ColorSequenceKeypoint.new(0.60, Color3.fromRGB(0, 255, 255)),
+                            ColorSequenceKeypoint.new(0.80, Color3.fromRGB(0, 17, 255)),
+                            ColorSequenceKeypoint.new(0.90, Color3.fromRGB(255, 0, 251)),
+                            ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 4))
+                        }
+                    }),
+                    Create("UICorner", {CornerRadius = UDim.new(0, 3)}),
+                    HueSelection
+                })
+                local ColorpickerContainer = Create("Frame", {
+                    Position = UDim2.new(0, 0, 0, 32),
+                    Size = UDim2.new(1, 0, 1, -32),
+                    BackgroundTransparency = 1,
+                    ClipsDescendants = true
+                }, {
+                    Hue, Color,
+                    Create("UIPadding", {
+                        PaddingLeft = UDim.new(0, 35),
+                        PaddingRight = UDim.new(0, 35),
+                        PaddingBottom = UDim.new(0, 10),
+                        PaddingTop = UDim.new(0, 17)
+                    })
+                })
+                local ButtonsMainWrapper = Create("Frame", {
+                    Size = UDim2.new(0, 0, 1, 0),
+                    Position = UDim2.new(1, -12, 0, 0),
+                    AnchorPoint = Vector2.new(1, 0),
+                    BackgroundTransparency = 1,
+                    ZIndex = 3
+                })
+                local TruncateIndicator = AddThemeObject(SetProps(MakeElement("Label", "...", 16), {
+                    Size = UDim2.new(0, 16, 1, 0),
+                    AnchorPoint = Vector2.new(1, 0),
+                    Font = Enum.Font.GothamBold,
+                    TextXAlignment = Enum.TextXAlignment.Center,
+                    Visible = false,
+                    ZIndex = 5,
+                    Parent = ButtonsMainWrapper
+                }), "Text")
+                local ButtonsHolder = Create("Frame", {
+                    Size = UDim2.new(1, 0, 1, 0),
+                    Position = UDim2.new(1, 0, 0, 0),
+                    AnchorPoint = Vector2.new(1, 0),
+                    BackgroundTransparency = 1,
+                    Parent = ButtonsMainWrapper
+                }, {
+                    Create("UIListLayout", {
+                        FillDirection = Enum.FillDirection.Horizontal,
+                        HorizontalAlignment = Enum.HorizontalAlignment.Right,
+                        VerticalAlignment = Enum.VerticalAlignment.Center,
+                        SortOrder = Enum.SortOrder.LayoutOrder,
+                        Padding = UDim.new(0, 8)
+                    })
+                })
+                local ToggleButton = SetProps(MakeElement("Button"), {
+                    Size = UDim2.new(1, 0, 1, 0),
+                    BackgroundTransparency = 1,
+                    ZIndex = 2,
+                    Visible = true
+                })
+                local ContentLabel = AddThemeObject(SetProps(MakeElement("Label", ColorpickerConfig.Name, 15), {
+                    Size = UDim2.new(0, 100, 1, 0),
+                    Position = UDim2.new(0, 12, 0, 0),
+                    Font = Enum.Font.GothamBold,
+                    Name = "Content",
+                    TextTruncate = Enum.TextTruncate.AtEnd
+                }), "Text")
+                local ColorpickerFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 5), {
+                    Size = UDim2.new(1, 0, 0, 38),
+                    Parent = ItemParent
+                }), {
+                    SetProps(SetChildren(MakeElement("TFrame"), {
+                        ContentLabel,
+                        ButtonsMainWrapper,
+                        ToggleButton,
+                        AddThemeObject(SetProps(MakeElement("Frame"), {
+                            Size = UDim2.new(1, 0, 0, 1),
+                            Position = UDim2.new(0, 0, 1, -1),
+                            Name = "Line",
+                            Visible = false
+                        }), "Stroke")
+                    }), {
+                        Size = UDim2.new(1, 0, 0, 38),
+                        ClipsDescendants = true,
+                        Name = "F"
+                    }),
+                    ColorpickerContainer,
+                    AddThemeObject(MakeElement("Stroke"), "Stroke")
+                }), "Second")
+                local ColorInput, HueInput
+                local ColorH, ColorS, ColorV = 0, 0, 1
+                local function UpdatePickerSelectorUI(index)
+                    local picker = MultiColorpicker.Pickers[index]
+                    if not picker then return end
+                    ColorH, ColorS, ColorV = Color3.toHSV(picker.Value)
+                    ColorSelection.Position = UDim2.new(ColorS, 0, 1 - ColorV)
+                    HueSelection.Position = UDim2.new(0.5, 0, 1 - ColorH)
+                    Color.BackgroundColor3 = Color3.fromHSV(ColorH, 1, 1)
+                end
+                local function UpdateColorPicker()
+                    local activeIndex = MultiColorpicker.ActiveIndex
+                    local picker = MultiColorpicker.Pickers[activeIndex]
+                    if not picker then return end
+                    local newColor = Color3.fromHSV(ColorH, ColorS, ColorV)
+                    picker.Value = newColor
+                    if picker.Box then
+                        picker.Box.BackgroundColor3 = newColor
+                    end
+                    Color.BackgroundColor3 = Color3.fromHSV(ColorH, 1, 1)
+                    if ColorpickerConfig.Mode == 1 then
+                        if isMulti then
+                            local allValues = {}
+                            for i, p in ipairs(MultiColorpicker.Pickers) do
+                                allValues[i] = p.Value
+                            end
+                            ColorpickerConfig.Callback(allValues, activeIndex, newColor)
+                        else
+                            ColorpickerConfig.Callback(newColor)
+                        end
+                    end
+                    if ColorpickerConfig.Save then SaveCfg(game.GameId) end
+                end
+                local function TogglePanel(state)
+                    if state == nil then
+                        MultiColorpicker.Toggled = not MultiColorpicker.Toggled
+                    else
+                        MultiColorpicker.Toggled = state
+                    end
+                    vgs.TS:Create(ColorpickerFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                        Size = MultiColorpicker.Toggled and UDim2.new(1, 0, 0, 148) or UDim2.new(1, 0, 0, 38)
+                    }):Play()
+                    Color.Visible = MultiColorpicker.Toggled
+                    Hue.Visible = MultiColorpicker.Toggled
+                    ColorpickerFrame.F.Line.Visible = MultiColorpicker.Toggled
+                end
+                AddConnection(ToggleButton.MouseButton1Click, function()
+                    if not isMulti then
+                        TogglePanel()
+                    else
+                        if MultiColorpicker.Toggled then
+                            TogglePanel(false)
+                            for _, p in ipairs(MultiColorpicker.Pickers) do
+                                p.Stroke.Enabled = false
+                                p.DefaultStroke.Enabled = true
+                            end
+                        else
+                            TogglePanel(true)
+                            local activePicker = MultiColorpicker.Pickers[MultiColorpicker.ActiveIndex]
+                            if activePicker then
+                                activePicker.Stroke.Enabled = true
+                                activePicker.DefaultStroke.Enabled = false
+                                UpdatePickerSelectorUI(MultiColorpicker.ActiveIndex)
+                            end
+                        end
+                    end
+                end)
+                for i, defaultColor in ipairs(Defaults) do
+                    local DefaultStroke = AddThemeObject(MakeElement("Stroke"), "Stroke")
+                    local Box = SetChildren(SetProps(MakeElement("RoundFrame", defaultColor, 0, 4), {
+                        Size = UDim2.new(0, 24, 0, 24),
+                        LayoutOrder = i
+                    }), {DefaultStroke})
+                    local SelectionStroke = AddThemeObject(Create("UIStroke", {
+                        Thickness = 1.5,
+                        Enabled = false,
+                        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                    }), "Text")
+                    SelectionStroke.Parent = Box
+                    local Click = SetProps(MakeElement("Button"), {
+                        Size = UDim2.new(1, 0, 1, 0),
+                        Parent = Box,
+                        ZIndex = 4
+                    })
+                    local pickerData = {
+                        Value = defaultColor,
+                        Box = Box,
+                        Stroke = SelectionStroke,
+                        DefaultStroke = DefaultStroke
+                    }
+                    MultiColorpicker.Pickers[i] = pickerData
+                    Box.Parent = ButtonsHolder
+                    AddConnection(Click.MouseButton1Click, function()
+                        if not isMulti then
+                            TogglePanel()
+                            UpdatePickerSelectorUI(i)
+                        else
+                            if MultiColorpicker.ActiveIndex == i and MultiColorpicker.Toggled then
+                                TogglePanel(false)
+                                SelectionStroke.Enabled = false
+                                DefaultStroke.Enabled = true
+                            else
+                                TogglePanel(true)
+                                for _, p in ipairs(MultiColorpicker.Pickers) do
+                                    p.Stroke.Enabled = false
+                                    p.DefaultStroke.Enabled = true
+                                end
+                                SelectionStroke.Enabled = true
+                                DefaultStroke.Enabled = false
+                                MultiColorpicker.ActiveIndex = i
+                                UpdatePickerSelectorUI(i)
+                            end
+                        end
+                    end)
+                end
+                local maxButtonsWidth = (#Defaults * 24) + ((#Defaults - 1) * 8)
+                ButtonsHolder.Size = UDim2.new(0, maxButtonsWidth, 1, 0)
+                local SizeConstraint = Create("UISizeConstraint", {
+                    MaxSize = Vector2.new(maxButtonsWidth, 9999),
+                    Parent = ButtonsMainWrapper
+                })
+                local TextService = game:GetService("TextService")
+                local function RecalculateLayout()
+                    local parentWidth = ColorpickerFrame.F.AbsoluteSize.X
+                    if parentWidth < 100 then
+                        TruncateIndicator.Visible = false
+                        for i = 1, #Defaults do
+                            local picker = MultiColorpicker.Pickers[i]
+                            if picker then picker.Box.Visible = true end
+                        end
+                        ButtonsMainWrapper.Size = UDim2.new(0, maxButtonsWidth, 1, 0)
+                        ContentLabel.Size = UDim2.new(1, -(maxButtonsWidth + 32), 1, 0)
+                        return
+                    end
+                    local realTextWidth = 0
+                    pcall(function()
+                        local size = TextService:GetTextSize(
+                            ColorpickerConfig.Name,
+                            15,
+                            Enum.Font.GothamBold,
+                            Vector2.new(9999, 9999)
+                        )
+                        realTextWidth = size.X
+                    end)
+                    local minLabelWidth = 80
+                    local maxButtonsSpaceAllowed = parentWidth - minLabelWidth - 36
+                    local totalSpaceNeededForButtons = (#Defaults * 24) + ((#Defaults - 1) * 8)
+                    local activeWrapperWidth = 0
+                    if totalSpaceNeededForButtons <= maxButtonsSpaceAllowed then
+                        TruncateIndicator.Visible = false
+                        for i = 1, #Defaults do
+                            local picker = MultiColorpicker.Pickers[i]
+                            if picker then picker.Box.Visible = true end
+                        end
+                        activeWrapperWidth = totalSpaceNeededForButtons
+                    else
+                        local spaceForButtons = maxButtonsSpaceAllowed - 24
+                        local firstVisibleIndex = #Defaults
+                        for i = #Defaults, 1, -1 do
+                            local buttonSpaceNeeded = ((#Defaults - i + 1) * 24) + ((#Defaults - i) * 8)
+                            if buttonSpaceNeeded <= spaceForButtons then
+                                firstVisibleIndex = i
+                            else
+                                break
+                            end
+                        end
+                        for i = 1, #Defaults do
+                            local picker = MultiColorpicker.Pickers[i]
+                            if picker then
+                                picker.Box.Visible = (i >= firstVisibleIndex)
+                            end
+                        end
+                        local visibleCount = #Defaults - firstVisibleIndex + 1
+                        local visibleButtonsWidth = (visibleCount * 24) + ((visibleCount - 1) * 8)
+                        activeWrapperWidth = visibleButtonsWidth + 24
+                        TruncateIndicator.Position = UDim2.new(1, -(visibleButtonsWidth + 8), 0, -2)
+                        TruncateIndicator.Visible = true
+                    end
+                    ButtonsMainWrapper.Size = UDim2.new(0, activeWrapperWidth, 1, 0)
+                    local maxAvailableLabelWidth = parentWidth - activeWrapperWidth - 32
+                    if realTextWidth > 0 and realTextWidth < maxAvailableLabelWidth then
+                        ContentLabel.Size = UDim2.new(0, realTextWidth + 2, 1, 0)
+                    else
+                        ContentLabel.Size = UDim2.new(0, maxAvailableLabelWidth, 1, 0)
+                    end
+                end
+                AddConnection(ColorpickerFrame.F:GetPropertyChangedSignal("AbsoluteSize"), RecalculateLayout)
+                task.spawn(function()
+                    RecalculateLayout()
+                    task.wait(0.05)
+                    RecalculateLayout()
+                    task.wait(0.15)
+                    RecalculateLayout()
+                end)
+                AddConnection(Color.InputBegan, function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        if ColorInput then ColorInput:Disconnect() end
+                        ColorInput = AddConnection(vgs.RS.Heartbeat, function(dt)
+                            acc += dt
+                            if acc < rate then return end
+                            acc -= rate
+                            local ax, ay = Color.AbsolutePosition.X, Color.AbsolutePosition.Y
+                            local aw, ah = Color.AbsoluteSize.X, Color.AbsoluteSize.Y
+                            local x = math.clamp(vgs.MS.X - ax, 0, aw) / aw
+                            local y = math.clamp(vgs.MS.Y - ay, 0, ah) / ah
+                            ColorSelection.Position = UDim2.new(x, 0, y, 0)
+                            ColorS, ColorV = x, 1 - y
+                            UpdateColorPicker()
+                        end)
+                    end
+                end)
+                AddConnection(Color.InputEnded, function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch and ColorInput then
+                        if ColorpickerConfig.Mode == 2 then
+                            if isMulti then
+                                local allValues = {}
+                                for i, p in ipairs(MultiColorpicker.Pickers) do allValues[i] = p.Value end
+                                ColorpickerConfig.Callback(allValues, MultiColorpicker.ActiveIndex, MultiColorpicker.Pickers[MultiColorpicker.ActiveIndex].Value)
+                            else
+                                ColorpickerConfig.Callback(MultiColorpicker.Pickers[1].Value)
+                            end
+                        end
+                        ColorInput:Disconnect()
+                        ColorInput = nil
+                    end
+                end)
+                AddConnection(Hue.InputBegan, function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        if HueInput then HueInput:Disconnect() end
+                        HueInput = AddConnection(vgs.RS.Heartbeat, function(dt)
+                            acc += dt
+                            if acc < rate then return end
+                            acc -= rate
+                            local ay, ah = Hue.AbsolutePosition.Y, Hue.AbsoluteSize.Y
+                            local y = math.clamp(vgs.MS.Y - ay, 0, ah) / ah
+                            HueSelection.Position = UDim2.new(0.5, 0, y, 0)
+                            ColorH = 1 - y
+                            UpdateColorPicker()
+                        end)
+                    end
+                end)
+                AddConnection(Hue.InputEnded, function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch and HueInput then
+                        if ColorpickerConfig.Mode == 2 then
+                            if isMulti then
+                                local allValues = {}
+                                for i, p in ipairs(MultiColorpicker.Pickers) do allValues[i] = p.Value end
+                                ColorpickerConfig.Callback(allValues, MultiColorpicker.ActiveIndex, MultiColorpicker.Pickers[MultiColorpicker.ActiveIndex].Value)
+                            else
+                                ColorpickerConfig.Callback(MultiColorpicker.Pickers[1].Value)
+                            end
+                        end
+                        HueInput:Disconnect()
+                        HueInput = nil
+                    end
+                end)
+                function MultiColorpicker:Set(IndexOrValue, Value)
+					if not isMulti then
+						local newColor = IndexOrValue
+						local picker = MultiColorpicker.Pickers[1]
+						if picker and typeof(newColor) == "Color3" then
+							picker.Value = newColor
+							picker.Box.BackgroundColor3 = newColor
+							UpdatePickerSelectorUI(1)
+							ColorpickerConfig.Callback(newColor)
+						end
+					else
+						local Index = IndexOrValue
+						local picker = MultiColorpicker.Pickers[Index]
+						if picker and typeof(Value) == "Color3" then
+							picker.Value = Value
+							if picker.Box then
+								picker.Box.BackgroundColor3 = Value
+							end
+							if MultiColorpicker.ActiveIndex == Index then
+								UpdatePickerSelectorUI(Index)
+							end
+							local allValues = {}
+							for i, p in ipairs(MultiColorpicker.Pickers) do
+								allValues[i] = p.Value
+							end
+							pcall(function()
+								ColorpickerConfig.Callback(allValues, Index, Value)
+							end)
+						end
+					end
+				end
+                UpdatePickerSelectorUI(1)
+                if isMulti then
+                    MultiColorpicker.Pickers[1].Stroke.Enabled = true
+                    MultiColorpicker.Pickers[1].DefaultStroke.Enabled = false
+                else
+                    MultiColorpicker.Pickers[1].Stroke.Enabled = false
+                    MultiColorpicker.Pickers[1].DefaultStroke.Enabled = true
+                end
+                if ColorpickerConfig.Flag then
+                    OrionLib.Flags[ColorpickerConfig.Flag] = MultiColorpicker
+                end
+                return MultiColorpicker
+            end
+
 			function ElementFunction:AddColorpicker(ColorpickerConfig)
+				ColorpickerConfig = ColorpickerConfig or {}
+				if type(ColorpickerConfig.Default) == "table" then
+					return ElementFunction:AddMultiColorpicker(ColorpickerConfig)
+				end
 				ColorpickerConfig = ColorpickerConfig or {}
 				ColorpickerConfig.Name = ColorpickerConfig.Name or "Colorpicker"
 				ColorpickerConfig.Default = ColorpickerConfig.Default or Color3.fromRGB(255, 255, 255)
