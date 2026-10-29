@@ -13558,6 +13558,442 @@ AuraTab:AddToggle({
         end
     end
 })
+AuraTab:AddSection({
+	Name = "Other"
+})
+AuraTab:AddDropdown({
+    Name = "All mode",
+    Default = "Kill",
+    Flag = "99g72g98t2",
+    Values = {"Kill", "destroy Gucci", "Speed/Jump (control)"},
+    Callback = function(Value)
+        Config.Bloballmode = Value
+        blobmanAllMode = Value
+        if Config.blobAllT then
+            Config.bloballrun = false
+            task.wait(0.1)
+            Config.bloballrun = true
+            local mode = blobmanAllMode
+            task.spawn(function()
+                local hpToggle = false
+                while Config.bloballrun do
+                    task.wait(0.01)
+                    local char, hrp = Charrrrrr()
+                    if not hrp then continue end
+                    local blobman = spawnBLob2()
+                    if not blobman then continue end
+                    sitOnBlobman(blobman)
+                    local scriptFolder = blobman:FindFirstChild("BlobmanSeatAndOwnerScript")
+                    local detector = blobman:FindFirstChild("LeftDetector")
+                    local weld = detector and detector:FindFirstChild("LeftWeld")
+                    if not (scriptFolder and detector and weld) then continue end
+                    local Grab = scriptFolder:FindFirstChild("CreatureGrab")
+                    local Release = scriptFolder:FindFirstChild("CreatureRelease")
+                    local Drop = scriptFolder:FindFirstChild("CreatureDrop")
+                    if not (Grab and Release and Drop) then continue end
+                    if mode == "Kill" or mode == "Destroy Gucci" then
+                        hpToggle = not hpToggle
+                    end
+                    for _, plr in ipairs(service.Players:GetPlayers()) do
+                        if not Config.bloballrun then break end
+                        if plr ~= localPlayer and not Whiteall(plr) then
+                            local c = plr.Character
+                            local thrp = c and c:FindFirstChild("HumanoidRootPart")
+                            local hum = c and c:FindFirstChildOfClass("Humanoid")
+                            if thrp and hum and (hrp.Position - thrp.Position).Magnitude <= 30 then
+                                pcall(function()
+                                    Grab:FireServer(detector, thrp, weld)
+                                    Release:FireServer(weld, thrp)
+                                    Drop:FireServer(weld, thrp)
+                                    if mode == "Kill" then
+                                        hum.Health = hpToggle and 0 or 100
+                                    elseif mode == "Speed/Jump (Control)" then
+                                        hum.WalkSpeed = Config.WalkspeedCont
+                                        hum.JumpPower = Config.JumpPownerCont
+                                    end
+                                end)
+                            end
+                        end
+                    end
+                end
+            end)
+            local tpLoopCount = (mode == "Speed/Jump (Control)") and 2 or 1
+            for i = 1, tpLoopCount do
+                task.spawn(function()
+                    while Config.bloballrun do
+                        task.wait(0.1)
+                        local char, hrp = Charrrrrr()
+                        if not hrp then continue end
+                        local blobman = spawnBLob2()
+                        if not blobman then continue end
+                        sitOnBlobman(blobman)
+                        for _, plr in ipairs(service.Players:GetPlayers()) do
+                            if not Config.bloballrun then break end
+                            if plr ~= localPlayer and not Whiteall(plr) then
+                                local c = plr.Character
+                                local thrp = c and c:FindFirstChild("HumanoidRootPart")
+                                if thrp then
+                                    pcall(function()
+                                        hrp.CFrame = thrp.CFrame * CFrame.new(0, 0, -3)
+                                    end)
+                                    task.wait(0.2)
+                                end
+                            end
+                        end
+                    end
+                end)
+            end
+        end
+    end
+})
+
+AuraTab:AddToggle({
+    Name = "all",
+    Default = false,
+    Flag = "v9iy228y0g",
+    Callback = function(Value)
+        Config.blobAllT = Value
+        Config.blobAllT = Value
+        Config.bloballrun = Value
+        if not Value then
+            return
+        end
+        local mode = blobmanAllMode or Config.Bloballmode or "Kill"
+        task.spawn(function()
+            local hpToggle = false
+            while Config.bloballrun do
+                task.wait(0.01)
+                local char, hrp = Charrrrrr()
+                if not hrp then continue end
+                local blobman = spawnBLob2()
+                if not blobman then continue end
+                sitOnBlobman(blobman)
+                local scriptFolder = blobman:FindFirstChild("BlobmanSeatAndOwnerScript")
+                local detector = blobman:FindFirstChild("LeftDetector")
+                local weld = detector and detector:FindFirstChild("LeftWeld")
+                if not (scriptFolder and detector and weld) then continue end
+                local Grab = scriptFolder:FindFirstChild("CreatureGrab")
+                local Release = scriptFolder:FindFirstChild("CreatureRelease")
+                local Drop = scriptFolder:FindFirstChild("CreatureDrop")
+                if not (Grab and Release and Drop) then continue end
+                if mode == "Kill" or mode == "Destroy Gucci" then
+                    hpToggle = not hpToggle
+                end
+                for _, plr in ipairs(service.Players:GetPlayers()) do
+                    if not Config.bloballrun then break end
+                    if plr ~= localPlayer and not Whiteall(plr) then
+                        local c = plr.Character
+                        local thrp = c and c:FindFirstChild("HumanoidRootPart")
+                        local hum = c and c:FindFirstChildOfClass("Humanoid")
+                        if thrp and hum and (hrp.Position - thrp.Position).Magnitude <= 30 then
+                            pcall(function()
+                                Grab:FireServer(detector, thrp, weld)
+                                Release:FireServer(weld, thrp)
+                                Drop:FireServer(weld, thrp)
+                                if mode == "Kill" then
+                                    hum.Health = hpToggle and 0 or 100
+                                elseif mode == "Speed/Jump (Control)" then
+                                    hum.WalkSpeed = Config.WalkspeedCont
+                                    hum.JumpPower = Config.JumpPownerCont
+                                end
+                            end)
+                        end
+                    end
+                end
+            end
+        end)
+        local tpLoopCount = (mode == "Speed/Jump (Control)") and 2 or 1
+        for i = 1, tpLoopCount do
+            task.spawn(function()
+                while Config.bloballrun do
+                    task.wait(0.1)
+                    local char, hrp = Charrrrrr()
+                    if not hrp then continue end
+                    local blobman = spawnBLob2()
+                    if not blobman then continue end
+                    sitOnBlobman(blobman)
+                    for _, plr in ipairs(service.Players:GetPlayers()) do
+                        if not Config.bloballrun then break end
+                        if plr ~= localPlayer and not Whiteall(plr) then
+                            local c = plr.Character
+                            local thrp = c and c:FindFirstChild("HumanoidRootPart")
+                            if thrp then
+                                pcall(function()
+                                    hrp.CFrame = thrp.CFrame * CFrame.new(0, 0, -3)
+                                end)
+                                task.wait(0.2)
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
+
+
+AuraTab:AddDropdown({
+    Name = "Aura mode",
+    Values = {"Kill", "Gucci destroy", "Speed/Jump (control)", "Kill (Beach)", "Grab Aura"},
+    Default = "Kill",
+    Flag = "e8ycr297gt297tg2",
+    Callback = function(Value)
+        Config.BlobauraM = Value
+        if Config.BlobauraT then
+            Config.BlobauraR = false
+            task.wait(0.1)
+            Config.BlobauraR = Config.BlobauraT
+            if Config.BlobauraT then
+                local mode = Config.BlobauraM
+                if mode == "Kill" or mode == "Destroy Gucci" or mode == "Speed/Jump (Control)" or mode == "Kill (Beach)" or mode == "Grab Aura" then
+                    task.spawn(function()
+                        local runningFlagGetter = function() 
+                            return Config.BlobauraR 
+                        end
+                        local hpToggle = false
+                        while runningFlagGetter() do
+                            task.wait(0.01)
+                            if mode == "Grab Aura" then
+                                local char = GetCharacter()
+                                local hrp = HRP()
+                                if not (char and hrp) then
+                                    continue
+                                end
+                                for _, v in ipairs(service.Workspace:GetPartBoundsInRadius(hrp.Position, 25)) do
+                                    if not runningFlagGetter() then 
+                                        break 
+                                    end
+                                    if (not v.Anchored and not v:IsDescendantOf(char)) then
+                                        local p = service.Players:GetPlayerFromCharacter(v.Parent)
+                                        if p and (p == localPlayer or whitelistBlob(p)) then
+                                            continue
+                                        end
+                                        if (v.Name ~= "HumanoidRootPart" or not getBlobman()) then
+                                            continue
+                                        end
+                                        pcall(function()
+                                            local blob = getBlobman()
+                                            local side = (math.random() >= .5) and "Left" or "Right"
+                                            
+                                            if blob then
+                                                local detector = blob:FindFirstChild(side .. "Detector")
+                                                if detector then
+                                                    local weld = detector:FindFirstChild(side .. "Weld")
+                                                    if weld then
+                                                        local script = blob:FindFirstChild("BlobmanSeatAndOwnerScript", true)
+                                                        if script then
+                                                            local remote = script:FindFirstChild("CreatureGrab")
+                                                            if remote then
+                                                                pcall(function()
+                                                                    remote:FireServer(detector, v, weld)
+                                                                end)
+                                                            end
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end)
+                                    end
+                                end
+                            else
+                                local char, hrp = Charrrrrr()
+                                if not hrp then 
+                                    continue 
+                                end
+                                local blobman = spawnBLob2()
+                                if not blobman then 
+                                    continue 
+                                end
+                                sitOnBlobman(blobman)
+                                local scriptFolder = blobman:FindFirstChild("BlobmanSeatAndOwnerScript")
+                                local detector = blobman:FindFirstChild("LeftDetector")
+                                local weld = detector and detector:FindFirstChild("LeftWeld")
+                                if not (scriptFolder and detector and weld) then 
+                                    continue 
+                                end
+                                local Grab, Release, Drop = scriptFolder:FindFirstChild("CreatureGrab"), scriptFolder:FindFirstChild("CreatureRelease"), scriptFolder:FindFirstChild("CreatureDrop")
+                                if not (Grab and Release and Drop) then 
+                                    continue 
+                                end
+                                hpToggle = not hpToggle
+                                for _, plr in ipairs(service.Players:GetPlayers()) do
+                                    if not runningFlagGetter() then 
+                                        break 
+                                    end
+                                    if plr ~= localPlayer and not whitelistBlob(plr) then
+                                        local c = plr.Character
+                                        local thrp, hum = c and c:FindFirstChild("HumanoidRootPart"), c and c:FindFirstChildOfClass("Humanoid")
+                                        local isTargetValid = false
+                                        if mode == "Kill (Beach)" then
+                                            isTargetValid = not not thrp
+                                        else
+                                            isTargetValid = not not (thrp and hum)
+                                        end
+                                        if isTargetValid and (hrp.Position - thrp.Position).Magnitude <= 30 then
+                                            pcall(function()
+                                                Grab:FireServer(detector, thrp, weld)
+                                                Release:FireServer(weld, thrp)
+                                                Drop:FireServer(weld, thrp)
+                                                if mode == "Kill" then
+                                                    hum.Health = hpToggle and 0 or 100
+                                                elseif mode == "Destroy Gucci" then
+                                                elseif mode == "Speed/Jump (Control)" then
+                                                    hum.WalkSpeed = Config.WalkspeedCont
+                                                    hum.JumpPower = Config.JumpPownerCont
+                                                elseif mode == "Kill (Beach)" then
+                                                    thrp.CFrame = CFrame.new(-1150, 23, -28)
+                                                end
+                                            end)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end)
+                end
+            end
+        end
+    end
+})
+
+AuraTab:AddToggle({
+    Name = "Aura",
+    Default = false,
+    Flag = "wiitg92v9ut",
+    Callback = function(Value)
+        Config.BlobauraT = Value
+        Config.BlobauraR = Config.BlobauraT
+        if Config.BlobauraT then
+            local mode = Config.BlobauraM
+            if mode == "Kill" or mode == "Destroy Gucci" or mode == "Speed/Jump (Control)" or mode == "Kill (Beach)" or mode == "Grab Aura" then
+                task.spawn(function()
+                    local runningFlagGetter = function() 
+                        return Config.BlobauraR 
+                    end
+                    local hpToggle = false
+                    while runningFlagGetter() do
+                        task.wait(0.01)
+                        if mode == "Grab Aura" then
+                            local char = GetCharacter()
+                            local hrp = HRP()
+                            if not (char and hrp) then
+                                continue
+                            end
+                            for _, v in ipairs(service.Workspace:GetPartBoundsInRadius(hrp.Position, 25)) do
+                                if not runningFlagGetter() then 
+                                    break 
+                                end
+                                if (not v.Anchored and not v:IsDescendantOf(char)) then
+                                    local p = service.Players:GetPlayerFromCharacter(v.Parent)
+                                    if p and (p == localPlayer or whitelistBlob(p)) then
+                                        continue
+                                    end
+                                    if (v.Name ~= "HumanoidRootPart" or not getBlobman()) then
+                                        continue
+                                    end
+                                    pcall(function()
+                                        local blob = getBlobman()
+                                        if not blob then return end
+                                        local side = (math.random() >= .5) and "Left" or "Right"
+                                        local detector = blob:FindFirstChild(side .. "Detector")
+                                        if not detector then return end
+                                        local weld = detector:FindFirstChild(side .. "Weld")
+                                        if not weld then return end
+                                        local script = blob:FindFirstChild("BlobmanSeatAndOwnerScript", true)
+                                        if not script then return end
+                                        local remote = script:FindFirstChild("CreatureGrab")
+                                        if remote then
+                                            pcall(function()
+                                                remote:FireServer(detector, v, weld)
+                                            end)
+                                        end
+                                    end)
+                                end
+                            end
+                        else
+                            local char, hrp = Charrrrrr()
+                            if not hrp then 
+                                continue 
+                            end
+                            local blobman = spawnBLob2()
+                            if not blobman then 
+                                continue 
+                            end
+                            sitOnBlobman(blobman)
+                            local scriptFolder = blobman:FindFirstChild("BlobmanSeatAndOwnerScript")
+                            local detector = blobman:FindFirstChild("LeftDetector")
+                            local weld = detector and detector:FindFirstChild("LeftWeld")
+                            if not (scriptFolder and detector and weld) then 
+                                continue 
+                            end
+                            local Grab, Release, Drop = scriptFolder:FindFirstChild("CreatureGrab"), scriptFolder:FindFirstChild("CreatureRelease"), scriptFolder:FindFirstChild("CreatureDrop")
+                            if not (Grab and Release and Drop) then 
+                                continue 
+                            end
+                            hpToggle = not hpToggle
+                            for _, plr in ipairs(service.Players:GetPlayers()) do
+                                if not runningFlagGetter() then 
+                                    break 
+                                end
+                                if plr ~= localPlayer and not whitelistBlob(plr) then
+                                    local c = plr.Character
+                                    local thrp, hum = c and c:FindFirstChild("HumanoidRootPart"), c and c:FindFirstChildOfClass("Humanoid")
+                                    local isTargetValid = false
+                                    if mode == "Kill (Beach)" then
+                                        isTargetValid = not not thrp
+                                    else
+                                        isTargetValid = not not (thrp and hum)
+                                    end
+                                    if isTargetValid and (hrp.Position - thrp.Position).Magnitude <= 30 then
+                                        pcall(function()
+                                            Grab:FireServer(detector, thrp, weld)
+                                            Release:FireServer(weld, thrp)
+                                            Drop:FireServer(weld, thrp)
+                                            if mode == "Kill" then
+                                                hum.Health = hpToggle and 0 or 100
+                                            elseif mode == "Destroy Gucci" then
+                                            elseif mode == "Speed/Jump (Control)" then
+                                                hum.WalkSpeed = Config.WalkspeedCont
+                                                hum.JumpPower = Config.JumpPownerCont
+                                            elseif mode == "Kill (Beach)" then
+                                                thrp.CFrame = CFrame.new(-1150, 23, -28)
+                                            end
+                                        end)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end)
+            end
+        end
+    end
+})
+
+AuraTab:AddSlider({
+    Name = "speed",
+    Min = 0,
+    Max = 500,
+    Default = 16,
+    Flag = "evoitw08ygw",
+    Rounding = 1,
+    Callback = function(Value)
+        Config.WalkspeedCont = Value
+    end
+})
+
+AuraTab:AddSlider({
+    Name = "Jump power",
+    Min = 0,
+    Max = 500,
+    Default = 50,
+    Flag = "97ft27f9t",
+    Rounding = 1,
+    Callback = function(Value)
+        Config.JumpPownerCont = Value
+    end
+})
+
 
 
  
