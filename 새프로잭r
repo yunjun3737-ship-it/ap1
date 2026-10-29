@@ -9602,31 +9602,52 @@ LoopTab:AddToggle({
           
 end
 
+    
 LoopTab:AddToggle({
     Name = "Set Owner Kick (ragdoll)",
     Default = false,
-    Callback = function(aa61)
-        Config.aa6 = aa61
-        Config.aa13 = aa61
+    Callback = function(Value)
         
-                if aa61 then
-            if playersInLoop2V and playersInLoop1V then
+        Config.aa6 = Value
+        Config.aa13 = Value
+        
+        ownerKickLoopActive = Value
+        
+        if Value then
+            
+            if playersInLoop1V and playersInLoop2V then
                 table.clear(playersInLoop2V)
                 for i, e in ipairs(playersInLoop1V) do
                     local nameOnly = e:match("^(.-) %(") or e
                     table.insert(playersInLoop2V, nameOnly)
                 end
             end
-                Config.PlayerList = playersInLoop2V
+            
+            if not playersInLoop2V or #playersInLoop2V == 0 then
+                task.spawn(function()
+                    if Toggles and Toggles.KickspamRag then
+                        Toggles.KickspamRag:SetValue(false)
+                    end
+                end)
+                return
+            end
+            
+            if typeof(loopPlayerOwnerKick) == "function" then
+                loopPlayerOwnerKick()
+            end
+            
+            task.spawn(runOwnerKickLoopLogic)
         else
+            ownerKickLoopActive = false
+            
             if playersInLoop2V then
                 table.clear(playersInLoop2V)
             end
-            Config.PlayerList = {}
+            
+            if typeof(cleanupOwnerKickLocks) == "function" then
+                cleanupOwnerKickLocks()
+            end
         end
-    
-
-        
 
         local function aa31(aa32, aa33, aa34)
             return aa32:FindFirstChild(aa33) or aa32:WaitForChild(aa33, aa34 or 5)
@@ -9761,7 +9782,7 @@ LoopTab:AddToggle({
                         or (localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart"))
 
                     if spawnLocation then
-                        CreateGrabLine:FireServer(spawnLocation, CFrame.new(math.random(-2010000000, 2000000001), 0, math.random(-2008100000, 2000200000)))
+                        CreateGrabLine:FireServer(spawnLocation, CFrame.new(math.random(-112010000000, 112000000001), 0, math.random(-2008100000, 2000200000)))
                     end
                     task.wait(0.07)
                 end
@@ -9773,16 +9794,13 @@ LoopTab:AddToggle({
             Config.running = false
         end
         
-        if aa61 then
+        if Value then
             if not Config.PlayerList or #Config.PlayerList == 0 then
                 return
             end
-            
-            task.spawn(function()
-                task.wait(9999)
-                task.defer(function()
-                    startLagSpam()
-                end)
+            task.wait(1)
+            task.defer(function()
+                startLagSpam()
             end)
         else
             stopLagSpam()
@@ -9840,8 +9858,8 @@ LoopTab:AddToggle({
                 end
             end)
         end
-        
-        if aa61 then
+
+        if Value then
             local aa71 = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys")
             local aa72 = nil
             Config.aa73 = service.RunService.RenderStepped:Connect(function()
