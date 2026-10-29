@@ -4287,31 +4287,112 @@ antiTab:AddToggle({
 antiGrabV2Active = false
 antiGrabV2Task = nil
 
+local rs = game:GetService("ReplicatedStorage")
+local rs2 = game:GetService("RunService")
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+
+local isHeld = plr.IsHeld
 local pp = {}
+
 local PARTS = {
-    {"Humanoid",         "hum"},
+    {"Humanoid", "hum"},
     {"HumanoidRootPart", "hrp"},
-    {"Head",             "head"},
-    {"Torso",            "torso"},
-    {"Left Arm",         "la"},
-    {"Right Arm",        "ra"},
-    {"Left Leg",         "ll"},
-    {"Right Leg",        "rl"},
+    {"Head", "head"},
+    {"Torso", "torso"},
+    {"Left Arm", "la"},
+    {"Right Arm", "ra"},
+    {"Left Leg", "ll"},
+    {"Right Leg", "rl"},
 }
 
 local LIMB_CHILDREN = {
-    {"Left Arm",  "la"},
+    {"Left Arm", "la"},
     {"Right Arm", "ra"},
-    {"Left Leg",  "ll"},
+    {"Left Leg", "ll"},
     {"Right Leg", "rl"},
 }
 
 local function fetch(parent, name, key)
     task.spawn(function()
-        repeat rs2.PreSimulation:Wait() until parent:FindFirstChild(name)
+        repeat
+            rs2.PreSimulation:Wait()
+        until parent:FindFirstChild(name)
+
         pp[key] = parent[name]
     end)
 end
+
+local function clearChar()
+    table.clear(pp)
+end
+
+local function plrpart(char)
+    pp.char = char
+
+    for _, v in ipairs(PARTS) do
+        fetch(char, v[1], v[2])
+    end
+
+    task.spawn(function()
+        repeat
+            rs2.PreSimulation:Wait()
+        until char:FindFirstChild("Humanoid")
+
+        local hum = char.Humanoid
+        fetch(hum, "FireDebounce", "brn")
+        fetch(hum, "Ragdolled", "rag")
+    end)
+
+    task.spawn(function()
+        repeat
+            rs2.PreSimulation:Wait()
+        until char:FindFirstChild("HumanoidRootPart")
+
+        local hrp = char.HumanoidRootPart
+        fetch(hrp, "RagdollTouchedHitbox", "raghit")
+
+        task.spawn(function()
+            task.wait(0.3)
+
+            repeat
+                rs2.PreSimulation:Wait()
+            until hrp:FindFirstChild("RootAttachment")
+
+            pp.att = hrp.RootAttachment
+        end)
+    end)
+
+    for _, v in ipairs(LIMB_CHILDREN) do
+        task.spawn(function()
+            repeat
+                rs2.PreSimulation:Wait()
+            until char:FindFirstChild(v[1])
+
+            local limb = char[v[1]]
+            fetch(limb, "RagdollLimbPart", v[2] .. "_p")
+            fetch(limb, "BallSocketConstraint", v[2] .. "_c")
+        end)
+    end
+
+    task.spawn(function()
+        repeat
+            rs2.PreSimulation:Wait()
+        until char:FindFirstChild("Head")
+
+        fetch(char.Head, "BallSocketConstraint", "head_c")
+    end)
+end
+
+plr.CharacterAdded:Connect(plrpart)
+plr.CharacterRemoving:Connect(clearChar)
+
+if plr.Character then
+    plrpart(plr.Character)
+end
+
+local AntiGrabC = nil
+local Owner = false
 antiTab:AddToggle({
     Name = "anti grab (Anchored Sit)",
     Default = false,
