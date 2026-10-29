@@ -11771,8 +11771,33 @@ do
 plotTab:AddSection({
     Name = "plot"
 })
-
-local BarrierNoclip = plotTab:AddToggle({
+Plots = workspace:WaitForChild("Plots")
+function BarrierCanCollideF()
+    if BarrierCanCollideT then
+        for i = 1, 5 do
+            local plot = Plots:FindFirstChild("Plot"..i)
+            if plot and plot:FindFirstChild("Barrier") then
+                for _, barrier in ipairs(plot.Barrier:GetChildren()) do
+                    if barrier:IsA("BasePart") then
+                        barrier.CanCollide = false
+                    end
+                end
+            end
+        end
+    else
+        for i = 1, 5 do
+            local plot = Plots:FindFirstChild("Plot"..i)
+            if plot and plot:FindFirstChild("Barrier") then
+                for _, barrier in ipairs(plot.Barrier:GetChildren()) do
+                    if barrier:IsA("BasePart") then
+                        barrier.CanCollide = true
+                    end
+                end
+            end
+        end
+    end
+end
+plotTab:AddToggle({
     Name = "Delete House barrier",
     CurrentValue = false,
     save = true,
@@ -11793,7 +11818,7 @@ plotTab:AddButton({
 })
 
 
-local isExecuting = false
+--local isExecuting = false
 
 local function getMyPlot()
     for i = 1, 5 do
