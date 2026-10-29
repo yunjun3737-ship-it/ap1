@@ -3581,18 +3581,22 @@ antiTab:AddSection({
             OriginalAnchored = hrp.Anchored
         end
     end
+local function StartFreeze(hrp)
+    if not hrp or not hrp.Parent then return end
 
-    local function StartFreeze(hrp)
-        if not hrp or not hrp.Parent then return end
-        if OriginalAnchored == nil then
-            OriginalAnchored = hrp.Anchored
-        end
-        hrp.Anchored = true
-        hrp.Massless = true
-        pcall(function()
-            hrp.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
-        end)
+    if OriginalAnchored == nil then
+        OriginalAnchored = hrp.Anchored
     end
+
+    hrp.Anchored = true
+    hrp.Massless = true
+
+    pcall(function()
+        
+        hrp.CustomPhysicalProperties = PhysicalProperties.new(0.01, 0, 0, 0, 0)
+    end)
+end
+
 
     local function EndFreeze(hrp, char)
         if not hrp or not hrp.Parent then return end
