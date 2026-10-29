@@ -8554,75 +8554,43 @@ end
 
 
 do
+playersInLoop1V = playersInLoop1V or {}
+playersInLoop2V = playersInLoop2V or {}
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-playersInLoop1V = playersInLoop1V or {}
+local function SyncLoopPlayersV1()
+    table.clear(playersInLoop2V)
 
-local PlayerDropdownV1
-
-local function GetPlayerNamesV1()
-    local names = {}
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            table.insert(names, player.Name)
+    for _, name in ipairs(playersInLoop1V) do
+        if Players:FindFirstChild(name) then
+            table.insert(playersInLoop2V, name)
         end
-    end
-
-    table.sort(names)
-    return names
-end
-
-local function UpdatePlayerDropdownV1()
-    if not PlayerDropdownV1 then
-        return
-    end
-
-    pcall(function()
-        PlayerDropdownV1:Refresh(GetPlayerNamesV1(), true)
-    end)
-end
-
-local function addToLoop1(name)
-    if not name or name == "" then
-        return
-    end
-
-    local target = Players:FindFirstChild(name)
-
-    if not target or target == LocalPlayer then
-        return
-    end
-
-    if not table.find(playersInLoop1V, target.Name) then
-        table.insert(playersInLoop1V, target.Name)
     end
 end
 
 LoopTab:AddPlayersDropdown({
-    Name = "Target Select V1",
-    Default = nil,
-    Options = GetPlayerNamesV1(),
+    Name = "Target Select ",
+    Options = {},
     Callback = function(value)
-        addToLoop1(value)
+        local name = typeof(value) == "Instance" and value.Name or tostring(value)
+
+        if name == "" or name == LocalPlayer.Name then
+            return
+        end
+
+        if not Players:FindFirstChild(name) then
+            return
+        end
+
+        if not table.find(playersInLoop1V, name) then
+            table.insert(playersInLoop1V, name)
+        end
+
+        SyncLoopPlayersV1()
     end
 })
-
-
-Players.PlayerAdded:Connect(function()
-    task.defer(UpdatePlayerDropdownV1)
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-    for i = #playersInLoop1V, 1, -1 do
-        if playersInLoop1V[i] == player.Name then
-            table.remove(playersInLoop1V, i)
-        end
-    end
-
-    task.defer(UpdatePlayerDropdownV1)
-end)
 ---------------- [타겟설정]
 local oatsKickActive = false
 local oatsKickTask = nil
@@ -8967,7 +8935,7 @@ local function loopBestKickF()
 end
 
 LoopTab:AddToggle({
-    Name = "Set Onwer Kick TOP1<font color='rgb(255,154,123)'>[Kick]</font>",
+    Name = "Set Onwer Kick",
     Default = false,
     Callback = function(Value)
         oatsKickActive = Value
@@ -9026,16 +8994,6 @@ LoopTab:AddToggle({
     end
 })
 
-LoopTab:AddToggle({
-    Name = " ┗ Options: Ragdoll",
-    Default = false,
-    Callback = function(Value)
-        oatsKickRagdollOpt = Value
-        if not Value then
-            cleanupRagdoll()
-        end
-    end
-})
 
 LoopTab:AddToggle({
     Name = " ┗ Options: Line Lag",
