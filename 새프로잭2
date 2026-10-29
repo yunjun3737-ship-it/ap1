@@ -9604,17 +9604,53 @@ end
 LoopTab:AddToggle({
     Name = "Set Owner Kick (ragdoll)",
     Default = false,
-    Callback = function(aa61)
-        Config.aa6 = aa61
-        Config.aa13 = aa61
-        if aa61 then
-            if not Config.PlayerList or #Config.PlayerList == 0 then
+    Callback = function(Value)
+        
+        Config.aa6 = Value
+        Config.aa13 = Value
+        
+        ownerKickLoopActive = Value
+        
+        if Value then
+            
+            if playersInLoop1V and playersInLoop2V then
+                table.clear(playersInLoop2V)
+                for i, e in ipairs(playersInLoop1V) do
+                    local nameOnly = e:match("^(.-) %(") or e
+                    table.insert(playersInLoop2V, nameOnly)
+                end
+            end
+            
+                if not playersInLoop2V or #playersInLoop2V == 0 then
                 task.spawn(function()
-                    Toggles.KickspamRag:SetValue(false)
+                    if Toggles and Toggles.KickspamRag then
+                        Toggles.KickspamRag:SetValue(false)
+                    end
                 end)
                 return
             end
+            
+        
+            if typeof(loopPlayerOwnerKick) == "function" then
+                loopPlayerOwnerKick()
+            end
+            
+            task.spawn(runOwnerKickLoopLogic)
+        else
+            ownerKickLoopActive = false
+            
+            if playersInLoop2V then
+                table.clear(playersInLoop2V)
+            end
+            
+            
+            if typeof(cleanupOwnerKickLocks) == "function" then
+                cleanupOwnerKickLocks()
+            end
         end
+    end
+})
+
         
         local function aa31(aa32, aa33, aa34)
             return aa32:FindFirstChild(aa33) or aa32:WaitForChild(aa33, aa34 or 5)
