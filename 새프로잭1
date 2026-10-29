@@ -1373,7 +1373,7 @@ playerTab:AddButton({
     	end)
 	end
 })
-antiTab:AddSection({
+playerTab:AddSection({
 	Name = "View"
 })
 do
@@ -1499,9 +1499,9 @@ function permRagdollLoopF()
     setRagdollF(false)
 end
 
-antiTab:AddToggle({
+playerTab:AddToggle({
     Name = "Ragdoll",
-    
+    Default = false,
     save = true,
     Flag = "367wff64",
     Callback = function(Value)
