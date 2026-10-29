@@ -9601,7 +9601,8 @@ LoopTab:AddToggle({
 })
           
 end
-LoopTab:AddToggle({
+
+  LoopTab:AddToggle({
     Name = "Set Owner Kick (ragdoll)",
     Default = false,
     Callback = function(Value)
@@ -9621,7 +9622,7 @@ LoopTab:AddToggle({
                 end
             end
             
-                if not playersInLoop2V or #playersInLoop2V == 0 then
+            if not playersInLoop2V or #playersInLoop2V == 0 then
                 task.spawn(function()
                     if Toggles and Toggles.KickspamRag then
                         Toggles.KickspamRag:SetValue(false)
@@ -9630,7 +9631,6 @@ LoopTab:AddToggle({
                 return
             end
             
-        
             if typeof(loopPlayerOwnerKick) == "function" then
                 loopPlayerOwnerKick()
             end
@@ -9643,15 +9643,11 @@ LoopTab:AddToggle({
                 table.clear(playersInLoop2V)
             end
             
-            
             if typeof(cleanupOwnerKickLocks) == "function" then
                 cleanupOwnerKickLocks()
             end
         end
-    end
 
-
-        
         local function aa31(aa32, aa33, aa34)
             return aa32:FindFirstChild(aa33) or aa32:WaitForChild(aa33, aa34 or 5)
         end
@@ -9740,7 +9736,8 @@ LoopTab:AddToggle({
                 aa51:Destroy()
                 Config.aa17 = false
                 return nil
-            end            for _, aa54 in pairs(aa51:GetDescendants()) do
+            end            
+            for _, aa54 in pairs(aa51:GetDescendants()) do
                 if aa54:IsA("BasePart") then
                     aa54.CanCollide = false
                     aa54.Transparency = 0.8
@@ -9796,7 +9793,7 @@ LoopTab:AddToggle({
             Config.running = false
         end
         
-        if aa61 then
+        if Value then
             if not Config.PlayerList or #Config.PlayerList == 0 then
                 return
             end
@@ -9807,6 +9804,7 @@ LoopTab:AddToggle({
         else
             stopLagSpam()
         end
+
         if Config.aa6 then
             task.spawn(function()
                 while Config.aa6 do
@@ -9859,7 +9857,8 @@ LoopTab:AddToggle({
                 end
             end)
         end
-        if aa61 then
+
+        if Value then
             local aa71 = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys")
             local aa72 = nil
             Config.aa73 = service.RunService.RenderStepped:Connect(function()
@@ -9901,6 +9900,6 @@ LoopTab:AddToggle({
                 Config.aa73 = nil
             end
         end
-    
+    end
 })
-            
+  
