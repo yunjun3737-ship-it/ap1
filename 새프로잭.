@@ -8555,40 +8555,29 @@ end
 
 do
 playersInLoop1V = playersInLoop1V or {}
-playersInLoop2V = playersInLoop2V or {}
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local function AddSelectedPlayerV1(value)
+    local name
 
-local function SyncLoopPlayersV1()
-    table.clear(playersInLoop2V)
+    if typeof(value) == "Instance" and value:IsA("Player") then
+        name = value.Name
+    elseif type(value) == "string" then
+        name = value:match("^(.-) %(") or value
+    end
 
-    for _, name in ipairs(playersInLoop1V) do
-        if Players:FindFirstChild(name) then
-            table.insert(playersInLoop2V, name)
-        end
+    if not name or name == "" then
+        return
+    end
+
+    if not table.find(playersInLoop1V, name) then
+        table.insert(playersInLoop1V, name)
     end
 end
 
 LoopTab:AddPlayersDropdown({
     Name = "Target Select ",
-    Options = {},
     Callback = function(value)
-        local name = typeof(value) == "Instance" and value.Name or tostring(value)
-
-        if name == "" or name == LocalPlayer.Name then
-            return
-        end
-
-        if not Players:FindFirstChild(name) then
-            return
-        end
-
-        if not table.find(playersInLoop1V, name) then
-            table.insert(playersInLoop1V, name)
-        end
-
-        SyncLoopPlayersV1()
+        AddSelectedPlayerV1(value)
     end
 })
 ---------------- [타겟설정]
