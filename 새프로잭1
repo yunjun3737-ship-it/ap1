@@ -1117,7 +1117,7 @@ end
 playerTab:AddSection({
 	Name = "Desync&Other"
 })
-do
+
 local desync1Enabled = false
 function Desync1Start()
     task.spawn(function()
