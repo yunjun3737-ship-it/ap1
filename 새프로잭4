@@ -214,7 +214,7 @@ local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Camera = workspace.CurrentCamera
-
+--[[
 local characterEventsFolder = ReplicatedStorage:WaitForChild("CharacterEvents")
 local ragdollRemoteEvent = characterEventsFolder:WaitForChild("RagdollRemote")
 local struggleEvent = characterEventsFolder:WaitForChild("Struggle")
@@ -226,7 +226,7 @@ local SpawnToyRF = menuToysFolder:WaitForChild("SpawnToyRemoteFunction")
 local DeleteToyRE = menuToysFolder:WaitForChild("DestroyToy")
 local playerEventsFolder = ReplicatedStorage:WaitForChild("PlayerEvents")
 local StickyPartEvent = playerEventsFolder:WaitForChild("StickyPartEvent")
-
+]]
 local Character = plr.Character or plr.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
 local RootPart = Character:WaitForChild("HumanoidRootPart")
@@ -299,7 +299,7 @@ function plrpart(char)
         fetch(hum, "Ragdolled",    "rag")
     end)
 end
-
+--[[
 local CharacterEvents = ReplicatedStorage:FindFirstChild("CharacterEvents")
 local GrabEvents      = ReplicatedStorage:FindFirstChild("GrabEvents")
 local PlayerEvents    = ReplicatedStorage:FindFirstChild("PlayerEvents")
@@ -349,7 +349,7 @@ local function onCharacterAdded(char)
         task.spawn(cb, char)
     end
 end
-
+]]
 plr.CharacterAdded:Connect(onCharacterAdded)
 
 
