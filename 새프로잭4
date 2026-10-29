@@ -10402,10 +10402,6 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
 
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "Hub", HidePremium = false, SaveConfig = false, ConfigFolder = "OrionConfig"})
-local BlobGroupbox = Window:MakeTab({Name = "Blobman", Icon = "rbxassetid://4483345998", PremiumOnly = false})
-
 local Toggles = {}
 
 local playerMap = {}
@@ -10483,7 +10479,7 @@ end
 
 Players.PlayerAdded:Connect(updateDropdown)
 Players.PlayerRemoving:Connect(updateDropdown)
---[[
+
 LoopTab:AddButton({
     Name = "Bring",
     Callback = function()
@@ -10527,7 +10523,7 @@ LoopTab:AddButton({
         task.wait(0.5)
     end
 })
-]]
+
 local killThread = nil
 
 LoopTab:AddToggle({
