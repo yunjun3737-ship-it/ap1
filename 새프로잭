@@ -5639,7 +5639,121 @@ end
             end
         end
     })
+local RunService = game:GetService("RunService")
+local notifyCooldowns = {}
+local AntiBlobConnection = nil
 
+local function CheckBlob(blob, myHRP, myAttach, occupantName)
+
+end
+
+function AntiBlobF()
+    if AntiBlobConnection then 
+        AntiBlobConnection:Disconnect() 
+        AntiBlobConnection = nil
+    end
+
+    AntiBlobConnection = RunService.Stepped:Connect(function()
+        if not AntiBlobT then 
+            if AntiBlobConnection then 
+                AntiBlobConnection:Disconnect() 
+                AntiBlobConnection = nil
+            end
+            return 
+        end
+
+        local myChar = plr.Character
+        if not myChar then return end
+        local humanoid = myChar:FindFirstChild("Humanoid")
+        local myHRP = myChar:FindFirstChild("HumanoidRootPart")
+
+        local myAttach = myHRP and myHRP:FindFirstChild("RootAttachment")
+
+        if not (myHRP and myAttach) then 
+            return
+        end
+
+        if inv then
+            for _, blob in ipairs(inv:GetChildren()) do
+                if blob.Name == "CreatureBlobman" then
+                    local occupantName = "{me}"
+                    local vehicleSeat = blob:FindFirstChild("VehicleSeat")
+                    if vehicleSeat and vehicleSeat.Occupant then
+                        local character = vehicleSeat.Occupant.Parent
+                        if character then
+                            local player = game.Players:GetPlayerFromCharacter(character)
+                            if player then
+                                occupantName = player.Name
+                            end
+                        end
+                    end
+                    CheckBlob(blob, myHRP, myAttach, occupantName)
+                end
+            end
+        end
+
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            if player ~= plr then
+                local invs = workspace:FindFirstChild(player.Name .. "SpawnedInToys")
+                if invs then
+                    for _, blob in ipairs(invs:GetChildren()) do
+                        if blob.Name == "CreatureBlobman" then
+                            local occupantName = player.Name
+                            local vehicleSeat = blob:FindFirstChild("VehicleSeat")
+                            if vehicleSeat and vehicleSeat.Occupant then
+                                local character = vehicleSeat.Occupant.Parent
+                                if character then
+                                    local occupantPlayer = game.Players:GetPlayerFromCharacter(character)
+                                    if occupantPlayer then
+                                        occupantName = occupantPlayer.Name
+                                    end
+                                end
+                            end
+                            CheckBlob(blob, myHRP, myAttach, occupantName)
+                        end
+                    end
+                end
+            end
+        end
+
+        local plots = workspace:FindFirstChild("PlotItems")
+        if plots then
+            for i = 1, 5 do
+                local plot = plots:FindFirstChild("Plot" .. i)
+                if plot then
+                    for _, blob in ipairs(plot:GetChildren()) do
+                        if blob.Name == "CreatureBlobman" then
+                            local occupantName = "Plot " .. i
+                            local vehicleSeat = blob:FindFirstChild("VehicleSeat")
+                            if vehicleSeat and vehicleSeat.Occupant then
+                                local character = vehicleSeat.Occupant.Parent
+                                if character then
+                                    local player = game.Players:GetPlayerFromCharacter(character)
+                                    if player then
+                                        occupantName = player.Name
+                                    end
+                                end
+                            end
+                            CheckBlob(blob, myHRP, myAttach, occupantName)
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+antiTab:AddToggle({
+	Name = "Anti Blobman (Check)",
+	Default = false,
+    save = true,
+	Flag = "15sgbbw25",
+	Callback = function(Value)
+		AntiBlobT = Value
+		if Value then
+			AntiBlobF()
+		end
+	end
+})
 antiTab:AddToggle({
     Name = "Anti blob kill",
     Default = false,
@@ -5867,6 +5981,184 @@ antiTab:AddToggle({
             end
         end)
     end
+})
+
+function AntiBlobUseF()
+    task.spawn(function()
+        local FallenY = workspace.FallenPartsDestroyHeight
+        local targetY = (FallenY <= -50000 and -49999) or (FallenY <= -100 and -99) or -100
+        local dropPos = CFrame.new(0, targetY, 9999)
+        local plr = game.Players.LocalPlayer
+        local targetItems = {"CreatureBlobman", "TractorRed", "TractorOrange", "TractorGreen", "SantaSleigh"}
+
+        local processedBlobs = {}
+        local cleanupInterval = 2
+
+        while AntiBlobUseT do
+            task.wait(0.01)
+
+            local char = plr.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+            if not char or not root or not hum then continue end
+
+            local myPlotNumber = nil
+            local plots = workspace:FindFirstChild("Plots")
+            if plots then
+                for i = 1, 5 do
+                    local plot = plots:FindFirstChild("Plot" .. i)
+                    local plotSign = plot and plot:FindFirstChild("PlotSign")
+                    local owners = plotSign and plotSign:FindFirstChild("ThisPlotsOwners")
+                    local ownerVal = owners and owners:FindFirstChildOfClass("StringValue")
+                    if ownerVal and ownerVal.Value == plr.Name then
+                        myPlotNumber = i
+                        break
+                    end
+                end
+            end
+
+            local function collectItemsFromFolder(folder)
+                local items = {}
+                for _, item in ipairs(folder:GetChildren()) do
+                    if item:IsA("Model") and table.find(targetItems, item.Name) then
+                        if item:FindFirstChild("VehicleSeat") then
+                            local vs = item:FindFirstChildOfClass("VehicleSeat")
+                            if vs and vs.Occupant then 
+                                if vs.Occupant == hum then
+                                    table.insert(items, item)
+                                end
+                                continue 
+                            end
+
+                            local itemId = tostring(item:GetDebugId())
+                            if not processedBlobs[itemId] then
+                                table.insert(items, item)
+                            end
+                        end
+                    end
+                end
+                return items
+            end
+
+            local allItems = {}
+            for _, player in ipairs(game.Players:GetPlayers()) do
+                if player == plr then continue end
+                if WhiteListMode then
+                    local inWhitelist = false
+                    for _, whiteName in ipairs(Whitelist) do 
+                        if player.Name == whiteName then 
+                            inWhitelist = true 
+                            break 
+                        end 
+                    end
+                    if inWhitelist then continue end
+                end
+                local folder = workspace:FindFirstChild(player.Name .. "SpawnedInToys")
+                if folder then 
+                    for _, item in ipairs(collectItemsFromFolder(folder)) do 
+                        table.insert(allItems, item) 
+                    end 
+                end
+            end
+
+            local plotItems = workspace:FindFirstChild("PlotItems")
+            if plotItems then
+                for i = 1, 5 do
+                    if i == myPlotNumber then continue end
+                    local plot = plotItems:FindFirstChild("Plot" .. i)
+                    if plot then 
+                        for _, item in ipairs(collectItemsFromFolder(plot)) do 
+                            table.insert(allItems, item) 
+                        end 
+                    end
+                end
+            end
+
+            for _, item in ipairs(allItems) do
+                if not AntiBlobUseT then break end
+
+                local itemId = tostring(item:GetDebugId())
+
+                if processedBlobs[itemId] then
+                    continue
+                end
+
+                local char = plr.Character
+                local root = char and char:FindFirstChild("HumanoidRootPart")
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+                if not char or not root or not hum then break end
+
+                local vs = item:FindFirstChildOfClass("VehicleSeat")
+
+                if vs then
+                    if vs.Occupant and vs.Occupant ~= hum then 
+                        continue 
+                    end
+
+                    root.Anchored = true
+                    vs:Sit(hum)
+
+                    if hum and vs then
+                    task.wait(0.1)
+                    hum:ChangeState(Enum.HumanoidStateType.Running)
+                    task.wait()
+                    if item.PrimaryPart then item:SetPrimaryPartCFrame(dropPos) end
+                    root.Anchored = false
+
+                        if root and vs then
+                            local connection
+                            connection = vs.AncestryChanged:Connect(function()
+                                if not vs or not vs.Parent then
+                                    if connection then
+                                        connection:Disconnect()
+                                    end
+                                    processedBlobs[itemId] = true
+
+                                    task.delay(cleanupInterval, function()
+                                        processedBlobs[itemId] = nil
+                                    end)
+                                end
+                            end)
+
+                            task.delay(2, function()
+                                if connection then
+                                    connection:Disconnect()
+                                end
+                                processedBlobs[itemId] = true
+
+                                task.delay(cleanupInterval, function()
+                                    processedBlobs[itemId] = nil
+                                end)
+                            end)
+                        end
+                    end
+
+                    task.wait(0.0001)
+                end
+
+                break
+            end
+        end
+    end)
+end
+
+antiTab:AddToggle({
+Name = "Anti Blob Use (Gucci)",
+Default = false,
+Flag = "28cuf2",
+Callback = function(Value)
+AntiBlobUseT = Value
+
+
+    if Value then
+        AntiBlobUseF()
+    end
+end
+
+
+
 })
 
 
@@ -6766,8 +7058,8 @@ antiTab:AddToggle({
 end
 
 
-antiTab:AddSection({
-	Name = "anti helper"
+AntiTab:AddSection({
+	Name = "Helper Anti"
 })
 do
 local Players = game:GetService("Players")
@@ -6937,7 +7229,42 @@ antiTab:AddDropdown({
         end
     end
 })
+plotItemsFolder = workspace:WaitForChild("PlotItems")
+playersInPlotsFolder = plotItemsFolder:WaitForChild("PlayersInPlots")
 
+function antiInPlotsLoop()
+    while antiInPlotsEnabled do
+        for _, q in pairs(game.Players:GetPlayers()) do
+            if q == d then continue end
+
+            local char = q.Character
+
+            if char and char.Parent then
+                local inPlot = playersInPlotsFolder:FindFirstChild(q.Name)
+
+                if inPlot then
+                    if char.Parent ~= inv then
+                        char.Parent = inv
+                    end
+                end
+            end
+        end
+
+        task.wait()
+    end
+end
+antiTab:AddToggle({
+    Name = "Anti plot (part)",
+    Default = false,
+    save = true,
+    Flag = "yquidsgwjsj",
+    Callback = function(Value)
+    antiInPlotsEnabled = Value
+         if Value then
+            task.spawn(antiInPlotsLoop)
+        end
+    end
+})
 antiTab:AddToggle({
     Name = "Anti void",
     
