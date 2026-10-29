@@ -299,7 +299,7 @@ function plrpart(char)
         fetch(hum, "Ragdolled",    "rag")
     end)
 end
---[[
+
 local CharacterEvents = ReplicatedStorage:FindFirstChild("CharacterEvents")
 local GrabEvents      = ReplicatedStorage:FindFirstChild("GrabEvents")
 local PlayerEvents    = ReplicatedStorage:FindFirstChild("PlayerEvents")
@@ -349,7 +349,7 @@ local function onCharacterAdded(char)
         task.spawn(cb, char)
     end
 end
-]]
+
 plr.CharacterAdded:Connect(onCharacterAdded)
 
 
@@ -386,7 +386,7 @@ PLOT_MAP = {
     ["Blue-Plot"]    = "Plot4",
     ["Chinese-Plot"] = "Plot5",
 }
-
+--[[
 UseRemote = service.ReplicatedStorage.HoldEvents:WaitForChild("Use")
 FurtherReachBoughtNotifier = service.ReplicatedStorage.GamepassEvents:WaitForChild("FurtherReachBoughtNotifier")
 Struggle = service.ReplicatedStorage.CharacterEvents:WaitForChild("Struggle")
@@ -419,7 +419,7 @@ PlayerScripts = localPlayer:WaitForChild("PlayerScripts")
 CharacterAndBeamMove = PlayerScripts:WaitForChild("CharacterAndBeamMove")
 isHeld = localPlayer:WaitForChild("IsHeld")
 AntiShuriLag = PlayerScripts:WaitForChild("StickyPartsTouchDetection")
-
+]]
 function sno(part)
     SetNetworkOwner:FireServer(part, part.CFrame)
 end
