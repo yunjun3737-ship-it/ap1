@@ -1373,7 +1373,9 @@ playerTab:AddButton({
     	end)
 	end
 })
-
+antiTab:AddSection({
+	Name = "View"
+})
 do
 local CameraToggle = false
 local CameraLoopID = 0
@@ -1478,7 +1480,39 @@ playerTab:AddToggle({
         end
     end
 })
+function setRagdollF(state)
+    char = plr.Character
+    hrp = char:WaitForChild("HumanoidRootPart")
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        rs.CharacterEvents.RagdollRemote:FireServer(hrp, state and 1 or 0)
+    end
+end
 
+function permRagdollLoopF()
+    if permRagdollRunningS then return end
+    permRagdollRunningS = true
+    while permRagdollT do
+        setRagdollF(true)
+        task.wait(0.001) 
+    end
+    permRagdollRunningS = false
+    setRagdollF(false)
+end
+
+antiTab:AddToggle({
+    Name = "Ragdoll",
+    
+    save = true,
+    Flag = "367wff64",
+    Callback = function(Value)
+        permRagdollT = Value
+        if permRagdollT and not permRagdollRunningS then
+            coroutine.wrap(permRagdollLoopF)()
+        elseif not permRagdollT then
+            permRagdollRunningS = false
+        end
+    end
+})
 end
 
 
@@ -3869,8 +3903,29 @@ antiTab:AddSection({
         end
     })
 end
+function setRagdollF(state)
+    char = plr.Character
+    hrp = char:WaitForChild("HumanoidRootPart")
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        rs.CharacterEvents.RagdollRemote:FireServer(hrp, state and 1 or 0)
+    end
+end
+
+function permRagdollLoopF()
+    if permRagdollRunningS then return end
+    permRagdollRunningS = true
+    while permRagdollT do
+        setRagdollF(true)
+        task.wait(0.001) 
+    end
+    permRagdollRunningS = false
+    setRagdollF(false)
+end
+
+
 RunService = game:GetService("RunService")
 isvs = false
+
 
 function AntiGrabF(enable)
     if antiGrabConn then
@@ -4453,7 +4508,171 @@ antiTab:AddToggle({
 		end
 	end    
 })
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 
+local characterConnections = {}
+local activeCharacters = setmetatable({}, { __mode = "k" })
+
+local MAX_VELOCITY_THRESHOLD = 150
+local MAX_ROT_VELOCITY_THRESHOLD = 150
+_G.AntiFlingEnabled = false
+
+local function cleanupCharacterConnections(userId)
+    if characterConnections[userId] then
+        for connection in pairs(characterConnections[userId]) do
+            if connection then connection:Disconnect() end
+        end
+        characterConnections[userId] = nil
+    end
+    activeCharacters[userId] = nil
+end
+
+local function monitorCharacter(character)
+    if not _G.AntiFlingEnabled then return end
+    
+    local userId = LocalPlayer.UserId
+    cleanupCharacterConnections(userId)
+    
+    local rootPart = character:WaitForChild("HumanoidRootPart", 5)
+    local humanoid = character:WaitForChild("Humanoid", 5)
+    if not rootPart or not humanoid then return end
+
+    characterConnections[userId] = {}
+    local registry = characterConnections[userId]
+
+    local charData = {
+        RootPart = rootPart,
+        Humanoid = humanoid,
+        LastSafeCFrame = rootPart.CFrame,
+        Parts = {}
+    }
+    activeCharacters[userId] = charData
+
+    local function refreshParts()
+        table.clear(charData.Parts)
+        for _, descendant in ipairs(character:GetDescendants()) do
+            if descendant:IsA("BasePart") and not descendant.Anchored then
+                table.insert(charData.Parts, descendant)
+            end
+        end
+    end
+
+    local addedConnection = character.DescendantAdded:Connect(function(descendant)
+        if descendant:IsA("BasePart") then
+            refreshParts()
+        end
+    end)
+    registry[addedConnection] = true
+
+    refreshParts()
+
+    local mainPhysicsConnection
+    mainPhysicsConnection = RunService.Heartbeat:Connect(function()
+        if not _G.AntiFlingEnabled then
+            cleanupCharacterConnections(userId)
+            return
+        end
+
+        if not character or not character.Parent or humanoid.Health <= 0 then
+            cleanupCharacterConnections(userId)
+            return
+        end
+
+        local anomalyDetected = false
+
+        for _, part in ipairs(charData.Parts) do
+            if part and part.Parent then
+                local velocity = part.AssemblyLinearVelocity.Magnitude
+                local rotVelocity = part.AssemblyAngularVelocity.Magnitude
+
+                if velocity > MAX_VELOCITY_THRESHOLD or rotVelocity > MAX_ROT_VELOCITY_THRESHOLD then
+                    anomalyDetected = true
+                    part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                end
+            end
+        end
+
+        if anomalyDetected then
+            if charData.LastSafeCFrame then
+                rootPart.CFrame = charData.LastSafeCFrame
+            end
+        else
+            charData.LastSafeCFrame = rootPart.CFrame
+        end
+    end)
+    registry[mainPhysicsConnection] = true
+
+    local removingConnection
+    removingConnection = character.AncestryChanged:Connect(function(_, parent)
+        if not parent then cleanupCharacterConnections(userId) end
+    end)
+    registry[removingConnection] = true
+end
+
+LocalPlayer.CharacterAdded:Connect(monitorCharacter)
+antiTab:AddToggle({
+    Name = "House Anti TP Grab",
+    Default = false,
+    Flag = "HouseeTpAnteiseGrab",
+    Callback = function(v)
+        Settings.Anti.HouseTpAntiGrab = v
+        if v then
+            if State.houseTpConn then return end
+            local housePositions = {
+                Vector3.new(295.6128234863281, -7.405966758728027, 486.5804138183594),
+                Vector3.new(-575.0462036132812, -9.292041778564453, 87.85179901123047),
+                Vector3.new(-526.5169677734375, -9.296868324279785, -165.31671142578125),
+                Vector3.new(524.0487670898438, 80.51884460449219, -366.8386535644531),
+                Vector3.new(577.5789184570312, 121.39737701416016, -93.60242462158203),
+            }
+
+            local function doHouseTp()
+                if not Settings.Anti.HouseTpAntiGrab then return end
+                local char = LocalPlayer.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if not hrp or not hum or hum.Health <= 0 then return end
+                local pos = housePositions[math.random(1, #housePositions)]
+                hrp.CFrame = CFrame.new(pos)
+                hrp.AssemblyLinearVelocity = Vector3.zero
+                hrp.AssemblyAngularVelocity = Vector3.zero
+            end
+
+            State.houseTpConn = {}
+            local lastHouseTp = 0
+            State.houseTpConn.heartbeat = RunService.Heartbeat:Connect(function()
+                if not Settings.Anti.HouseTpAntiGrab then return end
+                local now = tick()
+                if now - lastHouseTp < 0.04 then return end
+                lastHouseTp = now
+                doHouseTp()
+            end)
+            State.houseTpConn.respawn = LocalPlayer.CharacterAdded:Connect(function()
+                if not Settings.Anti.HouseTpAntiGrab then return end
+                local char = LocalPlayer.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if not hrp then
+                    hrp = char and char:WaitForChild("HumanoidRootPart", 2)
+                end
+                if hrp then
+                    local pos = housePositions[math.random(1, #housePositions)]
+                    hrp.CFrame = CFrame.new(pos)
+                    hrp.AssemblyLinearVelocity = Vector3.zero
+                    hrp.AssemblyAngularVelocity = Vector3.zero
+                end
+            end)
+        else
+            if State.houseTpConn then
+                if State.houseTpConn.heartbeat then State.houseTpConn.heartbeat:Disconnect() end
+                if State.houseTpConn.respawn then State.houseTpConn.respawn:Disconnect() end
+                State.houseTpConn = nil
+            end
+        end
+    end
+})
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -4896,7 +5115,7 @@ task.spawn(function()
 end)
 
 antiTab:AddToggle({
-    Name = "Anti kill (SetOwner)",
+    Name = "Anti kill (SetOwner+tractor)",
     Default = false,
     Flag = "ou2wghrx2o7fr",
     Callback = function(value)
@@ -8212,7 +8431,7 @@ end
 local flyingResetConn = nil
 
 antiTab:AddToggle({
-    Name = "Auto reset",
+    Name = "Auto Reset",
     Default = false,
     Flag = "owideguxj",
     Callback = function(Value)
