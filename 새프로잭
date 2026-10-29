@@ -1433,8 +1433,8 @@ local currentLoopID = CameraLoopID
             plr.CameraMaxZoomDistance = 100000
         end
     end)
+})
 
---[[
 playerTab:AddToggle({
     Name = "jerk off",
     Default = false,
@@ -1478,13 +1478,13 @@ playerTab:AddToggle({
         end
     end
 })
-]]
+
 end
 
 
 
 --===== Reach 및 Infinite Line 기능 =====
-
+do
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
