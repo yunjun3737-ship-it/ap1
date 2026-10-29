@@ -9713,7 +9713,7 @@ LoopTab:AddToggle({
     Default = false,
     --Flag = "OwnershipKickLoopV2",
     Callback = function(Value)
-        Settings.Loop.ownershipKickV2Active = Value
+       -- Settings.Loop.ownershipKickV2Active = Value
         if not Value then
             if ownershipKickV2Task then task.cancel(ownershipKickV2Task) ownershipKickV2Task = nil end
             if ownershipKickV2FloatConn then ownershipKickV2FloatConn:Disconnect() ownershipKickV2FloatConn = nil end
