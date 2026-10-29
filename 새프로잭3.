@@ -1437,7 +1437,7 @@ end
 playerTab:AddToggle({
     Name = "jerk off",
     Default = false,
-    Flag = "JerkMotiownToggle",
+    Flag = "JerkMotiownTuoggle",
     Callback = function(Value)
         jerkActive = Value
 
