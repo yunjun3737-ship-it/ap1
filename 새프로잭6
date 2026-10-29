@@ -9602,49 +9602,38 @@ LoopTab:AddToggle({
           
 end
 
-  LoopTab:AddToggle({
-    Name = "Set Owner Kick (ragdoll)",
+LoopTab:AddToggle({
+    Name = "Set Owner Kick (ragdoll) <font color='rgb(255,154,123)'>[]</font>",
     Default = false,
-    Callback = function(Value)
+    Callback = function(aa61)
+        Config.aa6 = aa61
+        Config.aa13 = aa61
         
-        Config.aa6 = Value
-        Config.aa13 = Value
-        
-        ownerKickLoopActive = Value
-        
-        if Value then
-            
-            if playersInLoop1V and playersInLoop2V then
+        -- [루프플레이어 V1 -> V2 이식 파트 (기존 로직 연동)]
+        if aa61 then
+            if playersInLoop2V and playersInLoop1V then
                 table.clear(playersInLoop2V)
                 for i, e in ipairs(playersInLoop1V) do
                     local nameOnly = e:match("^(.-) %(") or e
                     table.insert(playersInLoop2V, nameOnly)
                 end
             end
-            
-            if not playersInLoop2V or #playersInLoop2V == 0 then
-                task.spawn(function()
-                    if Toggles and Toggles.KickspamRag then
-                        Toggles.KickspamRag:SetValue(false)
-                    end
-                end)
-                return
-            end
-            
-            if typeof(loopPlayerOwnerKick) == "function" then
-                loopPlayerOwnerKick()
-            end
-            
-            task.spawn(runOwnerKickLoopLogic)
+            -- 원래 밑의 로직들이 타겟을 바로 잡을 수 있도록 PlayerList에 V2 값을 연결
+            Config.PlayerList = playersInLoop2V
         else
-            ownerKickLoopActive = false
-            
             if playersInLoop2V then
                 table.clear(playersInLoop2V)
             end
-            
-            if typeof(cleanupOwnerKickLocks) == "function" then
-                cleanupOwnerKickLocks()
+            Config.PlayerList = {}
+        end
+        -- [이식 끝]
+
+        if aa61 then
+            if not Config.PlayerList or #Config.PlayerList == 0 then
+                task.spawn(function()
+                    Toggles.KickspamRag:SetValue(false)
+                end)
+                return
             end
         end
 
@@ -9793,13 +9782,16 @@ end
             Config.running = false
         end
         
-        if Value then
+        if aa61 then
             if not Config.PlayerList or #Config.PlayerList == 0 then
                 return
             end
-            task.wait(9999)
-            task.defer(function()
-                startLagSpam()
+            
+            task.spawn(function()
+                task.wait(9999)
+                task.defer(function()
+                    startLagSpam()
+                end)
             end)
         else
             stopLagSpam()
@@ -9857,8 +9849,8 @@ end
                 end
             end)
         end
-
-        if Value then
+        
+        if aa61 then
             local aa71 = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys")
             local aa72 = nil
             Config.aa73 = service.RunService.RenderStepped:Connect(function()
@@ -9902,4 +9894,3 @@ end
         end
     end
 })
-  
