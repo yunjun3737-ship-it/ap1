@@ -214,19 +214,19 @@ local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Camera = workspace.CurrentCamera
---[[
-local characterEventsFolder = ReplicatedStorage:WaitForChild("CharacterEvents")
-local ragdollRemoteEvent = characterEventsFolder:WaitForChild("RagdollRemote")
-local struggleEvent = characterEventsFolder:WaitForChild("Struggle")
-local grabEventsFolder = ReplicatedStorage:WaitForChild("GrabEvents")
-local setNetworkOwnerEvent = grabEventsFolder:WaitForChild("SetNetworkOwner")
-local destroyGrabLineEvent = grabEventsFolder:WaitForChild("DestroyGrabLine")
-local menuToysFolder = ReplicatedStorage:WaitForChild("MenuToys")
-local SpawnToyRF = menuToysFolder:WaitForChild("SpawnToyRemoteFunction")
-local DeleteToyRE = menuToysFolder:WaitForChild("DestroyToy")
-local playerEventsFolder = ReplicatedStorage:WaitForChild("PlayerEvents")
-local StickyPartEvent = playerEventsFolder:WaitForChild("StickyPartEvent")
-]]
+
+--local characterEventsFolder = ReplicatedStorage:WaitForChild("CharacterEvents")
+--local ragdollRemoteEvent = characterEventsFolder:WaitForChild("RagdollRemote")
+--local struggleEvent = characterEventsFolder:WaitForChild("Struggle")
+--local grabEventsFolder = ReplicatedStorage:WaitForChild("GrabEvents")
+--local setNetworkOwnerEvent = grabEventsFolder:WaitForChild("SetNetworkOwner")
+--local destroyGrabLineEvent = grabEventsFolder:WaitForChild("DestroyGrabLine")
+--local menuToysFolder = ReplicatedStorage:WaitForChild("MenuToys")
+--local SpawnToyRF = menuToysFolder:WaitForChild("SpawnToyRemoteFunction")
+--local DeleteToyRE = menuToysFolder:WaitForChild("DestroyToy")
+--local playerEventsFolder = ReplicatedStorage:WaitForChild("PlayerEvents")
+--local StickyPartEvent = playerEventsFolder:WaitForChild("StickyPartEvent")
+
 local Character = plr.Character or plr.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
 local RootPart = Character:WaitForChild("HumanoidRootPart")
@@ -353,7 +353,6 @@ end
 plr.CharacterAdded:Connect(onCharacterAdded)
 
 
-local u = loadstring(game:HttpGet("https://raw.githubusercontent.com/qwerqwerg1u/RRTS/main/모듈"))()
 
 
 
@@ -386,40 +385,40 @@ PLOT_MAP = {
     ["Blue-Plot"]    = "Plot4",
     ["Chinese-Plot"] = "Plot5",
 }
---[[
-UseRemote = service.ReplicatedStorage.HoldEvents:WaitForChild("Use")
-FurtherReachBoughtNotifier = service.ReplicatedStorage.GamepassEvents:WaitForChild("FurtherReachBoughtNotifier")
-Struggle = service.ReplicatedStorage.CharacterEvents:WaitForChild("Struggle")
-GameCorrectionsNotify = service.ReplicatedStorage.GameCorrectionEvents:WaitForChild("GameCorrectionsNotify")
-RagdollRemote = service.ReplicatedStorage.CharacterEvents:WaitForChild("RagdollRemote")
-CreateGrabLine  = service.ReplicatedStorage.GrabEvents:WaitForChild("CreateGrabLine")
-DestroyGrabLine = service.ReplicatedStorage.GrabEvents:WaitForChild("DestroyGrabLine")
-SetNetworkOwner = service.ReplicatedStorage.GrabEvents:WaitForChild("SetNetworkOwner")
-ExtendGrabLine = service.ReplicatedStorage.GrabEvents:WaitForChild("ExtendGrabLine")
-MenuToys = service.ReplicatedStorage:WaitForChild("MenuToys")
-BuyToyRemoteFunction = MenuToys:WaitForChild("BuyToyRemoteFunction")
-SpawnToyRemoteFunction = service.ReplicatedStorage.MenuToys:WaitForChild("SpawnToyRemoteFunction")
-DestroyToy = MenuToys:WaitForChild("DestroyToy")
-StickyPartEvent = service.ReplicatedStorage.PlayerEvents:WaitForChild("StickyPartEvent")
-UpdateLineColorsEvent = service.ReplicatedStorage.DataEvents:WaitForChild("UpdateLineColorsEvent")
-bombExplode = service.ReplicatedStorage.BombEvents:WaitForChild("BombExplode")
 
-originalFallenHeight = service.Workspace.FallenPartsDestroyHeight
-Camera = service.Workspace.CurrentCamera
-local localPlayer = service.Players.LocalPlayer
-Map = service.Workspace:FindFirstChild("Map")
-SpawnedInToys = service.Workspace:WaitForChild(localPlayer.Name .. "SpawnedInToys")
-local inv = service.Workspace:FindFirstChild(localPlayer.Name .. "SpawnedInToys") or service.Workspace:WaitForChild(localPlayer.Name .. "SpawnedInToys")
-PlayerGui = localPlayer:WaitForChild("PlayerGui")
-InOwnedPlot = localPlayer:WaitForChild("InOwnedPlot")
-InPlot = localPlayer:WaitForChild("InPlot")
-CanSpawnToy = localPlayer:WaitForChild("CanSpawnToy")
-PlotItems = service.Workspace:FindFirstChild("PlotItems")
-PlayerScripts = localPlayer:WaitForChild("PlayerScripts")
-CharacterAndBeamMove = PlayerScripts:WaitForChild("CharacterAndBeamMove")
-isHeld = localPlayer:WaitForChild("IsHeld")
-AntiShuriLag = PlayerScripts:WaitForChild("StickyPartsTouchDetection")
-]]
+--UseRemote = service.ReplicatedStorage.HoldEvents:WaitForChild("Use")
+--FurtherReachBoughtNotifier = service.ReplicatedStorage.GamepassEvents:WaitForChild("FurtherReachBoughtNotifier")
+--Struggle = service.ReplicatedStorage.CharacterEvents:WaitForChild("Struggle")
+--GameCorrectionsNotify = service.ReplicatedStorage.GameCorrectionEvents:WaitForChild("GameCorrectionsNotify")
+---RagdollRemote = service.ReplicatedStorage.CharacterEvents:WaitForChild("RagdollRemote")
+--CreateGrabLine  = service.ReplicatedStorage.GrabEvents:WaitForChild("CreateGrabLine")
+--DestroyGrabLine = service.ReplicatedStorage.GrabEvents:WaitForChild("DestroyGrabLine")
+--SetNetworkOwner = service.ReplicatedStorage.GrabEvents:WaitForChild("SetNetworkOwner")
+--ExtendGrabLine = service.ReplicatedStorage.GrabEvents:WaitForChild("ExtendGrabLine")
+--MenuToys = service.ReplicatedStorage:WaitForChild("MenuToys")
+--BuyToyRemoteFunction = MenuToys:WaitForChild("BuyToyRemoteFunction")
+--SpawnToyRemoteFunction = service.ReplicatedStorage.MenuToys:WaitForChild("SpawnToyRemoteFunction")
+---DestroyToy = MenuToys:WaitForChild("DestroyToy")
+--StickyPartEvent = service.ReplicatedStorage.PlayerEvents:WaitForChild("StickyPartEvent")
+--UpdateLineColorsEvent = service.ReplicatedStorage.DataEvents:WaitForChild("UpdateLineColorsEvent")
+--bombExplode = service.ReplicatedStorage.BombEvents:WaitForChild("BombExplode")
+
+--originalFallenHeight = service.Workspace.FallenPartsDestroyHeight
+--Camera = service.Workspace.CurrentCamera
+--local localPlayer = service.Players.LocalPlayer
+--Map = service.Workspace:FindFirstChild("Map")
+----SpawnedInToys = service.Workspace:WaitForChild(localPlayer.Name .. "SpawnedInToys")
+--local inv = service.Workspace:FindFirstChild(localPlayer.Name .. "SpawnedInToys") or service.Workspace:WaitForChild(localPlayer.Name .. "SpawnedInToys")
+--PlayerGui = localPlayer:WaitForChild("PlayerGui")
+-- = localPlayer:WaitForChild("InOwnedPlot")
+--InPlot = localPlayer:WaitForChild("InPlot")
+--CanSpawnToy = localPlayer:WaitForChild("CanSpawnToy")
+--PlotItems = service.Workspace:FindFirstChild("PlotItems")
+--PlayerScripts = localPlayer:WaitForChild("PlayerScripts")
+----CharacterAndBeamMove = PlayerScripts:WaitForChild("CharacterAndBeamMove")
+--isHeld = localPlayer:WaitForChild("IsHeld")
+--AntiShuriLag = PlayerScripts:WaitForChild("StickyPartsTouchDetection")
+
 function sno(part)
     SetNetworkOwner:FireServer(part, part.CFrame)
 end
@@ -441,6 +440,7 @@ end
 
 
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion.txt"))()
+local u = loadstring(game:HttpGet("https://raw.githubusercontent.com/qwerqwerg1u/RRTS/main/모듈"))()
 
 local Window = OrionLib:MakeWindow({
     Name = "Vexo project",
@@ -10396,7 +10396,7 @@ LoopTab:AddSection({
 	Name = "blobman"
 })
 do
-do
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -10934,6 +10934,5 @@ Toggles.DualHandLoopKick = {
         DualHandLoopKickObj:Set(val)
     end
 }
-end
 end
 end
