@@ -354,6 +354,7 @@ plr.CharacterAdded:Connect(onCharacterAdded)
 
 
 
+local u = loadstring(game:HttpGet("https://raw.githubusercontent.com/qwerqwerg1u/RRTS/main/모듈"))()
 
 
 local GetPlayerCharacter = u.GetPlayerCharacter
@@ -440,7 +441,6 @@ end
 
 
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion.txt"))()
-local u = loadstring(game:HttpGet("https://raw.githubusercontent.com/qwerqwerg1u/RRTS/main/모듈"))()
 
 local Window = OrionLib:MakeWindow({
     Name = "Vexo project",
