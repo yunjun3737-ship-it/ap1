@@ -9971,7 +9971,7 @@ end
 
 currentDropdownOptions = getPlayerList()
 
-KickPlayerDropdown = LoopTab:AddPlayersDropdown({
+LoopTab:AddPlayersDropdown({
     Name = "Select Player",
     Default = "---",
     Options = currentDropdownOptions,
@@ -10246,7 +10246,7 @@ local function startKickV1()
     end)
 end
 
-LoopKickGrabToggle = LoopTab:AddToggle({
+LoopTab:AddToggle({
     Name = "Set Owner Kick",
     Default = false,
     Callback = function(on)
@@ -10292,7 +10292,7 @@ local function startRagdollThread()
     end)
 end
 
-RagdollGrabToggle = LoopTab:AddToggle({
+LoopTab:AddToggle({
     Name = "Pallet Ragdoll",
     Default = false,
     Flag = "29g7t28y",
