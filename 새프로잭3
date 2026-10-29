@@ -10396,6 +10396,7 @@ LoopTab:AddSection({
 	Name = "blobman"
 })
 do
+do
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -10933,5 +10934,6 @@ Toggles.DualHandLoopKick = {
         DualHandLoopKickObj:Set(val)
     end
 }
+end
 end
 end
