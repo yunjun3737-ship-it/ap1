@@ -9898,15 +9898,18 @@ LoopTab:AddSection({
 	Name = "Onwer kick Best"
 })
 
- local LoopKickGrabToggle
-local RagdollGrabToggle
-local AddPlayersDropdown 
-local currentDropdownValue = "---"
-local currentDropdownOptions = {}
+ 
+    local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local humanoidRootPart = character.HumanoidRootPart
-local humanoid = character.Humanoid
-local inventory = Workspace[LocalPlayer.Name.."SpawnedInToys"]
+local Toggles = {}
+
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart", 5) or character:FindFirstChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid", 5) or character:FindFirstChild("Humanoid")
+local inventory = Workspace:FindFirstChild(LocalPlayer.Name.."SpawnedInToys") or Workspace:WaitForChild(LocalPlayer.Name.."SpawnedInToys", 5)
 local cons = {}
 
 local function spawntoy(toy, cframe)
@@ -9970,19 +9973,23 @@ local function getPlayerList()
     return list
 end
 
-currentDropdownOptions = getPlayerList()
+local KickPlayerDropdown = {
+    Value = "---",
+    Values = getPlayerList()
+}
 
-LoopTab:AddPlayersDropdown({
+LoopTab:AddDropdown({
     Name = "Select Player",
     Default = "---",
-    Options = currentDropdownOptions,
+    Options = KickPlayerDropdown.Values,
     Callback = function(Value)
-        currentDropdownValue = Value
+        KickPlayerDropdown.Value = Value
         if Value and Value ~= "---" then
             local plr = playerMap[Value]
             if plr then
                 selectedKickPlayer = plr
                 getgenv().SelectedPlayer = plr.Name
+                print("Selected Player:", getgenv().SelectedPlayer)
             end
         else
             selectedKickPlayer = nil
@@ -9991,24 +9998,30 @@ LoopTab:AddPlayersDropdown({
     end
 })
 
+function KickPlayerDropdown:SetValues(newValues)
+    self.Values = newValues
+    actualDropdown:Refresh(newValues, true)
+end
+
+function KickPlayerDropdown:SetValue(newValue)
+    self.Value = newValue
+    actualDropdown:Set(newValue)
+end
+
 task.spawn(function()
     while true do
         task.wait(1) 
-        
-        if not AddPlayersDropdown then continue end 
-
         local updatedNames = getPlayerList()
-        local currentValue = currentDropdownValue
+        local currentValue = KickPlayerDropdown.Value
 
         if currentValue == "---" or not currentValue or not playerMap[currentValue] then
-            AddPlayersDropdown:Refresh(updatedNames, true)
-            AddPlayersDropdown:Set("---")
-            currentDropdownOptions = updatedNames
+            KickPlayerDropdown:SetValues(updatedNames)
+            KickPlayerDropdown:SetValue("---")
             selectedKickPlayer = nil
             getgenv().SelectedPlayer = nil
         else
             local needsUpdate = false
-            local currentNames = currentDropdownOptions
+            local currentNames = KickPlayerDropdown.Values
 
             if #currentNames ~= #updatedNames then
                 needsUpdate = true
@@ -10022,15 +10035,14 @@ task.spawn(function()
             end
             
             if needsUpdate then
-                AddPlayersDropdown:Refresh(updatedNames, true)
-                currentDropdownOptions = updatedNames
+                KickPlayerDropdown:SetValues(updatedNames)
 
                 if playerMap[currentValue] then
-                    AddPlayersDropdown:Set(currentValue)
+                    KickPlayerDropdown:SetValue(currentValue)
                     selectedKickPlayer = playerMap[currentValue]
                     getgenv().SelectedPlayer = selectedKickPlayer.Name
                 else
-                    AddPlayersDropdown:Set("---")
+                    KickPlayerDropdown:SetValue("---")
                     selectedKickPlayer = nil
                     getgenv().SelectedPlayer = nil
                 end
@@ -10086,9 +10098,7 @@ local function startKickV1()
         local myChar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
         local myRoot = myChar:FindFirstChild("HumanoidRootPart")
         if not myRoot then
-            if LoopKickGrabToggle then
-                LoopKickGrabToggle:Set(false)
-            end
+            Toggles.LoopKickGrabToggle:SetValue(false)
             kickLoopEnabled = false
             return
         end
@@ -10119,8 +10129,8 @@ local function startKickV1()
             local target = selectedKickPlayer
             if not target or not target.Parent then
                 kickLoopEnabled = false
-                if LoopKickGrabToggle then
-                    LoopKickGrabToggle:Set(false)
+                if Toggles and Toggles.LoopKickGrabToggle then
+                    Toggles.LoopKickGrabToggle:SetValue(false)
                 end
                 break
             end
@@ -10244,14 +10254,14 @@ local function startKickV1()
             myRoot.AssemblyAngularVelocity = Vector3.zero
         end
         kickLoopEnabled = false
-        if LoopKickGrabToggle then
-            LoopKickGrabToggle:Set(false)
+        if Toggles and Toggles.LoopKickGrabToggle then
+            Toggles.LoopKickGrabToggle:SetValue(false)
         end
     end)
 end
 
 LoopTab:AddToggle({
-    Name = "Owner Kick",
+    Name = "Set Owner Kick",
     Default = false,
     Callback = function(on)
         kickLoopEnabled = on
@@ -10262,6 +10272,12 @@ LoopTab:AddToggle({
         end
     end
 })
+
+Toggles.LoopKickGrabToggle = {
+    SetValue = function(self, val)
+        LoopKickGrabObj:Set(val)
+    end
+}
 
 local function startRagdollThread()
     if ragdollThread then
@@ -10306,8 +10322,8 @@ LoopTab:AddToggle({
             if not selectedKickPlayer or not selectedKickPlayer.Parent then
                 ragdollEnabled = false
                 task.defer(function()
-                    if RagdollGrabToggle then
-                        RagdollGrabToggle:Set(false)
+                    if Toggles and Toggles.RagdollGrab then
+                        Toggles.RagdollGrab:SetValue(false)
                     end
                 end)
                 return
@@ -10350,6 +10366,12 @@ LoopTab:AddToggle({
     end
 })
 
+Toggles.RagdollGrab = {
+    SetValue = function(self, val)
+        RagdollGrabObj:Set(val)
+    end
+}
+
 LocalPlayer.CharacterAdded:Connect(function(char)
     if kickLoopEnabled then
         if kickThreadV1 then
@@ -10359,10 +10381,10 @@ LocalPlayer.CharacterAdded:Connect(function(char)
         kickLoopEnabled = false
         task.wait(0.5)
         kickLoopEnabled = true
-        if LoopKickGrabToggle then
-            LoopKickGrabToggle:Set(true)
+        if Toggles and Toggles.LoopKickGrabToggle then
+            Toggles.LoopKickGrabToggle:SetValue(true)
         end
         startKickV1()
     end
 end)
-                   
+
