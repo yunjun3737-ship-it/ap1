@@ -9894,138 +9894,147 @@ LoopTab:AddToggle({
     end
 })
 ]]
-do
-    local humanoidRootPart = character.HumanoidRootPart
-    local humanoid = character.Humanoid
-    local inventory = Workspace[LocalPlayer.Name.."SpawnedInToys"]
-    local cons = {}
+LoopTab:AddSection({
+	Name = "Onwer kick Best"
+})
+local LoopKickGrabToggle
+local RagdollGrabToggle
+local KickPlayerDropdown
+local currentDropdownValue = "---"
+local currentDropdownOptions = {}
 
-    local function spawntoy(toy, cframe)
-        if not CanSpawn.Value then
-            CanSpawn.Changed:Wait()
-        end
-        local spawnedToy
-        local toyadded
-        toyadded = inventory.ChildAdded:Connect(function(child)
-            if child.Name == toy then
-                spawnedToy = child
-                toyadded:Disconnect()
-            end
-        end)
-        task.spawn(function()
-            SpawnRemote:InvokeServer(toy, cframe, Vector3.new(0, 0, 0))
-        end)
-        local time = tick() + 1
-        repeat task.wait() until spawnedToy or tick() > time
-        if spawnedToy then
-            return spawnedToy
-        end
+local humanoidRootPart = character.HumanoidRootPart
+local humanoid = character.Humanoid
+local inventory = Workspace[LocalPlayer.Name.."SpawnedInToys"]
+local cons = {}
+
+local function spawntoy(toy, cframe)
+    if not CanSpawn.Value then
+        CanSpawn.Changed:Wait()
     end
-
-    local function sno(object)
-        SetNetworkOwner:FireServer(object, object.CFrame)
-    end
-
-    LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-        task.wait(0.1)
-        if newCharacter then
-            character = newCharacter
-            humanoidRootPart = newCharacter:FindFirstChild("HumanoidRootPart") or newCharacter:WaitForChild("HumanoidRootPart", 1)
-            humanoid = newCharacter:FindFirstChild("Humanoid") or newCharacter:WaitForChild("Humanoid", 1)
+    local spawnedToy
+    local toyadded
+    toyadded = inventory.ChildAdded:Connect(function(child)
+        if child.Name == toy then
+            spawnedToy = child
+            toyadded:Disconnect()
         end
     end)
-
-    local selectedKickPlayer = nil
-    local kickLoopEnabled = false
-    local kickThreadV1 = nil
-    local ragdollEnabled = false
-    local PalletForRagdoll = nil
-    local ragdollThread = nil
-    local playerMap = {}
-
-    getgenv().SelectedPlayer = nil
-
-    local function getPlayerList()
-        local list = {}
-        playerMap = {}
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer then
-                local displayName = plr.DisplayName .. "(@" .. plr.Name .. ")"
-                table.insert(list, displayName)
-                playerMap[displayName] = plr
-            end
-        end
-        if #list == 0 then
-            table.insert(list, "---")
-        end
-        return list
-    end
-
-    local KickPlayerDropdown = LoopTab:AddPlayersDropdown({
-        Values = getPlayerList(),
-        Default = "---",
-        Multi = false,
-        Name = "Select Player",
-        Callback = function(Value)
-            if Value and Value ~= "---" then
-                local plr = playerMap[Value]
-                if plr then
-                    selectedKickPlayer = plr
-                    getgenv().SelectedPlayer = plr.Name
-                    print("Selected Player:", getgenv().SelectedPlayer)
-                end
-            else
-                selectedKickPlayer = nil
-                getgenv().SelectedPlayer = nil
-            end
-        end,
-    })
-
     task.spawn(function()
-        while true do
-            task.wait(1) 
-            local updatedNames = getPlayerList()
-            local currentValue = KickPlayerDropdown.Value
+        SpawnRemote:InvokeServer(toy, cframe, Vector3.new(0, 0, 0))
+    end)
+    local time = tick() + 1
+    repeat task.wait() until spawnedToy or tick() > time
+    if spawnedToy then
+        return spawnedToy
+    end
+end
 
-            if currentValue == "---" or not currentValue or not playerMap[currentValue] then
-                KickPlayerDropdown:SetValues(updatedNames)
-                KickPlayerDropdown:SetValue("---")
-                selectedKickPlayer = nil
-                getgenv().SelectedPlayer = nil
+local function sno(object)
+    SetNetworkOwner:FireServer(object, object.CFrame)
+end
+
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    task.wait(0.1)
+    if newCharacter then
+        character = newCharacter
+        humanoidRootPart = newCharacter:FindFirstChild("HumanoidRootPart") or newCharacter:WaitForChild("HumanoidRootPart", 1)
+        humanoid = newCharacter:FindFirstChild("Humanoid") or newCharacter:WaitForChild("Humanoid", 1)
+    end
+end)
+
+local selectedKickPlayer = nil
+local kickLoopEnabled = false
+local kickThreadV1 = nil
+local ragdollEnabled = false
+local PalletForRagdoll = nil
+local ragdollThread = nil
+local playerMap = {}
+
+getgenv().SelectedPlayer = nil
+
+local function getPlayerList()
+    local list = {}
+    playerMap = {}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            local displayName = plr.DisplayName .. "(@" .. plr.Name .. ")"
+            table.insert(list, displayName)
+            playerMap[displayName] = plr
+        end
+    end
+    if #list == 0 then
+        table.insert(list, "---")
+    end
+    return list
+end
+
+currentDropdownOptions = getPlayerList()
+
+KickPlayerDropdown = LoopTab:AddPlayersDropdown({
+    Name = "Select Player",
+    Default = "---",
+    Options = currentDropdownOptions,
+    Callback = function(Value)
+        currentDropdownValue = Value
+        if Value and Value ~= "---" then
+            local plr = playerMap[Value]
+            if plr then
+                selectedKickPlayer = plr
+                getgenv().SelectedPlayer = plr.Name
+            end
+        else
+            selectedKickPlayer = nil
+            getgenv().SelectedPlayer = nil
+        end
+    end
+})
+
+task.spawn(function()
+    while true do
+        task.wait(1) 
+        local updatedNames = getPlayerList()
+        local currentValue = currentDropdownValue
+
+        if currentValue == "---" or not currentValue or not playerMap[currentValue] then
+            KickPlayerDropdown:Refresh(updatedNames, true)
+            KickPlayerDropdown:Set("---")
+            currentDropdownOptions = updatedNames
+            selectedKickPlayer = nil
+            getgenv().SelectedPlayer = nil
+        else
+            local needsUpdate = false
+            local currentNames = currentDropdownOptions
+
+            if #currentNames ~= #updatedNames then
+                needsUpdate = true
             else
-                local needsUpdate = false
-                local currentNames = KickPlayerDropdown.Values
-
-                if #currentNames ~= #updatedNames then
-                    needsUpdate = true
-                else
-                    for i, name in ipairs(currentNames) do
-                        if name ~= updatedNames[i] then
-                            needsUpdate = true
-                            break
-                        end
-                    end
-                end
-                
-                if needsUpdate then
-                    KickPlayerDropdown:SetValues(updatedNames)
-
-                    if playerMap[currentValue] then
-                        KickPlayerDropdown:SetValue(currentValue)
-                        selectedKickPlayer = playerMap[currentValue]
-                        getgenv().SelectedPlayer = selectedKickPlayer.Name
-                    else
-                        KickPlayerDropdown:SetValue("---")
-                        selectedKickPlayer = nil
-                        getgenv().SelectedPlayer = nil
+                for i, name in ipairs(currentNames) do
+                    if name ~= updatedNames[i] then
+                        needsUpdate = true
+                        break
                     end
                 end
             end
+            
+            if needsUpdate then
+                KickPlayerDropdown:Refresh(updatedNames, true)
+                currentDropdownOptions = updatedNames
+
+                if playerMap[currentValue] then
+                    KickPlayerDropdown:Set(currentValue)
+                    selectedKickPlayer = playerMap[currentValue]
+                    getgenv().SelectedPlayer = selectedKickPlayer.Name
+                else
+                    KickPlayerDropdown:Set("---")
+                    selectedKickPlayer = nil
+                    getgenv().SelectedPlayer = nil
+                end
+            end
         end
-    end)
---=======================================================================
--- Set Owner Kick
---=======================================================================
+    end
+end)
+
 local noclipConn = nil
 local originalCollide = {}
 local noclipChar = nil
@@ -10073,7 +10082,9 @@ local function startKickV1()
         local myChar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
         local myRoot = myChar:FindFirstChild("HumanoidRootPart")
         if not myRoot then
-            Toggles.LoopKickGrabToggle:SetValue(false)
+            if LoopKickGrabToggle then
+                LoopKickGrabToggle:Set(false)
+            end
             kickLoopEnabled = false
             return
         end
@@ -10104,8 +10115,8 @@ local function startKickV1()
             local target = selectedKickPlayer
             if not target or not target.Parent then
                 kickLoopEnabled = false
-                if Toggles and Toggles.LoopKickGrabToggle then
-                    Toggles.LoopKickGrabToggle:SetValue(false)
+                if LoopKickGrabToggle then
+                    LoopKickGrabToggle:Set(false)
                 end
                 break
             end
@@ -10229,14 +10240,14 @@ local function startKickV1()
             myRoot.AssemblyAngularVelocity = Vector3.zero
         end
         kickLoopEnabled = false
-        if Toggles and Toggles.LoopKickGrabToggle then
-            Toggles.LoopKickGrabToggle:SetValue(false)
+        if LoopKickGrabToggle then
+            LoopKickGrabToggle:Set(false)
         end
     end)
 end
 
-LoopTab:AddToggle({
-    Name = "Owner Kick (vexo)",
+LoopKickGrabToggle = LoopTab:AddToggle({
+    Name = "Set Owner Kick",
     Default = false,
     Callback = function(on)
         kickLoopEnabled = on
@@ -10249,105 +10260,106 @@ LoopTab:AddToggle({
 })
 
 local function startRagdollThread()
-        if ragdollThread then
-            task.cancel(ragdollThread)
-            ragdollThread = nil
-        end
-
-        ragdollThread = task.spawn(function()
-            while ragdollEnabled do
-                if selectedKickPlayer and selectedKickPlayer.Parent then
-                    local target = selectedKickPlayer
-                    local tChar = target.Character
-                    local tRoot = tChar and tChar:FindFirstChild("HumanoidRootPart")
-                    local tHum = tChar and tChar:FindFirstChild("Humanoid")
-
-                    if tRoot and tHum and tHum.Health > 0 then
-
-                        if not isnetworkowner(tRoot) then
-                            sno(tRoot)
-                        end
-
-                        if PalletForRagdoll and inventory:FindFirstChild("PalletForRagdoll") then
-                            PalletForRagdoll.SoundPart.AssemblyLinearVelocity = Vector3.new(0, 1000, 0)
-                            PalletForRagdoll.SoundPart.CFrame = tRoot.CFrame
-                            task.wait(0.05)
-                            PalletForRagdoll.SoundPart.CFrame = humanoidRootPart.CFrame * CFrame.new(0, 1000, 0)
-                        end
-                    end
-                end
-                task.wait(0.1)
-            end
-        end)
+    if ragdollThread then
+        task.cancel(ragdollThread)
+        ragdollThread = nil
     end
 
-    LoopTab:AddToggle({
-        Name = "Pallet Ragdoll",
-        Default = false,
-        Callback = function(v)
-            ragdollEnabled = v
+    ragdollThread = task.spawn(function()
+        while ragdollEnabled do
+            if selectedKickPlayer and selectedKickPlayer.Parent then
+                local target = selectedKickPlayer
+                local tChar = target.Character
+                local tRoot = tChar and tChar:FindFirstChild("HumanoidRootPart")
+                local tHum = tChar and tChar:FindFirstChild("Humanoid")
 
-            if v then
-                if not selectedKickPlayer or not selectedKickPlayer.Parent then
-                    ragdollEnabled = false
-                    task.defer(function()
-                        if Toggles and Toggles.RagdollGrab then
-                            Toggles.RagdollGrab:SetValue(false)
-                        end
-                    end)
-                    return
-                end
+                if tRoot and tHum and tHum.Health > 0 then
 
-                local function spawnragdoll()
-                    PalletForRagdoll = spawntoy("PalletLightBrown", humanoidRootPart.CFrame * CFrame.new(0, 10, 20))
-                    repeat task.wait() until PalletForRagdoll and PalletForRagdoll:FindFirstChild("SoundPart")
-                    repeat task.wait() sno(PalletForRagdoll.SoundPart) until PalletForRagdoll.SoundPart:FindFirstChild("PartOwner")
-                    PalletForRagdoll.SoundPart.AssemblyLinearVelocity = Vector3.new(0, 1e9, 0)
-                    for i,v in pairs(PalletForRagdoll:GetChildren()) do
-                        if v:IsA("Part") then
-                            v.CanCollide = false
-                            v.CanQuery = false
-                            v.Transparency = 1
-                        end
+                    if not isnetworkowner(tRoot) then
+                        sno(tRoot)
                     end
-                    PalletForRagdoll.Name = "PalletForRagdoll"
-                    cons["PalletDestroying"] = PalletForRagdoll.Destroying:Once(function()
-                        if ragdollEnabled then
-                            spawnragdoll()
-                        end
-                    end)
-                end
-                spawnragdoll()
-                startRagdollThread()
-            else
-                if ragdollThread then
-                    task.cancel(ragdollThread)
-                    ragdollThread = nil
-                end
-                if cons["PalletDestroying"] then
-                    cons["PalletDestroying"]:Disconnect()
-                    cons["PalletDestroying"] = nil
-                end
-                if inventory:FindFirstChild("PalletForRagdoll") then
-                    DestroyRemote:FireServer(inventory.PalletForRagdoll)
-                end
-            end
-        end
-    })
 
-    LocalPlayer.CharacterAdded:Connect(function(char)
-        if kickLoopEnabled then
-            if kickThreadV1 then
-                task.cancel(kickThreadV1)
-                kickThreadV1 = nil
+                    if PalletForRagdoll and inventory:FindFirstChild("PalletForRagdoll") then
+                        PalletForRagdoll.SoundPart.AssemblyLinearVelocity = Vector3.new(0, 1000, 0)
+                        PalletForRagdoll.SoundPart.CFrame = tRoot.CFrame
+                        task.wait(0.05)
+                        PalletForRagdoll.SoundPart.CFrame = humanoidRootPart.CFrame * CFrame.new(0, 1000, 0)
+                    end
+                end
             end
-            kickLoopEnabled = false
-            task.wait(0.5)
-            kickLoopEnabled = true
-            if Toggles and Toggles.LoopKickGrabToggle then
-                Toggles.LoopKickGrabToggle:SetValue(true)
-            end
-            startKickV1()
+            task.wait(0.1)
         end
     end)
 end
+
+RagdollGrabToggle = LoopTab:AddToggle({
+    Name = "Pallet Ragdoll",
+    Default = false,
+    Flag = "29g7t28y",
+    Callback = function(v)
+        ragdollEnabled = v
+
+        if v then
+            if not selectedKickPlayer or not selectedKickPlayer.Parent then
+                ragdollEnabled = false
+                task.defer(function()
+                    if RagdollGrabToggle then
+                        RagdollGrabToggle:Set(false)
+                    end
+                end)
+                return
+            end
+
+            local function spawnragdoll()
+                PalletForRagdoll = spawntoy("PalletLightBrown", humanoidRootPart.CFrame * CFrame.new(0, 10, 20))
+                repeat task.wait() until PalletForRagdoll and PalletForRagdoll:FindFirstChild("SoundPart")
+                repeat task.wait() sno(PalletForRagdoll.SoundPart) until PalletForRagdoll.SoundPart:FindFirstChild("PartOwner")
+                PalletForRagdoll.SoundPart.AssemblyLinearVelocity = Vector3.new(0, 1e9, 0)
+                for i,v in pairs(PalletForRagdoll:GetChildren()) do
+                    if v:IsA("Part") then
+                        v.CanCollide = false
+                        v.CanQuery = false
+                        v.Transparency = 1
+                    end
+                end
+                PalletForRagdoll.Name = "PalletForRagdoll"
+                cons["PalletDestroying"] = PalletForRagdoll.Destroying:Once(function()
+                    if ragdollEnabled then
+                        spawnragdoll()
+                    end
+                end)
+            end
+            spawnragdoll()
+            startRagdollThread()
+        else
+            if ragdollThread then
+                task.cancel(ragdollThread)
+                ragdollThread = nil
+            end
+            if cons["PalletDestroying"] then
+                cons["PalletDestroying"]:Disconnect()
+                cons["PalletDestroying"] = nil
+            end
+            if inventory:FindFirstChild("PalletForRagdoll") then
+                DestroyRemote:FireServer(inventory.PalletForRagdoll)
+            end
+        end
+    end
+})
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    if kickLoopEnabled then
+        if kickThreadV1 then
+            task.cancel(kickThreadV1)
+            kickThreadV1 = nil
+        end
+        kickLoopEnabled = false
+        task.wait(0.5)
+        kickLoopEnabled = true
+        if LoopKickGrabToggle then
+            LoopKickGrabToggle:Set(true)
+        end
+        startKickV1()
+    end
+end)
+
