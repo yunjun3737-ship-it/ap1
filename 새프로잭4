@@ -13098,6 +13098,45 @@ do
 AuraTab:AddSection({
     Name = "Anti Aura"
 })
+function AntiBoxF()
+    local targetNames = {"Boombox"}
+
+    task.spawn(function()
+        while AntiBoxT and task.wait(0.1) do
+            local character = plr.Character
+            if not character then continue end
+
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            if not hrp then continue end
+
+            for _, folder in ipairs(workspace:GetChildren()) do
+                if folder:IsA("Folder") and folder.Name:match("SpawnedInToys$") then
+                    if folder.Name ~= (plr.Name .. "SpawnedInToys") then
+                        for _, item in ipairs(folder:GetChildren()) do
+                            if table.find(targetNames, item.Name) and item:FindFirstChild("SoundPart") then
+                                local Spart = item.Button
+
+                                local basePart = item.PrimaryPart or Spart
+                                local PartOwner = Spart:FindFirstChild("PartOwner")
+                                local dist = (basePart.Position - hrp.Position).Magnitude
+
+                                FallenY = workspace.FallenPartsDestroyHeight
+                                targetY = (FallenY <= -50000 and -49999) or (FallenY <= -100 and -99) or -100
+
+                                if dist <= 30 and not PartOwner then rs.GrabEvents.SetNetworkOwner:FireServer(Spart, CFrame.lookAt(hrp.Position, Spart.Position)) end
+                                if PartOwner then Spart.CFrame = CFrame.new(0, targetY, 9999) end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
+
+
+
 AuraTab:AddToggle({
     Name = "Anti boombox aura  <font color='rgb(0,200,0)'>[all]</font>",
     Default = false,
@@ -13109,7 +13148,44 @@ AuraTab:AddToggle({
     end
 })
 
+function ViewAuraF()
+    local targetNames = { 
+        "NinjaKunai", "NinjaShuriken", "NinjaKatana", 
+        "ToolCleaver", "ToolDiggingForkRusty", 
+        "ToolPencil", "ToolPickaxe" 
+    }
 
+    task.spawn(function()
+        while ViewAuraT and task.wait(0.03) do
+            local character = plr.Character
+            if not character then continue end
+
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            if not hrp then continue end
+
+            for _, folder in ipairs(workspace:GetChildren()) do
+                if folder:IsA("Folder") and folder.Name:match("SpawnedInToys$") then
+                    if folder.Name ~= (plr.Name .. "SpawnedInToys") then
+                        for _, item in ipairs(folder:GetChildren()) do
+                            if table.find(targetNames, item.Name) and item:FindFirstChild("StickyPart") then
+                                local sticky = item.StickyPart
+
+                                local basePart = item.PrimaryPart or sticky
+                                local dist = (basePart.Position - hrp.Position).Magnitude
+
+                                if dist <= 30 then
+                                    pcall(function()
+                                        rs.GrabEvents.SetNetworkOwner:FireServer(sticky, CFrame.lookAt(hrp.Position, sticky.Position))
+                                    end)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
 AuraTab:AddToggle({
     Name = "Anti part Aura <font color='rgb(0,0,255)'>[Ownership Spam]</font>",
     Default = false,
