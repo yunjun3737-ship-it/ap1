@@ -452,8 +452,8 @@ local Window = OrionLib:MakeWindow({
     IntroEnabled = false,
     IntroText = "4"
 })
-local DevTab = Window:MakeTab({  Name = "Script DevForum", Icon = "rbxassetid://77989137998499",  PremiumOnly = false,  Description = "Explore script development, share your work, and discover new ideas."})
-local UDTab = Window:MakeTab({Name = "user information", Icon = "rbxassetid://77989137998499", PremiumOnly = false, Description = "View and manage detailed information about yourself and other players in the server."})
+local DevTab = Window:MakeTab({  Name = "Script DevForum", Icon = "rbxassetid://6034281935",  PremiumOnly = false,  Description = "Explore script development, share your work, and discover new ideas."})
+local UDTab = Window:MakeTab({Name = "user information", Icon = "rbxassetid://6034281935", PremiumOnly = false, Description = "View and manage detailed information about yourself and other players in the server."})
 local playerTab = Window:MakeTab({Name = "Player", Icon = "rbxassetid://6034281935", PremiumOnly = false, Description = "Customize your character's speed, jump power, and core physics."})    
 local grabTab = Window:MakeTab({Name = "Combat", Icon = "rbxassetid://6026568198", PremiumOnly = false, Description = "Catch and dominate your opponents using a wide variety of advanced grabs."})               
 local antiTab = Window:MakeTab({Name = "Invincibility", Icon = "rbxassetid://6034831332", PremiumOnly = false, Description = "Ultimate defense systems: Anti-Grab, Anti-Kick, and Anti-Explosion shields."})               
