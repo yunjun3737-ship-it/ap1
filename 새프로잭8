@@ -451,14 +451,85 @@ local Window = OrionLib:MakeWindow({
     IntroEnabled = false,
     IntroText = "4"
 })
-
+local DevTab = Window:MakeTab({  Name = "Script DevForum", Icon = "rbxassetid://77989137998499",  PremiumOnly = false,  Description = "Explore script development, share your work, and discover new ideas."})
+local UDTab = Window:MakeTab({Name = "user information", Icon = "rbxassetid://77989137998499", PremiumOnly = false, Description = "View and manage detailed information about yourself and other players in the server."})
 local playerTab = Window:MakeTab({Name = "Player", Icon = "rbxassetid://6034281935", PremiumOnly = false, Description = "Customize your character's speed, jump power, and core physics."})    
 local grabTab = Window:MakeTab({Name = "Combat", Icon = "rbxassetid://6026568198", PremiumOnly = false, Description = "Catch and dominate your opponents using a wide variety of advanced grabs."})               
 local antiTab = Window:MakeTab({Name = "Invincibility", Icon = "rbxassetid://6034831332", PremiumOnly = false, Description = "Ultimate defense systems: Anti-Grab, Anti-Kick, and Anti-Explosion shields."})               
 local LoopTab = Window:MakeTab({Name = "Loop", Icon = "rbxassetid://6023426923", PremiumOnly = false, Description = "Automated destruction: Loop attacks, loop kills, and loop kicks."})   
 local FDTab = Window:MakeTab({Name = "protection", Icon = "rbxassetid://6034831332", PremiumOnly = false, Description = "Defend your friends and allies from enemy attacks, kicks, and targeted threats."})        
 local plotTab = Window:MakeTab({Name = "plot", Icon = "rbxassetid://6031094678", PremiumOnly = false, Description = "Own plots, remove barriers, and use barrier breakers to control the building area."})
+local CreditsTab = Window:MakeTab({Name = "save config", Icon = "rbxassetid://77989137998499", PremiumOnly = false, Description = "Save your current setup and automatically load it next time you inject."})
+Window:AddConfigTab()
+local HttpService = game:GetService("HttpService")
 
+local FILE = "Vexo.json"
+
+getgenv().IsLoadingConfig = false
+
+local function SaveAll()
+    local saveTable = {}
+
+    for flag, obj in pairs(OrionLib.Flags or {}) do
+        if obj and obj.Value ~= nil then
+            saveTable[flag] = obj.Value
+        end
+    end
+
+    local success, err = pcall(function()
+        writefile(FILE, HttpService:JSONEncode(saveTable))
+    end)
+
+    if success then
+        print("[Config] Storage complete")
+    else
+        warn("[Config] Storage failure:", err)
+    end
+end
+
+local function LoadAll()
+    if not isfile(FILE) then
+        warn("[Config] There are no saved files.")
+        return
+    end
+
+    local success, data = pcall(function()
+        return HttpService:JSONDecode(readfile(FILE))
+    end)
+
+    if not (success and type(data) == "table") then
+        warn("[Config] Failure to import (possibility of file damage)")
+        return
+    end
+
+    getgenv().IsLoadingConfig = true
+
+    local loaded = 0
+    for flag, value in pairs(data) do
+        local obj = OrionLib.Flags and OrionLib.Flags[flag]
+        if obj then
+            local ok = pcall(function()
+                if typeof(obj.Set) == "function" then
+                    
+                    obj:Set(value)
+                elseif typeof(obj.SetState) == "function" then
+                    obj:SetState(value)
+                else
+                    obj.Value = value
+                    if typeof(obj.Callback) == "function" then
+                        task.spawn(obj.Callback, value)
+                    end
+                end
+            end)
+            if ok then
+                loaded = loaded + 1
+            end
+        end
+    end
+
+    getgenv().IsLoadingConfig = false
+    print("Import complete | Flag number:", loaded)
+end
 
 --===== Player 이동, 점프, NoClip 및 Fly 기능 =====
 do
@@ -12476,3 +12547,29 @@ end
 
 
 
+
+
+DevTab:AddProfileParagraph({
+    Title = "👑 Onwer : Alpha",
+    Content = "Username : pacapaca110",
+    Image = "rbxthumb://type=AvatarHeadShot&id=11000044399&w=420&h=420"
+})
+
+CreditsTab:AddButton({
+    Name = "Save",
+    Callback = function()
+        SaveAll()
+    end
+})
+
+CreditsTab:AddButton({
+    Name = "Import",
+    Callback = function()
+        LoadAll()
+    end
+})
+
+task.spawn(function()
+    task.wait()
+    LoadAll()
+end)
