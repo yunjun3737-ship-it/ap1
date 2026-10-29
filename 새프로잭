@@ -4229,6 +4229,123 @@ antiTab:AddToggle({
     end
 })
 
+antiGrabV2Active = false
+antiGrabV2Task = nil
+
+local pp = {}
+local PARTS = {
+    {"Humanoid",         "hum"},
+    {"HumanoidRootPart", "hrp"},
+    {"Head",             "head"},
+    {"Torso",            "torso"},
+    {"Left Arm",         "la"},
+    {"Right Arm",        "ra"},
+    {"Left Leg",         "ll"},
+    {"Right Leg",        "rl"},
+}
+
+local LIMB_CHILDREN = {
+    {"Left Arm",  "la"},
+    {"Right Arm", "ra"},
+    {"Left Leg",  "ll"},
+    {"Right Leg", "rl"},
+}
+
+local function fetch(parent, name, key)
+    task.spawn(function()
+        repeat rs2.PreSimulation:Wait() until parent:FindFirstChild(name)
+        pp[key] = parent[name]
+    end)
+end
+antiTab:AddToggle({
+    Name = "anti grab (Anchored Sit)",
+    Default = false,
+    Flag = "AntiGrabToggle",
+    Save = true,
+    Callback = function(Value)
+        local AntiGrabTypeValues = {Struggle = true, Ragdoll = true, Sit = true, Anchored = true}
+        
+        if Value then
+            AntiGrabC = rs2.PreSimulation:Connect(function(deltaTime)
+                if not pp.char then return end
+                pp.hum.AutoRotate = true
+                
+                local grabParts = workspace:FindFirstChild("GrabParts")
+                if grabParts then
+                    local grabPart = grabParts:FindFirstChild("GrabPart")
+                    local weld = grabPart and grabPart:FindFirstChild("WeldConstraint")
+                    if weld and weld.Part1 and weld.Part1.Parent == pp.char then
+                        weld.Part1 = nil
+                        pcall(function() weld:Destroy() end)
+                    end
+                end
+
+                if isHeld.Value then
+                    task.spawn(function()
+                        repeat rs2.PreSimulation:Wait() until isHeld.Value or not Value
+                        repeat rs2.PreSimulation:Wait() until not isHeld.Value or not Value
+                        if AntiGrabTypeValues["Anchored"] then pp.hrp.Massless = false end
+                        repeat rs2.PreSimulation:Wait()
+                        if pp.rag.Value and isHeld.Value then
+                            if pp.head then pp.head.CFrame = pp.hrp.CFrame * CFrame.new(0,1.5,0) pp.head.AssemblyAngularVelocity = Vector3.zero pp.head_c.MaxFrictionTorque = math.huge end
+                            if pp.la then pp.la.CFrame = pp.hrp.CFrame * CFrame.new(-1.5,0,0) pp.la.AssemblyAngularVelocity = Vector3.zero pp.la_p.CanCollide = false pp.la.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                            if pp.ra then pp.ra.CFrame = pp.hrp.CFrame * CFrame.new(1.5,0,0) pp.ra.AssemblyAngularVelocity = Vector3.zero pp.ra_p.CanCollide = false pp.ra.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                            if pp.ll then pp.ll.CFrame = pp.hrp.CFrame * CFrame.new(-0.5,-2,0) pp.ll.AssemblyAngularVelocity = Vector3.zero pp.ll_p.CanCollide = false pp.ll.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                            if pp.rl then pp.rl.CFrame = pp.hrp.CFrame * CFrame.new(0.5,-2,0) pp.rl.AssemblyAngularVelocity = Vector3.zero pp.rl_p.CanCollide = false pp.rl.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                        end
+                        until not isHeld.Value and not pp.rag.Value or not Value
+                        task.wait(0.3)
+                        if pp.head then
+                            if pp.head_c then pp.head_c.MaxFrictionTorque = 20 end
+                            pp.head.CustomPhysicalProperties = nil
+                        end
+                        if pp.la then pp.la.CustomPhysicalProperties = nil end
+                        if pp.ra then pp.ra.CustomPhysicalProperties = nil end
+                        if pp.ll then pp.ll.CustomPhysicalProperties = nil end
+                        if pp.rl then pp.rl.CustomPhysicalProperties = nil end
+                        if not isHeld.Value and AntiGrabTypeValues["Sit"] and not pp.rag.Value then pp.hum:ChangeState(Enum.HumanoidStateType.GettingUp) end
+                    end)
+                end
+                if not pp.hrp and pp.rag.Value then
+                    pp.hum:ChangeState(Enum.HumanoidStateType.Dead)
+                    pp.hum.Health = 0
+                    rs.CharacterEvents.Struggle:FireServer()
+                    return
+                end
+                if Owner and AntiGrabTypeValues["Struggle"] then rs.CharacterEvents.Struggle:FireServer() end
+                if isHeld.Value then
+                    if AntiGrabTypeValues["Anchored"] then pp.hrp.Massless = true end
+                    if AntiGrabTypeValues["Struggle"] and not Owner then rs.CharacterEvents.Struggle:FireServer() end
+                    if AntiGrabTypeValues["Sit"] then pp.hum:ChangeState(Enum.HumanoidStateType.StrafingNoPhysics) end
+                end
+                if isHeld.Value then
+                    if AntiGrabTypeValues["Ragdoll"] then rs.CharacterEvents.RagdollRemote:FireServer(pp.hrp, 0.8) end
+                    if not AntiGrabTypeValues["Sit"] then if not pp.hum.SeatPart then pp.hum.Sit = false end end
+                    if AntiGrabTypeValues["Sit"] then pp.hum.Sit = true end
+                end
+
+                if pp.rag.Value and isHeld.Value then
+                    if pp.head then pp.head.CFrame = pp.hrp.CFrame * CFrame.new(0,1.5,0) pp.head.AssemblyAngularVelocity = Vector3.zero pp.head_c.MaxFrictionTorque = math.huge end
+                    if pp.la then pp.la.CFrame = pp.hrp.CFrame * CFrame.new(-1.5,0,0) pp.la.AssemblyAngularVelocity = Vector3.zero pp.la_p.CanCollide = false pp.la.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                    if pp.ra then pp.ra.CFrame = pp.hrp.CFrame * CFrame.new(1.5,0,0) pp.ra.AssemblyAngularVelocity = Vector3.zero pp.ra_p.CanCollide = false pp.ra.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                    if pp.ll then pp.ll.CFrame = pp.hrp.CFrame * CFrame.new(-0.5,-2,0) pp.ll.AssemblyAngularVelocity = Vector3.zero pp.ll_p.CanCollide = false pp.ll.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                    if pp.rl then pp.rl.CFrame = pp.hrp.CFrame * CFrame.new(0.5,-2,0) pp.rl.AssemblyAngularVelocity = Vector3.zero pp.rl_p.CanCollide = false pp.rl.CustomPhysicalProperties = PhysicalProperties.new(0.0001,0,0,0,0) end
+                end
+            end)
+        else
+            if pp.hrp then pp.hrp.Massless = false end
+            if pp.head then pp.head.CustomPhysicalProperties = nil end
+            if pp.la then pp.la.CustomPhysicalProperties = nil end
+            if pp.ra then pp.ra.CustomPhysicalProperties = nil end
+            if pp.ll then pp.ll.CustomPhysicalProperties = nil end
+            if pp.rl then pp.rl.CustomPhysicalProperties = nil end
+            if AntiGrabC then AntiGrabC:Disconnect() AntiGrabC = nil end
+        end
+    end
+})
+
+
+
 antiTab:AddToggle({
 	Name = "Anti Grab (Seatless)",
 	Default = false,
