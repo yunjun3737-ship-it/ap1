@@ -1481,7 +1481,7 @@ playerTab:AddToggle({
 ]]
 
 
-end
+
 
 --===== Reach 및 Infinite Line 기능 =====
 do
