@@ -8555,7 +8555,126 @@ end
 
 do
 
-  
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local playersInLoop1V = {}
+
+local GF = {""}
+local Owner = {"", "", "", "", "", "", "", "", "", ""}
+
+local function GetPlayerRank(name)
+    if table.find(Owner, name) then return 7 end
+    if table.find(GF, name) then return 6 end
+    return 0
+end
+
+
+local function findPlayer(text)
+    if not text or text == "" then
+        return nil
+    end
+
+    text = text:lower()
+
+    for _, p in ipairs(Players:GetPlayers()) do
+        local username = p.Name:lower()
+        local display = p.DisplayName:lower()
+
+        
+        if username:find(text, 1, true) == 1
+        or display:find(text, 1, true) == 1 then
+            return p
+        end
+    end
+
+    return nil
+end
+
+
+local DropdownV1
+
+local function UpdateDropdown()
+    if not DropdownV1 then return end
+
+    if DropdownV1.Set then
+        DropdownV1:Set(playersInLoop1V)
+    elseif DropdownV1.Refresh then
+        DropdownV1:Refresh(playersInLoop1V)
+    end
+end
+
+local function Notify(title, content)
+    OrionLib:MakeNotification({
+        Name = title,
+        Content = content,
+        Time = 2
+    })
+end
+
+
+function addToLoop1(name)
+    local target = findPlayer(name)
+
+    if not target then
+        Logger()
+        Notify("Error", "NotFound")
+        return
+    end
+
+
+    if target == LocalPlayer then
+        Notify("Vexo", "You cannot add yourself..")
+        return
+    end
+
+    if not table.find(playersInLoop1V, target.Name) then
+        table.insert(playersInLoop1V, target.Name)
+        UpdateDropdown()
+        Notify("Target ", target.Name .. " added")
+    end
+end
+
+local function removeFromLoop1(name)
+    for i, v in ipairs(playersInLoop1V) do
+        if v:lower():find(name:lower(), 1, true) then
+            table.remove(playersInLoop1V, i)
+            UpdateDropdown()
+            Notify("Completed", v .. " Remove")
+            return
+        end
+    end
+
+    Notify("Error", "NotFound.")
+end
+
+
+LoopTab:AddParagraph("How do I add a target?", "To add a target, enter their Display Name or Username into the Target Add input. You only need to enter the first 3–4 characters of their name. Once added, enable the features below to use them.")
+
+LoopTab:AddParagraph("How do I remove a target?", "Removing a target works similarly. Enter the first 3–4 characters of their Display Name or Username into the input to remove them from your target list.")
+
+LoopTab:AddTextbox({
+    Name = "Target add",
+    PlaceholderText = "username",
+    RemoveTextAfterFocusLost = true,
+    Callback = function(value)
+        addToLoop1(value)
+    end
+})
+
+LoopTab:AddTextbox({
+    Name = "Target Remove",
+    PlaceholderText = "username",
+    RemoveTextAfterFocusLost = true,
+    Callback = function(value)
+        removeFromLoop1(value)
+    end
+})
+
+
+task.defer(function()
+    UpdateDropdown()
+end)
       
 
           
