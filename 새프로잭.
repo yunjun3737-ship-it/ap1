@@ -8581,6 +8581,242 @@ LoopTab:AddPlayersDropdown({
     end
 })
 ---------------- [타겟설정]
+
+LoopTab:AddButton({
+    Name = "Bring   <font color='rgb(255,154,123)'>[Blobman]</font>",
+    Callback = function()
+        UpdateCurrentBlobman()
+        local processedHumanoids = {}
+
+        local function processPlayer(player)
+            if not player then return false end
+
+            local character, hrp, head = safeGetCharacterParts(player)
+            if not hrp or not head then return false end
+
+            local myChar = plr.Character
+            local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            if not myHrp then return false end
+            local originCF = myHrp.CFrame
+
+        TP(player)
+        task.wait(0.25)
+        BlobGrab(currentBlobS, hrp, "Right")
+        BlobRelease(currentBlobS, hrp, "Right")
+
+        task.wait(0.15)
+
+        if originCF then
+            hrp.CFrame = originCF * CFrame.new(0,5,0)
+            myHrp.CFrame = originCF
+        end
+
+        task.wait(0.3)
+
+        rs.GrabEvents.SetNetworkOwner:FireServer(hrp, hrp.CFrame)
+        rs.GrabEvents.DestroyGrabLine:FireServer(hrp, hrp.CFrame)
+
+            if originCF then BACK(originCF) end
+            return true
+        end
+
+        table.clear(playersInLoop2V)
+        for i, e in ipairs(playersInLoop1V) do
+            local nameOnly = e:match("^(.-) %(") or e
+            table.insert(playersInLoop2V, nameOnly)
+        end
+
+        for _, name in ipairs(playersInLoop2V) do
+            local player = game.Players:FindFirstChild(name)
+            if player and not table.find(Whitelist, player.Name) then
+                local character = player.Character
+                local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+                if PPs:FindFirstChild(name) then continue end
+
+                if humanoid and humanoid.Health > 0 then
+                    if processedHumanoids[player] ~= humanoid then
+                        local success = processPlayer(player)
+                        if success then
+                            processedHumanoids[player] = humanoid
+                        end
+                    end
+                else
+                    processedHumanoids[player] = nil
+                end
+                task.wait()
+            end
+        end
+    end
+})
+
+LoopTab:AddButton({
+    Name = "Bring   <font color='rgb(255,0,0)'>[grab]</font>",
+    Callback = function()
+        UpdateCurrentBlobman()
+        local processedHumanoids = {}
+        local activeThreads = {}
+
+        local function processPlayer(player)
+            if not player then return false end
+
+            local myChar = plr.Character
+            local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
+            if not myChar or not myHrp or not myHum or myHum.Health <= 0 then
+                return false
+            end
+
+            local character, hrp, head = safeGetCharacterParts(player)
+            if not hrp or not head then return false end
+
+            local characterParts = {}
+
+            table.insert(characterParts, hrp)
+
+            if character:FindFirstChild("Head") then
+                table.insert(characterParts, character.Head)
+            end
+
+            local torsoParts = {"Torso"}
+            for _, partName in ipairs(torsoParts) do
+                local part = character:FindFirstChild(partName)
+                if part then
+                    table.insert(characterParts, part)
+                end
+            end
+
+            local armParts = {
+                "Left Arm", "Right Arm"
+            }
+            for _, partName in ipairs(armParts) do
+                local part = character:FindFirstChild(partName)
+                if part then
+                    table.insert(characterParts, part)
+                end
+            end
+
+            local legParts = {
+                "Left Leg", "Right Leg"
+            }
+            for _, partName in ipairs(legParts) do
+                local part = character:FindFirstChild(partName)
+                if part then
+                    table.insert(characterParts, part)
+                end
+            end
+
+            local originCF = myHrp.CFrame
+
+            local tpRunning = true
+            local tpThread = task.spawn(function()
+                while tpRunning do
+                    if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") or 
+                       (plr.Character:FindFirstChildOfClass("Humanoid") and plr.Character:FindFirstChildOfClass("Humanoid").Health <= 0) then
+                        break
+                    end
+
+                    local ok, cf = TP(player)
+                    if ok and cf then
+                        CF = cf
+                    end
+                    task.wait()
+                end
+            end)
+            table.insert(activeThreads, tpThread)
+
+            local success = false
+            local startTime = tick()
+            local timeout = 10
+
+            while tpRunning and tick() - startTime < timeout do
+                if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") or 
+                   (plr.Character:FindFirstChildOfClass("Humanoid") and plr.Character:FindFirstChildOfClass("Humanoid").Health <= 0) then
+                    break
+                end
+
+                if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or 
+                   (player.Character:FindFirstChildOfClass("Humanoid") and player.Character:FindFirstChildOfClass("Humanoid").Health <= 0) then
+                    break
+                end
+
+                for _, part in ipairs(characterParts) do
+                    if part and part.Parent then
+                        rs.GrabEvents.SetNetworkOwner:FireServer(part, part.CFrame)
+                    end
+                end
+                
+                local ownerTag = head:FindFirstChild("PartOwner")
+                if ownerTag and ownerTag:IsA("StringValue") and ownerTag.Value == plr.Name then
+                    success = true
+                    break
+                end
+                task.wait()
+            end
+
+            tpRunning = false
+
+            for _, thread in ipairs(activeThreads) do
+                if coroutine.status(thread) ~= "dead" then
+                    task.cancel(thread)
+                end
+            end
+            table.clear(activeThreads)
+
+            if originCF and myHrp and myHrp.Parent then
+                myHrp.CFrame = originCF
+                task.wait()
+            end
+
+            if success then
+                for _, part in ipairs(characterParts) do
+                    if part and part.Parent and myHrp and myHrp.Parent then
+                        part.CFrame = myHrp.CFrame
+                    end
+                end
+            end
+
+            if originCF and myHrp and myHrp.Parent then 
+                BACK(originCF) 
+            end
+            
+            return success
+        end
+
+        table.clear(playersInLoop2V)
+        for i, e in ipairs(playersInLoop1V) do
+            local nameOnly = e:match("^(.-) %(") or e
+            table.insert(playersInLoop2V, nameOnly)
+        end
+
+        for _, name in ipairs(playersInLoop2V) do
+            local myChar = plr.Character
+            local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
+            if not myChar or not myHum or myHum.Health <= 0 then
+                break
+            end
+
+            local player = game.Players:FindFirstChild(name)
+            if player and not table.find(Whitelist, player.Name) then
+                local character = player.Character
+                local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+                if PPs:FindFirstChild(name) or inv:FindFirstChild(name) then continue end
+
+                if humanoid and humanoid.Health > 0 then
+                    if processedHumanoids[player] ~= humanoid then
+                        local success = processPlayer(player)
+                        if success then
+                            processedHumanoids[player] = humanoid
+                        end
+                    end
+                else
+                    processedHumanoids[player] = nil
+                end
+                task.wait(0.003)
+            end
+        end
+    end
+})
+
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local RunService = game:GetService("RunService")
