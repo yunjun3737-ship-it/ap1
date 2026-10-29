@@ -440,7 +440,8 @@ end
 
 
 
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/yunjun3737-ship-it/ap1/main/Orion.txt"))()
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/qwerqwerg1u/RRTS/main/Orion.txt"))()
+
 
 local Window = OrionLib:MakeWindow({
     Name = "Vexo project",
@@ -530,7 +531,70 @@ local function LoadAll()
     getgenv().IsLoadingConfig = false
     print("Import complete | Flag number:", loaded)
 end
+local Players = game:GetService("Players")
+local Stats = game:GetService("Stats")
+local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 
+local LocalPlayer = Players.LocalPlayer
+
+local ownerIDs = {
+    [5352731855] = true,
+    [2932138780] = true,
+    [11000044399] = true
+}
+
+local isOwner = ownerIDs[LocalPlayer.UserId] or false
+local userRole = isOwner and "Owner" or "User"
+local userRank = isOwner and "Owner Rank" or "Premium Rank"
+
+local hwid = "Unknown"
+pcall(function()
+    hwid = RbxAnalyticsService:GetClientId()
+end)
+
+
+local ExecSection = UDTab:AddSection({
+    Name = "user information"
+})
+
+local dispName = LocalPlayer.DisplayName
+local realName = LocalPlayer.Name
+ExecSection:AddLabel("name: " .. dispName .. " (@" .. realName .. ")")
+
+ExecSection:AddLabel("HWID: " .. hwid)
+
+--ExecSection:AddLabel("IP: 기밀")
+
+ExecSection:AddLabel("User status: " .. userRole)
+
+ExecSection:AddLabel("executor rating: " .. userRank)
+
+local PingLabel = ExecSection:AddLabel("Ping: ...")
+local FPSLabel = ExecSection:AddLabel("FPS: ...")
+
+task.spawn(function()
+    local RunService = game:GetService("RunService")
+    local lastTime = os.clock()
+    local frameCount = 0
+    
+    RunService.RenderStepped:Connect(function()
+        frameCount = frameCount + 1
+        local currentTime = os.clock()
+        if currentTime - lastTime >= 1 then
+            local fps = math.floor(frameCount / (currentTime - lastTime))
+            FPSLabel:Set("FPS: " .. tostring(fps))
+            frameCount = 0
+            lastTime = currentTime
+        end
+    end)
+    
+    while task.wait(1) do
+        pcall(function()
+            local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+            PingLabel:Set("ping: " .. tostring(ping) .. " ms")
+        end)
+    end
+end)
 --===== Player 이동, 점프, NoClip 및 Fly 기능 =====
 do
 playerTab:AddSection({
