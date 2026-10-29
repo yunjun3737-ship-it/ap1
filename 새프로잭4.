@@ -9649,7 +9649,7 @@ LoopTab:AddToggle({
             end
         end
     end
-})
+
 
         
         local function aa31(aa32, aa33, aa34)
@@ -9903,5 +9903,4 @@ LoopTab:AddToggle({
         end
     
 })
-
             
