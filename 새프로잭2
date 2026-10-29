@@ -9599,8 +9599,6 @@ LoopTab:AddToggle({
 	Name = "Other"
 })    
 
-Settings.Loop = Settings.Loop or {}
-Settings.Loop.ownershipKickV2Active = false
 
 function loopPlayerF() 
     UpdateCurrentBlobman()
