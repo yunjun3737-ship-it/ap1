@@ -8823,6 +8823,101 @@ LoopTab:AddToggle({
 LoopTab:AddSection({
     Name = "Bring"
 })
+
+local function teleportParts(player, partName)
+    local character = player.Character
+    if not character then return end
+    
+    local targetParts = {}
+
+    if partName == "Arm/Leg" then
+        table.insert(targetParts, character:FindFirstChild("Left Leg"))
+        table.insert(targetParts, character:FindFirstChild("Right Leg"))
+        table.insert(targetParts, character:FindFirstChild("Left Arm"))
+        table.insert(targetParts, character:FindFirstChild("Right Arm"))
+
+    elseif partName == "All/Leg" then
+        table.insert(targetParts, character:FindFirstChild("Left Leg"))
+        table.insert(targetParts, character:FindFirstChild("Right Leg"))
+
+    elseif partName == "All/Arm" then
+        table.insert(targetParts, character:FindFirstChild("Left Arm"))
+        table.insert(targetParts, character:FindFirstChild("Right Arm"))
+
+    elseif partName == "Leg/왼쪽" then
+        table.insert(targetParts, character:FindFirstChild("Left Leg"))
+
+    elseif partName == "Leg/오른쪽" then
+        table.insert(targetParts, character:FindFirstChild("Right Leg"))
+
+    elseif partName == "Arm/왼쪽" then
+        table.insert(targetParts, character:FindFirstChild("Left Arm"))
+
+    elseif partName == "Arm/오른쪽" then
+        table.insert(targetParts, character:FindFirstChild("Right Arm"))
+    end
+
+    for _, part in ipairs(targetParts) do
+        if part then part.CFrame = CFrame.new(0, -99999, 0) end
+    end
+
+    task.wait(0.03)
+    local torso = character:FindFirstChild("Torso")
+    if torso then torso.CFrame = CFrame.new(0, -99999, 0) end
+end
+
+function TP(target)
+    local TCHAR = target.Character
+    --local THRP = TCHAR:FindFirstChild("HumanoidRootPart")
+    local THRP = TCHAR:FindFirstChild("Torso")
+
+    local localChar = plr.Character
+    local localHRP = localChar and localChar:FindFirstChild("HumanoidRootPart")
+
+    if TCHAR and THRP and localHRP then
+        local ping = game:GetService("Players").LocalPlayer:GetNetworkPing()
+        local offset = THRP.Position + (THRP.Velocity * (ping + 0.15))
+
+        localHRP.CFrame = CFrame.new(offset) * THRP.CFrame.Rotation
+
+        return true
+    end
+    return false
+end
+
+function SetOwner(target)
+	local head = target.Character:FindFirstChild("HumanoidRootPart")
+	if head and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+		rs.GrabEvents.SetNetworkOwner:FireServer(head, head.CFrame)
+		return true
+	end
+	return false
+end
+
+function UnOwner(target)
+	local head = target.Character:FindFirstChild("HumanoidRootPart")
+	if head and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+		rs.GrabEvents.DestroyGrabLine:FireServer(head, head.CFrame)
+		return true
+	end
+	return false
+end
+
+function BACK(originCF)
+	if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+		plr.Character.HumanoidRootPart.CFrame = originCF
+	end
+end
+
+local function safeGetCharacterParts(player)
+    if not player then return nil end
+    local char = player.Character
+    if not char then return nil end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local head = char:FindFirstChild("Head")
+    return char, hrp, head
+end
+
 LoopTab:AddButton({
     Name = "Bring   <font color='rgb(255,154,123)'>[Blobman]</font>",
     Callback = function()
