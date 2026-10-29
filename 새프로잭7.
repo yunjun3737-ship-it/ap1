@@ -1433,7 +1433,7 @@ local currentLoopID = CameraLoopID
             plr.CameraMaxZoomDistance = 100000
         end
     end)
-end
+
 --[[
 playerTab:AddToggle({
     Name = "jerk off",
@@ -1479,7 +1479,7 @@ playerTab:AddToggle({
     end
 })
 ]]
-
+end
 
 
 
