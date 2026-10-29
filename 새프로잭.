@@ -1435,8 +1435,8 @@ local currentLoopID = CameraLoopID
     end)
 end
 playerTab:AddToggle({
-    Name = " jerk off",
-    CurrentValue= false,
+    Name = "jerk off",
+    Default = false,
     Flag = "JerkMotiownToggle",
     Callback = function(Value)
         jerkActive = Value
