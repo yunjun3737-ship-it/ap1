@@ -1244,7 +1244,7 @@ playerTab:AddSlider({
 end
 
 --===== Spin 및 FPS 기능 =====
-do
+
 local RunService = game:GetService("RunService")
 local Player = game:GetService("Players").LocalPlayer
 
