@@ -10392,3 +10392,546 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     end
 end)
 
+LoopTab:AddSection({
+	Name = "blobman"
+})
+do
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+local Window = OrionLib:MakeWindow({Name = "Hub", HidePremium = false, SaveConfig = false, ConfigFolder = "OrionConfig"})
+local BlobGroupbox = Window:MakeTab({Name = "Blobman", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+
+local Toggles = {}
+
+local playerMap = {}
+local selectedKickPlayer = nil
+local kickLoopEnabled = false
+local loopKickDualActive = false
+local activeBp = nil
+
+local function stvel(hrp)
+    hrp.AssemblyLinearVelocity = Vector3.zero
+    hrp.AssemblyAngularVelocity = Vector3.zero
+end
+
+local function getPlayerNames()
+    local names = {}
+    playerMap = {}
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local displayName = string.format("%s (@%s)", player.DisplayName, player.Name)
+            table.insert(names, displayName)
+            playerMap[displayName] = player
+        end
+    end
+
+    if #names == 0 then
+        table.insert(names, "---")
+    end
+
+    return names
+end
+
+local TargetDropdown = {
+    Value = "---",
+    Values = getPlayerNames()
+}
+
+LoopTab:AddDropdown({
+    Name = "Select Player",
+    Default = "---",
+    Options = TargetDropdown.Values,
+    Callback = function(Value)
+        TargetDropdown.Value = Value
+        if Value and Value ~= "---" then
+            selectedKickPlayer = playerMap[Value]
+        else
+            selectedKickPlayer = nil
+        end
+    end
+})
+
+function TargetDropdown:SetValues(newValues)
+    self.Values = newValues
+    actualDropdown:Refresh(newValues, true)
+end
+
+function TargetDropdown:SetValue(newValue)
+    self.Value = newValue
+    actualDropdown:Set(newValue)
+end
+
+local function updateDropdown()
+    local updatedNames = getPlayerNames()
+    TargetDropdown:SetValues(updatedNames)
+
+    if TargetDropdown.Value and playerMap[TargetDropdown.Value] then
+        selectedKickPlayer = playerMap[TargetDropdown.Value]
+    else
+        selectedKickPlayer = nil
+        if updatedNames[1] == "---" then
+            TargetDropdown:SetValue("---")
+        end
+    end
+end
+
+Players.PlayerAdded:Connect(updateDropdown)
+Players.PlayerRemoving:Connect(updateDropdown)
+--[[
+LoopTab:AddButton({
+    Name = "Bring",
+    Callback = function()
+        if not selectedKickPlayer then return end
+        
+        local target = selectedKickPlayer
+        local tChar = target.Character
+        local tRoot = tChar and tChar:FindFirstChild("HumanoidRootPart")
+        if not tRoot then return end
+        
+        local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChild("Humanoid")
+        local seat = hum and hum.SeatPart
+
+        if not seat or not seat.Parent or (seat.Parent.Name ~= "CreatureBlobman" and seat.Parent.Name ~= "AutoSitBlobman" and seat.Parent.Name ~= "blob") then return end
+        
+        local blob = seat.Parent
+        local scriptObj = blob:FindFirstChild("BlobmanSeatAndOwnerScript")
+        local CG = scriptObj and scriptObj:FindFirstChild("CreatureGrab")
+        local R_Det = blob:FindFirstChild("RightDetector")
+        local R_Weld = R_Det and (R_Det:FindFirstChild("RightWeld") or R_Det:FindFirstChildWhichIsA("Weld"))
+        
+        if not CG then return end
+        
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        
+        local pos = hrp.CFrame
+
+        hrp.CFrame = tRoot.CFrame
+        task.wait(0.25)
+
+        if R_Det and R_Weld then
+            CG:FireServer(R_Det, tRoot, R_Weld)
+        end
+        
+        task.wait(0.25)
+
+        hrp.CFrame = pos
+        
+        task.wait(0.5)
+    end
+})
+]]
+local killThread = nil
+
+LoopTab:AddToggle({
+    Name = "Blob Kill",
+    Default = false,
+    Callback = function(v)
+        local applymethod = v
+        local tt = selectedKickPlayer
+
+        if v then
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChild("Humanoid")
+            local seat = hum and hum.SeatPart
+
+            if not seat or not seat.Parent or (seat.Parent.Name ~= "CreatureBlobman" and seat.Parent.Name ~= "AutoSitBlobman") then
+                if Toggles and Toggles.LoopKill then
+                    Toggles.LoopKill:SetValue(false)
+                end
+                return
+            end
+        end
+
+        if not tt then
+            if v then
+                if Toggles and Toggles.LoopKill then
+                    Toggles.LoopKill:SetValue(false)
+                end
+            end
+            return
+        end
+
+        if v then
+            killThread = task.spawn(function()
+                while applymethod and task.wait(0.05) do
+                    tt = selectedKickPlayer
+
+                    local char = LocalPlayer.Character
+                    local hum = char and char:FindFirstChild("Humanoid")
+                    local seat = hum and hum.SeatPart
+
+                    if not seat or not seat.Parent or (seat.Parent.Name ~= "CreatureBlobman" and seat.Parent.Name ~= "AutoSitBlobman") then
+                        applymethod = false
+                        if Toggles and Toggles.LoopKill then
+                            Toggles.LoopKill:SetValue(false)
+                        end
+                        break
+                    end
+
+                    local Blob = seat.Parent
+
+                    if tt and tt.Character and tt.Character:FindFirstChild("HumanoidRootPart") and char and char:FindFirstChild("HumanoidRootPart") then
+                        local HRP = char.HumanoidRootPart
+                        local hum2 = char.Humanoid
+
+                        local CD, CG = Blob.BlobmanSeatAndOwnerScript.CreatureRelease, Blob.BlobmanSeatAndOwnerScript.CreatureGrab
+                        local pos = HRP.CFrame
+                        if tt.Character and tt.Character:FindFirstChild("HumanoidRootPart") and tt.Character.Humanoid.Health ~= 0 then
+                            Blob.HumanoidRootPart.CFrame = tt.Character.HumanoidRootPart.CFrame
+                            task.wait(0.1)
+                            repeat task.wait()
+                                CG:FireServer(nil, tt.Character.HumanoidRootPart, Blob.RightDetector.RightWeld)
+                                CD:FireServer(Blob.RightDetector.RightWeld)
+                            until isnetworkowner(tt.Character.HumanoidRootPart)
+                            task.wait()
+                            tt.Character.Humanoid:ChangeState("Dead")
+                            stvel(HRP)
+                            stvel(Blob.HumanoidRootPart)
+                            Blob.HumanoidRootPart.CFrame = pos
+                        end
+                    end
+                end
+
+                applymethod = false
+                if Toggles and Toggles.LoopKill then
+                    Toggles.LoopKill:SetValue(false)
+                end
+            end)
+        else
+            applymethod = false
+            if killThread then
+                task.cancel(killThread)
+                killThread = nil
+            end
+        end
+    end
+})
+
+Toggles.LoopKill = {
+    SetValue = function(self, val)
+        LoopKillObj:Set(val)
+    end
+}
+
+LoopTab:AddToggle({
+    Name = "Blob Kick",
+    Default = false,
+    Callback = function(on)
+        kickLoopEnabled = on
+
+        if not on then
+            return
+        end
+
+        local targetCheck = selectedKickPlayer
+        if not targetCheck or not targetCheck.Parent then
+            if Toggles and Toggles.LoopKickToggle then
+                Toggles.LoopKickToggle:SetValue(false)
+            end
+            kickLoopEnabled = false
+            return
+        end
+
+        local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChild("Humanoid")
+        local seat = hum and hum.SeatPart
+
+        if not seat or not seat.Parent or (seat.Parent.Name ~= "CreatureBlobman" and seat.Parent.Name ~= "AutoSitBlobman") then
+            if Toggles and Toggles.LoopKickToggle then
+                Toggles.LoopKickToggle:SetValue(false)
+            end
+            kickLoopEnabled = false
+            return
+        end
+
+        task.spawn(function()
+            local blob = seat.Parent
+            local blobRoot = blob:FindFirstChild("HumanoidRootPart") or blob.PrimaryPart
+            local scriptObj = blob:FindFirstChild("BlobmanSeatAndOwnerScript")
+            local CG = scriptObj and scriptObj:FindFirstChild("CreatureGrab")
+            local CD = scriptObj and scriptObj:FindFirstChild("CreatureDrop")
+            local R_Det = blob:FindFirstChild("RightDetector")
+            local R_Weld = R_Det and (R_Det:FindFirstChild("RightWeld") or R_Det:FindFirstChildWhichIsA("Weld"))
+
+            if not blobRoot then
+                kickLoopEnabled = false
+                if Toggles and Toggles.LoopKickToggle then
+                    Toggles.LoopKickToggle:SetValue(false)
+                end
+                return
+            end
+
+            local SavedPos = blobRoot.CFrame
+            local packetTimer = 0
+            local lastTargetChar = nil
+            local PACKET_DELAY = 0.01  
+            local BRING_DURATION = 0.15 
+
+            while kickLoopEnabled do
+                local target = selectedKickPlayer
+
+                if not blobRoot or not blobRoot.Parent then
+                    break
+                end
+
+                if not target or not target.Parent then
+                    lastTargetChar = nil
+                    task.wait(0.2)  
+                    continue
+                end
+
+                local tCharCurrent = target.Character
+                local tRootCurrent = tCharCurrent and tCharCurrent:FindFirstChild("HumanoidRootPart")
+                local tHumCurrent = tCharCurrent and tCharCurrent:FindFirstChild("Humanoid")
+
+                if not tCharCurrent or not tRootCurrent or not tHumCurrent or tHumCurrent.Health <= 0 then
+                    lastTargetChar = nil 
+                    task.wait(0.03) 
+                    continue
+                end
+
+                if tCharCurrent ~= lastTargetChar then
+                    lastTargetChar = tCharCurrent
+                    local bringStart = tick()
+
+                    while tick() - bringStart < BRING_DURATION do
+                        if not kickLoopEnabled then break end
+
+                        blobRoot.CFrame = tRootCurrent.CFrame
+                        blobRoot.AssemblyLinearVelocity = Vector3.zero
+                        blobRoot.AssemblyAngularVelocity = Vector3.zero
+
+                        pcall(function()
+                            if CG and R_Det then
+                                CG:FireServer(R_Det, tRootCurrent, R_Weld)
+                            end
+                            if CreateGrabLine then CreateGrabLine:FireServer(tRootCurrent, Vector3.zero, tRootCurrent.Position, false) end
+                            if SetNetworkOwner then SetNetworkOwner:FireServer(tRootCurrent, blobRoot.CFrame) end
+                        end)
+                        RunService.Heartbeat:Wait()
+                    end
+
+                    blobRoot.CFrame = SavedPos
+                    blobRoot.AssemblyLinearVelocity = Vector3.zero
+                    blobRoot.AssemblyAngularVelocity = Vector3.zero
+                    task.wait(0.01)  
+                end
+
+                blobRoot.CFrame = SavedPos
+                blobRoot.AssemblyLinearVelocity = Vector3.zero
+                blobRoot.AssemblyAngularVelocity = Vector3.zero
+
+                local lockPos = SavedPos * CFrame.new(0, 23, 0)
+                tRootCurrent.CFrame = lockPos
+                tRootCurrent.AssemblyLinearVelocity = Vector3.zero
+                tRootCurrent.AssemblyAngularVelocity = Vector3.zero
+                tRootCurrent.Velocity = Vector3.zero
+                tRootCurrent.RotVelocity = Vector3.zero
+
+                if tick() - packetTimer > PACKET_DELAY then
+                    packetTimer = tick()
+                    pcall(function()
+                        tHumCurrent.PlatformStand = true
+                        tHumCurrent.Sit = true
+                        if SetNetworkOwner then SetNetworkOwner:FireServer(tRootCurrent, lockPos) end
+                        if R_Det and CD then
+                            local weld = R_Det:FindFirstChild("RightWeld") or R_Det:FindFirstChildWhichIsA("Weld")
+                            if weld then CD:FireServer(weld) end
+                        end
+                        if DestroyGrabLine then DestroyGrabLine:FireServer(tRootCurrent) end
+                        if R_Det and CG then CG:FireServer(R_Det, tRootCurrent, R_Weld) end
+                        if CreateGrabLine then CreateGrabLine:FireServer(tRootCurrent, Vector3.zero, tRootCurrent.Position, false) end
+                    end)
+                end
+
+                RunService.Heartbeat:Wait()
+            end
+
+            kickLoopEnabled = false
+            if Toggles and Toggles.LoopKickToggle then
+                Toggles.LoopKickToggle:SetValue(false)
+            end
+
+            if blobRoot and blobRoot.Parent then
+                blobRoot.CFrame = SavedPos
+                blobRoot.AssemblyLinearVelocity = Vector3.zero
+                blobRoot.AssemblyAngularVelocity = Vector3.zero
+            end
+        end)
+    end
+})
+
+Toggles.LoopKickToggle = {
+    SetValue = function(self, val)
+        LoopKickToggleObj:Set(val)
+    end
+}
+
+LoopTab:AddToggle({
+    Name = "Blob Kick (spam)",
+    Default = false,
+    Callback = function(on)
+        loopKickDualActive = on
+
+        if not on then
+            if activeBp then
+                pcall(function() activeBp:Destroy() end)
+                activeBp = nil
+            end
+            return
+        end
+
+        local targetCheck = selectedKickPlayer
+        if not targetCheck or not targetCheck.Parent then
+            if Toggles and Toggles.DualHandLoopKick then
+                Toggles.DualHandLoopKick:SetValue(false)
+            end
+            loopKickDualActive = false
+            return
+        end
+
+        local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChild("Humanoid")
+        local seat = hum and hum.SeatPart
+
+        if not seat or not seat.Parent or (seat.Parent.Name ~= "CreatureBlobman" and seat.Parent.Name ~= "AutoSitBlobman") then
+            if Toggles and Toggles.DualHandLoopKick then
+                Toggles.DualHandLoopKick:SetValue(false)
+            end
+            loopKickDualActive = false
+            return
+        end
+
+        task.spawn(function()
+            local lastTargetCharDual = nil
+
+            while loopKickDualActive do
+                local target = selectedKickPlayer
+                local char = LocalPlayer.Character
+                local hum = char and char:FindFirstChild("Humanoid")
+                local seat = hum and hum.SeatPart
+
+                if not seat or not seat.Parent or (seat.Parent.Name ~= "CreatureBlobman" and seat.Parent.Name ~= "AutoSitBlobman") then
+                    loopKickDualActive = false
+                    if activeBp then
+                        pcall(function() activeBp:Destroy() end)
+                        activeBp = nil
+                    end
+                    break
+                end
+
+                if not target or not target.Parent then
+                    if activeBp then
+                        pcall(function() activeBp:Destroy() end)
+                        activeBp = nil
+                    end
+                    lastTargetCharDual = nil
+                    task.wait(0.5)
+                    continue
+                end
+
+                local seatParent = seat.Parent
+                local scriptObj = seatParent:FindFirstChild("BlobmanSeatAndOwnerScript")
+                local grab = scriptObj and scriptObj:FindFirstChild("CreatureGrab")
+                local drop = scriptObj and scriptObj:FindFirstChild("CreatureDrop")
+
+                if not grab or not drop then
+                    task.wait(0.05)
+                    continue
+                end
+
+                local leftDet = seatParent:FindFirstChild("LeftDetector")
+                local rightDet = seatParent:FindFirstChild("RightDetector")
+                local leftWeld = leftDet and (leftDet:FindFirstChild("LeftWeld") or leftDet:FindFirstChildWhichIsA("Weld"))
+                local rightWeld = rightDet and (rightDet:FindFirstChild("RightWeld") or rightDet:FindFirstChildWhichIsA("Weld"))
+
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local targetChar = target.Character
+                local targetHRP = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
+                local targetHum = targetChar and targetChar:FindFirstChild("Humanoid")
+
+                if not targetChar or not targetHRP or not targetHum or targetHum.Health <= 0 then
+                    if activeBp then
+                        pcall(function() activeBp:Destroy() end)
+                        activeBp = nil
+                    end
+                    lastTargetCharDual = nil
+                    task.wait(0.5)
+                    continue
+                end
+
+                if targetChar ~= lastTargetCharDual then
+                    lastTargetCharDual = targetChar
+                    
+                    if activeBp then
+                        pcall(function() activeBp:Destroy() end)
+                        activeBp = nil
+                    end
+
+                    if hrp then
+                        hrp.CFrame = targetHRP.CFrame * CFrame.new(3, 15, 0)
+                    end
+
+                    task.wait()
+                    pcall(function() grab:FireServer(leftDet, targetHRP, leftWeld) end)
+                    task.wait()
+                    pcall(function() drop:FireServer(leftWeld, targetHRP) end)
+                    task.wait()
+
+                    local newBp = Instance.new("BodyPosition")
+                    newBp.Position = Vector3.new(0, 999999, 0)
+                    newBp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                    newBp.Parent = targetHRP
+                    activeBp = newBp
+
+                    pcall(function() grab:FireServer(leftDet, targetHRP, leftWeld) end)
+                    task.wait()
+                    pcall(function() drop:FireServer(leftWeld, targetHRP) end)
+                end
+
+                pcall(function()
+                    grab:FireServer(leftDet, targetHRP, leftWeld)
+                    task.wait()
+                    drop:FireServer(leftWeld, targetHRP)
+                    task.wait()
+                    grab:FireServer(rightDet, targetHRP, rightWeld)
+                    task.wait()
+                    drop:FireServer(rightWeld, targetHRP)
+                    task.wait()
+                    grab:FireServer(leftDet, targetHRP, leftWeld)
+                    grab:FireServer(rightDet, targetHRP, rightWeld)
+                    task.wait()
+                    drop:FireServer(leftWeld, targetHRP)
+                    drop:FireServer(rightWeld, targetHRP)
+                end)
+                
+                task.wait()
+            end
+
+            loopKickDualActive = false
+            if Toggles and Toggles.DualHandLoopKick then
+                Toggles.DualHandLoopKick:SetValue(false)
+            end
+
+            if activeBp then
+                pcall(function() activeBp:Destroy() end)
+                activeBp = nil
+            end
+        end)
+    end
+})
+
+Toggles.DualHandLoopKick = {
+    SetValue = function(self, val)
+        DualHandLoopKickObj:Set(val)
+    end
+}
+end
+
