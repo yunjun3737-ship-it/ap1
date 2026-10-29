@@ -9160,6 +9160,9 @@ LoopTab:AddButton({
 LoopTab:AddSection({
     Name = "Oats Kick"
 })
+                   
+            
+
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -9404,7 +9407,7 @@ local function loopBestKickF()
 
                 local grabStartTime = tick()
                 while (tick() - grabStartTime) < 0.3 and oatsKickActive do
-                    task.wait(0.01)
+                    task.wait(0.05)
                     sno(tHRP)
                     pcall(function()
                         local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
@@ -9464,7 +9467,7 @@ local function loopBestKickF()
 
             local align = tHRP:FindFirstChild("KickAlign")
             if align and align.Attachment1 and oatsKickActive then
-                align.Attachment1.WorldPosition = myHead.Position + Vector3.new(5, 16, 0)
+                align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, 20, 0)
             end
 
             local rot = tHRP:FindFirstChild("KickRot")
@@ -9472,7 +9475,7 @@ local function loopBestKickF()
                 rot.CFrame = CFrame.Angles(0, 0, 0) 
             end
 
-            if tick() - lastRemoteFire > 0.005 and oatsKickActive then
+            if tick() - lastRemoteFire > 0.05 and oatsKickActive then
                 pcall(function()
                     local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
                     local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
@@ -9520,7 +9523,7 @@ local function loopBestKickF()
 end
 
 LoopTab:AddToggle({
-    Name = "Set Onwer Kick",
+    Name = "Set Onwer Kick TOP1<font color='rgb(255,154,123)'>[Kick]</font>",
     Default = false,
     Callback = function(Value)
         oatsKickActive = Value
@@ -9580,17 +9583,18 @@ LoopTab:AddToggle({
 })
 
 
+
 LoopTab:AddToggle({
     Name = " ┗ Options: Line Lag",
     Default = false,
-    Flag = "wouft280yg2",
     Callback = function(Value)
         oatsKickLagOpt = Value
         manageLag()
     end
 })
-          
-end
+
+        
+
 
  --[[   
 LoopTab:AddToggle({
