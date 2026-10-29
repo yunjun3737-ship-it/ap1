@@ -682,7 +682,7 @@ playerTab:AddSlider({
 })
 
 playerTab:AddSection({
-    Name = "Other"
+    Name = "support"
 })
 
 
@@ -1114,6 +1114,9 @@ end
 
 
 --===== Desync 기능 =====
+playerTab:AddSection({
+	Name = "Desync&Other"
+})
 do
 local desync1Enabled = false
 function Desync1Start()
@@ -1370,6 +1373,116 @@ playerTab:AddButton({
     	end)
 	end
 })
+
+do
+local CameraToggle = false
+local CameraLoopID = 0
+
+
+playerTab:AddToggle({
+Name = "Third person View",
+Default = false,
+Flag = "w9f7tgt08w",
+Callback = function(Value)
+CameraToggle = Value
+CameraLoopID = CameraLoopID + 1
+local currentLoopID = CameraLoopID
+
+
+    if not Value then
+        plr.CameraMode = Enum.CameraMode.LockFirstPerson
+        plr.CameraMinZoomDistance = 0.5
+        plr.CameraMaxZoomDistance = 0.5
+        return
+    end
+
+    task.spawn(function()
+        if not game:IsLoaded() then
+            game.Loaded:Wait()
+        end
+
+        plr.CameraMode = Enum.CameraMode.Classic
+        task.wait(0.05)
+
+        local character = plr.Character or plr.CharacterAdded:Wait()
+        local rootPart = character:WaitForChild("HumanoidRootPart", 5)
+        local success = false
+        local attempts = 0
+
+        while CameraToggle
+            and CameraLoopID == currentLoopID
+            and not success
+            and attempts < 80 do
+
+            plr.CameraMinZoomDistance = 12
+            plr.CameraMaxZoomDistance = 12
+
+            task.wait(0.05)
+            attempts = attempts + 1
+
+            if plr:GetAttribute("CameraZoomDistance") == 12
+                or (workspace.CurrentCamera
+                and rootPart
+                and (workspace.CurrentCamera.CFrame.Position - rootPart.Position).Magnitude >= 11.5) then
+                success = true
+            end
+        end
+
+        if CameraToggle and CameraLoopID == currentLoopID then
+            plr.CameraMinZoomDistance = 0.5
+            plr.CameraMaxZoomDistance = 100000
+        end
+    end)
+end
+playerTab:AddToggle({
+    Name = " jerk off",
+    CurrentValue= false,
+    Flag = "JerkMotiownToggle",
+    Callback = function(Value)
+        jerkActive = Value
+
+        local player = game:GetService("Players").LocalPlayer
+        local character = player.Character
+        if not character then return end
+
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if not humanoid then return end
+
+        local animator = humanoid:FindFirstChildOfClass("Animator")
+        if not animator then
+            animator = Instance.new("Animator")
+            animator.Parent = humanoid
+        end
+
+        if jerkActive then
+            if not jerkAnimationTrack then
+                local animation = Instance.new("Animation")
+                animation.AnimationId = "rbxassetid://168268306"
+                jerkAnimationTrack = animator:LoadAnimation(animation)
+            end
+
+            jerkAnimationTrack:Play()
+            task.wait(0.3)
+
+            task.spawn(function()
+                while jerkActive and jerkAnimationTrack and jerkAnimationTrack.IsPlaying do
+                    jerkAnimationTrack.TimePosition = 0.3
+                    task.wait(0.1)
+                end
+            end)
+        else
+            if jerkAnimationTrack then
+                jerkAnimationTrack:Stop()
+            end
+        end
+    end
+})
+
+
+})
+
+
+end
 
 
 
@@ -2449,7 +2562,7 @@ grabTab:AddTextbox({
 local nageru = 800
 
 grabTab:AddToggle({
-    Name = "Super Throw V2   <font color='rgb(0,255,0)'>[Mobile]</font>",
+    Name = "Super Throw   <font color='rgb(0,255,0)'>[Mobile]</font>",
     
     save = true,
     Flag = "Super2hhsThrow",
@@ -2500,7 +2613,7 @@ grabTab:AddToggle({
 })
 
 grabTab:AddTextbox({
-    Name = "Super Throw V2",
+    Name = "Super Throw",
     PlaceholderText = "Number input (default: 800)",
     
     save = true,
