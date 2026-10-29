@@ -531,6 +531,7 @@ local function LoadAll()
     getgenv().IsLoadingConfig = false
     print("Import complete | Flag number:", loaded)
 end
+do
 local Players = game:GetService("Players")
 local Stats = game:GetService("Stats")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
@@ -595,6 +596,7 @@ task.spawn(function()
         end)
     end
 end)
+end
 --===== Player 이동, 점프, NoClip 및 Fly 기능 =====
 do
 playerTab:AddSection({
