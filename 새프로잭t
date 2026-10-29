@@ -11766,7 +11766,7 @@ end
 
 
 
-do
+
 
 plotTab:AddSection({
     Name = "plot"
@@ -12475,4 +12475,4 @@ plotTab:AddToggle({
 end
 
 
-end
+
