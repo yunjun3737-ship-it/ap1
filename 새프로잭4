@@ -10982,30 +10982,16 @@ LoopTab:AddSection({
 	Name = "blobman"
 })
 do
-
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
-
-local Toggles = {}
 
 local playerMap = {}
 local selectedKickPlayer = nil
-local kickLoopEnabled = false
-local loopKickDualActive = false
-local activeBp = nil
-
-local function stvel(hrp)
-    hrp.AssemblyLinearVelocity = Vector3.zero
-    hrp.AssemblyAngularVelocity = Vector3.zero
-end
-
-local playerMap = {}
+local refreshQueued = false
 
 local function getPlayerNames()
     local names = {}
-    playerMap = {}
+    local newPlayerMap = {}
 
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
@@ -11016,13 +11002,17 @@ local function getPlayerNames()
             )
 
             table.insert(names, displayName)
-            playerMap[displayName] = player
+            newPlayerMap[displayName] = player
         end
     end
+
+    table.sort(names)
 
     if #names == 0 then
         table.insert(names, "---")
     end
+
+    playerMap = newPlayerMap
 
     return names
 end
@@ -11032,82 +11022,82 @@ local TargetDropdown = {
     Values = getPlayerNames()
 }
 
-local TargetDropdownObject = LoopTab:AddPlayersDropdown({
+LoopTab:AddPlayersDropdown({
     Name = "Select Player",
     Default = "---",
     Options = TargetDropdown.Values,
 
-    Callback = function(Value)
-        TargetDropdown.Value = Value
+    Callback = function(value)
+        TargetDropdown.Value = value
 
-        if Value and Value ~= "---" then
-            selectedKickPlayer = playerMap[Value]
+        if value and value ~= "---" then
+            selectedKickPlayer = playerMap[value]
         else
             selectedKickPlayer = nil
         end
     end
 })
 
-local function refreshPlayerDropdown()
-    local selectedPlayer = selectedKickPlayer
+function updateDropdown()
+    if refreshQueued then
+        return
+    end
 
-    TargetDropdown.Values = getPlayerNames()
+    refreshQueued = true
 
-    TargetDropdownObject:Refresh(TargetDropdown.Values, true)
+    task.defer(function()
+        refreshQueued = false
 
-    if selectedPlayer and selectedPlayer.Parent == Players then
-        for displayName, player in pairs(playerMap) do
-            if player == selectedPlayer then
-                TargetDropdownObject:SetValue(displayName)
-                selectedKickPlayer = selectedPlayer
-                return
+        local previousTarget = selectedKickPlayer
+        local names = getPlayerNames()
+
+        TargetDropdown.Values = names
+
+        if TargetDropdownObject
+            and type(TargetDropdownObject.Refresh) == "function" then
+
+            TargetDropdownObject:Refresh(names, true)
+        end
+
+        local selectedName = nil
+
+        if previousTarget and previousTarget.Parent == Players then
+            for name, player in pairs(playerMap) do
+                if player == previousTarget then
+                    selectedName = name
+                    break
+                end
             end
         end
-    end
 
-    TargetDropdown.Value = "---"
-    selectedKickPlayer = nil
-    TargetDropdownObject:SetValue("---")
-end
+        if selectedName then
+            TargetDropdown.Value = selectedName
+            selectedKickPlayer = previousTarget
 
-Players.PlayerAdded:Connect(function()
-    task.defer(refreshPlayerDropdown)
-end)
+            if TargetDropdownObject
+                and type(TargetDropdownObject.SetValue) == "function" then
 
-Players.PlayerRemoving:Connect(function()
-    task.defer(refreshPlayerDropdown)
-end)
+                TargetDropdownObject:SetValue(selectedName)
+            end
+        else
+            TargetDropdown.Value = "---"
+            selectedKickPlayer = nil
 
+            if TargetDropdownObject
+                and type(TargetDropdownObject.SetValue) == "function" then
 
-
-
-function TargetDropdown:SetValues(newValues)
-    self.Values = newValues
-    actualDropdown:Refresh(newValues, true)
-end
-
-function TargetDropdown:SetValue(newValue)
-    self.Value = newValue
-    actualDropdown:Set(newValue)
-end
-
-local function updateDropdown()
-    local updatedNames = getPlayerNames()
-    TargetDropdown:SetValues(updatedNames)
-
-    if TargetDropdown.Value and playerMap[TargetDropdown.Value] then
-        selectedKickPlayer = playerMap[TargetDropdown.Value]
-    else
-        selectedKickPlayer = nil
-        if updatedNames[1] == "---" then
-            TargetDropdown:SetValue("---")
+                TargetDropdownObject:SetValue("---")
+            end
         end
-    end
+    end)
 end
 
 Players.PlayerAdded:Connect(updateDropdown)
 Players.PlayerRemoving:Connect(updateDropdown)
 
+
+
+ --[[
 LoopTab:AddButton({
     Name = "Bring",
     Callback = function()
@@ -11151,7 +11141,7 @@ LoopTab:AddButton({
         task.wait(0.5)
     end
 })
-
+]]
 --local killThread = nil
 
 LoopTab:AddToggle({
