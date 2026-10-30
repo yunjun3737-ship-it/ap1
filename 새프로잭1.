@@ -207,6 +207,7 @@ local G = rs:WaitForChild("GrabEvents")
 if G:FindFirstChild("EndGrabEarly") then
     G.EndGrabEarly:Destroy()
 end
+--[[
 Instance.new("RemoteEvent", G).Name = "EndGrabEarly"
 
 local UserInputService = game:GetService("UserInputService")
@@ -236,7 +237,7 @@ plr.CharacterAdded:Connect(function(newChar)
     Humanoid = newChar:WaitForChild("Humanoid")
     RootPart = newChar:WaitForChild("HumanoidRootPart")
 end)
-
+]]
 function resetCharacter()
     if Character and Humanoid then
         Humanoid.Health = 0
