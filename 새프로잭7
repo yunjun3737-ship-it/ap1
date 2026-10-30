@@ -11026,7 +11026,7 @@ local TargetDropdown = {
     Values = getPlayerNames()
 }
 
-local TargetDropdownObject = LoopTab:AddPlayersDropdown({
+local TargetDropdownObject = LoopTab:AddDropdown({
     Name = "Select Player",
     Default = "---",
     Options = TargetDropdown.Values,
