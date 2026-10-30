@@ -1,4 +1,32 @@
 --[[ by alpha 21분38초 걸렸습니다 ]]
+
+
+--[[Prometheus 소스 파싱 및 판별 통과]]
+
+
+--[[래퍼 제거 및 상수 접기 통과]]
+
+
+--[[문자열 복호화 통과]]
+
+
+--[[Vmify 가상 머신 해제 통과]]
+
+
+--[[제어 흐름·프록시 정리 및 최적화 통과]]
+
+
+--[[변수 정리·서식·이름 복원 통과]]
+
+
+--[[복원 소스 검증 통과]]
+
+
+--[[추가 함수복원 작업 했음]]
+
+
+
+
 local players = game:GetService("Players")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local lighting = game:GetService("Lighting")
