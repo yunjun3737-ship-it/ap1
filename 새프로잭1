@@ -1,9 +1,9 @@
 
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Config = {}
+--local Config = {}
 --local SpinEnabled = false
-local SpinSpeed = 25
+--local SpinSpeed = 25
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -20,7 +20,7 @@ local deb = game:GetService("Debris")
 local SetNetworkOwner = rs.GrabEvents.SetNetworkOwner
 local DestroyGrabLine = rs.GrabEvents.DestroyGrabLine
 local Auto = syn and syn.queue_on_teleport or fluxus and fluxus.queue_on_teleport or queue_on_teleport
-local Whitelist = {}
+--local Whitelist = {}
 local playersInLoop1V = {}
 local playersInLoop2V = {}
 local PPs = workspace:WaitForChild("PlotItems"):WaitForChild("PlayersInPlots")
