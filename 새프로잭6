@@ -4052,6 +4052,7 @@ end
         end
     })
 end
+--[[
 function setRagdollF(state)
     char = plr.Character
     hrp = char:WaitForChild("HumanoidRootPart")
@@ -4302,6 +4303,8 @@ antiTab:AddToggle({
         AntiGrabF(Value)
     end
 })
+]]
+
 function AntiGrabStickyF()
     local plr = game.Players.LocalPlayer
     
@@ -10982,6 +10985,7 @@ LoopTab:AddSection({
 	Name = "blobman"
 })
 do
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
@@ -10989,7 +10993,7 @@ local playerMap = {}
 local selectedKickPlayer = nil
 local refreshQueued = false
 
-local function getPlayerNames()
+function getPlayerNames()
     local names = {}
     local newPlayerMap = {}
 
@@ -11022,7 +11026,7 @@ local TargetDropdown = {
     Values = getPlayerNames()
 }
 
-LoopTab:AddPlayersDropdown({
+local TargetDropdownObject = LoopTab:AddPlayersDropdown({
     Name = "Select Player",
     Default = "---",
     Options = TargetDropdown.Values,
@@ -11038,7 +11042,7 @@ LoopTab:AddPlayersDropdown({
     end
 })
 
-function updateDropdown()
+local function updateDropdown()
     if refreshQueued then
         return
     end
@@ -11094,6 +11098,8 @@ end
 
 Players.PlayerAdded:Connect(updateDropdown)
 Players.PlayerRemoving:Connect(updateDropdown)
+
+
 
 
 
