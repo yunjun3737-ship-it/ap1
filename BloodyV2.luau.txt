@@ -1,4 +1,4 @@
-
+--[[ by alpha 21분38초 걸렸습니다 ]]
 local players = game:GetService("Players")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local lighting = game:GetService("Lighting")
@@ -643,10 +643,10 @@ else
 	StickyEvent = replicatedStorage.PlayerEvents.StickyPartEvent
 
 	Window = rayfield:CreateWindow({
-		Name = "🩸 Bloody V2 🩸 [\"PREMIUM\" no.]",
+		Name = "🩸 Bloody V2 🩸 [\"PREMIUM\"]",
 		Icon = 0,
-		LoadingTitle = "🩸 Bloody V2 🩸 [\"PREMIUM\" no.]",
-		LoadingSubtitle = "by Claude & Grok",
+		LoadingTitle = "🩸 Bloody V2 🩸 [\"PREMIUM\"]",
+		LoadingSubtitle = "by alpha",
 		ShowText = "test",
 		Theme = {
 			TextColor = Color3.fromRGB(240, 240, 240),
@@ -13218,6 +13218,6 @@ else
 		activeForm = nil
 	end)
 
-	notify("Bloody [not so PREMIUM]", "github.com/beatmm")
+	notify("Bloody [PREMIUM]")
 	return
 end
