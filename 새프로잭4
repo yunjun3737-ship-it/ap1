@@ -588,7 +588,7 @@ task.spawn(function()
         local currentTime = os.clock()
         if currentTime - lastTime >= 1 then
             local fps = math.floor(frameCount / (currentTime - lastTime))
-            FPSLabel:Set("FPS: " .. tostring(fps))
+            --FPSLabel:Set("FPS: " .. tostring(fps))
             frameCount = 0
             lastTime = currentTime
         end
@@ -11110,7 +11110,7 @@ LoopTab:AddButton({
     end
 })
 
-local killThread = nil
+--local killThread = nil
 
 LoopTab:AddToggle({
     Name = "Blob Kill",
@@ -13565,11 +13565,11 @@ AuraTab:AddToggle({
 
 
 end
-do
+
  
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
+--local Players = game:GetService("Players")
+--local ReplicatedStorage = game:GetService("ReplicatedStorage")
+--local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 local SpawnRemote = ReplicatedStorage:WaitForChild("MenuToys"):WaitForChild("SpawnToyRemoteFunction")
@@ -13885,7 +13885,7 @@ AuraTab:AddSlider({
 	end    
 })
 end
-end
+
 
 
 
