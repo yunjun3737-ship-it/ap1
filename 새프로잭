@@ -11001,13 +11001,20 @@ local function stvel(hrp)
     hrp.AssemblyAngularVelocity = Vector3.zero
 end
 
+local playerMap = {}
+
 local function getPlayerNames()
     local names = {}
     playerMap = {}
 
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
-            local displayName = string.format("%s (@%s)", player.DisplayName, player.Name)
+            local displayName = string.format(
+                "%s (@%s)",
+                player.DisplayName,
+                player.Name
+            )
+
             table.insert(names, displayName)
             playerMap[displayName] = player
         end
@@ -11025,12 +11032,14 @@ local TargetDropdown = {
     Values = getPlayerNames()
 }
 
-LoopTab:AddDropdown({
+local TargetDropdownObject = LoopTab:AddPlayersDropdown({
     Name = "Select Player",
     Default = "---",
     Options = TargetDropdown.Values,
+
     Callback = function(Value)
         TargetDropdown.Value = Value
+
         if Value and Value ~= "---" then
             selectedKickPlayer = playerMap[Value]
         else
@@ -11038,6 +11047,39 @@ LoopTab:AddDropdown({
         end
     end
 })
+
+local function refreshPlayerDropdown()
+    local selectedPlayer = selectedKickPlayer
+
+    TargetDropdown.Values = getPlayerNames()
+
+    TargetDropdownObject:Refresh(TargetDropdown.Values, true)
+
+    if selectedPlayer and selectedPlayer.Parent == Players then
+        for displayName, player in pairs(playerMap) do
+            if player == selectedPlayer then
+                TargetDropdownObject:SetValue(displayName)
+                selectedKickPlayer = selectedPlayer
+                return
+            end
+        end
+    end
+
+    TargetDropdown.Value = "---"
+    selectedKickPlayer = nil
+    TargetDropdownObject:SetValue("---")
+end
+
+Players.PlayerAdded:Connect(function()
+    task.defer(refreshPlayerDropdown)
+end)
+
+Players.PlayerRemoving:Connect(function()
+    task.defer(refreshPlayerDropdown)
+end)
+
+
+
 
 function TargetDropdown:SetValues(newValues)
     self.Values = newValues
