@@ -207,7 +207,7 @@ local G = rs:WaitForChild("GrabEvents")
 if G:FindFirstChild("EndGrabEarly") then
     G.EndGrabEarly:Destroy()
 end
---[[
+
 Instance.new("RemoteEvent", G).Name = "EndGrabEarly"
 
 local UserInputService = game:GetService("UserInputService")
@@ -215,7 +215,7 @@ local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Camera = workspace.CurrentCamera
-
+--[[
 --local characterEventsFolder = ReplicatedStorage:WaitForChild("CharacterEvents")
 --local ragdollRemoteEvent = characterEventsFolder:WaitForChild("RagdollRemote")
 --local struggleEvent = characterEventsFolder:WaitForChild("Struggle")
