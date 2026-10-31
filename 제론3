@@ -21478,7 +21478,14 @@ DevTab:AddProfileParagraph({
     Content = "Username : pacapaca110",
     Image = "rbxthumb://type=AvatarHeadShot&id=11000044399&w=420&h=420"
 })
+DevTab:AddLabel("Want to try out more amazing scripts?")
 
+DevTab:AddButton({
+    Name = "Join Our Server (Copy Invite)",
+    Callback = function()
+        setclipboard("https://discord.gg/kXfFhKZD")
+    end
+})
 CreditsTab:AddButton({
     Name = "Save",
     Callback = function()
