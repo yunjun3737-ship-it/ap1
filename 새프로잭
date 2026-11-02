@@ -13931,7 +13931,10 @@ end
 		
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
-
+local optionText, refreshDropdown, generateShapePath, getSmoothedShapePos,
+    SE_CP, SE_rebuildHearts, SE_countAllHeartSparkler, SE_cleanupALL,
+    SE_cleanupExcess, SE_CBM, SE_forceNetworkOwnership, SE_setupAntiGrab,
+    SE_watchFolder, SE_spawnSparkler
 sparklesEnabled = false
 sparklesRainbowEnabled = false
 sparklesAmount = 4
