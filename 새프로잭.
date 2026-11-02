@@ -14616,9 +14616,22 @@ SE_cleanupALL = function()
 
 	if SE_rebuildHearts then SE_rebuildHearts() end
 
-	for index117, value291 in ipairs((getAllPalletFolders())) do
-		SE_watchFolder(value291)
-	end
+	local folders = {}
+
+if type(getAllPalletFolders) == "function" then
+    local success, result = pcall(getAllPalletFolders)
+    if success and type(result) == "table" then
+        folders = result
+    end
+end
+
+for _, folder in ipairs(folders) do
+    if folder and folder.Parent then
+        if type(SE_watchFolder) == "function" then
+            SE_watchFolder(folder)
+        end
+    end
+end
 
 	if generateShapePath then generateShapePath() end
 
