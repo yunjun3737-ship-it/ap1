@@ -14659,49 +14659,50 @@ for index118, value292 in ipairs(folders) do
     end
 end
 
-				local findFirstChild29 = players:FindFirstChild(sparklesTarget)
+				local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
 
-				if findFirstChild29 and findFirstChild29.Character then
-					local rootPart489 = findFirstChild29.Character:FindFirstChild("HumanoidRootPart")
+local character = localPlayer and localPlayer.Character
+local rootPart489 = character and character:FindFirstChild("HumanoidRootPart")
 
-					if rootPart489 then
-						local rootPart490 = rootPart489.Position + Vector3.new(0, SE_HeightOffset, 0)
+if rootPart489 then
+    local rootPart490 = rootPart489.Position + Vector3.new(0, SE_HeightOffset, 0)
 
-						for index120, value294 in ipairs(sparklesConnections) do
-							local connection491 = getSmoothedShapePos(
-								(sparklesCount + (index120 - 1) * (math.pi * 2 / sparklesAmount)) % (math.pi * 2) / (math.pi * 2)
-							)
+    for index120, value294 in ipairs(sparklesConnections) do
+        local connection491 = getSmoothedShapePos(
+            (sparklesCount + (index120 - 1) * (math.pi * 2 / sparklesAmount)) % (math.pi * 2) / (math.pi * 2)
+        )
 
-							local transform492 = rootPart490
-								+ CFrame.Angles(0, math.rad(SE_RotationOffset), 0) * connection491
-								+ Vector3.new(6, 0, 0)
+        local transform492 = rootPart490
+            + CFrame.Angles(0, math.rad(SE_RotationOffset), 0) * connection491
+            + Vector3.new(6, 0, 0)
 
-							value294.Handle.CFrame = CFrame.new(transform492)
-							local transform493 = childCollection488[index120]
+        if value294 and value294.Handle then
+            value294.Handle.CFrame = CFrame.new(transform492)
+        end
 
-							if transform493 then
-								local base3 = transform493:FindFirstChild("Base")
-									or transform493.PrimaryPart
-									or transform493:FindFirstChild("SoundPart")
-									or transform493:FindFirstChildOfClass("BasePart")
+        local transform493 = childCollection488[index120]
 
-								if base3 then
-									local transform494, transform495 = SE_CBM(base3)
-									transform495.Position = transform492
-									transform494.CFrame = CFrame.new(transform492)
-									base3.CanCollide = false
-								end
-							end
-						end
-					end
-				end
+        if transform493 and transform493.Parent then
+            local base3 = transform493:FindFirstChild("Base")
+                or transform493.PrimaryPart
+                or transform493:FindFirstChild("SoundPart")
+                or transform493:FindFirstChildOfClass("BasePart")
 
-				return
-			end
-		end
-	end)
+            if base3 then
+                local transform494, transform495 = SE_CBM(base3)
 
-			
+                if transform494 and transform495 then
+                    transform495.Position = transform492
+                    transform494.CFrame = CFrame.new(transform492)
+                    base3.CanCollide = false
+                end
+            end
+        end
+    end
+end
+
+return
 					
 		
 DevTab:AddProfileParagraph({
