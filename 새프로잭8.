@@ -13929,10 +13929,13 @@ end
 })
 
 		
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
 sparklesEnabled = false
 sparklesRainbowEnabled = false
 sparklesAmount = 4
-sparklesTarget = localPlayer.Name
+sparklesTarget = localPlayer and localPlayer.Name or nil
 sparklesType = "Heart"
 sparklesInterval = 1.5
 sparklesConnections = {}
@@ -13941,9 +13944,8 @@ sparklesLoopEnabled = false
 sparklesCount = 0
 sparklesIndex = 0
 sparklesTargetCache = {}
-sparklesTargetSelected = true
+sparklesTargetSelected = localPlayer ~= nil
 playerDropdownValues = {}
-
 local optionText, refreshDropdown, generateShapePath, getSmoothedShapePos, SE_CP, SE_rebuildHearts, SE_countAllHeartSparkler, SE_cleanupALL, SE_cleanupExcess, SE_CBM, SE_forceNetworkOwnership, SE_setupAntiGrab, SE_watchFolder, SE_spawnSparkler
 
 SE_cleanupALL = function()
