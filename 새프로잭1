@@ -13939,25 +13939,49 @@ sparklesEnabled = false
 	sparklesTargetSelected = false
 	playerDropdownValues = {}
 
-	PlayerDropdown = AuraTab:AddDropdown({
+local optionText, refreshDropdown, generateShapePath, getSmoothedShapePos, SE_CP, SE_rebuildHearts, SE_countAllHeartSparkler, SE_cleanupALL, SE_cleanupExcess, SE_CBM, SE_forceNetworkOwnership, SE_setupAntiGrab, SE_watchFolder, SE_spawnSparkler
+
+SE_cleanupALL = function()
+		local folders = type(getAllPalletFolders) == "function" and getAllPalletFolders() or {}
+		for index109, value285 in ipairs(folders) do
+			for index110, value286 in ipairs(value285:GetChildren()) do
+				local childCollection480 = value286
+
+				if childCollection480.Name == "HeartSparkler" then
+					pcall(function()
+						DeleteToyRE:FireServer(childCollection480)
+					end)
+					sparklesObjects[childCollection480] = nil
+				end
+			end
+		end
+		for _, connection in ipairs(sparklesConnections) do
+			if connection.Handle then connection.Handle:Destroy() end
+		end
+		sparklesConnections = {}
+		sparklesLoopEnabled = false
+	end
+
+		PlayerDropdown = AuraTab:AddDropdown({
 		Name = 'Target',
 		Options = {},
 		CurrentOption = {},
 		MultipleOptions = false,
 		Flag = "PlayerDropdown",
 		Callback = function(value272)
-			if not value272 or not value272[1] or value272[1] == "None" then
+			local selectedValue = type(value272) == "table" and value272[1] or value272
+			if not selectedValue or selectedValue == "None" then
 				sparklesTarget = nil
 				return
 			end
 
-			username = value272[1]:match("@([%w_]+)")
+			local username = tostring(selectedValue):match("@([%w_]+)")
 
 			if username then
 				sparklesTarget = username
 
 				if sparklesEnabled then
-					SE_rebuildHearts()
+					if SE_rebuildHearts then SE_rebuildHearts() end
 				end
 			end
 		end,
@@ -13980,13 +14004,13 @@ sparklesEnabled = false
 			sparklesEnabled = value273
 
 			if value273 then
-				SE_rebuildHearts()
+				if SE_rebuildHearts then SE_rebuildHearts() end
 
 				for index103, value274 in ipairs((getAllPalletFolders())) do
 					SE_watchFolder(value274)
 				end
 			else
-				SE_cleanupALL()
+				if SE_cleanupALL then SE_cleanupALL() end
 			end
 		end,
 	})
@@ -14002,10 +14026,10 @@ sparklesEnabled = false
 			sparklesAmount = value275
 
 			if value275 < old then
-				SE_cleanupExcess()
+				if SE_cleanupExcess then SE_cleanupExcess() end
 			end
 
-			SE_rebuildHearts()
+			if SE_rebuildHearts then SE_rebuildHearts() end
 		end,
 	})
 
@@ -14019,7 +14043,7 @@ sparklesEnabled = false
 		Callback = function(value276)
 			sparklesType = value276[1]
 			sparklesTargetSelected = false
-			generateShapePath()
+			if generateShapePath then generateShapePath() end
 		end,
 	})
 
@@ -14041,7 +14065,7 @@ sparklesEnabled = false
 		Callback = function(value278)
 			sparklesInterval = value278
 			sparklesTargetSelected = false
-			generateShapePath()
+			if generateShapePath then generateShapePath() end
 		end,
 	})
 
@@ -14069,11 +14093,11 @@ sparklesEnabled = false
 		end,
 	})
 
-	function optionText(p117)
+	optionText = function(p117)
 		return string.format("👤 @%s (%s)", p117.Name, p117.DisplayName or "")
 	end
 
-	function refreshDropdown()
+	refreshDropdown = function()
 		local playerListItem423 = { optionText(localPlayer) }
 
 		for index104, value281 in ipairs(players:GetPlayers()) do
@@ -14097,7 +14121,7 @@ sparklesEnabled = false
 
 	refreshDropdown()
 
-	function generateShapePath()
+	generateShapePath = function()
 		local generateShapePathValue424, generateShapePathValue425, generateShapePathValue426, generateShapePathValue427, generateShapePathValue428, generateShapePathValue429, generateShapePathValue430, generateShapePathValue431, generateShapePathValue432, generateShapePathValue433, generateShapePathValue434, generateShapePathValue435
 
 		if sparklesTargetSelected then
@@ -14331,7 +14355,7 @@ sparklesEnabled = false
 		end
 	end
 
-	function getSmoothedShapePos(index105)
+	getSmoothedShapePos = function(index105)
 		if #sparklesTargetCache == 0 then
 			return Vector3.new(0, 0, 0)
 		else
@@ -14341,7 +14365,7 @@ sparklesEnabled = false
 		end
 	end
 
-	function SE_CP()
+	SE_CP = function()
 		local part2 = Instance.new("Part")
 		part2.Anchored = true
 		part2.CanCollide = false
@@ -14352,7 +14376,7 @@ sparklesEnabled = false
 		return part2
 	end
 
-	function SE_rebuildHearts()
+	SE_rebuildHearts = function()
 		for index106, value282 in ipairs(sparklesConnections) do
 			if value282.Handle then
 				value282.Handle:Destroy()
@@ -14366,7 +14390,7 @@ sparklesEnabled = false
 		end
 	end
 
-	function SE_countAllHeartSparkler()
+	SE_countAllHeartSparkler = function()
 		local count10 = 0
 
 		for index107, value283 in ipairs((getAllPalletFolders())) do
@@ -14380,22 +14404,8 @@ sparklesEnabled = false
 		return count10
 	end
 
-	function SE_cleanupALL()
-		for index109, value285 in ipairs((getAllPalletFolders())) do
-			for index110, value286 in ipairs(value285:GetChildren()) do
-				local childCollection480 = value286
 
-				if childCollection480.Name == "HeartSparkler" then
-					pcall(function()
-						DeleteToyRE:FireServer(childCollection480)
-					end)
-					sparklesObjects[childCollection480] = nil
-				end
-			end
-		end
-	end
-
-	function SE_cleanupExcess()
+	SE_cleanupExcess = function()
 		local count11 = 0
 
 		for index111, value287 in ipairs((getAllPalletFolders())) do
@@ -14416,7 +14426,7 @@ sparklesEnabled = false
 		end
 	end
 
-	function SE_CBM(p118)
+	SE_CBM = function(p118)
 		local heartGyro = p118:FindFirstChild("HeartGyro") or Instance.new("BodyGyro")
 		local heartPos = p118:FindFirstChild("HeartPos") or Instance.new("BodyPosition")
 		heartGyro.Name = "HeartGyro"
@@ -14435,7 +14445,7 @@ sparklesEnabled = false
 		return heartGyro, heartPos
 	end
 
-	function SE_forceNetworkOwnership(key79)
+	SE_forceNetworkOwnership = function(key79)
 		if sparklesObjects[key79] then
 			return
 		end
@@ -14465,7 +14475,7 @@ sparklesEnabled = false
 		end)
 	end
 
-	function SE_setupAntiGrab(p119)
+	SE_setupAntiGrab = function(p119)
 		local partObject482 = tick()
 
 		task.spawn(function()
@@ -14505,7 +14515,7 @@ sparklesEnabled = false
 		end)
 	end
 
-	function SE_watchFolder(key80)
+	SE_watchFolder = function(key80)
 		if not key80 or playerDropdownValues[key80] then
 			return
 		else
@@ -14538,7 +14548,7 @@ sparklesEnabled = false
 		end
 	end
 
-	function SE_spawnSparkler(index115)
+	SE_spawnSparkler = function(index115)
 		if not canSpawn() or sparklesLoopEnabled or not sparklesEnabled then
 			return
 		elseif not getCurrentSpawnFolder() then
@@ -14587,13 +14597,13 @@ sparklesEnabled = false
 		end
 	end)
 
-	SE_rebuildHearts()
+	if SE_rebuildHearts then SE_rebuildHearts() end
 
 	for index117, value291 in ipairs((getAllPalletFolders())) do
 		SE_watchFolder(value291)
 	end
 
-	generateShapePath()
+	if generateShapePath then generateShapePath() end
 
 	runService.Heartbeat:Connect(function(delta6)
 		if not sparklesEnabled then
@@ -14667,8 +14677,9 @@ sparklesEnabled = false
 		end
 	end)
 
-
-
+	
+					
+		
 DevTab:AddProfileParagraph({
     Title = "👑 Onwer : Alpha",
     Content = "Username : pacapaca110",
