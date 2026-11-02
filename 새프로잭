@@ -13924,6 +13924,9 @@ AuraTab:AddSlider({
 })
 end
 
+ 
+
+		
 sparklesEnabled = false
 	sparklesRainbowEnabled = false
 	sparklesAmount = 4
@@ -13993,12 +13996,16 @@ SE_cleanupALL = function()
 		Flag = "SparkleHeartToggle",
 		Callback = function(value273)
 			if value273 and not sparklesTarget then
-				rayfield:Notify({
-					Title = "Error",
-					Content = "Please select a target player first!",
-					Duration = 3,
-					Image = "x",
-				})
+				if rayfield and type(rayfield.Notify) == "function" then
+					rayfield:Notify({
+						Title = "Error",
+						Content = "Please select a target player first!",
+						Duration = 3,
+						Image = "x",
+					})
+				end
+				sparklesEnabled = false
+				return
 			end
 
 			sparklesEnabled = value273
@@ -14098,6 +14105,10 @@ SE_cleanupALL = function()
 	end
 
 	refreshDropdown = function()
+		if not PlayerDropdown or not players or not localPlayer then
+			return
+		end
+
 		local playerListItem423 = { optionText(localPlayer) }
 
 		for index104, value281 in ipairs(players:GetPlayers()) do
@@ -14109,15 +14120,21 @@ SE_cleanupALL = function()
 		PlayerDropdown:Refresh(playerListItem423)
 	end
 
-	players.PlayerAdded:Connect(function()
-		task.wait(0.5)
-		refreshDropdown()
-	end)
+	if players then
+		players.PlayerAdded:Connect(function()
+			task.wait(0.5)
+			if refreshDropdown then
+				refreshDropdown()
+			end
+		end)
 
-	players.PlayerRemoving:Connect(function()
-		task.wait(0.5)
-		refreshDropdown()
-	end)
+		players.PlayerRemoving:Connect(function()
+			task.wait(0.5)
+			if refreshDropdown then
+				refreshDropdown()
+			end
+		end)
+	end
 
 	refreshDropdown()
 
@@ -14677,7 +14694,7 @@ SE_cleanupALL = function()
 		end
 	end)
 
-	
+			
 					
 		
 DevTab:AddProfileParagraph({
