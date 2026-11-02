@@ -14597,7 +14597,9 @@ end
 
 	if SE_rebuildHearts then SE_rebuildHearts() end
 
-	local folders = {}
+	
+				
+    local folders = {}
 
 if type(getAllPalletFolders) == "function" then
     local success, result = pcall(getAllPalletFolders)
@@ -14614,59 +14616,57 @@ for _, folder in ipairs(folders) do
     end
 end
 
-	if generateShapePath then generateShapePath() end
-
-	local RunService = game:GetService("RunService")
-
-RunService.Heartbeat:Connect(function(delta6)		if not sparklesEnabled then
-			return
-		elseif not sparklesTarget then
-			return
-		else
-			local character82 = localPlayer.Character
-			local rootPart487 = character82 and character82:FindFirstChild("HumanoidRootPart")
-
-			if not rootPart487 then
-				return
-			else
-				sparklesCount = sparklesCount + delta6 * 3
-				sparklesIndex = sparklesIndex + delta6
-
-				if sparklesIndex >= 0.5 then
-					sparklesIndex = 0
-					SE_spawnSparkler(rootPart487)
-				end
-
-				local childCollection488 = {}
-
-				local folders = {}
-
-if type(getAllPalletFolders) == "function" then
-    local success, result = pcall(getAllPalletFolders)
-
-    if success and type(result) == "table" then
-        folders = result
-    end
+if generateShapePath then
+    generateShapePath()
 end
 
-for index118, value292 in ipairs(folders) do
-    if value292 and value292:GetChildren() then
-        for index119, value293 in ipairs(value292:GetChildren()) do
-            if value293.Name == "HeartSparkler" then
-                table.insert(childCollection488, value293)
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+RunService.Heartbeat:Connect(function(delta6)
+    if not sparklesEnabled then
+        return
+    end
+
+    local character82 = localPlayer and localPlayer.Character
+    local rootPart487 = character82 and character82:FindFirstChild("HumanoidRootPart")
+
+    if not rootPart487 then
+        return
+    end
+
+    sparklesTarget = localPlayer.Name
+    sparklesCount = sparklesCount + delta6 * 3
+    sparklesIndex = sparklesIndex + delta6
+
+    if sparklesIndex >= 0.5 then
+        sparklesIndex = 0
+        SE_spawnSparkler(rootPart487)
+    end
+
+    local childCollection488 = {}
+    local folders = {}
+
+    if type(getAllPalletFolders) == "function" then
+        local success, result = pcall(getAllPalletFolders)
+
+        if success and type(result) == "table" then
+            folders = result
+        end
+    end
+
+    for index118, value292 in ipairs(folders) do
+        if value292 then
+            for index119, value293 in ipairs(value292:GetChildren()) do
+                if value293.Name == "HeartSparkler" then
+                    table.insert(childCollection488, value293)
+                end
             end
         end
     end
-end
 
-				local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
-
-local character = localPlayer and localPlayer.Character
-local rootPart489 = character and character:FindFirstChild("HumanoidRootPart")
-
-if rootPart489 then
-    local rootPart490 = rootPart489.Position + Vector3.new(0, SE_HeightOffset, 0)
+    local rootPart490 = rootPart487.Position + Vector3.new(0, SE_HeightOffset, 0)
 
     for index120, value294 in ipairs(sparklesConnections) do
         local connection491 = getSmoothedShapePos(
@@ -14700,10 +14700,8 @@ if rootPart489 then
             end
         end
     end
-end
+end)
 
-				
-		
 DevTab:AddProfileParagraph({
     Title = "👑 Onwer : Alpha",
     Content = "Username : pacapaca110",
@@ -14728,5 +14726,5 @@ task.spawn(function()
     task.wait()
     LoadAll()
 end)
-end
+
 end
