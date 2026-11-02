@@ -13928,68 +13928,48 @@ end
 
 		
 sparklesEnabled = false
-	sparklesRainbowEnabled = false
-	sparklesAmount = 4
-	sparklesTarget = nil
-	sparklesType = "Heart"
-	sparklesInterval = 1.5
-	sparklesConnections = {}
-	sparklesObjects = {}
-	sparklesLoopEnabled = false
-	sparklesCount = 0
-	sparklesIndex = 0
-	sparklesTargetCache = {}
-	sparklesTargetSelected = false
-	playerDropdownValues = {}
+sparklesRainbowEnabled = false
+sparklesAmount = 4
+sparklesTarget = localPlayer.Name
+sparklesType = "Heart"
+sparklesInterval = 1.5
+sparklesConnections = {}
+sparklesObjects = {}
+sparklesLoopEnabled = false
+sparklesCount = 0
+sparklesIndex = 0
+sparklesTargetCache = {}
+sparklesTargetSelected = true
+playerDropdownValues = {}
 
 local optionText, refreshDropdown, generateShapePath, getSmoothedShapePos, SE_CP, SE_rebuildHearts, SE_countAllHeartSparkler, SE_cleanupALL, SE_cleanupExcess, SE_CBM, SE_forceNetworkOwnership, SE_setupAntiGrab, SE_watchFolder, SE_spawnSparkler
 
 SE_cleanupALL = function()
-		local folders = type(getAllPalletFolders) == "function" and getAllPalletFolders() or {}
-		for index109, value285 in ipairs(folders) do
-			for index110, value286 in ipairs(value285:GetChildren()) do
-				local childCollection480 = value286
+    local folders = type(getAllPalletFolders) == "function" and getAllPalletFolders() or {}
 
-				if childCollection480.Name == "HeartSparkler" then
-					pcall(function()
-						DeleteToyRE:FireServer(childCollection480)
-					end)
-					sparklesObjects[childCollection480] = nil
-				end
-			end
-		end
-		for _, connection in ipairs(sparklesConnections) do
-			if connection.Handle then connection.Handle:Destroy() end
-		end
-		sparklesConnections = {}
-		sparklesLoopEnabled = false
-	end
+    for index109, value285 in ipairs(folders) do
+        for index110, value286 in ipairs(value285:GetChildren()) do
+            local childCollection480 = value286
 
-		PlayerDropdown = AuraTab:AddDropdown({
-		Name = 'Target',
-		Options = {},
-		CurrentOption = {},
-		MultipleOptions = false,
-		Flag = "PlayerDropdown",
-		Callback = function(value272)
-			local selectedValue = type(value272) == "table" and value272[1] or value272
-			if not selectedValue or selectedValue == "None" then
-				sparklesTarget = nil
-				return
-			end
+            if childCollection480.Name == "HeartSparkler" then
+                pcall(function()
+                    DeleteToyRE:FireServer(childCollection480)
+                end)
 
-			local username = tostring(selectedValue):match("@([%w_]+)")
+                sparklesObjects[childCollection480] = nil
+            end
+        end
+    end
 
-			if username then
-				sparklesTarget = username
+    for _, connection in ipairs(sparklesConnections) do
+        if connection.Handle then
+            connection.Handle:Destroy()
+        end
+    end
 
-				if sparklesEnabled then
-					if SE_rebuildHearts then SE_rebuildHearts() end
-				end
-			end
-		end,
-	})
-
+    sparklesConnections = {}
+    sparklesLoopEnabled = false
+end
 	AuraTab:AddToggle({
 		Name = 'Enable Sparkle Shape',
 		Default = false,
