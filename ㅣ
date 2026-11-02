@@ -1,0 +1,742 @@
+sparklesEnabled = false
+	sparklesRainbowEnabled = false
+	sparklesAmount = 4
+	sparklesTarget = nil
+	sparklesType = "Heart"
+	sparklesInterval = 1.5
+	sparklesConnections = {}
+	sparklesObjects = {}
+	sparklesLoopEnabled = false
+	sparklesCount = 0
+	sparklesIndex = 0
+	sparklesTargetCache = {}
+	sparklesTargetSelected = false
+	playerDropdownValues = {}
+
+	PlayerDropdown = AuraTab:AddDropdown({
+		Name = 'Target',
+		Options = {},
+		CurrentOption = {},
+		MultipleOptions = false,
+		Flag = "PlayerDropdown",
+		Callback = function(value272)
+			if not value272 or not value272[1] or value272[1] == "None" then
+				sparklesTarget = nil
+				return
+			end
+
+			username = value272[1]:match("@([%w_]+)")
+
+			if username then
+				sparklesTarget = username
+
+				if sparklesEnabled then
+					SE_rebuildHearts()
+				end
+			end
+		end,
+	})
+
+	AuraTab:AddToggle({
+		Name = 'Enable Sparkle Shape',
+		Default = false,
+		Flag = "SparkleHeartToggle",
+		Callback = function(value273)
+			if value273 and not sparklesTarget then
+				rayfield:Notify({
+					Title = "Error",
+					Content = "Please select a target player first!",
+					Duration = 3,
+					Image = "x",
+				})
+			end
+
+			sparklesEnabled = value273
+
+			if value273 then
+				SE_rebuildHearts()
+
+				for index103, value274 in ipairs((getAllPalletFolders())) do
+					SE_watchFolder(value274)
+				end
+			else
+				SE_cleanupALL()
+			end
+		end,
+	})
+
+	AuraTab:AddSlider({
+		Name = 'Sparkler Amount',
+		Range = { 1, 5 },
+		Increment = 1,
+		CurrentValue = 5,
+		Flag = "SparklerAmount",
+		Callback = function(value275)
+			old = sparklesAmount
+			sparklesAmount = value275
+
+			if value275 < old then
+				SE_cleanupExcess()
+			end
+
+			SE_rebuildHearts()
+		end,
+	})
+
+	sparklesAmount = 5
+
+	AuraTab:AddDropdown({
+		Name = 'Shape',
+		Options = { "Heart", "Dick", "L", "MiddleFinger", "nazi cross", "Square", "Triangle" },
+		CurrentOption = { "Heart" },
+		Flag = "ShapeDropdown",
+		Callback = function(value276)
+			sparklesType = value276[1]
+			sparklesTargetSelected = false
+			generateShapePath()
+		end,
+	})
+
+	AuraTab:AddToggle({
+		Name = 'Auto Regrab',
+		Default = false,
+		Flag = "AutoRegrab",
+		Callback = function(value277)
+			sparklesRainbowEnabled = value277
+		end,
+	})
+
+	AuraTab:AddSlider({
+		Name = 'Size',
+		Range = { 0, 10 },
+		Increment = 1,
+		Default = 2,
+		Flag = "SizeScale",
+		Callback = function(value278)
+			sparklesInterval = value278
+			sparklesTargetSelected = false
+			generateShapePath()
+		end,
+	})
+
+	AuraTab:AddSlider({
+		Name = 'Height',
+		Range = { 0, 100 },
+		Increment = 5,
+		Default = 20,
+		Flag = "HeightOffset",
+		Callback = function(value279)
+			SE_HeightOffset = value279
+		end,
+	})
+
+	SE_RotationOffset = 0
+
+	AuraTab:AddSlider({
+		Name = 'Rotation',
+		Range = { -360, 360 },
+		Increment = 5,
+		Default = 0,
+		Flag = "RotationOffset",
+		Callback = function(value280)
+			SE_RotationOffset = value280
+		end,
+	})
+
+	function optionText(p117)
+		return string.format("👤 @%s (%s)", p117.Name, p117.DisplayName or "")
+	end
+
+	function refreshDropdown()
+		local playerListItem423 = { optionText(localPlayer) }
+
+		for index104, value281 in ipairs(players:GetPlayers()) do
+			if value281 ~= localPlayer then
+				table.insert(playerListItem423, optionText(value281))
+			end
+		end
+
+		PlayerDropdown:Refresh(playerListItem423)
+	end
+
+	players.PlayerAdded:Connect(function()
+		task.wait(0.5)
+		refreshDropdown()
+	end)
+
+	players.PlayerRemoving:Connect(function()
+		task.wait(0.5)
+		refreshDropdown()
+	end)
+
+	refreshDropdown()
+
+	function generateShapePath()
+		local generateShapePathValue424, generateShapePathValue425, generateShapePathValue426, generateShapePathValue427, generateShapePathValue428, generateShapePathValue429, generateShapePathValue430, generateShapePathValue431, generateShapePathValue432, generateShapePathValue433, generateShapePathValue434, generateShapePathValue435
+
+		if sparklesTargetSelected then
+			return
+		else
+			sparklesTargetCache = {}
+			local numericValue436 = sparklesInterval
+
+			if sparklesType == "Heart" then
+				for i32 = 0, 3000 do
+					local numericValue437 = i32 / 3000 * math.pi * 2
+					local numericValue438 = math.sin(numericValue437)
+					local numericValue439 = math.cos(numericValue437)
+					local positionValue440 = math.cos(2 * numericValue437)
+					local positionValue441 = math.cos(3 * numericValue437)
+					local positionValue442 = math.cos(4 * numericValue437)
+
+					sparklesTargetCache[i32] = Vector3.new(
+						16 * numericValue438 * numericValue438 * numericValue438 * numericValue436,
+						(13 * numericValue439 - 5 * positionValue440 - 2 * positionValue441 - positionValue442) * numericValue436 + 2,
+						0
+					)
+				end
+			elseif sparklesType == "Dick" then
+				for i33 = 0, 3000 do
+					local numericValue443 = i33 / 3000 * math.pi * 2
+
+					if numericValue443 < math.pi then
+						generateShapePathValue434 = 4 * numericValue436 * math.cos(numericValue443)
+						generateShapePathValue435 = 8 * numericValue436 + 16 * numericValue436 * math.sin(numericValue443)
+					elseif numericValue443 < math.pi * 1.5 then
+						local numericValue444 = (numericValue443 - math.pi) * 4
+						generateShapePathValue434 = -5 * numericValue436 + 4 * numericValue436 * math.cos(numericValue444)
+						generateShapePathValue435 = -2 * numericValue436 + 4 * numericValue436 * math.sin(numericValue444)
+					else
+						local numericValue445 = (numericValue443 - math.pi * 1.5) * 4 + math.pi
+						generateShapePathValue434 = 5 * numericValue436 + 4 * numericValue436 * math.cos(numericValue445)
+						generateShapePathValue435 = -2 * numericValue436 + 4 * numericValue436 * math.sin(numericValue445)
+					end
+
+					sparklesTargetCache[i33] = Vector3.new(generateShapePathValue434, generateShapePathValue435 + 2, 0)
+				end
+			elseif sparklesType == "L" then
+				local positionValue446 = 8 * numericValue436
+				local numericValue447 = 10 * numericValue436
+
+				for i34 = 0, 3000 do
+					local numericValue448 = math.abs(math.sin(i34 / 3000 * 2 * math.pi))
+
+					if numericValue448 < 0.6 then
+						generateShapePathValue432 = numericValue448 / 0.6 * positionValue446 * 2
+						generateShapePathValue433 = 0
+					else
+						generateShapePathValue432 = positionValue446 * 2
+						generateShapePathValue433 = (numericValue448 - 0.6) / 0.4 * numericValue447 * 2
+					end
+
+					sparklesTargetCache[i34] = Vector3.new(generateShapePathValue432 - positionValue446, generateShapePathValue433 + 2, 0)
+				end
+			elseif sparklesType == "MiddleFinger" then
+				local positionValue449 = 22 * numericValue436
+				local numericValue450 = 35 * numericValue436
+				local numericValue451 = 14 * numericValue436
+
+				for i35 = 0, 3000 do
+					local temporaryValue452 = i35 / 3000
+
+					if temporaryValue452 < 0.05 then
+						generateShapePathValue430 = -positionValue449 * 0.5
+						generateShapePathValue431 = temporaryValue452 / 0.05 * numericValue451
+					elseif temporaryValue452 < 0.15 then
+						local numericValue453 = (temporaryValue452 - 0.05) / 0.1 * math.pi
+						generateShapePathValue430 = -positionValue449 * 0.4 + math.cos(math.pi - numericValue453) * positionValue449 * 0.1
+						generateShapePathValue431 = numericValue451 + math.sin(numericValue453) * numericValue451 * 0.2
+					elseif temporaryValue452 < 0.25 then
+						local numericValue454 = (temporaryValue452 - 0.15) / 0.1 * math.pi
+						generateShapePathValue430 = -positionValue449 * 0.2 + math.cos(math.pi - numericValue454) * positionValue449 * 0.1
+						generateShapePathValue431 = numericValue451 + math.sin(numericValue454) * numericValue451 * 0.2
+					elseif temporaryValue452 < 0.55 then
+						local numericValue455 = (temporaryValue452 - 0.25) / 0.3
+
+						if numericValue455 < 0.3 then
+							generateShapePathValue430 = -positionValue449 * 0.1
+							generateShapePathValue431 = numericValue451 + numericValue455 / 0.3 * (numericValue450 - numericValue451)
+						elseif numericValue455 < 0.7 then
+							local numericValue456 = (numericValue455 - 0.3) / 0.4 * math.pi
+							generateShapePathValue430 = math.cos(math.pi - numericValue456) * positionValue449 * 0.1
+							generateShapePathValue431 = numericValue450 + math.sin(numericValue456) * positionValue449 * 0.1
+						else
+							generateShapePathValue430 = positionValue449 * 0.1
+							generateShapePathValue431 = numericValue450 - (numericValue455 - 0.7) / 0.3 * (numericValue450 - numericValue451)
+						end
+					elseif temporaryValue452 < 0.65 then
+						local numericValue457 = (temporaryValue452 - 0.55) / 0.1 * math.pi
+						generateShapePathValue430 = positionValue449 * 0.2 + math.cos(math.pi - numericValue457) * positionValue449 * 0.1
+						generateShapePathValue431 = numericValue451 + math.sin(numericValue457) * numericValue451 * 0.2
+					elseif temporaryValue452 < 0.75 then
+						local numericValue458 = (temporaryValue452 - 0.65) / 0.1 * math.pi
+						generateShapePathValue430 = positionValue449 * 0.4 + math.cos(math.pi - numericValue458) * positionValue449 * 0.1
+						generateShapePathValue431 = numericValue451 + math.sin(numericValue458) * numericValue451 * 0.2
+					elseif temporaryValue452 < 0.8 then
+						generateShapePathValue430 = positionValue449 * 0.5
+						generateShapePathValue431 = numericValue451 - (temporaryValue452 - 0.75) / 0.05 * numericValue451
+					else
+						generateShapePathValue430 = positionValue449 * 0.5 - (temporaryValue452 - 0.8) / 0.2 * positionValue449
+						generateShapePathValue431 = 0
+					end
+
+					sparklesTargetCache[i35] = Vector3.new(generateShapePathValue430, generateShapePathValue431, 0)
+				end
+			elseif sparklesType == "Square" then
+				local positionValue459 = 14 * numericValue436
+
+				for i36 = 0, 3000 do
+					local numericValue460 = i36 / 3000 * math.pi * 2
+					local numericValue461 = math.floor(numericValue460 / (math.pi * 0.5)) % 4
+					local numericValue462 = numericValue460 % (math.pi * 0.5) / (math.pi * 0.5) * 2 - 1
+
+					if numericValue461 == 0 then
+						generateShapePathValue429 = positionValue459
+						generateShapePathValue428 = numericValue462 * positionValue459
+					elseif numericValue461 == 1 then
+						generateShapePathValue429 = numericValue462 * -positionValue459
+						generateShapePathValue428 = positionValue459
+					elseif numericValue461 == 2 then
+						generateShapePathValue428 = numericValue462 * -positionValue459
+						generateShapePathValue429 = -positionValue459
+					else
+						generateShapePathValue428 = -positionValue459
+						generateShapePathValue429 = numericValue462 * positionValue459
+					end
+
+					sparklesTargetCache[i36] = Vector3.new(generateShapePathValue428, generateShapePathValue429 + 2, 0)
+				end
+			elseif sparklesType == "nazi cross" then
+				local positionValue463 = 12 * numericValue436
+				local numericValue464 = positionValue463 * 0.4
+				local numericValue465 = {}
+
+				for i37 = 0, 3000 do
+					local numericValue466 = i37 / 3000 * math.pi * 2
+					local numericValue467 = math.floor(numericValue466 / (math.pi * 2 / 12)) % 12
+					local numericValue468 = numericValue466 % (math.pi * 2 / 12) / (math.pi * 2 / 12)
+
+					if numericValue467 == 0 then
+						generateShapePathValue426 = numericValue468 * positionValue463 * 0.5
+						generateShapePathValue427 = 0
+					elseif numericValue467 == 1 then
+						generateShapePathValue426 = positionValue463 * 0.5
+						generateShapePathValue427 = numericValue468 * numericValue464
+					elseif numericValue467 == 2 then
+						generateShapePathValue426 = positionValue463 * 0.5 - numericValue468 * positionValue463 * 0.5
+						generateShapePathValue427 = 0
+					elseif numericValue467 == 3 then
+						generateShapePathValue426 = 0
+						generateShapePathValue427 = -numericValue468 * positionValue463 * 0.5
+					elseif numericValue467 == 4 then
+						generateShapePathValue426 = numericValue468 * numericValue464
+						generateShapePathValue427 = -positionValue463 * 0.5
+					elseif numericValue467 == 5 then
+						generateShapePathValue426 = 0
+						generateShapePathValue427 = -positionValue463 * 0.5 + numericValue468 * positionValue463 * 0.5
+					elseif numericValue467 == 6 then
+						generateShapePathValue426 = -numericValue468 * positionValue463 * 0.5
+						generateShapePathValue427 = 0
+					elseif numericValue467 == 7 then
+						generateShapePathValue426 = -positionValue463 * 0.5
+						generateShapePathValue427 = -numericValue468 * numericValue464
+					elseif numericValue467 == 8 then
+						generateShapePathValue426 = -positionValue463 * 0.5 + numericValue468 * positionValue463 * 0.5
+						generateShapePathValue427 = 0
+					elseif numericValue467 == 9 then
+						generateShapePathValue427 = numericValue468 * positionValue463 * 0.5
+						generateShapePathValue426 = 0
+					elseif numericValue467 == 10 then
+						generateShapePathValue426 = -numericValue468 * numericValue464
+						generateShapePathValue427 = positionValue463 * 0.5
+					else
+						generateShapePathValue426 = 0
+						generateShapePathValue427 = positionValue463 * 0.5 - numericValue468 * positionValue463 * 0.5
+					end
+
+					numericValue465[#numericValue465 + 1] = Vector3.new(generateShapePathValue426, generateShapePathValue427, 0)
+				end
+
+				local positionValue469 = { 0 }
+				local total2 = 0
+
+				for i38 = 2, #numericValue465 do
+					total2 = total2 + (numericValue465[i38] - numericValue465[i38 - 1]).Magnitude
+					positionValue469[i38] = total2
+				end
+
+				local numericValue470 = 2
+
+				for i39 = 0, 3000 do
+					local temporaryValue471 = i39 / 3000 * total2
+
+					while numericValue470 < #positionValue469 and positionValue469[numericValue470] < temporaryValue471 do
+						numericValue470 = numericValue470 + 1
+					end
+
+					local positionValue472 = positionValue469[numericValue470 - 1]
+					local positionValue473 = positionValue469[numericValue470]
+					local positionValue474 = positionValue473 == positionValue472 and 0 or (temporaryValue471 - positionValue472) / (positionValue473 - positionValue472)
+					sparklesTargetCache[i39] = numericValue465[numericValue470 - 1]:Lerp(numericValue465[numericValue470], positionValue474) + Vector3.new(0, 2, 0)
+				end
+			elseif sparklesType == "Triangle" then
+				for i40 = 0, 3000 do
+					local numericValue475 = i40 / 3000 * math.pi * 2
+					local numericValue476 = math.floor(numericValue475 / (math.pi * 2 / 3)) % 3
+
+					if numericValue476 == 0 then
+						generateShapePathValue424 = 0
+						generateShapePathValue425 = 10 * numericValue436
+					elseif numericValue476 == 1 then
+						generateShapePathValue424 = 8 * numericValue436
+						generateShapePathValue425 = -6 * numericValue436
+					else
+						generateShapePathValue424 = -8 * numericValue436
+						generateShapePathValue425 = -6 * numericValue436
+					end
+
+					local positionValue477 = numericValue436 * math.sin(numericValue475 * 0.5)
+					sparklesTargetCache[i40] = Vector3.new(generateShapePathValue424 + positionValue477 * 0.3, generateShapePathValue425 + positionValue477 * 0.3 + 2, 0)
+				end
+			end
+
+			sparklesTargetSelected = true
+			return
+		end
+	end
+
+	function getSmoothedShapePos(index105)
+		if #sparklesTargetCache == 0 then
+			return Vector3.new(0, 0, 0)
+		else
+			local positionValue478 = index105 * #sparklesTargetCache
+			local positionValue479 = math.floor(positionValue478) % #sparklesTargetCache
+			return sparklesTargetCache[positionValue479]:Lerp(sparklesTargetCache[(positionValue479 + 1) % #sparklesTargetCache], positionValue478 - math.floor(positionValue478))
+		end
+	end
+
+	function SE_CP()
+		local part2 = Instance.new("Part")
+		part2.Anchored = true
+		part2.CanCollide = false
+		part2.Transparency = 1
+		part2.Size = Vector3.new(1, 1, 1)
+		part2.Parent = workspace
+
+		return part2
+	end
+
+	function SE_rebuildHearts()
+		for index106, value282 in ipairs(sparklesConnections) do
+			if value282.Handle then
+				value282.Handle:Destroy()
+			end
+		end
+
+		sparklesConnections = {}
+
+		for i41 = 1, sparklesAmount do
+			sparklesConnections[i41] = { Handle = SE_CP() }
+		end
+	end
+
+	function SE_countAllHeartSparkler()
+		local count10 = 0
+
+		for index107, value283 in ipairs((getAllPalletFolders())) do
+			for index108, value284 in ipairs(value283:GetChildren()) do
+				if value284.Name == "HeartSparkler" then
+					count10 = count10 + 1
+				end
+			end
+		end
+
+		return count10
+	end
+
+	function SE_cleanupALL()
+		for index109, value285 in ipairs((getAllPalletFolders())) do
+			for index110, value286 in ipairs(value285:GetChildren()) do
+				local childCollection480 = value286
+
+				if childCollection480.Name == "HeartSparkler" then
+					pcall(function()
+						DeleteToyRE:FireServer(childCollection480)
+					end)
+					sparklesObjects[childCollection480] = nil
+				end
+			end
+		end
+	end
+
+	function SE_cleanupExcess()
+		local count11 = 0
+
+		for index111, value287 in ipairs((getAllPalletFolders())) do
+			for index112, value288 in ipairs(value287:GetChildren()) do
+				local childCollection481 = value288
+
+				if childCollection481.Name == "HeartSparkler" then
+					count11 = count11 + 1
+
+					if count11 > sparklesAmount then
+						pcall(function()
+							DeleteToyRE:FireServer(childCollection481)
+						end)
+						sparklesObjects[childCollection481] = nil
+					end
+				end
+			end
+		end
+	end
+
+	function SE_CBM(p118)
+		local heartGyro = p118:FindFirstChild("HeartGyro") or Instance.new("BodyGyro")
+		local heartPos = p118:FindFirstChild("HeartPos") or Instance.new("BodyPosition")
+		heartGyro.Name = "HeartGyro"
+		heartPos.Name = "HeartPos"
+
+		heartGyro.P = 15000
+		heartGyro.D = 200
+
+		heartPos.P = 15000
+		heartPos.D = 200
+
+		heartGyro.MaxTorque = Vector3.new(1, 1, 1) * 10000000000
+		heartPos.MaxForce = Vector3.new(1, 1, 1) * 10000000000
+		heartGyro.Parent = p118
+		heartPos.Parent = p118
+		return heartGyro, heartPos
+	end
+
+	function SE_forceNetworkOwnership(key79)
+		if sparklesObjects[key79] then
+			return
+		end
+
+		sparklesObjects[key79] = true
+
+		task.spawn(function()
+			local base = key79:FindFirstChild("Base")
+				or key79:WaitForChild("SoundPart", 3)
+				or key79.PrimaryPart
+				or key79:FindFirstChildOfClass("BasePart")
+
+			if not base then
+				return
+			end
+
+			for index113, value289 in ipairs(key79:GetDescendants()) do
+				if value289:IsA("BasePart") then
+					value289.CanCollide = false
+				end
+			end
+
+			for i42 = 1, 5 do
+				SetNetworkOwner:FireServer(base, base.CFrame)
+				task.wait(0.1)
+			end
+		end)
+	end
+
+	function SE_setupAntiGrab(p119)
+		local partObject482 = tick()
+
+		task.spawn(function()
+			local base2 = p119:FindFirstChild("Base")
+				or p119:WaitForChild("SoundPart", 3)
+				or p119.PrimaryPart
+				or p119:FindFirstChildOfClass("BasePart")
+
+			if not base2 then
+				return
+			end
+
+			task.wait(1.5)
+
+			while p119.Parent do
+				local partOwner9 = base2:FindFirstChild("PartOwner")
+
+				if sparklesRainbowEnabled and tick() - partObject482 > 2 and (partOwner9 and partOwner9.Value ~= localPlayer.Name or not partOwner9) then
+					local character81 = localPlayer.Character
+					local rootPart483 = character81 and character81:FindFirstChild("HumanoidRootPart")
+
+					if rootPart483 and rootPart483.Parent then
+						local cframe30 = rootPart483.CFrame
+						rootPart483.CFrame = base2.CFrame * CFrame.new(0, 5, 0)
+
+						for i43 = 1, 8 do
+							SetNetworkOwner:FireServer(base2, base2.CFrame)
+						end
+
+						task.wait(0.05)
+						rootPart483.CFrame = cframe30
+					end
+				end
+
+				task.wait(0.01)
+			end
+		end)
+	end
+
+	function SE_watchFolder(key80)
+		if not key80 or playerDropdownValues[key80] then
+			return
+		else
+			local getChildren2 = key80.GetChildren
+			playerDropdownValues[key80] = true
+
+			for index114, heartSparkler in ipairs(getChildren2(key80)) do
+				if heartSparkler.Name == "FireworkSparkler" then
+					task.wait(0.2)
+					heartSparkler.Name = "HeartSparkler"
+					SE_forceNetworkOwnership(heartSparkler)
+					SE_setupAntiGrab(heartSparkler)
+				end
+			end
+
+			key80.ChildAdded:Connect(function(heartSparkler2)
+				if not sparklesEnabled then
+					return
+				end
+
+				if heartSparkler2.Name == "FireworkSparkler" then
+					task.wait(0.2)
+					heartSparkler2.Name = "HeartSparkler"
+					SE_forceNetworkOwnership(heartSparkler2)
+					SE_setupAntiGrab(heartSparkler2)
+				end
+			end)
+
+			return
+		end
+	end
+
+	function SE_spawnSparkler(index115)
+		if not canSpawn() or sparklesLoopEnabled or not sparklesEnabled then
+			return
+		elseif not getCurrentSpawnFolder() then
+			return
+		else
+			local sE_spawnSparklerValue484 = sparklesAmount - SE_countAllHeartSparkler()
+
+			if sE_spawnSparklerValue484 <= 0 then
+				return
+			end
+
+			sparklesLoopEnabled = true
+
+			for i44 = 1, sE_spawnSparklerValue484 do
+				local transform485 = i44
+
+				task.spawn(function()
+					task.wait((transform485 - 1) * 0.05)
+					local lookVector6 = workspace.CurrentCamera.CFrame.LookVector
+					local transform486 = index115.Position + lookVector6 * -1
+
+					SpawnToyRF:InvokeServer(
+						"FireworkSparkler",
+						CFrame.new(transform486, transform486 + lookVector6),
+						Vector3.new(0, 90, 0)
+					)
+				end)
+			end
+
+			task.delay(1, function()
+				sparklesLoopEnabled = false
+			end)
+			return
+		end
+	end
+
+	task.spawn(function()
+		while true do
+			task.wait(2)
+
+			if sparklesEnabled then
+				for index116, value290 in ipairs((getAllPalletFolders())) do
+					SE_watchFolder(value290)
+				end
+			end
+		end
+	end)
+
+	SE_rebuildHearts()
+
+	for index117, value291 in ipairs((getAllPalletFolders())) do
+		SE_watchFolder(value291)
+	end
+
+	generateShapePath()
+
+	runService.Heartbeat:Connect(function(delta6)
+		if not sparklesEnabled then
+			return
+		elseif not sparklesTarget then
+			return
+		else
+			local character82 = localPlayer.Character
+			local rootPart487 = character82 and character82:FindFirstChild("HumanoidRootPart")
+
+			if not rootPart487 then
+				return
+			else
+				sparklesCount = sparklesCount + delta6 * 3
+				sparklesIndex = sparklesIndex + delta6
+
+				if sparklesIndex >= 0.5 then
+					sparklesIndex = 0
+					SE_spawnSparkler(rootPart487)
+				end
+
+				local childCollection488 = {}
+
+				for index118, value292 in ipairs((getAllPalletFolders())) do
+					for index119, value293 in ipairs(value292:GetChildren()) do
+						if value293.Name == "HeartSparkler" then
+							table.insert(childCollection488, value293)
+						end
+					end
+				end
+
+				local findFirstChild29 = players:FindFirstChild(sparklesTarget)
+
+				if findFirstChild29 and findFirstChild29.Character then
+					local rootPart489 = findFirstChild29.Character:FindFirstChild("HumanoidRootPart")
+
+					if rootPart489 then
+						local rootPart490 = rootPart489.Position + Vector3.new(0, SE_HeightOffset, 0)
+
+						for index120, value294 in ipairs(sparklesConnections) do
+							local connection491 = getSmoothedShapePos(
+								(sparklesCount + (index120 - 1) * (math.pi * 2 / sparklesAmount)) % (math.pi * 2) / (math.pi * 2)
+							)
+
+							local transform492 = rootPart490
+								+ CFrame.Angles(0, math.rad(SE_RotationOffset), 0) * connection491
+								+ Vector3.new(6, 0, 0)
+
+							value294.Handle.CFrame = CFrame.new(transform492)
+							local transform493 = childCollection488[index120]
+
+							if transform493 then
+								local base3 = transform493:FindFirstChild("Base")
+									or transform493.PrimaryPart
+									or transform493:FindFirstChild("SoundPart")
+									or transform493:FindFirstChildOfClass("BasePart")
+
+								if base3 then
+									local transform494, transform495 = SE_CBM(base3)
+									transform495.Position = transform492
+									transform494.CFrame = CFrame.new(transform492)
+									base3.CanCollide = false
+								end
+							end
+						end
+					end
+				end
+
+				return
+			end
+		end
+	end)
