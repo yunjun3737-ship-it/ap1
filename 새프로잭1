@@ -14639,13 +14639,25 @@ RunService.Heartbeat:Connect(function(delta6)		if not sparklesEnabled then
 
 				local childCollection488 = {}
 
-				for index118, value292 in ipairs((getAllPalletFolders())) do
-					for index119, value293 in ipairs(value292:GetChildren()) do
-						if value293.Name == "HeartSparkler" then
-							table.insert(childCollection488, value293)
-						end
-					end
-				end
+				local folders = {}
+
+if type(getAllPalletFolders) == "function" then
+    local success, result = pcall(getAllPalletFolders)
+
+    if success and type(result) == "table" then
+        folders = result
+    end
+end
+
+for index118, value292 in ipairs(folders) do
+    if value292 and value292:GetChildren() then
+        for index119, value293 in ipairs(value292:GetChildren()) do
+            if value293.Name == "HeartSparkler" then
+                table.insert(childCollection488, value293)
+            end
+        end
+    end
+end
 
 				local findFirstChild29 = players:FindFirstChild(sparklesTarget)
 
