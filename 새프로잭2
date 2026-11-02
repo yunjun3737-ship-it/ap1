@@ -13929,82 +13929,51 @@ end
 })
 
 		
-local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
-local optionText, refreshDropdown, generateShapePath, getSmoothedShapePos,
-    SE_CP, SE_rebuildHearts, SE_countAllHeartSparkler, SE_cleanupALL,
-    SE_cleanupExcess, SE_CBM, SE_forceNetworkOwnership, SE_setupAntiGrab,
-    SE_watchFolder, SE_spawnSparkler
 sparklesEnabled = false
-sparklesRainbowEnabled = false
-sparklesAmount = 4
-sparklesTarget = localPlayer and localPlayer.Name or nil
-sparklesType = "Heart"
-sparklesInterval = 1.5
-sparklesConnections = {}
-sparklesObjects = {}
-sparklesLoopEnabled = false
-sparklesCount = 0
-sparklesIndex = 0
-sparklesTargetCache = {}
-sparklesTargetSelected = localPlayer ~= nil
-playerDropdownValues = {}
-local optionText, refreshDropdown, generateShapePath, getSmoothedShapePos, SE_CP, SE_rebuildHearts, SE_countAllHeartSparkler, SE_cleanupALL, SE_cleanupExcess, SE_CBM, SE_forceNetworkOwnership, SE_setupAntiGrab, SE_watchFolder, SE_spawnSparkler
+	sparklesRainbowEnabled = false
+	sparklesAmount = 4
+	sparklesTarget = localPlayer.Name
+	sparklesType = "Heart"
+	sparklesInterval = 1.5
+	sparklesConnections = {}
+	sparklesObjects = {}
+	sparklesLoopEnabled = false
+	sparklesCount = 0
+	sparklesIndex = 0
+	sparklesTargetCache = {}
+	sparklesTargetSelected = false
+	playerDropdownValues = {}
 
-SE_cleanupALL = function()
-    local folders = type(getAllPalletFolders) == "function" and getAllPalletFolders() or {}
+	function SE_getFolders()
+		if type(getAllPalletFolders) ~= "function" then
+			return {}
+		end
+		local ok, folders = pcall(getAllPalletFolders)
+		if not ok or type(folders) ~= "table" then
+			return {}
+		end
+		return folders
+	end
 
-    for index109, value285 in ipairs(folders) do
-        for index110, value286 in ipairs(value285:GetChildren()) do
-            local childCollection480 = value286
-
-            if childCollection480.Name == "HeartSparkler" then
-                pcall(function()
-                    DeleteToyRE:FireServer(childCollection480)
-                end)
-
-                sparklesObjects[childCollection480] = nil
-            end
-        end
-    end
-
-    for _, connection in ipairs(sparklesConnections) do
-        if connection.Handle then
-            connection.Handle:Destroy()
-        end
-    end
-
-    sparklesConnections = {}
-    sparklesLoopEnabled = false
-end
 	AuraTab:AddToggle({
-    Name = 'Enable Sparkle Shape',
-    Default = false,
-    Flag = "SparkleHeartToggle",
-    Callback = function(value273)
-        sparklesTarget = localPlayer.Name
-        sparklesTargetSelected = true
-        sparklesEnabled = value273
+		Name = 'Enable Sparkle Shape',
+		Default = false,
+		Flag = "SparkleHeartToggle",
+		Callback = function(value273)
+			sparklesTarget = localPlayer.Name
+			sparklesEnabled = value273
 
-        if value273 then
-            if SE_rebuildHearts then
-                SE_rebuildHearts()
-            end
+			if value273 then
+				SE_rebuildHearts()
 
-            local folders = type(getAllPalletFolders) == "function" and getAllPalletFolders() or {}
-
-            for index103, value274 in ipairs(folders) do
-                if SE_watchFolder then
-                    SE_watchFolder(value274)
-                end
-            end
-        else
-            if SE_cleanupALL then
-                SE_cleanupALL()
-            end
-        end
-    end,
-})
+				for _, folder in ipairs(SE_getFolders()) do
+					SE_watchFolder(folder)
+				end
+			else
+				SE_cleanupALL()
+			end
+		end,
+	})
 
 	AuraTab:AddSlider({
 		Name = 'Sparkler Amount',
@@ -14013,14 +13982,14 @@ end
 		CurrentValue = 5,
 		Flag = "SparklerAmount",
 		Callback = function(value275)
-			old = sparklesAmount
-			sparklesAmount = value275
+			local old = sparklesAmount
+			sparklesAmount = math.clamp(math.floor(value275), 1, 5)
 
 			if value275 < old then
-				if SE_cleanupExcess then SE_cleanupExcess() end
+				SE_cleanupExcess()
 			end
 
-			if SE_rebuildHearts then SE_rebuildHearts() end
+			SE_rebuildHearts()
 		end,
 	})
 
@@ -14034,7 +14003,7 @@ end
 		Callback = function(value276)
 			sparklesType = value276[1]
 			sparklesTargetSelected = false
-			if generateShapePath then generateShapePath() end
+			generateShapePath()
 		end,
 	})
 
@@ -14056,7 +14025,7 @@ end
 		Callback = function(value278)
 			sparklesInterval = value278
 			sparklesTargetSelected = false
-			if generateShapePath then generateShapePath() end
+			generateShapePath()
 		end,
 	})
 
@@ -14084,51 +14053,12 @@ end
 		end,
 	})
 
-	optionText = function(p117)
-		return string.format("👤 @%s (%s)", p117.Name, p117.DisplayName or "")
-	end
 
-	refreshDropdown = function()
-		if not PlayerDropdown or not players or not localPlayer then
-			return
-		end
-
-		local playerListItem423 = { optionText(localPlayer) }
-
-		for index104, value281 in ipairs(players:GetPlayers()) do
-			if value281 ~= localPlayer then
-				table.insert(playerListItem423, optionText(value281))
-			end
-		end
-
-		PlayerDropdown:Refresh(playerListItem423)
-	end
-
-	if players then
-		players.PlayerAdded:Connect(function()
-			task.wait(0.5)
-			if refreshDropdown then
-				refreshDropdown()
-			end
-		end)
-
-		players.PlayerRemoving:Connect(function()
-			task.wait(0.5)
-			if refreshDropdown then
-				refreshDropdown()
-			end
-		end)
-	end
-
-	refreshDropdown()
-
-	generateShapePath = function()
+	function generateShapePath()
 		local generateShapePathValue424, generateShapePathValue425, generateShapePathValue426, generateShapePathValue427, generateShapePathValue428, generateShapePathValue429, generateShapePathValue430, generateShapePathValue431, generateShapePathValue432, generateShapePathValue433, generateShapePathValue434, generateShapePathValue435
 
-		if sparklesTargetSelected then
-			return
-		else
-			sparklesTargetCache = {}
+		sparklesTargetSelected = false
+		sparklesTargetCache = {}
 			local numericValue436 = sparklesInterval
 
 			if sparklesType == "Heart" then
@@ -14351,12 +14281,10 @@ end
 				end
 			end
 
-			sparklesTargetSelected = true
-			return
-		end
+		sparklesTargetSelected = true
 	end
 
-	getSmoothedShapePos = function(index105)
+	function getSmoothedShapePos(index105)
 		if #sparklesTargetCache == 0 then
 			return Vector3.new(0, 0, 0)
 		else
@@ -14366,7 +14294,7 @@ end
 		end
 	end
 
-	SE_CP = function()
+	function SE_CP()
 		local part2 = Instance.new("Part")
 		part2.Anchored = true
 		part2.CanCollide = false
@@ -14377,7 +14305,7 @@ end
 		return part2
 	end
 
-	SE_rebuildHearts = function()
+	function SE_rebuildHearts()
 		for index106, value282 in ipairs(sparklesConnections) do
 			if value282.Handle then
 				value282.Handle:Destroy()
@@ -14391,43 +14319,64 @@ end
 		end
 	end
 
-	SE_countAllHeartSparkler = function()
+	function SE_countAllHeartSparkler()
 		local count10 = 0
 
-		for index107, value283 in ipairs((getAllPalletFolders())) do
+		for index107, value283 in ipairs(SE_getFolders()) do
+			if value283 and value283.Parent then
 			for index108, value284 in ipairs(value283:GetChildren()) do
 				if value284.Name == "HeartSparkler" then
 					count10 = count10 + 1
 				end
+			end
 			end
 		end
 
 		return count10
 	end
 
-
-	SE_cleanupExcess = function()
-		local count11 = 0
-
-		for index111, value287 in ipairs((getAllPalletFolders())) do
-			for index112, value288 in ipairs(value287:GetChildren()) do
-				local childCollection481 = value288
-
-				if childCollection481.Name == "HeartSparkler" then
-					count11 = count11 + 1
-
-					if count11 > sparklesAmount then
+	function SE_cleanupALL()
+		for _, folder in ipairs(SE_getFolders()) do
+			if folder and folder.Parent then
+				for _, object in ipairs(folder:GetChildren()) do
+					if object.Name == "HeartSparkler" then
 						pcall(function()
-							DeleteToyRE:FireServer(childCollection481)
+							DeleteToyRE:FireServer(object)
 						end)
-						sparklesObjects[childCollection481] = nil
+						sparklesObjects[object] = nil
+					end
+				end
+			end
+		end
+		for _, entry in ipairs(sparklesConnections) do
+			if entry and entry.Handle then
+				entry.Handle:Destroy()
+			end
+		end
+		sparklesConnections = {}
+		sparklesLoopEnabled = false
+	end
+
+	function SE_cleanupExcess()
+		local count = 0
+		for _, folder in ipairs(SE_getFolders()) do
+			if folder and folder.Parent then
+				for _, object in ipairs(folder:GetChildren()) do
+					if object.Name == "HeartSparkler" then
+						count += 1
+						if count > sparklesAmount then
+							pcall(function()
+								DeleteToyRE:FireServer(object)
+							end)
+							 sparklesObjects[object] = nil
+						end
 					end
 				end
 			end
 		end
 	end
 
-	SE_CBM = function(p118)
+	function SE_CBM(p118)
 		local heartGyro = p118:FindFirstChild("HeartGyro") or Instance.new("BodyGyro")
 		local heartPos = p118:FindFirstChild("HeartPos") or Instance.new("BodyPosition")
 		heartGyro.Name = "HeartGyro"
@@ -14446,7 +14395,7 @@ end
 		return heartGyro, heartPos
 	end
 
-	SE_forceNetworkOwnership = function(key79)
+	function SE_forceNetworkOwnership(key79)
 		if sparklesObjects[key79] then
 			return
 		end
@@ -14476,7 +14425,7 @@ end
 		end)
 	end
 
-	SE_setupAntiGrab = function(p119)
+	function SE_setupAntiGrab(p119)
 		local partObject482 = tick()
 
 		task.spawn(function()
@@ -14516,7 +14465,7 @@ end
 		end)
 	end
 
-	SE_watchFolder = function(key80)
+	function SE_watchFolder(key80)
 		if not key80 or playerDropdownValues[key80] then
 			return
 		else
@@ -14549,7 +14498,7 @@ end
 		end
 	end
 
-	SE_spawnSparkler = function(index115)
+	function SE_spawnSparkler(index115)
 		if not canSpawn() or sparklesLoopEnabled or not sparklesEnabled then
 			return
 		elseif not getCurrentSpawnFolder() then
@@ -14591,120 +14540,87 @@ end
 			task.wait(2)
 
 			if sparklesEnabled then
-				for index116, value290 in ipairs((getAllPalletFolders())) do
+				for index116, value290 in ipairs(SE_getFolders()) do
 					SE_watchFolder(value290)
 				end
 			end
 		end
 	end)
 
-	if SE_rebuildHearts then SE_rebuildHearts() end
+	SE_rebuildHearts()
 
+	for index117, value291 in ipairs(SE_getFolders()) do
+		SE_watchFolder(value291)
+	end
+
+	generateShapePath()
+
+	runService.Heartbeat:Connect(function(delta6)
+		if not sparklesEnabled then
+			return
+		end
+
+		sparklesTarget = localPlayer.Name
+		local character = localPlayer.Character
+		local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+		if not rootPart then
+			return
+		end
+
+		sparklesCount += delta6 * 3
+		sparklesIndex += delta6
+		if sparklesIndex >= 0.5 then
+			sparklesIndex = 0
+			SE_spawnSparkler(rootPart)
+		end
+
+		local sparklerObjects = {}
+		for _, folder in ipairs(SE_getFolders()) do
+			if folder and folder.Parent then
+				for _, object in ipairs(folder:GetChildren()) do
+					if object.Name == "HeartSparkler" then
+						table.insert(sparklerObjects, object)
+					end
+				end
+			end
+		end
+
+		local targetPosition = rootPart.Position + Vector3.new(0, SE_HeightOffset, 0)
+		local amount = math.max(1, #sparklesConnections)
+		for index, entry in ipairs(sparklesConnections) do
+			if entry and entry.Handle and entry.Handle.Parent then
+				local shapePosition = getSmoothedShapePos(
+					(sparklesCount + (index - 1) * (math.pi * 2 / amount)) % (math.pi * 2) / (math.pi * 2)
+				)
+				local position = targetPosition
+					+ CFrame.Angles(0, math.rad(SE_RotationOffset), 0) * shapePosition
+					+ Vector3.new(6, 0, 0)
+				entry.Handle.CFrame = CFrame.new(position)
+
+				local sparkler = sparklerObjects[index]
+				if sparkler and sparkler.Parent then
+					local base = sparkler:FindFirstChild("Base")
+						or sparkler.PrimaryPart
+						or sparkler:FindFirstChild("SoundPart")
+						or sparkler:FindFirstChildOfClass("BasePart")
+					if base then
+						local gyro, bodyPosition = SE_CBM(base)
+						if gyro and bodyPosition then
+							bodyPosition.Position = position
+							gyro.CFrame = CFrame.new(position)
+							base.CanCollide = false
+						end
+					end
+				end
+			end
+		end
+	end)
+
+		
 	
-				
-    local folders = {}
-
-if type(getAllPalletFolders) == "function" then
-    local success, result = pcall(getAllPalletFolders)
-    if success and type(result) == "table" then
-        folders = result
-    end
-end
-
-for _, folder in ipairs(folders) do
-    if folder and folder.Parent then
-        if type(SE_watchFolder) == "function" then
-            SE_watchFolder(folder)
-        end
-    end
-end
-
-if generateShapePath then
-    generateShapePath()
-end
-
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
-
-RunService.Heartbeat:Connect(function(delta6)
-    if not sparklesEnabled then
-        return
-    end
-
-    local character82 = localPlayer and localPlayer.Character
-    local rootPart487 = character82 and character82:FindFirstChild("HumanoidRootPart")
-
-    if not rootPart487 then
-        return
-    end
-
-    sparklesTarget = localPlayer.Name
-    sparklesCount = sparklesCount + delta6 * 3
-    sparklesIndex = sparklesIndex + delta6
-
-    if sparklesIndex >= 0.5 then
-        sparklesIndex = 0
-        SE_spawnSparkler(rootPart487)
-    end
-
-    local childCollection488 = {}
-    local folders = {}
-
-    if type(getAllPalletFolders) == "function" then
-        local success, result = pcall(getAllPalletFolders)
-
-        if success and type(result) == "table" then
-            folders = result
-        end
-    end
-
-    for index118, value292 in ipairs(folders) do
-        if value292 then
-            for index119, value293 in ipairs(value292:GetChildren()) do
-                if value293.Name == "HeartSparkler" then
-                    table.insert(childCollection488, value293)
-                end
-            end
-        end
-    end
-
-    local rootPart490 = rootPart487.Position + Vector3.new(0, SE_HeightOffset, 0)
-
-    for index120, value294 in ipairs(sparklesConnections) do
-        local connection491 = getSmoothedShapePos(
-            (sparklesCount + (index120 - 1) * (math.pi * 2 / sparklesAmount)) % (math.pi * 2) / (math.pi * 2)
-        )
-
-        local transform492 = rootPart490
-            + CFrame.Angles(0, math.rad(SE_RotationOffset), 0) * connection491
-            + Vector3.new(6, 0, 0)
-
-        if value294 and value294.Handle then
-            value294.Handle.CFrame = CFrame.new(transform492)
-        end
-
-        local transform493 = childCollection488[index120]
-
-        if transform493 and transform493.Parent then
-            local base3 = transform493:FindFirstChild("Base")
-                or transform493.PrimaryPart
-                or transform493:FindFirstChild("SoundPart")
-                or transform493:FindFirstChildOfClass("BasePart")
-
-            if base3 then
-                local transform494, transform495 = SE_CBM(base3)
-
-                if transform494 and transform495 then
-                    transform495.Position = transform492
-                    transform494.CFrame = CFrame.new(transform492)
-                    base3.CanCollide = false
-                end
-            end
-        end
-    end
-end)
-
+			
+	
+    
 DevTab:AddProfileParagraph({
     Title = "👑 Onwer : Alpha",
     Content = "Username : pacapaca110",
