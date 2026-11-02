@@ -14702,8 +14702,7 @@ if rootPart489 then
     end
 end
 
-return
-					
+				
 		
 DevTab:AddProfileParagraph({
     Title = "👑 Onwer : Alpha",
