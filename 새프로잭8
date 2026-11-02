@@ -13924,7 +13924,9 @@ AuraTab:AddSlider({
 })
 end
 
- 
+ AuraTab:AddSection({
+	Name = "misc"
+})
 
 		
 sparklesEnabled = false
@@ -13971,36 +13973,33 @@ SE_cleanupALL = function()
     sparklesLoopEnabled = false
 end
 	AuraTab:AddToggle({
-		Name = 'Enable Sparkle Shape',
-		Default = false,
-		Flag = "SparkleHeartToggle",
-		Callback = function(value273)
-			if value273 and not sparklesTarget then
-				if rayfield and type(rayfield.Notify) == "function" then
-					rayfield:Notify({
-						Title = "Error",
-						Content = "Please select a target player first!",
-						Duration = 3,
-						Image = "x",
-					})
-				end
-				sparklesEnabled = false
-				return
-			end
+    Name = 'Enable Sparkle Shape',
+    Default = false,
+    Flag = "SparkleHeartToggle",
+    Callback = function(value273)
+        sparklesTarget = localPlayer.Name
+        sparklesTargetSelected = true
+        sparklesEnabled = value273
 
-			sparklesEnabled = value273
+        if value273 then
+            if SE_rebuildHearts then
+                SE_rebuildHearts()
+            end
 
-			if value273 then
-				if SE_rebuildHearts then SE_rebuildHearts() end
+            local folders = type(getAllPalletFolders) == "function" and getAllPalletFolders() or {}
 
-				for index103, value274 in ipairs((getAllPalletFolders())) do
-					SE_watchFolder(value274)
-				end
-			else
-				if SE_cleanupALL then SE_cleanupALL() end
-			end
-		end,
-	})
+            for index103, value274 in ipairs(folders) do
+                if SE_watchFolder then
+                    SE_watchFolder(value274)
+                end
+            end
+        else
+            if SE_cleanupALL then
+                SE_cleanupALL()
+            end
+        end
+    end,
+})
 
 	AuraTab:AddSlider({
 		Name = 'Sparkler Amount',
