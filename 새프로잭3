@@ -14635,8 +14635,9 @@ end
 
 	if generateShapePath then generateShapePath() end
 
-	runService.Heartbeat:Connect(function(delta6)
-		if not sparklesEnabled then
+	local RunService = game:GetService("RunService")
+
+RunService.Heartbeat:Connect(function(delta6)		if not sparklesEnabled then
 			return
 		elseif not sparklesTarget then
 			return
