@@ -9975,7 +9975,7 @@ end)
 
 
 LoopTab:AddToggle({
-    Name = "Set Owner Kick NEW <font color='rgb(255,154,123)'>lol</font>",
+    Name = "Set Owner Kick NEW <font color='rgb(255,154,123)'>TOP1</font>",
     Default = false,
     Callback = function(Value)
         Config.Active = Value
@@ -10182,7 +10182,7 @@ LoopTab:AddToggle({
 
 
 LoopTab:AddToggle({
-    Name = " Lag Spam <font color='rgb(150,150,255)'>[Line Option]</font>",
+    Name = " Lag Spam <font color='rgb(150,150,255)'>Line Option</font>",
     Default = false,
     Callback = function(Value)
         Config.EnableLagSpam = Value
@@ -10193,7 +10193,18 @@ LoopTab:AddToggle({
         end
     end
 })
-
+LoopTab:AddToggle({
+    Name = " Airlock <font color='rgb(0,250,5)'>PCLD fixed/font>",
+    Default = false,
+    Callback = function(Value)
+        Config.EnableLagSpam = Value
+        if Value and Config.Active then
+            startLagSpam()
+        else
+            stopLagSpam()
+        end
+    end
+})
 end
     LoopTab:AddSection({
 	Name = "Other"
