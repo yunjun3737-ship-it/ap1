@@ -1,0 +1,1596 @@
+--============================================================
+-- Xeron Kick Hub — 통합 완전본
+--============================================================
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+
+local PALETTE = {
+    Bg = Color3.fromRGB(15, 15, 15),
+    Main = Color3.fromRGB(25, 25, 25),
+    Accent = Color3.fromRGB(125, 85, 255),
+    Outline = Color3.fromRGB(40, 40, 40),
+    Font = Color3.new(1, 1, 1),
+    Dark = Color3.new(0, 0, 0),
+    Red = Color3.fromRGB(255, 50, 50),
+    Green = Color3.fromRGB(80, 200, 120),
+}
+local FONT = Font.fromEnum(Enum.Font.Code)
+
+local function new(class, props)
+    local inst = Instance.new(class)
+    for k, v in pairs(props or {}) do inst[k] = v end
+    return inst
+end
+local function round(inst, r)
+    new("UICorner", { CornerRadius = UDim.new(0, r or 4), Parent = inst })
+end
+local function outline(inst)
+    return new("UIStroke", { Color = PALETTE.Outline, Thickness = 1, Parent = inst })
+end
+
+--============================================================
+-- MinimalHub
+--============================================================
+local MinimalHub = {}
+MinimalHub.__index = MinimalHub
+
+function MinimalHub.new()
+    local self = setmetatable({}, MinimalHub)
+    self.Toggles, self.Options, self.Labels, self.Buttons, self.Tabs = {}, {}, {}, {}, {}
+    self.Scheme = PALETTE
+    self.Toggled = false
+    self.Unloaded = false
+    self.IsMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+    self.ToggleKeybind = Enum.KeyCode.RightShift
+    self.Notifications = {}
+    self.ScreenGui = new("ScreenGui", {
+        Name = "MinimalHub", ResetOnSpawn = false,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+        DisplayOrder = 999, Parent = CoreGui,
+    })
+    self.Floats = new("Frame", {
+        BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1),
+        ZIndex = 10, Parent = self.ScreenGui,
+    })
+    UserInputService.InputBegan:Connect(function(input)
+        if input.KeyCode == self.ToggleKeybind and not UserInputService:GetFocusedTextBox() then
+            self:Toggle()
+        end
+    end)
+    return self
+end
+
+function MinimalHub:SafeCallback(fn, ...)
+    if type(fn) ~= "function" then return end
+    local ok, err = pcall(fn, ...)
+    if not ok then warn("[Hub]", err) end
+end
+
+function MinimalHub:Toggle(value)
+    if type(value) == "boolean" then self.Toggled = value
+    else self.Toggled = not self.Toggled end
+    if self.Window then self.Window.MainFrame.Visible = self.Toggled end
+end
+
+function MinimalHub:Notify(info)
+    if type(info) == "string" then info = { Description = info } end
+    info = info or {}
+    local holder = new("Frame", {
+        BackgroundColor3 = PALETTE.Main, Size = UDim2.fromOffset(280, 0),
+        AutomaticSize = Enum.AutomaticSize.Y, Position = UDim2.fromOffset(6, 6),
+        Visible = false, Parent = self.Floats,
+    })
+    round(holder, 4); outline(holder)
+    new("UIListLayout", { Padding = UDim.new(0, 4), Parent = holder })
+    new("UIPadding", {
+        PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8),
+        PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), Parent = holder,
+    })
+    new("TextLabel", {
+        BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 18),
+        Text = tostring(info.Title or "Notification"), TextColor3 = PALETTE.Font,
+        FontFace = FONT, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left, Parent = holder,
+    })
+    new("TextLabel", {
+        BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0),
+        AutomaticSize = Enum.AutomaticSize.Y, Text = tostring(info.Description or ""),
+        TextColor3 = PALETTE.Font, FontFace = FONT, TextSize = 14,
+        TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left,
+        TextTransparency = 0.2, Parent = holder,
+    })
+    holder.Visible = true
+    table.insert(self.Notifications, holder)
+    local function reposition()
+        local y = 6
+        for i = 1, #self.Notifications do
+            local n = self.Notifications[i]
+            if n and n.Parent then
+                TweenService:Create(n, TweenInfo.new(0.25), { Position = UDim2.fromOffset(6, y) }):Play()
+                y = y + n.AbsoluteSize.Y + 6
+            end
+        end
+    end
+    task.defer(reposition); task.delay(0.05, reposition)
+    task.delay(tonumber(info.Time) or 5, function()
+        holder:Destroy()
+        for i = 1, #self.Notifications do
+            if self.Notifications[i] == holder then table.remove(self.Notifications, i); break end
+        end
+        reposition()
+    end)
+    return holder
+end
+
+function MinimalHub:CreateWindow(info)
+    info = info or {}
+    local Size = info.Size or UDim2.fromOffset(560, 440)
+    local MainFrame = new("TextButton", {
+        Name = "Main", BackgroundColor3 = PALETTE.Bg,
+        Position = UDim2.new(0.5, -Size.X.Offset / 2, 0.5, -Size.Y.Offset / 2),
+        Size = Size, Text = "", AutoButtonColor = false, Visible = false, Parent = self.ScreenGui,
+    })
+    round(MainFrame, info.CornerRadius or 6); outline(MainFrame)
+    local TopBar = new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 42), Parent = MainFrame })
+    new("TextLabel", {
+        BackgroundTransparency = 1, Position = UDim2.fromOffset(12, 0),
+        Size = UDim2.new(1, -24, 1, 0), Text = tostring(info.Title or "Hub"),
+        TextColor3 = PALETTE.Font, FontFace = FONT, TextSize = 18,
+        TextXAlignment = Enum.TextXAlignment.Left, Parent = TopBar,
+    })
+    new("Frame", { BackgroundColor3 = PALETTE.Outline, Position = UDim2.fromOffset(0, 42), Size = UDim2.new(1, 0, 0, 1), Parent = MainFrame })
+    self:MakeDraggable(MainFrame, TopBar)
+
+    local TabBar = new("ScrollingFrame", {
+        BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 43),
+        Size = UDim2.new(0, 140, 1, -43), CanvasSize = UDim2.new(0, 0, 0, 0),
+        AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 0, Parent = MainFrame,
+    })
+    new("UIListLayout", { Padding = UDim.new(0, 2), Parent = TabBar })
+    new("UIPadding", {
+        PaddingTop = UDim.new(0, 6), PaddingLeft = UDim.new(0, 6),
+        PaddingRight = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6), Parent = TabBar,
+    })
+    new("Frame", {
+        BackgroundColor3 = PALETTE.Outline, Position = UDim2.fromOffset(140, 43),
+        Size = UDim2.new(0, 1, 1, -43), Parent = MainFrame,
+    })
+    local Container = new("Frame", {
+        BackgroundTransparency = 1, Position = UDim2.fromOffset(141, 43),
+        Size = UDim2.new(1, -141, 1, -43), Parent = MainFrame,
+    })
+    local Window = { MainFrame = MainFrame, Container = Container, Tabs = {}, Library = self }
+    self.Window = Window
+
+    function Window:AddTab(name)
+        local Button = new("TextButton", {
+            BackgroundColor3 = PALETTE.Main, BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, 32), Text = "", Parent = TabBar,
+        })
+        round(Button, 4)
+        local lbl = new("TextLabel", {
+            BackgroundTransparency = 1, Position = UDim2.fromOffset(10, 0),
+            Size = UDim2.new(1, -10, 1, 0), Text = tostring(name or "Tab"),
+            TextColor3 = PALETTE.Font, FontFace = FONT, TextSize = 14,
+            TextTransparency = 0.5, TextXAlignment = Enum.TextXAlignment.Left, Parent = Button,
+        })
+        local Page = new("ScrollingFrame", {
+            BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1),
+            CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y,
+            ScrollBarThickness = 2, ScrollBarImageColor3 = PALETTE.Outline,
+            Visible = false, Parent = Container,
+        })
+        new("UIPadding", {
+            PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6),
+            PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), Parent = Page,
+        })
+        local Columns = new("Frame", {
+            BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0),
+            AutomaticSize = Enum.AutomaticSize.Y, Parent = Page,
+        })
+        new("UIPadding", {
+            PaddingTop = UDim.new(0, 6), PaddingLeft = UDim.new(0, 6),
+            PaddingRight = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6), Parent = Columns,
+        })
+        new("UIListLayout", {
+            FillDirection = Enum.FillDirection.Horizontal,
+            HorizontalAlignment = Enum.HorizontalAlignment.Center,
+            VerticalAlignment = Enum.VerticalAlignment.Top,
+            Padding = UDim.new(0, 8), Parent = Columns,
+        })
+        local LeftCol = new("Frame", {
+            BackgroundTransparency = 1, Size = UDim2.new(0.5, -4, 0, 0),
+            AutomaticSize = Enum.AutomaticSize.Y, Parent = Columns,
+        })
+        new("UIListLayout", { Padding = UDim.new(0, 6), Parent = LeftCol })
+        local RightCol = new("Frame", {
+            BackgroundTransparency = 1, Size = UDim2.new(0.5, -4, 0, 0),
+            AutomaticSize = Enum.AutomaticSize.Y, Parent = Columns,
+        })
+        new("UIListLayout", { Padding = UDim.new(0, 6), Parent = RightCol })
+
+        local Tab = {
+            Name = name, Button = Button, Page = Page,
+            Left = LeftCol, Right = RightCol,
+            Groupboxes = {}, Library = self,
+        }
+
+        local function makeGroupbox(side, gbName)
+            local parentCol = side == "Left" and LeftCol or RightCol
+            local Box = new("Frame", {
+                BackgroundColor3 = PALETTE.Bg, Size = UDim2.new(1, 0, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y, Parent = parentCol,
+            })
+            round(Box, 4); outline(Box)
+            new("UIListLayout", { Padding = UDim.new(0, 4), Parent = Box })
+            new("UIPadding", {
+                PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6),
+                PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), Parent = Box,
+            })
+            new("TextLabel", {
+                BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 18),
+                Text = tostring(gbName or "Group"), TextColor3 = PALETTE.Font,
+                FontFace = FONT, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left, Parent = Box,
+            })
+            new("Frame", { BackgroundColor3 = PALETTE.Outline, Size = UDim2.new(1, 0, 0, 1), Parent = Box })
+            local Content = new("Frame", {
+                BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y, Parent = Box,
+            })
+            new("UIListLayout", { Padding = UDim.new(0, 6), Parent = Content })
+
+            local Groupbox = { Box = Box, Content = Content, Elements = {}, Library = self, Tab = Tab }
+            Tab.Groupboxes[gbName] = Groupbox
+
+            function Groupbox:AddDivider(text)
+                local holder = new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 14), Parent = Content })
+                if text then
+                    new("TextLabel", {
+                        BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Text = tostring(text),
+                        TextColor3 = PALETTE.Font, TextTransparency = 0.5, TextSize = 12, FontFace = FONT, Parent = holder,
+                    })
+                else
+                    new("Frame", {
+                        AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = PALETTE.Outline,
+                        Position = UDim2.new(0, 0, 0.5, 0), Size = UDim2.new(1, 0, 0, 1), Parent = holder,
+                    })
+                end
+            end
+
+            function Groupbox:AddLabel(text, wrap)
+                if type(text) == "table" then wrap = text.DoesWrap; text = text.Text end
+                local lbl = new("TextLabel", {
+                    BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0),
+                    AutomaticSize = Enum.AutomaticSize.Y, Text = tostring(text or ""),
+                    TextColor3 = PALETTE.Font, TextTransparency = 0.2, TextSize = 13,
+                    TextWrapped = wrap == true, TextXAlignment = Enum.TextXAlignment.Left,
+                    FontFace = FONT, Parent = Content,
+                })
+                local obj = { TextLabel = lbl }
+                function obj:SetText(t) lbl.Text = tostring(t) end
+                function obj:SetVisible(v) lbl.Visible = v end
+                return obj
+            end
+
+            function Groupbox:AddToggle(idx, info)
+                info = info or {}
+                local holder = new("TextButton", {
+                    BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20),
+                    Text = "", Parent = Content,
+                })
+                local label = new("TextLabel", {
+                    BackgroundTransparency = 1, Size = UDim2.new(1, -40, 1, 0),
+                    Text = tostring(info.Text or "Toggle"), TextColor3 = PALETTE.Font,
+                    TextTransparency = 0.4, TextSize = 13,
+                    TextXAlignment = Enum.TextXAlignment.Left, FontFace = FONT, Parent = holder,
+                })
+                local box = new("Frame", {
+                    AnchorPoint = Vector2.new(1, 0.5), BackgroundColor3 = PALETTE.Main,
+                    Position = UDim2.new(1, 0, 0.5, 0), Size = UDim2.fromOffset(18, 18), Parent = holder,
+                })
+                round(box, 3); outline(box)
+                local check = new("Frame", {
+                    AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = PALETTE.Accent,
+                    Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromScale(0.7, 0.7),
+                    Visible = false, Parent = box,
+                })
+                round(check, 2)
+
+                local toggle = {
+                    Text = info.Text, Value = info.Default == true,
+                    Callback = info.Callback, Changed = info.Changed,
+                    Disabled = info.Disabled, Type = "Toggle",
+                    Holder = holder, TextLabel = label,
+                }
+                local function render()
+                    check.Visible = toggle.Value
+                    label.TextTransparency = toggle.Disabled and 0.8 or (toggle.Value and 0 or 0.4)
+                    box.BackgroundTransparency = toggle.Disabled and 0.5 or 0
+                end
+                function toggle:SetValue(v)
+                    v = v == true
+                    if self.Value == v then return end
+                    self.Value = v
+                    render()
+                    self.Library:SafeCallback(self.Callback, v)
+                    self.Library:SafeCallback(self.Changed, v)
+                end
+                function toggle:SetDisabled(d) self.Disabled = d; holder.Active = not d; render() end
+                function toggle:SetVisible(v) holder.Visible = v == true end
+                function toggle:SetText(t) self.Text = t; label.Text = tostring(t) end
+                function toggle:OnChanged(fn) self.Changed = fn end
+                holder.MouseButton1Click:Connect(function()
+                    if not toggle.Disabled then toggle:SetValue(not toggle.Value) end
+                end)
+                self.Toggles[idx or ("__t_" .. tostring(#self.Toggles + 1))] = toggle
+                render()
+                return toggle
+            end
+
+            function Groupbox:AddSlider(idx, info)
+                info = info or {}
+                local holder = new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 34), Parent = Content })
+                new("TextLabel", {
+                    BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 14),
+                    Text = tostring(info.Text or "Slider"), TextColor3 = PALETTE.Font,
+                    TextTransparency = 0.2, TextSize = 13,
+                    TextXAlignment = Enum.TextXAlignment.Left, FontFace = FONT, Parent = holder,
+                })
+                local bar = new("TextButton", {
+                    AnchorPoint = Vector2.new(0, 1), BackgroundColor3 = PALETTE.Main,
+                    Position = UDim2.new(0, 0, 1, 0), Size = UDim2.new(1, 0, 0, 16),
+                    Text = "", Parent = holder,
+                })
+                round(bar, 3); outline(bar)
+                local fill = new("Frame", {
+                    BackgroundColor3 = PALETTE.Accent, Size = UDim2.fromScale(0, 1), Parent = bar,
+                })
+                round(fill, 3)
+                local disp = new("TextLabel", {
+                    BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1),
+                    Text = "", TextColor3 = PALETTE.Font, TextSize = 12,
+                    FontFace = FONT, ZIndex = 3, Parent = bar,
+                })
+                local slider = {
+                    Value = tonumber(info.Default) or 0,
+                    Min = info.Min or 0, Max = info.Max or 100,
+                    Rounding = info.Rounding or 0,
+                    Prefix = info.Prefix or "", Suffix = info.Suffix or "",
+                    Compact = info.Compact, Callback = info.Callback,
+                    Changed = info.Changed, Type = "Slider", Holder = holder,
+                }
+                local function fmt(n)
+                    if slider.Rounding > 0 then return string.format("%." .. slider.Rounding .. "f", n) end
+                    return tostring(math.floor(n))
+                end
+                local function render()
+                    local alpha = (slider.Value - slider.Min) / math.max(slider.Max - slider.Min, 1e-9)
+                    fill.Size = UDim2.fromScale(math.clamp(alpha, 0, 1), 1)
+                    disp.Text = slider.Prefix .. fmt(slider.Value) .. slider.Suffix
+                end
+                function slider:SetValue(n)
+                    n = tonumber(n); if not n then return end
+                    n = math.clamp(n, self.Min, self.Max)
+                    if self.Rounding > 0 then n = tonumber(string.format("%." .. self.Rounding .. "f", n))
+                    else n = math.floor(n) end
+                    if n == self.Value then return end
+                    self.Value = n; render()
+                    self.Library:SafeCallback(self.Callback, n)
+                    self.Library:SafeCallback(self.Changed, n)
+                end
+                function slider:SetDisabled(d) self.Disabled = d; bar.Active = not d end
+                function slider:SetVisible(v) holder.Visible = v == true end
+                function slider:OnChanged(fn) self.Changed = fn end
+                local dragging = false
+                bar.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1
+                        or input.UserInputType == Enum.UserInputType.Touch then
+                        dragging = true
+                        local c1, c2
+                        c1 = UserInputService.InputChanged:Connect(function(i)
+                            if not dragging then return end
+                            local x = math.clamp((i.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+                            slider:SetValue(slider.Min + (slider.Max - slider.Min) * x)
+                        end)
+                        c2 = input.Changed:Connect(function()
+                            if input.UserInputState == Enum.UserInputState.End then
+                                dragging = false; c1:Disconnect(); c2:Disconnect()
+                            end
+                        end)
+                    end
+                end)
+                self.Options[idx or ("__s_" .. tostring(#self.Options + 1))] = slider
+                render()
+                return slider
+            end
+
+            function Groupbox:AddDropdown(idx, info)
+                info = info or {}
+                local holder = new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 38), Parent = Content })
+                new("TextLabel", {
+                    BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 14),
+                    Text = tostring(info.Text or "Dropdown"), TextColor3 = PALETTE.Font,
+                    TextTransparency = 0.2, TextSize = 13,
+                    TextXAlignment = Enum.TextXAlignment.Left, FontFace = FONT, Parent = holder,
+                })
+                local btn = new("TextButton", {
+                    AnchorPoint = Vector2.new(0, 1), BackgroundColor3 = PALETTE.Main,
+                    Position = UDim2.new(0, 0, 1, 0), Size = UDim2.new(1, 0, 0, 20),
+                    Text = "", Parent = holder,
+                })
+                round(btn, 3); outline(btn)
+                local disp = new("TextLabel", {
+                    BackgroundTransparency = 1, Position = UDim2.fromOffset(6, 0),
+                    Size = UDim2.new(1, -12, 1, 0), Text = "---", TextColor3 = PALETTE.Font,
+                    TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = FONT, Parent = btn,
+                })
+                local list = new("ScrollingFrame", {
+                    BackgroundColor3 = PALETTE.Main, Position = UDim2.fromOffset(0, 22),
+                    Size = UDim2.new(1, 0, 0, 120), CanvasSize = UDim2.new(0, 0, 0, 0),
+                    AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 2,
+                    Visible = false, ZIndex = 20, Parent = holder,
+                })
+                round(list, 3); outline(list)
+                new("UIListLayout", { Padding = UDim.new(0, 0), Parent = list })
+                local values = info.Values or {}
+                local multi = info.Multi == true
+                local drop = {
+                    Value = multi and {} or nil, Values = values, Multi = multi,
+                    Type = "Dropdown", Callback = info.Callback, Changed = info.Changed,
+                    Holder = holder, Menu = list, Active = false,
+                }
+                local function getDisplay()
+                    if multi then
+                        local keys = {}
+                        for k, v in pairs(drop.Value) do if v == true then keys[#keys + 1] = tostring(k) end end
+                        if #keys == 0 then return "---" end
+                        return table.concat(keys, ", ")
+                    else
+                        if drop.Value == nil then return "---" end
+                        return tostring(drop.Value)
+                    end
+                end
+                local function refresh() disp.Text = getDisplay() end
+                local function rebuild()
+                    for _, c in list:GetChildren() do
+                        if c:IsA("TextButton") then c:Destroy() end
+                    end
+                    for _, val in ipairs(values) do
+                        local item = new("TextButton", {
+                            BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20),
+                            Text = tostring(val), TextColor3 = PALETTE.Font, TextSize = 13,
+                            TextXAlignment = Enum.TextXAlignment.Left, FontFace = FONT, Parent = list,
+                        })
+                        new("UIPadding", { PaddingLeft = UDim.new(0, 6), Parent = item })
+                        item.MouseButton1Click:Connect(function()
+                            if multi then
+                                drop.Value[val] = (not drop.Value[val]) or nil
+                            else
+                                drop.Value = val
+                                list.Visible = false
+                                drop.Active = false
+                            end
+                            refresh()
+                            self:SafeCallback(drop.Callback, drop.Value)
+                            self:SafeCallback(drop.Changed, drop.Value)
+                        end)
+                    end
+                end
+                function drop:SetValue(v)
+                    if multi then
+                        if type(v) == "table" then
+                            self.Value = {}
+                            for k, x in pairs(v) do
+                                if type(k) == "number" then self.Value[x] = true
+                                else self.Value[k] = x end
+                            end
+                        elseif type(v) == "string" then
+                            self.Value = { [v] = true }
+                        end
+                    else self.Value = v end
+                    refresh()
+                    self:SafeCallback(self.Callback, self.Value)
+                    self:SafeCallback(self.Changed, self.Value)
+                end
+                function drop:SetValues(nv) values = nv; self.Values = nv; rebuild() end
+                function drop:SetDisabled(d) self.Disabled = d; btn.Active = not d end
+                function drop:SetVisible(v) holder.Visible = v == true end
+                function drop:OnChanged(fn) self.Changed = fn end
+                btn.MouseButton1Click:Connect(function()
+                    if drop.Disabled then return end
+                    drop.Active = not drop.Active
+                    list.Visible = drop.Active
+                end)
+                rebuild(); refresh()
+                self.Options[idx or ("__d_" .. tostring(#self.Options + 1))] = drop
+                return drop
+            end
+
+            function Groupbox:AddInput(idx, info)
+                info = info or {}
+                local holder = new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 38), Parent = Content })
+                new("TextLabel", {
+                    BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 14),
+                    Text = tostring(info.Text or "Input"), TextColor3 = PALETTE.Font,
+                    TextTransparency = 0.2, TextSize = 13,
+                    TextXAlignment = Enum.TextXAlignment.Left, FontFace = FONT, Parent = holder,
+                })
+                local box = new("TextBox", {
+                    AnchorPoint = Vector2.new(0, 1), BackgroundColor3 = PALETTE.Main,
+                    Position = UDim2.new(0, 0, 1, 0), Size = UDim2.new(1, 0, 0, 20),
+                    Text = tostring(info.Default or ""), PlaceholderText = tostring(info.Placeholder or ""),
+                    TextColor3 = PALETTE.Font, TextSize = 13, FontFace = FONT,
+                    TextXAlignment = Enum.TextXAlignment.Left, ClearTextOnFocus = false, Parent = holder,
+                })
+                round(box, 3); outline(box)
+                new("UIPadding", { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), Parent = box })
+                local input = {
+                    Value = tostring(info.Default or ""), Type = "Input",
+                    Callback = info.Callback, Changed = info.Changed, Holder = holder,
+                }
+                function input:SetValue(v)
+                    self.Value = tostring(v or "")
+                    box.Text = self.Value
+                    self.Library:SafeCallback(self.Callback, self.Value)
+                    self.Library:SafeCallback(self.Changed, self.Value)
+                end
+                function input:SetDisabled(d) box.TextEditable = not d end
+                function input:SetVisible(v) holder.Visible = v == true end
+                function input:OnChanged(fn) self.Changed = fn end
+                box.FocusLost:Connect(function()
+                    input.Value = box.Text
+                    self:SafeCallback(input.Callback, box.Text)
+                    self:SafeCallback(input.Changed, box.Text)
+                end)
+                self.Options[idx or ("__i_" .. tostring(#self.Options + 1))] = input
+                return input
+            end
+
+            function Groupbox:AddButton(info)
+                if type(info) == "string" then info = { Text = info } end
+                info = info or {}
+                local btn = new("TextButton", {
+                    BackgroundColor3 = PALETTE.Main, Size = UDim2.new(1, 0, 0, 22),
+                    Text = tostring(info.Text or "Button"), TextColor3 = PALETTE.Font,
+                    TextSize = 13, FontFace = FONT, Parent = Content,
+                })
+                round(btn, 3); outline(btn)
+                local button = { Button = btn, Text = info.Text, Type = "Button" }
+                function button:SetDisabled(d)
+                    btn.Active = not d; btn.TextTransparency = d and 0.5 or 0
+                end
+                function button:SetText(t) btn.Text = tostring(t) end
+                btn.MouseButton1Click:Connect(function()
+                    self:SafeCallback(info.Func or info.Callback)
+                end)
+                self.Buttons[#self.Buttons + 1] = button
+                return button
+            end
+
+            function Groupbox:AddDependencyBox()
+                local Sub = {
+                    Dependencies = {},
+                    Box = new("Frame", {
+                        BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0),
+                        AutomaticSize = Enum.AutomaticSize.Y, Visible = false, Parent = Content,
+                    }),
+                }
+                new("UIListLayout", { Padding = UDim.new(0, 6), Parent = Sub.Box })
+                local SubApi = {}
+                for _, key in ipairs({ "AddToggle", "AddSlider", "AddDropdown", "AddButton", "AddLabel", "AddDivider", "AddInput" }) do
+                    SubApi[key] = function(_, a, b, c)
+                        local orig = Groupbox.Content
+                        Groupbox.Content = Sub.Box
+                        local fn = Groupbox[key]
+                        local ok, ret = pcall(fn, Groupbox, a, b, c)
+                        Groupbox.Content = orig
+                        if ok then return ret end
+                        error(ret)
+                    end
+                end
+                setmetatable(Sub, { __index = SubApi })
+                function Sub:SetupDependencies(deps)
+                    self.Dependencies = deps or {}
+                    local function check()
+                        local ok = true
+                        for _, dep in ipairs(self.Dependencies) do
+                            local el, expect = dep[1], dep[2]
+                            local ok2 = false
+                            if el and el.Value ~= nil then
+                                if type(el.Value) == "table" then
+                                    ok2 = el.Value[expect] == true
+                                else
+                                    ok2 = el.Value == expect
+                                end
+                            end
+                            if not ok2 then ok = false; break end
+                        end
+                        self.Box.Visible = ok
+                    end
+                    check()
+                    task.spawn(function()
+                        while self.Box.Parent do
+                            task.wait(0.1); check()
+                        end
+                    end)
+                end
+                return Sub
+            end
+
+            return Groupbox
+        end
+
+        function Tab:AddGroupbox(info)
+            info = info or {}
+            local side = info.Side or "Left"
+            if type(side) == "number" then side = side == 1 and "Left" or "Right" end
+            return makeGroupbox(side, info.Name)
+        end
+        function Tab:AddLeftGroupbox(name) return makeGroupbox("Left", name) end
+        function Tab:AddRightGroupbox(name) return makeGroupbox("Right", name) end
+
+        Button.MouseButton1Click:Connect(function()
+            for _, t in pairs(self.Tabs) do
+                if t.Page then t.Page.Visible = false end
+                if t.Button then
+                    t.Button.BackgroundTransparency = 1
+                    local l = t.Button:FindFirstChildOfClass("TextLabel")
+                    if l then l.TextTransparency = 0.5 end
+                end
+            end
+            Page.Visible = true
+            Button.BackgroundTransparency = 0
+            lbl.TextTransparency = 0
+        end)
+
+        self.Tabs[#self.Tabs + 1] = Tab
+        if #self.Tabs == 1 then
+            Page.Visible = true
+            Button.BackgroundTransparency = 0
+            lbl.TextTransparency = 0
+        end
+        return Tab
+    end
+
+    if info.AutoShow ~= false then
+        task.defer(function() self:Toggle(true) end)
+    end
+    return Window
+end
+
+function MinimalHub:MakeDraggable(main, handle)
+    local dragging, startPos, startFrame
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            startPos = input.Position
+            startFrame = main.Position
+            local c1, c2
+            c1 = UserInputService.InputChanged:Connect(function(i)
+                if not dragging then return end
+                if i.UserInputType == Enum.UserInputType.MouseMovement
+                    or i.UserInputType == Enum.UserInputType.Touch then
+                    local d = i.Position - startPos
+                    main.Position = UDim2.new(
+                        startFrame.X.Scale, startFrame.X.Offset + d.X,
+                        startFrame.Y.Scale, startFrame.Y.Offset + d.Y
+                    )
+                end
+            end)
+            c2 = input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false; c1:Disconnect(); c2:Disconnect()
+                end
+            end)
+        end
+    end)
+end
+
+--============================================================
+-- 게임 상태
+--============================================================
+local localPlayer = Players.LocalPlayer
+local inPlot = localPlayer:WaitForChild("InPlot")
+local inOwnedPlot = localPlayer:WaitForChild("InOwnedPlot")
+local v17 = workspace:WaitForChild(localPlayer.Name .. "SpawnedInToys")
+local flag11 = false
+
+local tbl7 = {
+    PartOwnerCache = setmetatable({}, { __mode = "k" }),
+    RuntimeGates = {},
+    States = {},
+    LimbOffsetsRL = {
+        Head = CFrame.new(0, 1.5, 0),
+        ["Left Arm"] = CFrame.new(-1.5, 0, 0),
+        ["Right Arm"] = CFrame.new(1.5, 0, 0),
+        ["Left Leg"] = CFrame.new(-0.5, -2, 0),
+        ["Right Leg"] = CFrame.new(0.5, -2, 0),
+        Torso = CFrame.new(),
+    },
+    FailedToys = {},
+    SpawnQueue = {},
+    SpawnOrder = 0,
+    ToyAuraReserved = setmetatable({}, { __mode = "k" }),
+    BrokenPlots = {},
+    GrabbableParts = {},
+    SelectedPlayers = {},
+    PlayerList = Players:GetPlayers(),
+}
+
+local tbl8 = {
+    EKI = false,
+    LoopApplyMethodT = false,
+    RagdollInNK = true,
+    DeleteShurInNK = true,
+    DirectGrab = false,
+    PositionPrediction = false,
+}
+
+local tbl9 = {
+    NKOffset = 15,
+    NKDelayMode = "Normal",
+}
+
+local tbl11 = {
+    SetNetworkOwner = ReplicatedStorage:WaitForChild("GrabEvents"):WaitForChild("SetNetworkOwner"),
+    DestroyGrabLine = ReplicatedStorage:WaitForChild("GrabEvents"):WaitForChild("DestroyGrabLine"),
+    SpawnToy = ReplicatedStorage:WaitForChild("MenuToys"):WaitForChild("SpawnToyRemoteFunction"),
+    DestroyToy = ReplicatedStorage:WaitForChild("MenuToys"):WaitForChild("DestroyToy"),
+    StickyPartEvent = ReplicatedStorage:WaitForChild("Player"):WaitForChild("StickyPartEvent"),
+    RagdollRemote = ReplicatedStorage:WaitForChild("Character"):WaitForChild("RagdollRemote"),
+}
+
+Players.PlayerAdded:Connect(function(p) table.insert(tbl7.PlayerList, p) end)
+Players.PlayerRemoving:Connect(function(p)
+    local i = table.find(tbl7.PlayerList, p)
+    if i then table.remove(tbl7.PlayerList, i) end
+end)
+
+--============================================================
+-- 유틸리티 함수
+--============================================================
+local CharCache = setmetatable({}, { __mode = "k" })
+local VelocityCache = setmetatable({}, { __mode = "k" })
+
+local function Char(arg)
+    arg = arg or localPlayer
+    if not arg then return end
+    local cached = CharCache[arg]
+    if cached then
+        local c, r, h = cached.Character, cached.RootPart, cached.Humanoid
+        if c and c.Parent and r and r.Parent and h and h.Parent then
+            return c, r, h
+        end
+        CharCache[arg] = nil
+    end
+    local c = arg.Character
+    if c then
+        local hrp = c:FindFirstChild("realHrp") or c:FindFirstChild("HumanoidRootPart")
+        local h = c:FindFirstChild("Humanoid")
+        CharCache[arg] = { Character = c, RootPart = hrp, Humanoid = h }
+        return c, hrp, h
+    end
+end
+
+local function IsPartOwner(arg)
+    if not (arg and arg:IsA("BasePart")) then return end
+    local cached = tbl7.PartOwnerCache[arg]
+    if cached and cached.Parent then return cached.Value == localPlayer.Name end
+    local parent = arg.Parent
+    local head = arg.Name == "HumanoidRootPart" and parent and parent:FindFirstChild("Head")
+    head = head and head:FindFirstChild("PartOwner")
+    if head and head.Value == localPlayer.Name then
+        tbl7.PartOwnerCache[arg] = head
+        return true
+    end
+    local po = arg:FindFirstChild("PartOwner")
+    if po and po.Value == localPlayer.Name then
+        tbl7.PartOwnerCache[arg] = po
+        return true
+    end
+    parent = parent and parent:FindFirstChild("PartOwner", true)
+    if parent then
+        tbl7.PartOwnerCache[arg] = parent
+        return parent.Value == localPlayer.Name
+    end
+    return false
+end
+
+local function IsNetworkOwner(arg)
+    if not (arg and arg:IsA("BasePart")) then return end
+    local root = arg.AssemblyRootPart or arg
+    return not root.Anchored and root.ReceiveAge == 0
+end
+
+local function GetMagnitude(a, b)
+    if not a or not b then return end
+    return (a.Position - b.Position).Magnitude
+end
+
+local function ResetVelocity(arg)
+    if not arg or not arg:IsA("BasePart") then return false end
+    if arg.AssemblyAngularVelocity ~= Vector3.zero then arg.AssemblyAngularVelocity = Vector3.zero end
+    if arg.AssemblyLinearVelocity ~= Vector3.zero then arg.AssemblyLinearVelocity = Vector3.zero end
+    return true
+end
+
+local function GetRuntimeGate(name)
+    local g = tbl7.RuntimeGates[name]
+    if g then return g end
+    local ev = Instance.new("BindableEvent")
+    tbl7.RuntimeGates[name] = ev
+    return ev
+end
+
+local function WaitForRuntimeToggle(name)
+    if tbl8[name] then return true end
+    local g = GetRuntimeGate(name)
+    while true do
+        g.Event:Wait()
+        if flag11 or tbl8[name] then break end
+    end
+    return not flag11
+end
+
+local function GetCustomVelocity(arg)
+    local now = os.clock()
+    local pos = arg.Position
+    local v = VelocityCache[arg]
+    if not v then
+        VelocityCache[arg] = { Position = pos, Time = now, Linear = Vector3.zero }
+        return Vector3.zero
+    end
+    local dt = now - v.Time
+    if dt < 0.001 then return v.Linear end
+    local vel = (pos - v.Position) / dt
+    if dt > 0.25 or vel.Magnitude > 300 then
+        v.Linear = Vector3.zero
+    else
+        v.Linear = v.Linear:Lerp(vel, 1 - math.exp(-dt * 40))
+        if v.Linear.Magnitude < 0.05 then v.Linear = Vector3.zero end
+    end
+    v.Position = pos
+    v.Time = now
+    return v.Linear
+end
+
+local function PredictCFrame(arg, override)
+    local cf = override or arg.CFrame
+    if not tbl8.PositionPrediction then return cf end
+    local ping = math.clamp(localPlayer:GetNetworkPing(), 0, 0.35)
+    return cf + GetCustomVelocity(arg) * ping
+end
+
+local function Grab(arg, arg2)
+    local c, r, h = Char()
+    if not r or not h or h.Health == 0 or not arg or not arg.Parent or not arg:IsA("BasePart") then return end
+    local base = (arg2 or r.CFrame) * CFrame.new(0, 1.593, 0)
+    local cf = PredictCFrame(arg)
+    if not tbl8.DirectGrab then
+        cf = CFrame.new(base.Position, cf.Position)
+    end
+    tbl11.SetNetworkOwner:FireServer(arg, cf)
+end
+
+local function RNO(arg)
+    tbl11.DestroyGrabLine:FireServer(arg)
+end
+
+local function ToggleMotor6D(arg, enabled, includeLimbs)
+    if not arg then return end
+    local h = arg:FindFirstChild("Humanoid")
+    local torso = arg:FindFirstChild("Torso")
+    h = h and h:FindFirstChild("Ragdolled")
+    if not torso or not h then return end
+    if not h.Value then
+        for _, m in ipairs(torso:GetChildren()) do
+            if m:IsA("Motor6D") then m.Enabled = enabled end
+        end
+    end
+    if includeLimbs and (enabled == false or h.Value) then
+        for _, name in ipairs({ "Left Leg", "Right Leg", "Left Arm", "Right Arm", "Head" }) do
+            local limb = arg:FindFirstChild(name)
+            local bsc = limb and limb:FindFirstChild("BallSocketConstraint")
+            if bsc then bsc.Enabled = enabled end
+        end
+    end
+end
+
+local LightPhysicalProperties = PhysicalProperties.new(0.01, 0.01, 0.01, 0.01, 0.01)
+
+local function ToggleCollisions(arg, canCollide, keepRagdollParts, lightPhys)
+    if canCollide == nil then canCollide = false end
+    local props = lightPhys and LightPhysicalProperties or nil
+    for _, child in ipairs(arg:GetChildren()) do
+        if child:IsA("BasePart") then
+            if canCollide then
+                if child.Name == "Torso" or child.Name == "Head" then
+                    child.CanCollide = true
+                end
+            else
+                child.CanCollide = false
+                if not keepRagdollParts then
+                    local rl = child:FindFirstChild("RagdollLimbPart")
+                    if rl and rl.CanCollide then rl.CanCollide = false end
+                end
+            end
+            if child.Name ~= "HumanoidRootPart" and child.CustomPhysicalProperties ~= props then
+                child.CustomPhysicalProperties = props
+            end
+        end
+    end
+end
+
+local function RepositionLimbs(arg, resetVel)
+    local hrp = arg:FindFirstChild("HumanoidRootPart")
+    local torso = arg:FindFirstChild("Torso")
+    if not hrp or not torso then return end
+    local neck = torso:FindFirstChild("Neck")
+    if neck and neck.Enabled then return end
+    local look = hrp.CFrame.LookVector
+    local flat = Vector3.new(look.X, 0, look.Z)
+    if flat.Magnitude < 0.001 then return end
+    local baseCF = CFrame.lookAt(hrp.Position, hrp.Position + flat.Unit)
+    for name, offset in pairs(tbl7.LimbOffsetsRL) do
+        local limb = arg:FindFirstChild(name)
+        if limb and limb:IsA("BasePart") then
+            local cf = baseCF * offset
+            if limb.CFrame ~= cf then limb.CFrame = cf end
+            if resetVel then ResetVelocity(limb) end
+        end
+    end
+end
+
+local function FindNicePart(arg)
+    if not arg or not arg:IsA("Model") then return end
+    local cached = tbl7.GrabbableParts[arg]
+    if cached and cached:IsDescendantOf(arg) and cached.CanQuery and not cached.Anchored then
+        return cached
+    end
+    tbl7.GrabbableParts[arg] = nil
+    local fallback = nil
+    for _, p in ipairs(arg:QueryDescendants("BasePart")) do
+        if p.CanQuery and not p.Anchored and p.Name ~= "Button" then
+            fallback = fallback or p
+            if (p.AssemblyRootPart or p) == p then
+                tbl7.GrabbableParts[arg] = p
+                return p
+            end
+        end
+    end
+    tbl7.GrabbableParts[arg] = fallback
+    return fallback
+end
+
+local antiGrabCF = nil
+
+local function Teleport(arg, cf, offset, noResetVel)
+    if not arg or not arg:IsA("BasePart") or not cf then return false end
+    local c = Char()
+    local isLocal = c and arg:IsDescendantOf(c)
+    if typeof(cf) == "CFrame" then
+        if offset then cf *= offset end
+    elseif typeof(cf) == "Vector3" then
+        if offset then cf += offset.Position end
+        cf = CFrame.new(cf)
+    else
+        if not (typeof(cf) == "Instance" and cf:IsA("BasePart")) then return false end
+        cf = offset and (cf.CFrame * offset) or cf.CFrame
+    end
+    if isLocal and (arg.Name == "HumanoidRootPart" or arg.Name == "Torso") and tbl7.States["Anti Grab"] then
+        antiGrabCF = cf
+    end
+    if arg.CFrame ~= cf then arg.CFrame = cf end
+    if noResetVel ~= false then ResetVelocity(arg) end
+    return true
+end
+
+local function PivotTo(model, cf, parts, buffers)
+    if not model or not model:IsA("Model") or typeof(cf) ~= "CFrame" then return false end
+    local delta = cf * model:GetPivot():Inverse()
+    parts = parts or model:QueryDescendants("BasePart")
+    buffers = buffers or {}
+    table.clear(buffers)
+    for i, p in ipairs(parts) do
+        local root = p:IsDescendantOf(model) and p.AssemblyRootPart
+        if root and not p.Anchored and not root.Anchored then
+            buffers[i] = delta * p.CFrame
+        end
+    end
+    for i, newCF in pairs(buffers) do parts[i].CFrame = newCF end
+    return true
+end
+
+local function DestroyToy(arg)
+    if arg and arg:IsA("Model") then tbl11.DestroyToy:FireServer(arg) end
+end
+
+local function SpawnToy(arg, pos, priority, reserve)
+    if type(arg) ~= "string" or arg == "" then return end
+    if tbl7.FailedToys[arg] then return end
+    local prio = tonumber(priority) or 0
+    if tbl7.States.Spawning or #tbl7.SpawnQueue > 0 then
+        if prio <= 0 then return end
+        tbl7.SpawnOrder = tbl7.SpawnOrder + 1
+        local entry = { Priority = prio, Order = tbl7.SpawnOrder }
+        table.insert(tbl7.SpawnQueue, entry)
+        table.sort(tbl7.SpawnQueue, function(a, b)
+            if a.Priority == b.Priority then return a.Order < b.Order end
+            return a.Priority > b.Priority
+        end)
+        while true do
+            task.wait()
+            if flag11 or (not tbl7.States.Spawning and tbl7.SpawnQueue[1] == entry) then break end
+        end
+        table.remove(tbl7.SpawnQueue, table.find(tbl7.SpawnQueue, entry))
+        if flag11 then return end
+    end
+    local c, hrp = Char()
+    if not hrp then return end
+    local inForeignPlot = inPlot.Value and not inOwnedPlot.Value
+    if inForeignPlot and tbl7.States.Owning then return end
+    tbl7.States.Spawning = true
+    if inForeignPlot then tbl7.States.Owning = true end
+    if localPlayer.CanSpawnToy.Value == false then
+        repeat task.wait() until localPlayer.CanSpawnToy.Value
+    end
+    local baseCF = inForeignPlot and CFrame.new(0, 25, 0) or (hrp.CFrame + Vector3.new(0, 15, 0))
+    local spawnCF = CFrame.new((pos or baseCF).Position) + Vector3.new(0, 0, 20)
+    local rot = workspace:FindFirstChild("RotateOrientPart") and workspace.RotateOrientPart.Rotation or Vector3.zero
+    local spawned = nil
+    local conn = nil
+    conn = v17.ChildAdded:Connect(function(child)
+        if child.Name == arg then
+            spawned = child
+            if reserve then tbl7.ToyAuraReserved[child] = true end
+            if conn then conn:Disconnect() end
+        end
+    end)
+    local startCF = hrp.CFrame
+    local holdCF = CFrame.new(0, 10, 0)
+    local freezeConn = nil
+    if inForeignPlot then
+        RunService:BindToRenderStep("STClient", Enum.RenderPriority.Camera.Value - 1, function()
+            hrp.CFrame = startCF
+        end)
+        freezeConn = RunService.Heartbeat:Connect(function()
+            startCF = hrp.CFrame
+            hrp.CFrame = holdCF
+        end)
+    end
+    local startTime = tick()
+    task.spawn(function() tbl11.SpawnToy:InvokeServer(arg, spawnCF, rot) end)
+    while true do
+        RunService.Heartbeat:Wait()
+        if inForeignPlot then
+            task.spawn(function() tbl11.SpawnToy:InvokeServer(arg, spawnCF, rot) end)
+        end
+        if spawned or tick() - startTime > 1.3 then break end
+    end
+    if inForeignPlot then
+        RunService:UnbindFromRenderStep("STClient")
+        if freezeConn then freezeConn:Disconnect() end
+        if hrp then hrp.CFrame = startCF end
+    end
+    if conn then conn:Disconnect() end
+    if not spawned then
+        tbl7.FailedToys[arg] = true
+        task.delay(2, function() tbl7.FailedToys[arg] = nil end)
+    end
+    tbl7.States.Spawning = false
+    if inForeignPlot then tbl7.States.Owning = false end
+    return spawned
+end
+
+local function WhichPlot(arg)
+    local plots = workspace:FindFirstChild("Plots")
+    if not plots then return end
+    for _, child in ipairs(plots:GetChildren()) do
+        local plotArea = child:FindFirstChild("PlotArea")
+        if plotArea then
+            for _, part in ipairs(workspace:GetPartsInPart(plotArea)) do
+                if Players:GetPlayerFromCharacter(part.Parent) == arg then
+                    local own = arg:FindFirstChild("InOwnedPlot")
+                    return child, own and own.Value
+                end
+            end
+        end
+    end
+end
+
+local BreakPlot
+local function SNO(arg, timeout, condition)
+    local c, hrp, h = Char()
+    local head = c and c:FindFirstChild("Head")
+    local ragdolled = h and h:FindFirstChild("Ragdolled")
+    if not (head and ragdolled and hrp and h and h.Health > 0) then return false end
+    if not arg or not arg:IsA("BasePart") or not arg.Parent
+        or GetMagnitude(arg, workspace.SpawnLocation) > 10000000 then return false end
+    if IsPartOwner(arg) then return true end
+    if tbl7.States.Owning or (condition and not condition()) then return false end
+    local far = (hrp.Position - arg.Position).Magnitude >= 31
+    local isRoot = arg.Name == "HumanoidRootPart" or arg.Name == "Torso"
+    local plotBreaker = nil
+    if isRoot then
+        local owner = Players:FindFirstChild(arg.Parent.Name)
+        if owner then
+            local _, _, oh = Char(owner)
+            if not oh or oh.Health == 0 then return false end
+            local inP = owner:FindFirstChild("InPlot")
+            if inP and inP.Value then
+                plotBreaker = BreakPlot(owner)
+                if not plotBreaker then return false end
+            end
+        end
+    end
+    tbl7.States.Owning = true
+    local savedHrp = CFrame.new()
+    local savedHead = CFrame.new()
+    local target = CFrame.new()
+    local conn = nil
+    local function beginFreeze()
+        savedHrp = hrp.CFrame
+        savedHead = head.CFrame
+        target = hrp.CFrame
+        RunService:BindToRenderStep("RSCClient", Enum.RenderPriority.Camera.Value - 1, function()
+            hrp.CFrame = savedHrp
+            head.CFrame = savedHead
+        end)
+        conn = RunService.Heartbeat:Connect(function()
+            savedHrp = hrp.CFrame
+            savedHead = head.CFrame
+            hrp.CFrame = target
+            head.CFrame = target
+        end)
+    end
+    local function endFreeze()
+        RunService:UnbindFromRenderStep("RSCClient")
+        if conn then conn:Disconnect(); conn = nil end
+        head.CFrame = savedHead
+        hrp.CFrame = savedHrp
+    end
+    local ok, err = pcall(function()
+        if far then beginFreeze() end
+        timeout = timeout or 0.65
+        local start = tick()
+        while not flag11 and arg.Parent and not IsPartOwner(arg)
+            and h.Health ~= 0 and hrp.Parent
+            and (not condition or condition())
+            and tick() - start < timeout do
+            if far then target = PredictCFrame(arg) - Vector3.new(0, 22, 0) end
+            RunService.Heartbeat:Wait()
+            Grab(arg, far and target or nil)
+        end
+    end)
+    if far then pcall(endFreeze) end
+    if plotBreaker then task.delay(1, DestroyToy, plotBreaker) end
+    tbl7.States.Owning = false
+    if not ok then warn(err) end
+    return IsPartOwner(arg)
+end
+
+BreakPlot = function(arg)
+    local inPlotVal = nil
+    if arg:IsA("Player") then
+        inPlotVal = arg:FindFirstChild("InPlot")
+        if not inPlotVal then return end
+        arg = WhichPlot(arg)
+        if not arg then return end
+    end
+    if tbl7.BrokenPlots[arg.Name] then return true end
+    local plotArea = arg:FindFirstChild("PlotArea")
+    if not plotArea then return end
+    local shuriken = SpawnToy("NinjaShuriken")
+    if not shuriken then return end
+    local sticky = shuriken:WaitForChild("StickyPart", 0.4)
+    local weld = sticky and sticky:WaitForChild("StickyWeld", 0.4)
+    local cf = arg.Name == "Plot5" and CFrame.new(2147483648, 2147483648, 2147483648)
+        or CFrame.new(1099511627776, 1099511627776, 1099511627776)
+    if not weld or not SNO(sticky) then return end
+    tbl11.StickyPartEvent:FireServer(sticky, plotArea, cf)
+    local start = tick()
+    while true do
+        task.wait()
+        if weld.Part1 == plotArea and (not inPlotVal or not inPlotVal.Value)
+            or not weld.Parent
+            or tick() - start > 0.8 then break end
+    end
+    if not weld.Parent or weld.Part1 ~= plotArea or (inPlotVal and inPlotVal.Value) then
+        DestroyToy(shuriken)
+        return false
+    end
+    tbl7.BrokenPlots[arg.Name] = shuriken
+    shuriken.Destroying:Once(function() tbl7.BrokenPlots[arg.Name] = nil end)
+    return shuriken
+end
+
+local function GetInventory(arg)
+    local a = workspace:FindFirstChild(arg.Name .. "SpawnedInToys")
+    local b = nil
+    for _, plot in ipairs(workspace.Plots:GetChildren()) do
+        for _, owner in ipairs(plot.PlotSign.ThisPlotsOwners:GetChildren()) do
+            if owner:IsA("StringValue") and owner.Value == arg.Name then
+                b = workspace.PlotItems:FindFirstChild(plot.Name)
+            end
+        end
+    end
+    return a, b
+end
+
+local function Ragdoll(arg)
+    if not arg or not arg.Parent or tbl7.States.Ragdolling then return end
+    local head = arg:FindFirstChild("Head")
+    local torso = head and arg:FindFirstChild("Torso")
+    local h = torso and arg:FindFirstChild("Humanoid")
+    h = h and h:FindFirstChild("Ragdolled")
+    if not (h and h.Value == false) then return end
+    tbl7.States.Ragdolling = true
+    local toy = v17:FindFirstChild("RagdollRSC") or SpawnToy("PalletLightBrown")
+    local soundPart = toy and toy:WaitForChild("SoundPart", 0.5)
+    local main = soundPart and toy:WaitForChild("Main", 0.5)
+    if not main or not SNO(soundPart) then
+        tbl7.States.Ragdolling = false
+        return DestroyToy(toy)
+    end
+    toy.Name = "RagdollRSC"
+    for _, child in ipairs(toy:GetChildren()) do
+        if child:IsA("BasePart") then child.CanCollide = false end
+    end
+    if not main:FindFirstChild("RagdollBP") then
+        local bp = Instance.new("BodyPosition")
+        bp.Name = "RagdollBP"
+        bp.D = 1500
+        bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bp.Position = Vector3.new(0, 100000, 0)
+        bp.Parent = main
+    end
+    local start = tick()
+    while true do
+        soundPart.Position = torso.Position
+        soundPart.Velocity = Vector3.new(0, -10, 0)
+        task.wait(0.1)
+        if h.Value or not main.Parent or not arg.Parent
+            or not head:FindFirstChild("PartOwner")
+            or tick() - start > 0.5 then break end
+    end
+    tbl7.States.Ragdolling = false
+    return h.Value
+end
+
+local function RemoveSticky(arg, onlySticked)
+    if not arg or not arg.Parent then return end
+    for _, p in ipairs(arg:QueryDescendants("BasePart")) do
+        if p.Parent then
+            for _, connected in ipairs(p:GetConnectedParts()) do
+                if connected.Name == "StickyPart" then
+                    for _, child in ipairs(connected:GetChildren()) do
+                        if child:IsA("TouchInterest") then child:Destroy() end
+                    end
+                    local parent = connected.Parent and FindNicePart(connected.Parent)
+                    if parent and not parent:IsDescendantOf(workspace.PlotItems) then
+                        Grab(parent)
+                    end
+                end
+            end
+        end
+    end
+    if onlySticked then return end
+    local owner = Players:GetPlayerFromCharacter(arg)
+    if not owner then return end
+    local inv = GetInventory(owner)
+    if not inv then return end
+    local root = arg:FindFirstChild("HumanoidRootPart") or arg:FindFirstChild("Torso")
+    if not root then return end
+    for _, model in ipairs(inv:GetChildren()) do
+        if model:IsA("Model") then
+            if (model:GetPivot().Position - root.Position).Magnitude < 10 then
+                local p = FindNicePart(model)
+                if p then
+                    ToggleCollisions(model, false)
+                    Grab(p)
+                    if not model:FindFirstChild("StickyPart") then
+                        if not p:FindFirstChild("RscBV") then
+                            local bv = Instance.new("BodyVelocity")
+                            bv.Velocity = Vector3.new(0, -50000, 0)
+                            bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                            bv.Name = "RscBV"
+                            bv.Parent = p
+                        end
+                        PivotTo(model, CFrame.new(0, -50000, 0))
+                        task.delay(1, RNO, p)
+                    end
+                end
+            end
+        end
+    end
+end
+
+local tbl12 = {
+    Char = Char, IsPartOwner = IsPartOwner, IsNetworkOwner = IsNetworkOwner,
+    GetMagnitude = GetMagnitude, ResetVelocity = ResetVelocity,
+    GetRuntimeGate = GetRuntimeGate, WaitForRuntimeToggle = WaitForRuntimeToggle,
+    GetCustomVelocity = GetCustomVelocity, PredictCFrame = PredictCFrame,
+    Grab = Grab, RNO = RNO, ToggleMotor6D = ToggleMotor6D,
+    LightPhysicalProperties = LightPhysicalProperties,
+    ToggleCollisions = ToggleCollisions, RepositionLimbs = RepositionLimbs,
+    FindNicePart = FindNicePart, Teleport = Teleport, PivotTo = PivotTo,
+    DestroyToy = DestroyToy, SpawnToy = SpawnToy, WhichPlot = WhichPlot,
+    SNO = SNO, BreakPlot = BreakPlot, GetInventory = GetInventory,
+    Ragdoll = Ragdoll, RemoveSticky = RemoveSticky,
+}
+
+--============================================================
+-- LoopApplyMethodT 메인 루프
+--============================================================
+local loopTargets = {}
+
+local function EKIApply(root, mode)
+    if not root or not tbl8.EKI then return end
+    if sethiddenproperty then
+        pcall(function() sethiddenproperty(root, "PhysicsRepRootPart", mode) end)
+    end
+end
+
+local function CleanupTarget(arg)
+    if not arg then return end
+    local c, hrp, h = Char(arg)
+    if hrp then
+        local kickAP = hrp:FindFirstChild("KickAP")
+        local kickAO = hrp:FindFirstChild("KickAO")
+        local weldHRP = hrp:FindFirstChild("WeldHRP")
+        if kickAP then kickAP:Destroy() end
+        if kickAO then kickAO:Destroy() end
+        if weldHRP and h and h:FindFirstChild("Ragdolled") and h.Ragdolled.Value then
+            weldHRP.Enabled = true
+        end
+        if IsNetworkOwner(hrp) then EKIApply(hrp, nil) end
+    end
+    if c then
+        task.spawn(ToggleMotor6D, c, true, true)
+        task.spawn(ToggleCollisions, c, true)
+    end
+end
+
+local function ComputeKickPos(hrp, idx, total)
+    local angle = 6.2831853071795862 / total * (idx - 1)
+    return hrp.Position + Vector3.new(math.cos(angle) * 10, tbl9.NKOffset, math.sin(angle) * 10)
+end
+
+local function SetupKickAttachments(hrp)
+    local kickAP = hrp:FindFirstChild("KickAP")
+    local kickAO = hrp:FindFirstChild("KickAO")
+    if kickAP and kickAO then return kickAP, kickAO end
+    if kickAP then kickAP:Destroy() end
+    if kickAO then kickAO:Destroy() end
+    kickAP = Instance.new("BodyPosition")
+    kickAP.Name = "KickAP"
+    kickAP.D = 200
+    kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    kickAP.Parent = hrp
+    local bg = Instance.new("BodyGyro")
+    bg.Name = "KickAO"
+    bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    bg.D = 200
+    bg.CFrame = CFrame.new()
+    bg.Parent = hrp
+    return kickAP, bg
+end
+
+task.spawn(function()
+    while task.wait() do
+        if flag11 then
+            for k in pairs(loopTargets) do CleanupTarget(k) end
+            return
+        end
+        if not tbl8.LoopApplyMethodT then
+            for k in pairs(loopTargets) do
+                CleanupTarget(k)
+                loopTargets[k] = nil
+            end
+            if not WaitForRuntimeToggle("LoopApplyMethodT") then return end
+        end
+        for k in pairs(loopTargets) do
+            if not k or not k.Parent or inPlot.Value
+                or not tbl8.LoopApplyMethodT or not tbl7.SelectedPlayers[k] then
+                CleanupTarget(k)
+                loopTargets[k] = nil
+            end
+        end
+        if tbl8.LoopApplyMethodT and not inPlot.Value then
+            local c, hrp, h = Char()
+            if hrp and h and h.Health > 0 then
+                local targets = {}
+                for k in pairs(tbl7.SelectedPlayers) do
+                    if k and k.Parent and k:IsA("Player") then
+                        table.insert(targets, k)
+                        loopTargets[k] = true
+                    end
+                end
+                if #targets > 0 then
+                    for i, player in ipairs(targets) do
+                        if not hrp or not h or h.Health <= 0 or inPlot.Value then break end
+                        local tc, trp, th = Char(player)
+                        local torso = tc and tc:FindFirstChild("Torso")
+                        if not (trp and th and torso and th.Health > 0) then
+                            CleanupTarget(player)
+                        else
+                            local targetPos = ComputeKickPos(hrp, i, #targets)
+                            local kickAP = SetupKickAttachments(trp)
+                            local weldHRP = trp:FindFirstChild("WeldHRP")
+                            if weldHRP then weldHRP.Enabled = false end
+                            kickAP.Position = targetPos
+                            if GetMagnitude(hrp, trp) <= 33 then
+                                Grab(trp)
+                                if tbl9.NKDelayMode == "Faster but worse" or not tbl9.NKDelayMode then
+                                    task.delay(0.2, RNO, trp)
+                                elseif tbl9.NKDelayMode == "Normal" then
+                                    task.spawn(function() task.wait(); RNO(trp) end)
+                                end
+                                if tbl8.RagdollInNK then task.spawn(Ragdoll, tc) end
+                                if tbl8.DeleteShurInNK then task.spawn(RemoveSticky, tc) end
+                                ToggleCollisions(tc, false)
+                                RepositionLimbs(tc, true)
+                                task.delay(0.6, function()
+                                    if tbl8.LoopApplyMethodT and tbl7.SelectedPlayers[player]
+                                        and IsNetworkOwner(trp) then
+                                        EKIApply(trp, trp)
+                                    end
+                                end)
+                            elseif SNO(trp) then
+                                Teleport(trp, targetPos)
+                                Grab(trp)
+                                if tbl9.NKDelayMode == "Faster but worse" or not tbl9.NKDelayMode then
+                                    task.delay(0.2, RNO, trp)
+                                elseif tbl9.NKDelayMode == "Normal" then
+                                    task.spawn(function() task.wait(); RNO(trp) end)
+                                end
+                                if tbl8.RagdollInNK then task.spawn(Ragdoll, tc) end
+                                if tbl8.DeleteShurInNK then task.spawn(RemoveSticky, tc) end
+                                ToggleCollisions(tc, false)
+                                RepositionLimbs(tc, true)
+                                task.delay(0.6, function()
+                                    if tbl8.LoopApplyMethodT and tbl7.SelectedPlayers[player]
+                                        and IsNetworkOwner(trp) then
+                                        EKIApply(trp, trp)
+                                    end
+                                end)
+                            else
+                                EKIApply(trp, nil)
+                            end
+                        end
+                    end
+                    if tbl9.NKDelayMode == "Normal" then task.wait() end
+                end
+            end
+        end
+    end
+end)
+
+--============================================================
+-- UI 초기화
+--============================================================
+local lib = MinimalHub.new()
+local window = lib:CreateWindow({ Title = "Xeron Kick Hub", Size = UDim2.fromOffset(580, 460) })
+local mainTab = window:AddTab("Kick")
+local settingsTab = window:AddTab("Settings")
+
+local Apply = mainTab:AddLeftGroupbox("Apply")
+Apply:AddToggle("LoopApplyMethodTSel", {
+    Text = "Loop Apply Method Selected",
+    Default = false,
+    Callback = function(v)
+        tbl8.LoopApplyMethodT = v
+        local g = tbl7.RuntimeGates["LoopApplyMethodT"]
+        if g then g:Fire() end
+    end,
+})
+
+local kickOpts = mainTab:AddRightGroupbox("Kick Settings")
+kickOpts:AddDropdown("NKDelayConf", {
+    Values = { "Normal", "Faster but worse" },
+    Default = "Normal",
+    Multi = false,
+    Text = "Delay Mode",
+    Callback = function(v) tbl9.NKDelayMode = v end,
+})
+kickOpts:AddToggle("RagdollNK", {
+    Text = "Loop Ragdoll", Default = true,
+    Callback = function(v) tbl8.RagdollInNK = v end,
+})
+kickOpts:AddToggle("AntiKickRemoverNK", {
+    Text = "Remove Anti-Kick", Default = true,
+    Callback = function(v) tbl8.DeleteShurInNK = v end,
+})
+kickOpts:AddToggle("EKIToggle", {
+    Text = "Experimental Kick Improvements",
+    Default = false,
+    Disabled = typeof(sethiddenproperty) ~= "function",
+    Callback = function(v) tbl8.EKI = v end,
+})
+kickOpts:AddSlider("HeightNK", {
+    Text = "Kick Height", Default = 15, Min = 0, Max = 28,
+    Rounding = 0, Compact = true,
+    Callback = function(v) tbl9.NKOffset = v end,
+})
+
+--===== 플레이어 선택 UI =====
+local selectGroup = mainTab:AddLeftGroupbox("Select Target")
+local playerListHolder = new("ScrollingFrame", {
+    BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 180),
+    CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y,
+    ScrollBarThickness = 2, ScrollBarImageColor3 = PALETTE.Outline, Parent = selectGroup.Content,
+})
+new("UIListLayout", { Padding = UDim.new(0, 2), Parent = playerListHolder })
+
+local playerButtons = {}
+
+local function refreshPlayerList()
+    for _, btn in pairs(playerButtons) do btn:Destroy() end
+    playerButtons = {}
+    for _, player in ipairs(tbl7.PlayerList) do
+        if player ~= localPlayer then
+            local btn = new("TextButton", {
+                BackgroundColor3 = tbl7.SelectedPlayers[player] and PALETTE.Accent or PALETTE.Main,
+                Size = UDim2.new(1, 0, 0, 22), Text = player.Name,
+                TextColor3 = PALETTE.Font, TextSize = 13, FontFace = FONT, Parent = playerListHolder,
+            })
+            round(btn, 3); outline(btn)
+            btn.MouseButton1Click:Connect(function()
+                if tbl7.SelectedPlayers[player] then
+                    tbl7.SelectedPlayers[player] = nil
+                    btn.BackgroundColor3 = PALETTE.Main
+                else
+                    tbl7.SelectedPlayers[player] = true
+                    btn.BackgroundColor3 = PALETTE.Accent
+                end
+            end)
+            playerButtons[player] = btn
+        end
+    end
+end
+
+refreshPlayerList()
+Players.PlayerAdded:Connect(function() task.wait(0.2); refreshPlayerList() end)
+Players.PlayerRemoving:Connect(function(p)
+    tbl7.SelectedPlayers[p] = nil
+    refreshPlayerList()
+end)
+
+selectGroup:AddButton({
+    Text = "Select All",
+    Func = function()
+        for _, player in ipairs(tbl7.PlayerList) do
+            if player ~= localPlayer then tbl7.SelectedPlayers[player] = true end
+        end
+        refreshPlayerList()
+    end,
+})
+selectGroup:AddButton({
+    Text = "Clear All",
+    Func = function()
+        tbl7.SelectedPlayers = {}
+        refreshPlayerList()
+    end,
+})
+
+--===== Settings =====
+local netGroup = settingsTab:AddRightGroupbox("Network")
+netGroup:AddToggle("PositionPrediction", {
+    Text = "Position Prediction", Default = false,
+    Callback = function(v) tbl8.PositionPrediction = v end,
+})
+netGroup:AddToggle("DirectGrab", {
+    Text = "Direct Grab CFrame", Default = false,
+    Callback = function(v) tbl8.DirectGrab = v end,
+})
+
+lib:Notify({
+    Title = "Xeron Kick Hub",
+    Description = "Loaded. Right Shift to toggle.",
+    Time = 5,
+})
