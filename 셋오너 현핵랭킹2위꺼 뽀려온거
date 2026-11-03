@@ -1,0 +1,563 @@
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local workspace = game:GetService("Workspace")
+
+local GrabEvents = ReplicatedStorage:WaitForChild("GrabEvents", 3)
+local SetNetworkOwner = GrabEvents and GrabEvents:FindFirstChild("SetNetworkOwner")
+local CreateGrabLine = GrabEvents and GrabEvents:FindFirstChild("CreateGrabLine")
+local DestroyGrabLine = GrabEvents and GrabEvents:FindFirstChild("DestroyGrabLine")
+
+local Config = {
+    Active = false,
+    EnableLagSpam = false,
+    LagSpamRunning = false,
+    RagdollSpawning = false,
+    PlayerList = {},
+    MainTask = nil,
+    RenderTask = nil,
+
+    -- [추가된 옵션]
+    EKI = false,
+    DeleteShurInNK = true,
+    RagdollInNK = true,
+    NKOffset = 20,
+    StickyCleanupInterval = 0.3,
+}
+
+local ragdollPallet = nil
+
+local function getPlayer(name)
+    if not name or name == "" then return nil end
+    name = string.lower(name)
+    for _, p in ipairs(Players:GetPlayers()) do
+        if string.lower(p.Name) == name or string.lower(p.DisplayName) == name then
+            return p
+        end
+    end
+    return nil
+end
+
+local function getPlayerNames()
+    local names = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= localPlayer then table.insert(names, p.Name) end
+    end
+    return names
+end
+
+-- [기존 sno — 내부에 EKI 자동 적용 추가]
+-- 호출부는 그대로. Config.EKI가 켜져 있으면 매 호출마다 PhysicsRepRootPart를 part로 설정.
+-- 끌 때는 cleanupTargetHolds에서 nil로 되돌림.
+local function sno(part)
+    pcall(function()
+        if SetNetworkOwner then
+            SetNetworkOwner:FireServer(part, part.CFrame)
+        end
+    end)
+    if Config.EKI and sethiddenproperty then
+        pcall(function()
+            sethiddenproperty(part, "PhysicsRepRootPart", part)
+        end)
+    end
+end
+
+-- [신규 헬퍼 — 원본 LoopApplyMethodT 소스에서 가져옴]
+local function IsNetworkOwner(part)
+    if not (part and part:IsA("BasePart")) then return false end
+    local root = part.AssemblyRootPart or part
+    return not root.Anchored and root.ReceiveAge == 0
+end
+
+local function ClearEKI(part)
+    if not part or not sethiddenproperty then return end
+    pcall(function()
+        sethiddenproperty(part, "PhysicsRepRootPart", nil)
+    end)
+end
+
+local function RemoveSticky(character, onlySticked)
+    if not character or not character.Parent then return end
+    for _, p in pairs(character:GetDescendants()) do
+        if p:IsA("BasePart") then
+            for _, connected in pairs(p:GetConnectedParts()) do
+                if connected.Name == "StickyPart" then
+                    for _, child in pairs(connected:GetChildren()) do
+                        if child:IsA("TouchInterest") then
+                            child:Destroy()
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- [라인 렉 로직 — 원본 그대로]
+local function startLagSpam()
+    if Config.LagSpamRunning then return end
+    Config.LagSpamRunning = true
+    task.spawn(function()
+        local spawnLocation = workspace:FindFirstChild("SpawnLocation") or workspace:FindFirstChild("Spawn")
+        while Config.LagSpamRunning do
+            if spawnLocation and CreateGrabLine then
+                pcall(function()
+                    CreateGrabLine:FireServer(spawnLocation, CFrame.new(math.random(-112010000000, 112000000001), 0, math.random(-2008100000, 2000200000)))
+                end)
+            end
+            task.wait(0.05)
+        end
+    end)
+end
+
+local function stopLagSpam()
+    Config.LagSpamRunning = false
+end
+
+-- [버전2 기반 래그돌 생성 로직 — 원본 그대로]
+local function spawnRagdollV2Full()
+    if Config.RagdollSpawning then return nil end
+    Config.RagdollSpawning = true
+
+    local myChar = localPlayer.Character
+    local myHRP = myChar and myChar:WaitForChild("HumanoidRootPart", 3)
+    if not myHRP then Config.RagdollSpawning = false return nil end
+
+    local waitCount = 0
+    local inPlot = localPlayer:FindFirstChild("InPlot")
+    local inOwnedPlot = localPlayer:FindFirstChild("InOwnedPlot")
+    if inPlot and inOwnedPlot then
+        while (inPlot.Value and not inOwnedPlot.Value) and waitCount < 50 do
+            task.wait(0.1)
+            waitCount = waitCount + 1
+        end
+    end
+
+    local canSpawnToy = localPlayer:FindFirstChild("CanSpawnToy")
+    if canSpawnToy then
+        waitCount = 0
+        while not canSpawnToy.Value and waitCount < 50 do
+            task.wait(0.1)
+            waitCount = waitCount + 1
+        end
+    end
+
+    local spawnCF = myHRP.CFrame * CFrame.new(0, 14, 20)
+    local targetFolder = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys") or workspace:FindFirstChild("PlotItems") and workspace.PlotItems:FindFirstChild("Plot1") or workspace
+
+    local spawnedToy = nil
+    local rsToys = ReplicatedStorage:FindFirstChild("MenuToys")
+    local spawnRemote = rsToys and rsToys:FindFirstChild("SpawnToyRemoteFunction")
+
+    local connection = targetFolder.ChildAdded:Connect(function(child)
+        if child.Name == "PalletLightBrown" then spawnedToy = child end
+    end)
+
+    task.spawn(function()
+        pcall(function()
+            if spawnRemote then
+                spawnRemote:InvokeServer("PalletLightBrown", spawnCF, spawnCF.Position)
+            else
+                if typeof(spawntoy) == "function" then spawntoy("PalletLightBrown", spawnCF, Vector3.zero) end
+            end
+        end)
+    end)
+
+    local inv = localPlayer:FindFirstChild("Backpack")
+    local startTime = tick()
+    repeat
+        task.wait(0.05)
+        if inv and not spawnedToy then
+            spawnedToy = inv:FindFirstChild("PalletLightBrown") or targetFolder:FindFirstChild("PalletLightBrown")
+        end
+    until spawnedToy or (tick() - startTime) > 5
+
+    connection:Disconnect()
+
+    if not spawnedToy then Config.RagdollSpawning = false return nil end
+    local soundPart = spawnedToy:FindFirstChild("SoundPart") or spawnedToy:WaitForChild("SoundPart", 5)
+
+    if not soundPart then
+        spawnedToy:Destroy()
+        Config.RagdollSpawning = false
+        return nil
+    end
+
+    local retryCount = 0
+    while retryCount < 10 do
+        if not Config.Active then break end
+        sno(soundPart)
+        task.wait()
+        if soundPart:FindFirstChild("PartOwner") then break end
+        retryCount = retryCount + 1
+    end
+
+    if not soundPart:FindFirstChild("PartOwner") then
+        spawnedToy:Destroy()
+        Config.RagdollSpawning = false
+        return nil
+    end
+
+    for _, part in pairs(spawnedToy:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+            part.Transparency = 0.8
+        end
+    end
+
+    spawnedToy.Name = "RagdollPalete"
+    local bv = Instance.new("BodyVelocity")
+    bv.MaxForce = Vector3.new(0, math.huge, 0)
+    bv.Velocity = Vector3.new(0, 900, 0)
+    bv.Parent = soundPart
+
+    Config.RagdollSpawning = false
+    return spawnedToy
+end
+
+local function cleanupRagdollFull()
+    local inv = localPlayer:FindFirstChild("Backpack")
+    if inv then
+        local deskToRemove = inv:FindFirstChild("RB") or inv:FindFirstChild("RagdollPalete") or inv:FindFirstChild("PalletLightBrown")
+        if deskToRemove then
+            pcall(function()
+                local rsToys = ReplicatedStorage:FindFirstChild("MenuToys")
+                if rsToys and rsToys:FindFirstChild("DestroyToy") then
+                    rsToys.DestroyToy:FireServer(deskToRemove)
+                else
+                    deskToRemove:Destroy()
+                end
+            end)
+        end
+    end
+    if ragdollPallet then
+        pcall(function() ragdollPallet:Destroy() end)
+        ragdollPallet = nil
+    end
+end
+
+-- [기존 cleanupTargetHolds + EKI 리셋 추가]
+local function cleanupTargetHolds(targetPlayer)
+    if not targetPlayer or not targetPlayer.Character then return end
+    local tHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if tHRP then
+        for _, objName in ipairs({"KickAlign", "KickRot", "KickAtt0", "ControlBP"}) do
+            local obj = tHRP:FindFirstChild(objName)
+            if obj then obj:Destroy() end
+        end
+        if Config.EKI then ClearEKI(tHRP) end
+        pcall(function() if DestroyGrabLine then DestroyGrabLine:FireServer(tHRP) end end)
+    end
+end
+
+local TargetDropdown = LoopTab:AddDropdown({
+    Name = "Select Target",
+    Options = getPlayerNames(),
+    Default = "",
+    MultipleOptions = true,
+    Callback = function(Options)
+        table.clear(Config.PlayerList)
+        if type(Options) == "table" then
+            for _, v in ipairs(Options) do table.insert(Config.PlayerList, v) end
+        elseif type(Options) == "string" and Options ~= "" then
+            table.insert(Config.PlayerList, Options)
+        end
+    end
+})
+
+Players.PlayerAdded:Connect(function()
+    if TargetDropdown and TargetDropdown.Refresh then TargetDropdown:Refresh(getPlayerNames(), true) end
+end)
+Players.PlayerRemoving:Connect(function()
+    if TargetDropdown and TargetDropdown.Refresh then TargetDropdown:Refresh(getPlayerNames(), true) end
+end)
+
+
+LoopTab:AddToggle({
+    Name = "Set Owner Kick NEW <font color='rgb(255,154,123)'>TOP1</font>",
+    Default = false,
+    Callback = function(Value)
+        Config.Active = Value
+
+        if Value then
+            if not Config.PlayerList or #Config.PlayerList == 0 then
+                Config.Active = false
+                return
+            end
+
+            if Config.EnableLagSpam then startLagSpam() end
+
+            if Config.RenderTask then Config.RenderTask:Disconnect() Config.RenderTask = nil end
+            Config.RenderTask = RunService.RenderStepped:Connect(function()
+                if not Config.Active or #Config.PlayerList == 0 then return end
+
+                local targetPlayer = getPlayer(Config.PlayerList[1])
+                if not targetPlayer or not targetPlayer.Character then return end
+
+                local tHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local tHum = targetPlayer.Character:FindFirstChild("Humanoid")
+                if not tHRP or not tHum or tHum.Health <= 0 then return end
+
+                -- [수정] RagdollInNK 꺼져있으면 팔레트 스폰/추적 둘 다 skip
+                if Config.RagdollInNK then
+                    if ragdollPallet and (ragdollPallet:IsDescendantOf(workspace) or ragdollPallet:IsDescendantOf(localPlayer)) then
+                        local sPart = ragdollPallet:FindFirstChild("SoundPart")
+                        if not sPart or not sPart:FindFirstChild("PartOwner") then
+                            ragdollPallet:Destroy()
+                            ragdollPallet = nil
+                        end
+                    else
+                        ragdollPallet = nil
+                    end
+
+                    if not Config.RagdollSpawning and not ragdollPallet then
+                        ragdollPallet = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys") and workspace[localPlayer.Name.."SpawnedInToys"]:FindFirstChild("RagdollPalete") or spawnRagdollV2Full()
+                    end
+
+                    if ragdollPallet and ragdollPallet:FindFirstChild("SoundPart") then
+                        local ragdolled = tHum:FindFirstChild("Ragdolled")
+                        if ragdolled and not ragdolled.Value then
+                            ragdollPallet.SoundPart.Position = tHRP.Position
+                        end
+                    end
+                end
+            end)
+
+            if Config.MainTask then task.cancel(Config.MainTask) end
+            Config.MainTask = task.spawn(function()
+                local lastRemoteFire = tick()
+                local lastStickyCleanup = 0
+
+                while Config.Active and RunService.Heartbeat:Wait() do
+                    local myChar = localPlayer.Character
+                    local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                    local myHead = myChar and myChar:FindFirstChild("Head")
+                    local inv = localPlayer:FindFirstChild("Backpack")
+
+                    if not (myChar and myHRP and myHead and inv) then continue end
+
+                    local targetPlayer = getPlayer(Config.PlayerList[1])
+                    if not targetPlayer or not targetPlayer.Character then continue end
+
+                    local tHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    local tHum = targetPlayer.Character:FindFirstChild("Humanoid")
+                    if not tHRP or not tHum or tHum.Health <= 0 then continue end
+
+                    local dist = (tHRP.Position - myHRP.Position).Magnitude
+
+                    if dist > 30 then
+                        local currentSavedPos = myHRP.CFrame
+
+                        pcall(function() myChar:PivotTo(tHRP.CFrame * CFrame.new(0, 2, 4)) end)
+
+                        sno(tHRP)
+
+                        if not tHRP:FindFirstChild("KickAlign") then
+                            pcall(function()
+                                local oldBp = tHRP:FindFirstChildOfClass("BodyPosition")
+                                if oldBp then oldBp:Destroy() end
+
+                                local att0 = Instance.new("Attachment", tHRP)
+                                att0.Name = "KickAtt0"
+                                local att1 = Instance.new("Attachment", workspace.Terrain)
+                                att1.Name = "KickAtt1"
+
+                                local alignPos = Instance.new("AlignPosition")
+                                alignPos.Name = "KickAlign"
+                                alignPos.Attachment0 = att0
+                                alignPos.Attachment1 = att1
+                                alignPos.MaxForce = math.huge
+                                alignPos.Responsiveness = 200
+                                alignPos.Parent = tHRP
+
+                                local alignRot = Instance.new("AlignOrientation")
+                                alignRot.Name = "KickRot"
+                                alignRot.Attachment0 = att0
+                                alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment
+                                alignRot.CFrame = CFrame.new()
+                                alignRot.MaxTorque = math.huge
+                                alignRot.Responsiveness = 200
+                                alignRot.Parent = tHRP
+                            end)
+                        end
+
+                        for i = 1, 23.1 do
+                            if not Config.Active then break end
+                            sno(tHRP)
+
+                            -- [추가] 안티킥 리무브 (throttle)
+                            if Config.DeleteShurInNK and tick() - lastStickyCleanup > Config.StickyCleanupInterval then
+                                RemoveSticky(targetPlayer.Character)
+                                lastStickyCleanup = tick()
+                            end
+
+                            pcall(function()
+                                if DestroyGrabLine then DestroyGrabLine:FireServer(tHRP) end
+                            end)
+
+                            local align = tHRP:FindFirstChild("KickAlign")
+                            if myHead and align and align.Attachment1 then
+                                -- [수정] Config.NKOffset 사용
+                                align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
+                            end
+                            task.wait()
+                        end
+
+                        if Config.Active then
+                            pcall(function()
+                                myChar:PivotTo(currentSavedPos)
+                                -- [수정] Config.NKOffset 사용
+                                tHRP.CFrame = currentSavedPos * CFrame.new(0, Config.NKOffset, 0)
+                            end)
+                        end
+                        continue
+                    end
+
+                    if not tHRP:FindFirstChild("KickAlign") then
+                        pcall(function()
+                            local oldBp = tHRP:FindFirstChildOfClass("BodyPosition")
+                            if oldBp then oldBp:Destroy() end
+
+                            local att0 = Instance.new("Attachment", tHRP)
+                            att0.Name = "KickAtt0"
+                            local att1 = Instance.new("Attachment", workspace.Terrain)
+                            att1.Name = "KickAtt1"
+
+                            local alignPos = Instance.new("AlignPosition")
+                            alignPos.Name = "KickAlign"
+                            alignPos.Attachment0 = att0
+                            alignPos.Attachment1 = att1
+                            alignPos.MaxForce = math.huge
+                            alignPos.Responsiveness = 200
+                            alignPos.Parent = tHRP
+
+                            local alignRot = Instance.new("AlignOrientation")
+                            alignRot.Name = "KickRot"
+                            alignRot.Attachment0 = att0
+                            alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment
+                            alignRot.CFrame = CFrame.new()
+                            alignRot.MaxTorque = math.huge
+                            alignRot.Responsiveness = 200
+                            alignRot.Parent = tHRP
+                        end)
+                    end
+
+                    sno(tHRP)
+
+                    -- [추가] 안티킥 리무브 (throttle)
+                    if Config.DeleteShurInNK and tick() - lastStickyCleanup > Config.StickyCleanupInterval then
+                        RemoveSticky(targetPlayer.Character)
+                        lastStickyCleanup = tick()
+                    end
+
+                    tHRP.AssemblyLinearVelocity = Vector3.zero
+                    tHRP.AssemblyAngularVelocity = Vector3.zero
+
+                    local align = tHRP:FindFirstChild("KickAlign")
+                    if align and align.Attachment1 and Config.Active then
+                        -- [수정] Config.NKOffset 사용
+                        align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
+                    end
+
+                    local rot = tHRP:FindFirstChild("KickRot")
+                    if rot then rot.CFrame = CFrame.Angles(0, 0, 0) end
+
+                    local bp = tHRP:FindFirstChild("ControlBP")
+                    if not bp then
+                        bp = Instance.new("BodyPosition")
+                        bp.Name = "ControlBP"
+                        bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                        bp.P = 800000
+                        bp.Parent = tHRP
+                    end
+                    -- [수정] Config.NKOffset 사용
+                    bp.Position = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
+
+                    if tick() - lastRemoteFire > 0.05 and Config.Active then
+                        pcall(function()
+                            if DestroyGrabLine then DestroyGrabLine:FireServer(tHRP) end
+                        end)
+                        lastRemoteFire = tick()
+                    end
+                end
+            end)
+        else
+            stopLagSpam()
+            if Config.RenderTask then Config.RenderTask:Disconnect() Config.RenderTask = nil end
+            if Config.MainTask then task.cancel(Config.MainTask) Config.MainTask = nil end
+
+            cleanupRagdollFull()
+            if Config.PlayerList then
+                for _, targetName in ipairs(Config.PlayerList) do
+                    cleanupTargetHolds(getPlayer(targetName))
+                end
+            end
+        end
+    end
+})
+
+
+LoopTab:AddToggle({
+    Name = " Lag Spam <font color='rgb(150,150,255)'>Line Option</font>",
+    Default = false,
+    Callback = function(Value)
+        Config.EnableLagSpam = Value
+        if Value and Config.Active then
+            startLagSpam()
+        else
+            stopLagSpam()
+        end
+    end
+})
+
+
+-- ============================================================
+-- [신규 옵션 — 기존 토글 아래에 추가]
+-- ============================================================
+
+LoopTab:AddToggle({
+    Name = "Anti-Kick Remove <font color='rgb(255,200,60)'>Cleaner</font>",
+    Default = true,
+    Callback = function(Value)
+        Config.DeleteShurInNK = Value
+    end
+})
+
+LoopTab:AddToggle({
+    Name = "EKI (Experimental Kick) <font color='rgb(255,120,200)'>BETA</font>",
+    Default = false,
+    Callback = function(Value)
+        Config.EKI = Value
+        if not Value and Config.PlayerList then
+            for _, targetName in ipairs(Config.PlayerList) do
+                local p = getPlayer(targetName)
+                if p and p.Character then
+                    local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then ClearEKI(hrp) end
+                end
+            end
+        end
+    end
+})
+
+LoopTab:AddToggle({
+    Name = "Loop Ragdoll <font color='rgb(120,200,255)'>Visual</font>",
+    Default = true,
+    Callback = function(Value)
+        Config.RagdollInNK = Value
+        if not Value then
+            cleanupRagdollFull()
+        end
+    end
+})
+
+LoopTab:AddDropdown({
+    Name = "Kick Height",
+    Options = {"15", "18", "20", "22", "25", "28", "30"},
+    Default = "20",
+    MultipleOptions = false,
+    Callback = function(Value)
+        Config.NKOffset = tonumber(Value) or 20
+    end
+})
