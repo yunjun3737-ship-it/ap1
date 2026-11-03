@@ -9305,448 +9305,11 @@ LoopTab:AddButton({
 })
 
 LoopTab:AddSection({
-    Name = "Oats Kick"
+    Name = "Vexo Kick"
 })
                    
             
-
 local Players = game:GetService("Players")
-local Player = Players.LocalPlayer
-local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local workspace = game:GetService("Workspace")
-
-local function getPlayer(name)
-    if not name or name == "" then return nil end
-    name = string.lower(name)
-    for _, p in ipairs(Players:GetPlayers()) do
-        if string.lower(string.sub(p.Name, 1, #name)) == name or string.lower(string.sub(p.DisplayName, 1, #name)) == name then
-            return p
-        end
-    end
-    return nil
-end
-
-local oatsKickActive = false
-local oatsKickTask = nil
-local oatsKickRagdollOpt = false
-local oatsKickLagOpt = false
-local lagTask = nil
-
-local function manageLag()
-    if oatsKickActive and oatsKickLagOpt then
-        if not lagTask then
-            lagTask = task.spawn(function()
-                local Event = ReplicatedStorage:FindFirstChild("GrabEvents") and ReplicatedStorage.GrabEvents:FindFirstChild("CreateGrabLine")
-                local SpawnLocation = workspace:FindFirstChild("SpawnLocation")
-                while oatsKickActive and oatsKickLagOpt do
-                    task.wait(0.05)
-                    if Event and SpawnLocation then
-                        pcall(function()
-                            Event:FireServer(SpawnLocation, CFrame.new(2000000000, 0, 2000000000, 1, 0, 0, 0, 1, 0, 0, 0, 1))
-                        end)
-                    end
-                end
-            end)
-        end
-    else
-        if lagTask then task.cancel(lagTask) lagTask = nil end
-    end
-end
-
-local function cleanupRagdoll()
-    local inv = Player:FindFirstChild("Backpack")
-    if inv then
-        local deskToRemove = inv:FindFirstChild("RB")
-        if deskToRemove then
-            local rsToys = ReplicatedStorage:FindFirstChild("MenuToys")
-            if rsToys and rsToys:FindFirstChild("DestroyToy") then
-                rsToys.DestroyToy:FireServer(deskToRemove)
-            end
-        end
-    end
-end
-
-local function loopBestKickF()
-    if oatsKickTask then task.cancel(oatsKickTask) oatsKickTask = nil end
-    
-    oatsKickTask = task.spawn(function()
-        local myChar = Player.Character
-        local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
-        if not (myChar and myHRP) then
-            oatsKickActive = false
-            manageLag()
-            return
-        end
-
-        local lastRemoteFire = tick()
-
-        local function sno(part)
-            pcall(function()
-                local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
-                local setNetOwner = grabEvents and grabEvents:FindFirstChild("SetNetworkOwner")
-                if setNetOwner then
-                    setNetOwner:FireServer(part, part.CFrame)
-                end
-            end)
-        end
-
-        while oatsKickActive and RunService.Heartbeat:Wait() do
-            if playersInLoop1V then
-                table.clear(playersInLoop2V)
-                for i, e in ipairs(playersInLoop1V) do
-                    local nameOnly = tostring(e):match("^(.-) %(") or tostring(e)
-                    table.insert(playersInLoop2V, nameOnly)
-                end
-            end
-
-            local targetPlayer, tChar, tHRP, tHum
-            if playersInLoop2V then
-                for _, name in ipairs(playersInLoop2V) do
-                    local p = getPlayer(name)
-                    if p and p.Character then
-                        local hrp = p.Character:FindFirstChild("HumanoidRootPart")
-                        local hum = p.Character:FindFirstChild("Humanoid")
-                        if hrp and hum and hum.Health > 0 then
-                            targetPlayer = p
-                            tChar = p.Character
-                            tHRP = hrp
-                            tHum = hum
-                            break
-                        end
-                    end
-                end
-            end
-            
-            if not targetPlayer then
-                continue
-            end
-
-            myChar = Player.Character
-            myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
-            local myHead = myChar and myChar:FindFirstChild("Head")
-            local inv = Player:FindFirstChild("Backpack")
-
-            if not (myChar and myHRP and myHead and inv) then
-                continue
-            end
-
-            if oatsKickRagdollOpt then
-                local desk = inv:FindFirstChild("RB")
-                if not desk then
-                    local rsToys = ReplicatedStorage:FindFirstChild("MenuToys")
-                    local spawnRemote = rsToys and rsToys:FindFirstChild("SpawnToyRemoteFunction")
-                    if spawnRemote then
-                        local offset = myHRP.CFrame.LookVector * -24
-                        local spawnCF = myHRP.CFrame + offset
-                        task.spawn(function()
-                            pcall(function()
-                                spawnRemote:InvokeServer("PalletLightBrown", spawnCF, spawnCF.Position)
-                            end)
-                            task.wait(0.1)
-                            for attempt = 1, 3 do
-                                for _, item in pairs(inv:GetChildren()) do
-                                    if item.Name == "PalletLightBrown" then
-                                        local soundPart = item:FindFirstChild("SoundPart")
-                                        if soundPart then
-                                            for i = 1, 3 do
-                                                pcall(function()
-                                                    local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
-                                                    if grabEvents and grabEvents:FindFirstChild("SetNetworkOwner") then
-                                                        grabEvents.SetNetworkOwner:FireServer(soundPart, soundPart.CFrame)
-                                                        grabEvents.SetNetworkOwner:FireServer(soundPart, myHRP.CFrame)
-                                                    end
-                                                end)
-                                            end
-                                            local partOwner = soundPart:FindFirstChild("PartOwner")
-                                            if partOwner and partOwner.Value == Player.Name then
-                                                item.Name = "RB"
-                                                return
-                                            end
-                                        end
-                                    end
-                                end
-                                task.wait()
-                            end
-                        end)
-                    end
-                end
-
-                if desk then
-                    pcall(function()
-                        for _, part in ipairs(desk:GetDescendants()) do
-                            if part:IsA("BasePart") then
-                                part.CanCollide = false
-                            end
-                        end
-                    end)
-
-                    local soundPart = desk:FindFirstChild("SoundPart")
-                    local main = desk:FindFirstChild("Main")
-                    
-                    if soundPart and main then
-                        local partOwner = soundPart:FindFirstChild("PartOwner")
-                        if partOwner and partOwner.Value == Player.Name then
-                            local bp = main:FindFirstChildOfClass("BodyPosition")
-                            if not bp then
-                                bp = Instance.new("BodyPosition")
-                                bp.MaxForce = Vector3.new(999999, 999999, 999999)
-                                bp.P = 500000
-                                bp.D = 5000
-                                bp.Parent = main
-                            end
-
-                            soundPart.CFrame = CFrame.new(0, 9999, 0)
-                            task.wait(0.01)
-                            soundPart.CFrame = tHRP.CFrame * CFrame.Angles(math.rad(-90), 0, 0)
-                            bp.Position = soundPart.Position
-                        else
-                            cleanupRagdoll()
-                        end
-                    else
-                        cleanupRagdoll()
-                    end
-                end
-            else
-                cleanupRagdoll()
-            end
-
-            local dist = (tHRP.Position - myHRP.Position).Magnitude
-
-            if dist > 30 then
-                local currentSavedPos = myHRP.CFrame
-
-                pcall(function()
-                    myChar:PivotTo(tHRP.CFrame * CFrame.new(0, 2, 4))
-                end)
-                
-                sno(tHRP)
-
-                if not tHRP:FindFirstChild("KickAlign") then
-                    pcall(function()
-                        local oldBp = tHRP:FindFirstChildOfClass("BodyPosition")
-                        if oldBp then oldBp:Destroy() end
-
-                        local att0 = Instance.new("Attachment", tHRP)
-                        att0.Name = "KickAtt0"
-                        
-                        local att1 = Instance.new("Attachment", workspace.Terrain)
-                        att1.Name = "KickAtt1"
-
-                        local alignPos = Instance.new("AlignPosition")
-                        alignPos.Name = "KickAlign"
-                        alignPos.Attachment0 = att0
-                        alignPos.Attachment1 = att1
-                        alignPos.MaxForce = math.huge
-                        alignPos.Responsiveness = 200
-                        alignPos.Parent = tHRP
-
-                        local alignRot = Instance.new("AlignOrientation")
-                        alignRot.Name = "KickRot"
-                        alignRot.Attachment0 = att0
-                        alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment
-                        alignRot.CFrame = CFrame.new() 
-                        alignRot.MaxTorque = math.huge
-                        alignRot.Responsiveness = 200
-                        alignRot.Parent = tHRP
-                    end)
-                end
-
-                local grabStartTime = tick()
-                while (tick() - grabStartTime) < 0.3 and oatsKickActive do
-                    task.wait(0.05)
-                    sno(tHRP)
-                    pcall(function()
-                        local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
-                        local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
-                        if destroyLine then
-                            destroyLine:FireServer(tHRP)
-                        end
-                    end)
-                    
-                    local align = tHRP:FindFirstChild("KickAlign")
-                    if myHead and align and align.Attachment1 then
-                        align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, 15, 0)
-                    end
-                end
-
-                if oatsKickActive then
-                    pcall(function()
-                        myChar:PivotTo(currentSavedPos)
-                        tHRP.CFrame = currentSavedPos * CFrame.new(0, 15, 0)
-                    end)
-                end
-                
-                continue
-            end
-
-            if not tHRP:FindFirstChild("KickAlign") then
-                pcall(function()
-                    local oldBp = tHRP:FindFirstChildOfClass("BodyPosition")
-                    if oldBp then oldBp:Destroy() end
-
-                    local att0 = Instance.new("Attachment", tHRP)
-                    att0.Name = "KickAtt0"
-                        
-                    local att1 = Instance.new("Attachment", workspace.Terrain)
-                    att1.Name = "KickAtt1"
-
-                    local alignPos = Instance.new("AlignPosition")
-                    alignPos.Name = "KickAlign"
-                    alignPos.Attachment0 = att0
-                    alignPos.Attachment1 = att1
-                    alignPos.MaxForce = math.huge
-                    alignPos.Responsiveness = 200
-                    alignPos.Parent = tHRP
-
-                    local alignRot = Instance.new("AlignOrientation")
-                    alignRot.Name = "KickRot"
-                    alignRot.Attachment0 = att0
-                    alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment
-                    alignRot.CFrame = CFrame.new() 
-                    alignRot.MaxTorque = math.huge
-                    alignRot.Responsiveness = 200
-                    alignRot.Parent = tHRP
-                end)
-            end
-
-            sno(tHRP)
-
-            local align = tHRP:FindFirstChild("KickAlign")
-            if align and align.Attachment1 and oatsKickActive then
-                align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, 20, 0)
-            end
-
-            local rot = tHRP:FindFirstChild("KickRot")
-            if rot then 
-                rot.CFrame = CFrame.Angles(0, 0, 0) 
-            end
-
-            if tick() - lastRemoteFire > 0.05 and oatsKickActive then
-                pcall(function()
-                    local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
-                    local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
-                    if destroyLine then
-                        destroyLine:FireServer(tHRP)
-                    end
-                end)
-                lastRemoteFire = tick()
-            end
-        end
-
-        if playersInLoop2V then
-            for _, currentTargetName in ipairs(playersInLoop2V) do
-                local targetPlayer = getPlayer(currentTargetName)
-                if targetPlayer and targetPlayer.Character then
-                    local tH = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                    if tH then
-                        local align = tH:FindFirstChild("KickAlign")
-                        local rot = tH:FindFirstChild("KickRot")
-                        local att0 = tH:FindFirstChild("KickAtt0")
-                        
-                        if align then 
-                            if align.Attachment1 then align.Attachment1:Destroy() end
-                            align:Destroy() 
-                        end
-                        if rot then rot:Destroy() end
-                        if att0 then att0:Destroy() end
-
-                        pcall(function()
-                            local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
-                            local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
-                            if destroyLine then
-                                destroyLine:FireServer(tH)
-                            end
-                        end)
-                    end
-                end
-            end
-        end
-        
-        cleanupRagdoll()
-        oatsKickActive = false
-        manageLag()
-    end)
-end
-
-LoopTab:AddToggle({
-    Name = "Set Onwer Kick TOP1<font color='rgb(255,154,123)'>[Kick]</font>",
-    Default = false,
-    Callback = function(Value)
-        oatsKickActive = Value
-        manageLag()
-        
-        if oatsKickActive then
-            table.clear(playersInLoop2V)
-            if playersInLoop1V then
-                for i, e in ipairs(playersInLoop1V) do
-                    local nameOnly = tostring(e):match("^(.-) %(") or tostring(e)
-                    table.insert(playersInLoop2V, nameOnly)
-                end
-            end
-            
-            loopBestKickF()
-        else
-            oatsKickActive = false
-            manageLag()
-            if oatsKickTask then
-                task.cancel(oatsKickTask)
-                oatsKickTask = nil
-            end
-            
-            if playersInLoop2V then
-                for _, currentTargetName in ipairs(playersInLoop2V) do
-                    local targetPlayer = getPlayer(currentTargetName)
-                    
-                    if targetPlayer and targetPlayer.Character then
-                        local tH = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                        if tH then
-                            local align = tH:FindFirstChild("KickAlign")
-                            local rot = tH:FindFirstChild("KickRot")
-                            local att0 = tH:FindFirstChild("KickAtt0")
-                            
-                            if align then 
-                                if align.Attachment1 then align.Attachment1:Destroy() end
-                                align:Destroy() 
-                            end
-                            if rot then rot:Destroy() end
-                            if att0 then att0:Destroy() end
-
-                            pcall(function()
-                                local grabEvents = game:GetService("ReplicatedStorage"):FindFirstChild("GrabEvents")
-                                local destroyLine = grabEvents and grabEvents:FindFirstChild("DestroyGrabLine")
-                                if destroyLine then
-                                    destroyLine:FireServer(tH)
-                                end
-                            end)
-                        end
-                    end
-                end
-                table.clear(playersInLoop2V)
-            end
-            cleanupRagdoll()
-        end
-    end
-})
-
-
-
-LoopTab:AddToggle({
-    Name = " ┗ Options: Line Lag",
-    Default = false,
-    Callback = function(Value)
-        oatsKickLagOpt = Value
-        manageLag()
-    end
-})
-do
-LoopTab:AddSection({
-	Name = "SetNetworkOwner Top1"
-})    
-
-
-     
-        local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -9764,7 +9327,14 @@ local Config = {
     RagdollSpawning = false,
     PlayerList = {},
     MainTask = nil,
-    RenderTask = nil
+    RenderTask = nil,
+
+    
+    EKI = false,
+    DeleteShurInNK = true,
+    RagdollInNK = true,
+    NKOffset = 20,
+    StickyCleanupInterval = 0.3,
 }
 
 local ragdollPallet = nil
@@ -9794,9 +9364,43 @@ local function sno(part)
             SetNetworkOwner:FireServer(part, part.CFrame)
         end
     end)
+    if Config.EKI and sethiddenproperty then
+        pcall(function()
+            sethiddenproperty(part, "PhysicsRepRootPart", part)
+        end)
+    end
 end
 
--- [라인 렉 로직]
+local function IsNetworkOwner(part)
+    if not (part and part:IsA("BasePart")) then return false end
+    local root = part.AssemblyRootPart or part
+    return not root.Anchored and root.ReceiveAge == 0
+end
+
+local function ClearEKI(part)
+    if not part or not sethiddenproperty then return end
+    pcall(function()
+        sethiddenproperty(part, "PhysicsRepRootPart", nil)
+    end)
+end
+
+local function RemoveSticky(character, onlySticked)
+    if not character or not character.Parent then return end
+    for _, p in pairs(character:GetDescendants()) do
+        if p:IsA("BasePart") then
+            for _, connected in pairs(p:GetConnectedParts()) do
+                if connected.Name == "StickyPart" then
+                    for _, child in pairs(connected:GetChildren()) do
+                        if child:IsA("TouchInterest") then
+                            child:Destroy()
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
 local function startLagSpam()
     if Config.LagSpamRunning then return end
     Config.LagSpamRunning = true
@@ -9805,7 +9409,7 @@ local function startLagSpam()
         while Config.LagSpamRunning do
             if spawnLocation and CreateGrabLine then
                 pcall(function()
-                    CreateGrabLine:FireServer(spawnLocation, CFrame.new(math.random(-112010000000, 112000000001), 0, math.random(-2008100000, 2000200000)))
+                    CreateGrabLine:FireServer(spawnLocation, CFrame.new(math.random(-2010000000, 2000000001), 0, math.random(-2008100000, 2000200000)))
                 end)
             end
             task.wait(0.05)
@@ -9817,7 +9421,6 @@ local function stopLagSpam()
     Config.LagSpamRunning = false
 end
 
--- [버전2 기반 래그돌 생성 로직 복원]
 local function spawnRagdollV2Full()
     if Config.RagdollSpawning then return nil end
     Config.RagdollSpawning = true
@@ -9868,7 +9471,7 @@ local function spawnRagdollV2Full()
 
     local inv = localPlayer:FindFirstChild("Backpack")
     local startTime = tick()
-    repeat 
+    repeat
         task.wait(0.05)
         if inv and not spawnedToy then
             spawnedToy = inv:FindFirstChild("PalletLightBrown") or targetFolder:FindFirstChild("PalletLightBrown")
@@ -9879,7 +9482,7 @@ local function spawnRagdollV2Full()
 
     if not spawnedToy then Config.RagdollSpawning = false return nil end
     local soundPart = spawnedToy:FindFirstChild("SoundPart") or spawnedToy:WaitForChild("SoundPart", 5)
-    
+
     if not soundPart then
         spawnedToy:Destroy()
         Config.RagdollSpawning = false
@@ -9899,7 +9502,7 @@ local function spawnRagdollV2Full()
         spawnedToy:Destroy()
         Config.RagdollSpawning = false
         return nil
-    end            
+    end
 
     for _, part in pairs(spawnedToy:GetDescendants()) do
         if part:IsA("BasePart") then
@@ -9907,7 +9510,7 @@ local function spawnRagdollV2Full()
             part.Transparency = 0.8
         end
     end
-    
+
     spawnedToy.Name = "RagdollPalete"
     local bv = Instance.new("BodyVelocity")
     bv.MaxForce = Vector3.new(0, math.huge, 0)
@@ -9947,11 +9550,12 @@ local function cleanupTargetHolds(targetPlayer)
             local obj = tHRP:FindFirstChild(objName)
             if obj then obj:Destroy() end
         end
+        if Config.EKI then ClearEKI(tHRP) end
         pcall(function() if DestroyGrabLine then DestroyGrabLine:FireServer(tHRP) end end)
     end
 end
 
-local TargetDropdown = LoopTab:AddDropdown({
+local TargetDropdown = LoopTab:AddPlayersDropdown({
     Name = "Select Target",
     Options = getPlayerNames(),
     Default = "",
@@ -9979,44 +9583,46 @@ LoopTab:AddToggle({
     Default = false,
     Callback = function(Value)
         Config.Active = Value
-        
+
         if Value then
             if not Config.PlayerList or #Config.PlayerList == 0 then
                 Config.Active = false
                 return
             end
-            
+
             if Config.EnableLagSpam then startLagSpam() end
-            
+
             if Config.RenderTask then Config.RenderTask:Disconnect() Config.RenderTask = nil end
             Config.RenderTask = RunService.RenderStepped:Connect(function()
                 if not Config.Active or #Config.PlayerList == 0 then return end
-                
+
                 local targetPlayer = getPlayer(Config.PlayerList[1])
                 if not targetPlayer or not targetPlayer.Character then return end
-                
+
                 local tHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
                 local tHum = targetPlayer.Character:FindFirstChild("Humanoid")
                 if not tHRP or not tHum or tHum.Health <= 0 then return end
-                
-                if ragdollPallet and (ragdollPallet:IsDescendantOf(workspace) or ragdollPallet:IsDescendantOf(localPlayer)) then
-                    local sPart = ragdollPallet:FindFirstChild("SoundPart")
-                    if not sPart or not sPart:FindFirstChild("PartOwner") then
-                        ragdollPallet:Destroy()
+
+                               if Config.RagdollInNK then
+                    if ragdollPallet and (ragdollPallet:IsDescendantOf(workspace) or ragdollPallet:IsDescendantOf(localPlayer)) then
+                        local sPart = ragdollPallet:FindFirstChild("SoundPart")
+                        if not sPart or not sPart:FindFirstChild("PartOwner") then
+                            ragdollPallet:Destroy()
+                            ragdollPallet = nil
+                        end
+                    else
                         ragdollPallet = nil
                     end
-                else
-                    ragdollPallet = nil
-                end
-                
-                if not Config.RagdollSpawning and not ragdollPallet then
-                    ragdollPallet = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys") and workspace[localPlayer.Name.."SpawnedInToys"]:FindFirstChild("RagdollPalete") or spawnRagdollV2Full()
-                end
-                
-                if ragdollPallet and ragdollPallet:FindFirstChild("SoundPart") then
-                    local ragdolled = tHum:FindFirstChild("Ragdolled")
-                    if ragdolled and not ragdolled.Value then
-                        ragdollPallet.SoundPart.Position = tHRP.Position
+
+                    if not Config.RagdollSpawning and not ragdollPallet then
+                        ragdollPallet = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys") and workspace[localPlayer.Name.."SpawnedInToys"]:FindFirstChild("RagdollPalete") or spawnRagdollV2Full()
+                    end
+
+                    if ragdollPallet and ragdollPallet:FindFirstChild("SoundPart") then
+                        local ragdolled = tHum:FindFirstChild("Ragdolled")
+                        if ragdolled and not ragdolled.Value then
+                            ragdollPallet.SoundPart.Position = tHRP.Position
+                        end
                     end
                 end
             end)
@@ -10024,8 +9630,9 @@ LoopTab:AddToggle({
             if Config.MainTask then task.cancel(Config.MainTask) end
             Config.MainTask = task.spawn(function()
                 local lastRemoteFire = tick()
+                local lastStickyCleanup = 0
 
-                                while Config.Active and RunService.Heartbeat:Wait() do
+                while Config.Active and RunService.Heartbeat:Wait() do
                     local myChar = localPlayer.Character
                     local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
                     local myHead = myChar and myChar:FindFirstChild("Head")
@@ -10035,19 +9642,18 @@ LoopTab:AddToggle({
 
                     local targetPlayer = getPlayer(Config.PlayerList[1])
                     if not targetPlayer or not targetPlayer.Character then continue end
-                    
+
                     local tHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
                     local tHum = targetPlayer.Character:FindFirstChild("Humanoid")
                     if not tHRP or not tHum or tHum.Health <= 0 then continue end
 
                     local dist = (tHRP.Position - myHRP.Position).Magnitude
 
-                                  if dist > 30 then
+                    if dist > 30 then
                         local currentSavedPos = myHRP.CFrame
 
-                        
                         pcall(function() myChar:PivotTo(tHRP.CFrame * CFrame.new(0, 2, 4)) end)
-                        
+
                         sno(tHRP)
 
                         if not tHRP:FindFirstChild("KickAlign") then
@@ -10072,39 +9678,45 @@ LoopTab:AddToggle({
                                 alignRot.Name = "KickRot"
                                 alignRot.Attachment0 = att0
                                 alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment
-                                alignRot.CFrame = CFrame.new() 
+                                alignRot.CFrame = CFrame.new()
                                 alignRot.MaxTorque = math.huge
                                 alignRot.Responsiveness = 200
                                 alignRot.Parent = tHRP
                             end)
                         end
 
-                    
                         for i = 1, 23.1 do
                             if not Config.Active then break end
                             sno(tHRP)
+
+                            -- [추가] 안티킥 리무브 (throttle)
+                            if Config.DeleteShurInNK and tick() - lastStickyCleanup > Config.StickyCleanupInterval then
+                                RemoveSticky(targetPlayer.Character)
+                                lastStickyCleanup = tick()
+                            end
+
                             pcall(function()
                                 if DestroyGrabLine then DestroyGrabLine:FireServer(tHRP) end
                             end)
-                            
+
                             local align = tHRP:FindFirstChild("KickAlign")
                             if myHead and align and align.Attachment1 then
-                                align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, 15, 0)
+                                -- [수정] Config.NKOffset 사용
+                                align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
                             end
-                            task.wait() 
+                            task.wait()
                         end
 
-                    
                         if Config.Active then
                             pcall(function()
                                 myChar:PivotTo(currentSavedPos)
-                                tHRP.CFrame = currentSavedPos * CFrame.new(0, 15, 0)
+                                -- [수정] Config.NKOffset 사용
+                                tHRP.CFrame = currentSavedPos * CFrame.new(0, Config.NKOffset, 0)
                             end)
                         end
                         continue
                     end
 
-                
                     if not tHRP:FindFirstChild("KickAlign") then
                         pcall(function()
                             local oldBp = tHRP:FindFirstChildOfClass("BodyPosition")
@@ -10127,7 +9739,7 @@ LoopTab:AddToggle({
                             alignRot.Name = "KickRot"
                             alignRot.Attachment0 = att0
                             alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment
-                            alignRot.CFrame = CFrame.new() 
+                            alignRot.CFrame = CFrame.new()
                             alignRot.MaxTorque = math.huge
                             alignRot.Responsiveness = 200
                             alignRot.Parent = tHRP
@@ -10135,20 +9747,25 @@ LoopTab:AddToggle({
                     end
 
                     sno(tHRP)
-                    
-                    
+
+                    -- [추가] 안티킥 리무브 (throttle)
+                    if Config.DeleteShurInNK and tick() - lastStickyCleanup > Config.StickyCleanupInterval then
+                        RemoveSticky(targetPlayer.Character)
+                        lastStickyCleanup = tick()
+                    end
+
                     tHRP.AssemblyLinearVelocity = Vector3.zero
                     tHRP.AssemblyAngularVelocity = Vector3.zero
 
                     local align = tHRP:FindFirstChild("KickAlign")
                     if align and align.Attachment1 and Config.Active then
-                                           align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, 20, 0)
+                        -- [수정] Config.NKOffset 사용
+                        align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
                     end
 
                     local rot = tHRP:FindFirstChild("KickRot")
                     if rot then rot.CFrame = CFrame.Angles(0, 0, 0) end
 
-                    
                     local bp = tHRP:FindFirstChild("ControlBP")
                     if not bp then
                         bp = Instance.new("BodyPosition")
@@ -10157,7 +9774,8 @@ LoopTab:AddToggle({
                         bp.P = 800000
                         bp.Parent = tHRP
                     end
-                    bp.Position = myHead.Position + Vector3.new(0, 20, 0) -- Align과 동일 좌표로 맞추어 충돌/솟구침 방지
+                    -- [수정] Config.NKOffset 사용
+                    bp.Position = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
 
                     if tick() - lastRemoteFire > 0.05 and Config.Active then
                         pcall(function()
@@ -10171,10 +9789,12 @@ LoopTab:AddToggle({
             stopLagSpam()
             if Config.RenderTask then Config.RenderTask:Disconnect() Config.RenderTask = nil end
             if Config.MainTask then task.cancel(Config.MainTask) Config.MainTask = nil end
-            
+
             cleanupRagdollFull()
             if Config.PlayerList then
-                for _, targetName in ipairs(Config.PlayerList) do cleanupTargetHolds(getPlayer(targetName)) end
+                for _, targetName in ipairs(Config.PlayerList) do
+                    cleanupTargetHolds(getPlayer(targetName))
+                end
             end
         end
     end
@@ -10193,18 +9813,57 @@ LoopTab:AddToggle({
         end
     end
 })
+
+
+
 LoopTab:AddToggle({
-    Name = " Airlock <font color='rgb(0, 250, 5)'>PCLD fixed</font>",
+    Name = "Anti-Kick Remove <font color='rgb(255,200,60)'>Cleaner</font>",
+    Default = true,
+    Callback = function(Value)
+        Config.DeleteShurInNK = Value
+    end
+})
+
+LoopTab:AddToggle({
+    Name = "Airlock <font color='rgb(55,120,200)'>PCLD fixed</font>",
     Default = false,
     Callback = function(Value)
-        Config.EnableLagSpam = Value
-        if Value and Config.Active then
-            startLagSpam()
-        else
-            stopLagSpam()
+        Config.EKI = Value
+        if not Value and Config.PlayerList then
+            for _, targetName in ipairs(Config.PlayerList) do
+                local p = getPlayer(targetName)
+                if p and p.Character then
+                    local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then ClearEKI(hrp) end
+                end
+            end
         end
     end
 })
+
+LoopTab:AddToggle({
+    Name = "Loop Ragdoll <font color='rgb(120,200,255)'>pallet</font>",
+    Default = true,
+    Callback = function(Value)
+        Config.RagdollInNK = Value
+        if not Value then
+            cleanupRagdollFull()
+        end
+    end
+})
+
+LoopTab:AddDropdown({
+    Name = "Kick Height",
+    Options = {"15", "18", "20", "22", "25", "28", "30"},
+    Default = "20",
+    MultipleOptions = false,
+    Callback = function(Value)
+        Config.NKOffset = tonumber(Value) or 20
+    end
+})
+
+                          
+                              
 end
     LoopTab:AddSection({
 	Name = "Other"
