@@ -10194,7 +10194,7 @@ LoopTab:AddToggle({
     end
 })
 LoopTab:AddToggle({
-    Name = " Airlock <font color='rgb(0,250,5)'>PCLD fixed/font>",
+    Name = " Airlock <font color='rgb(0, 250, 5)'>PCLD fixed</font>",
     Default = false,
     Callback = function(Value)
         Config.EnableLagSpam = Value
