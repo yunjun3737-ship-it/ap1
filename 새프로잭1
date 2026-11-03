@@ -11683,7 +11683,7 @@ Toggles.DualHandLoopKick = {
 }
 end
 ]]
-end
+--end
 do
 local tppEnabled = false
 local tppTargets = {}
