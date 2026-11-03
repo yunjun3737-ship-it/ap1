@@ -1,0 +1,2703 @@
+--==================================================================
+-- MinimalHub.lua  — Obsidian 호환 미니 허브
+-- 사용: local lib = MinimalHub.new()
+--==================================================================
+local MinimalHub = {}
+MinimalHub.__index = MinimalHub
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+
+--==================================================================
+-- 팔레트 / 템플릿
+--==================================================================
+local PALETTE = {
+    Bg       = Color3.fromRGB(15, 15, 15),
+    Main     = Color3.fromRGB(25, 25, 25),
+    Accent   = Color3.fromRGB(125, 85, 255),
+    Outline  = Color3.fromRGB(40, 40, 40),
+    Font     = Color3.new(1, 1, 1),
+    Dark     = Color3.new(0, 0, 0),
+    Red      = Color3.fromRGB(255, 50, 50),
+}
+local FONT = Font.fromEnum(Enum.Font.Code)
+local FONT_ENUM = Enum.Font.Code
+
+local function new(class, props)
+    local inst = Instance.new(class)
+    for k, v in pairs(props or {}) do
+        inst[k] = v
+    end
+    return inst
+end
+
+local function round(inst, r)
+    new("UICorner", { CornerRadius = UDim.new(0, r or 4), Parent = inst })
+end
+
+local function outline(inst)
+    return new("UIStroke", { Color = PALETTE.Outline, Thickness = 1, Parent = inst })
+end
+
+--==================================================================
+-- 생성자
+--==================================================================
+function MinimalHub.new()
+    local self = setmetatable({}, MinimalHub)
+    self.Toggles    = {}
+    self.Options    = {}
+    self.Labels     = {}
+    self.Buttons    = {}
+    self.Tabs       = {}
+    self.Scheme     = PALETTE
+    self.Toggled    = false
+    self.Unloaded   = false
+    self.IsMobile   = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+    self.ToggleKeybind = Enum.KeyCode.RightShift
+    self.Notifications = {}
+
+    self.ScreenGui = new("ScreenGui", {
+        Name = "MinimalHub",
+        ResetOnSpawn = false,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+        DisplayOrder = 999,
+        Parent = CoreGui,
+    })
+    self.Floats = new("Frame", {
+        BackgroundTransparency = 1,
+        Size = UDim2.fromScale(1, 1),
+        ZIndex = 10,
+        Parent = self.ScreenGui,
+    })
+
+    self:GiveSignal(UserInputService.InputBegan:Connect(function(input)
+        if input.KeyCode == self.ToggleKeybind
+            and not UserInputService:GetFocusedTextBox() then
+            self:Toggle()
+        end
+    end))
+
+    return self
+end
+
+--==================================================================
+-- 유틸
+--==================================================================
+function MinimalHub:GiveSignal(conn)
+    table.insert(self._signals or (function() self._signals = {} return self._signals end)(), conn)
+    return conn
+end
+
+function MinimalHub:SafeCallback(fn, ...)
+    if type(fn) ~= "function" then return end
+    local ok, err = pcall(fn, ...)
+    if not ok then warn("[Hub] callback error:", err) end
+end
+
+function MinimalHub:Toggle(value)
+    if type(value) == "boolean" then
+        self.Toggled = value
+    else
+        self.Toggled = not self.Toggled
+    end
+    if self.Window then
+        self.Window.MainFrame.Visible = self.Toggled
+    end
+end
+
+--==================================================================
+-- Notify
+--==================================================================
+function MinimalHub:Notify(info)
+    if type(info) == "string" then info = { Description = info } end
+    info = info or {}
+
+    local holder = new("Frame", {
+        BackgroundColor3 = PALETTE.Main,
+        Size = UDim2.fromOffset(280, 0),
+        AutomaticSize = Enum.AutomaticSize.Y,
+        Position = UDim2.fromOffset(6, 6),
+        Visible = false,
+        Parent = self.Floats,
+    })
+    round(holder, 4); outline(holder)
+
+    new("UIListLayout", {
+        Padding = UDim.new(0, 4),
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent = holder,
+    })
+    new("UIPadding", {
+        PaddingTop = UDim.new(0, 8),
+        PaddingBottom = UDim.new(0, 8),
+        PaddingLeft = UDim.new(0, 8),
+        PaddingRight = UDim.new(0, 8),
+        Parent = holder,
+    })
+
+    local title = info.Title or "Notification"
+    new("TextLabel", {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 18),
+        Text = tostring(title),
+        TextColor3 = PALETTE.Font,
+        FontFace = FONT,
+        TextSize = 15,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = holder,
+    })
+    new("TextLabel", {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 0),
+        AutomaticSize = Enum.AutomaticSize.Y,
+        Text = tostring(info.Description or ""),
+        TextColor3 = PALETTE.Font,
+        FontFace = FONT,
+        TextSize = 14,
+        TextWrapped = true,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextTransparency = 0.2,
+        Parent = holder,
+    })
+
+    holder.Position = UDim2.fromOffset(6, -holder.AbsoluteSize.Y)
+    holder.Visible = true
+
+    local idx = #self.Notifications + 1
+    self.Notifications[idx] = holder
+
+    local function reposition()
+        local y = 6
+        for i = 1, #self.Notifications do
+            local n = self.Notifications[i]
+            if n and n.Parent then
+                TweenService:Create(n, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+                    Position = UDim2.fromOffset(6, y),
+                }):Play()
+                y = y + n.AbsoluteSize.Y + 6
+            end
+        end
+    end
+    task.defer(reposition)
+    task.delay(0.05, reposition)
+
+    task.delay(tonumber(info.Time) or 5, function()
+        holder:Destroy()
+        for i = 1, #self.Notifications do
+            if self.Notifications[i] == holder then
+                table.remove(self.Notifications, i)
+                break
+            end
+        end
+        reposition()
+    end)
+
+    return holder
+end
+
+--==================================================================
+-- CreateWindow
+--==================================================================
+function MinimalHub:CreateWindow(info)
+    info = info or {}
+    local Size = info.Size or UDim2.fromOffset(560, 420)
+
+    local MainFrame = new("TextButton", {
+        Name = "Main",
+        BackgroundColor3 = PALETTE.Bg,
+        Position = UDim2.new(0.5, -Size.X.Offset / 2, 0.5, -Size.Y.Offset / 2),
+        Size = Size,
+        Text = "",
+        AutoButtonColor = false,
+        Visible = false,
+        Parent = self.ScreenGui,
+    })
+    round(MainFrame, info.CornerRadius or 6); outline(MainFrame)
+
+    -- Top bar
+    local TopBar = new("Frame", {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 42),
+        Parent = MainFrame,
+    })
+    new("TextLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(12, 0),
+        Size = UDim2.new(1, -24, 1, 0),
+        Text = tostring(info.Title or "Hub"),
+        TextColor3 = PALETTE.Font,
+        FontFace = FONT,
+        TextSize = 18,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = TopBar,
+    })
+    new("Frame", {
+        BackgroundColor3 = PALETTE.Outline,
+        Position = UDim2.fromOffset(0, 42),
+        Size = UDim2.new(1, 0, 0, 1),
+        Parent = MainFrame,
+    })
+
+    -- Draggable
+    self:MakeDraggable(MainFrame, TopBar)
+
+    -- Tab bar (left)
+    local TabBar = new("ScrollingFrame", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(0, 43),
+        Size = UDim2.new(0, 140, 1, -43),
+        CanvasSize = UDim2.new(0, 0, 0, 0),
+        AutomaticCanvasSize = Enum.AutomaticSize.Y,
+        ScrollBarThickness = 0,
+        Parent = MainFrame,
+    })
+    new("UIListLayout", {
+        Padding = UDim.new(0, 2),
+        Parent = TabBar,
+    })
+    new("UIPadding", {
+        PaddingTop = UDim.new(0, 6),
+        PaddingLeft = UDim.new(0, 6),
+        PaddingRight = UDim.new(0, 6),
+        PaddingBottom = UDim.new(0, 6),
+        Parent = TabBar,
+    })
+
+    -- Divider
+    new("Frame", {
+        BackgroundColor3 = PALETTE.Outline,
+        Position = UDim2.fromOffset(140, 43),
+        Size = UDim2.new(0, 1, 1, -43),
+        Parent = MainFrame,
+    })
+
+    -- Content
+    local Container = new("Frame", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(141, 43),
+        Size = UDim2.new(1, -141, 1, -43),
+        Parent = MainFrame,
+    })
+
+    local Window = {
+        MainFrame = MainFrame,
+        Container = Container,
+        Tabs = {},
+        Library = self,
+    }
+    self.Window = Window
+
+    -- Window:AddTab
+    function Window:AddTab(name, icon, desc)
+        local Button = new("TextButton", {
+            BackgroundColor3 = PALETTE.Main,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, 32),
+            Text = "",
+            Parent = TabBar,
+        })
+        round(Button, 4)
+
+        new("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(10, 0),
+            Size = UDim2.new(1, -10, 1, 0),
+            Text = tostring(name or "Tab"),
+            TextColor3 = PALETTE.Font,
+            FontFace = FONT,
+            TextSize = 14,
+            TextTransparency = 0.5,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = Button,
+        })
+
+        local Page = new("ScrollingFrame", {
+            BackgroundTransparency = 1,
+            Size = UDim2.fromScale(1, 1),
+            CanvasSize = UDim2.new(0, 0, 0, 0),
+            AutomaticCanvasSize = Enum.AutomaticSize.Y,
+            ScrollBarThickness = 2,
+            ScrollBarImageColor3 = PALETTE.Outline,
+            Visible = false,
+            Parent = Container,
+        })
+        new("UIPadding", {
+            PaddingTop = UDim.new(0, 6),
+            PaddingBottom = UDim.new(0, 6),
+            PaddingLeft = UDim.new(0, 6),
+            PaddingRight = UDim.new(0, 6),
+            Parent = Page,
+        })
+
+        local Columns = new("Frame", {
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, 0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            Parent = Page,
+        })
+        new("UIPadding", {
+            PaddingTop = UDim.new(0, 6),
+            PaddingLeft = UDim.new(0, 6),
+            PaddingRight = UDim.new(0, 6),
+            PaddingBottom = UDim.new(0, 6),
+            Parent = Columns,
+        })
+        new("UIListLayout", {
+            FillDirection = Enum.FillDirection.Horizontal,
+            HorizontalAlignment = Enum.HorizontalAlignment.Center,
+            VerticalAlignment = Enum.VerticalAlignment.Top,
+            Padding = UDim.new(0, 8),
+            Parent = Columns,
+        })
+
+        local LeftCol = new("Frame", {
+            BackgroundTransparency = 1,
+            Size = UDim2.new(0.5, -4, 0, 0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            Parent = Columns,
+        })
+        new("UIListLayout", {
+            Padding = UDim.new(0, 6),
+            Parent = LeftCol,
+        })
+
+        local RightCol = new("Frame", {
+            BackgroundTransparency = 1,
+            Size = UDim2.new(0.5, -4, 0, 0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            Parent = Columns,
+        })
+        new("UIListLayout", {
+            Padding = UDim.new(0, 6),
+            Parent = RightCol,
+        })
+
+        local Tab = {
+            Name = name,
+            Button = Button,
+            Page = Page,
+            Left = LeftCol,
+            Right = RightCol,
+            Groupboxes = {},
+            Library = self,
+        }
+
+        -- Tab:AddGroupbox
+        local function makeGroupbox(side, gbName)
+            local parentCol = side == "Left" and LeftCol or RightCol
+            local Box = new("Frame", {
+                BackgroundColor3 = PALETTE.Bg,
+                Size = UDim2.new(1, 0, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y,
+                Parent = parentCol,
+            })
+            round(Box, 4); outline(Box)
+
+            new("UIListLayout", {
+                Padding = UDim.new(0, 4),
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Parent = Box,
+            })
+            new("UIPadding", {
+                PaddingTop = UDim.new(0, 6),
+                PaddingBottom = UDim.new(0, 6),
+                PaddingLeft = UDim.new(0, 6),
+                PaddingRight = UDim.new(0, 6),
+                Parent = Box,
+            })
+
+            new("TextLabel", {
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, 0, 0, 18),
+                Text = tostring(gbName or "Group"),
+                TextColor3 = PALETTE.Font,
+                FontFace = FONT,
+                TextSize = 14,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Parent = Box,
+            })
+            new("Frame", {
+                BackgroundColor3 = PALETTE.Outline,
+                Size = UDim2.new(1, 0, 0, 1),
+                Parent = Box,
+            })
+
+            local Content = new("Frame", {
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, 0, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y,
+                Parent = Box,
+            })
+            new("UIListLayout", {
+                Padding = UDim.new(0, 6),
+                Parent = Content,
+            })
+
+            local Groupbox = {
+                Box = Box,
+                Content = Content,
+                Elements = {},
+                Library = self,
+            }
+            Tab.Groupboxes[gbName] = Groupbox
+
+            -- 헬퍼: 요소 컨테이너 (DependencyBox 지원 위해)
+            local function addRow(row)
+                row.Parent = Content
+                table.insert(Groupbox.Elements, row)
+                return row
+            end
+
+            -- AddDivider
+            function Groupbox:AddDivider(text)
+                local holder = new("Frame", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 14),
+                })
+                if text then
+                    new("TextLabel", {
+                        BackgroundTransparency = 1,
+                        Size = UDim2.fromScale(1, 1),
+                        Text = tostring(text),
+                        TextColor3 = PALETTE.Font,
+                        TextTransparency = 0.5,
+                        TextSize = 12,
+                        FontFace = FONT,
+                        Parent = holder,
+                    })
+                else
+                    new("Frame", {
+                        AnchorPoint = Vector2.new(0, 0.5),
+                        BackgroundColor3 = PALETTE.Outline,
+                        Position = UDim2.new(0, 0, 0.5, 0),
+                        Size = UDim2.new(1, 0, 0, 1),
+                        Parent = holder,
+                    })
+                end
+                addRow(holder)
+            end
+
+            -- AddLabel
+            function Groupbox:AddLabel(text, wrap)
+                if type(text) == "table" then
+                    wrap = text.DoesWrap
+                    text = text.Text
+                end
+                local lbl = new("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 0),
+                    AutomaticSize = Enum.AutomaticSize.Y,
+                    Text = tostring(text or ""),
+                    TextColor3 = PALETTE.Font,
+                    TextTransparency = 0.2,
+                    TextSize = 13,
+                    TextWrapped = wrap == true,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    FontFace = FONT,
+                })
+                addRow(lbl)
+                local obj = { TextLabel = lbl }
+                function obj:SetText(t) lbl.Text = tostring(t) end
+                function obj:SetVisible(v) lbl.Visible = v end
+                return obj
+            end
+
+            -- AddToggle
+            function Groupbox:AddToggle(idx, info)
+                info = info or {}
+                local holder = new("TextButton", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 20),
+                    Text = "",
+                })
+
+                local label = new("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, -40, 1, 0),
+                    Text = tostring(info.Text or "Toggle"),
+                    TextColor3 = PALETTE.Font,
+                    TextTransparency = 0.4,
+                    TextSize = 13,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    FontFace = FONT,
+                    Parent = holder,
+                })
+
+                local box = new("Frame", {
+                    AnchorPoint = Vector2.new(1, 0.5),
+                    BackgroundColor3 = PALETTE.Main,
+                    Position = UDim2.new(1, 0, 0.5, 0),
+                    Size = UDim2.fromOffset(18, 18),
+                    Parent = holder,
+                })
+                round(box, 3); outline(box)
+                local check = new("ImageLabel", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, -4, 1, -4),
+                    Position = UDim2.fromOffset(2, 2),
+                    Image = "rbxassetid://97682394690683",
+                    ImageColor3 = PALETTE.Accent,
+                    ImageTransparency = 1,
+                    Parent = box,
+                })
+
+                addRow(holder)
+
+                local toggle = {
+                    Text = info.Text,
+                    Value = info.Default == true,
+                    Callback = info.Callback,
+                    Changed = info.Changed,
+                    Disabled = info.Disabled,
+                    Type = "Toggle",
+                    Holder = holder,
+                    TextLabel = label,
+                }
+
+                local function render()
+                    check.ImageTransparency = toggle.Value and 0 or 1
+                    label.TextTransparency = toggle.Disabled and 0.8 or (toggle.Value and 0 or 0.4)
+                    box.BackgroundTransparency = toggle.Disabled and 0.5 or 0
+                end
+
+                function toggle:SetValue(v)
+                    v = v == true
+                    if self.Value == v then return end
+                    self.Value = v
+                    render()
+                    self.Library:SafeCallback(self.Callback, v)
+                    self.Library:SafeCallback(self.Changed, v)
+                end
+
+                function toggle:SetDisabled(d)
+                    self.Disabled = d
+                    holder.Active = not d
+                    render()
+                end
+
+                function toggle:SetVisible(v)
+                    holder.Visible = v == true
+                end
+
+                function toggle:SetText(t)
+                    self.Text = t
+                    label.Text = tostring(t)
+                end
+
+                function toggle:OnChanged(fn) self.Changed = fn end
+
+                holder.MouseButton1Click:Connect(function()
+                    if not toggle.Disabled then
+                        toggle:SetValue(not toggle.Value)
+                    end
+                end)
+
+                self.Toggles[idx or ("__toggle_" .. tostring(#self.Toggles + 1))] = toggle
+                if info.Default then task.defer(function() toggle.Value = info.Default; render() end) end
+                render()
+                return toggle
+            end
+
+            -- AddSlider
+            function Groupbox:AddSlider(idx, info)
+                info = info or {}
+                local holder = new("Frame", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 34),
+                })
+                local label = new("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 14),
+                    Text = tostring(info.Text or "Slider"),
+                    TextColor3 = PALETTE.Font,
+                    TextTransparency = 0.2,
+                    TextSize = 13,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    FontFace = FONT,
+                    Parent = holder,
+                })
+                local bar = new("TextButton", {
+                    AnchorPoint = Vector2.new(0, 1),
+                    BackgroundColor3 = PALETTE.Main,
+                    Position = UDim2.new(0, 0, 1, 0),
+                    Size = UDim2.new(1, 0, 0, 16),
+                    Text = "",
+                    Parent = holder,
+                })
+                round(bar, 3); outline(bar)
+
+                local fill = new("Frame", {
+                    BackgroundColor3 = PALETTE.Accent,
+                    Size = UDim2.fromScale(0, 1),
+                    Parent = bar,
+                })
+                round(fill, 3)
+
+                local disp = new("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.fromScale(1, 1),
+                    Text = "",
+                    TextColor3 = PALETTE.Font,
+                    TextSize = 12,
+                    FontFace = FONT,
+                    ZIndex = 3,
+                    Parent = bar,
+                })
+
+                addRow(holder)
+
+                local slider = {
+                    Value = tonumber(info.Default) or 0,
+                    Min = info.Min or 0,
+                    Max = info.Max or 100,
+                    Rounding = info.Rounding or 0,
+                    Prefix = info.Prefix or "",
+                    Suffix = info.Suffix or "",
+                    Compact = info.Compact,
+                    Callback = info.Callback,
+                    Changed = info.Changed,
+                    Type = "Slider",
+                    Holder = holder,
+                }
+
+                local function fmt(n)
+                    if slider.Rounding and slider.Rounding > 0 then
+                        return string.format("%." .. slider.Rounding .. "f", n)
+                    end
+                    return tostring(math.floor(n))
+                end
+
+                local function render()
+                    local alpha = (slider.Value - slider.Min) / math.max(slider.Max - slider.Min, 1e-9)
+                    fill.Size = UDim2.fromScale(math.clamp(alpha, 0, 1), 1)
+                    disp.Text = string.format("%s%s%s", slider.Prefix, fmt(slider.Value), slider.Suffix)
+                    if not slider.Compact then
+                        label.Text = tostring(info.Text or "Slider") .. ": " .. disp.Text
+                    end
+                end
+
+                function slider:SetValue(n)
+                    n = tonumber(n)
+                    if not n then return end
+                    n = math.clamp(n, self.Min, self.Max)
+                    if self.Rounding and self.Rounding > 0 then
+                        n = tonumber(string.format("%." .. self.Rounding .. "f", n))
+                    else
+                        n = math.floor(n)
+                    end
+                    if n == self.Value then return end
+                    self.Value = n
+                    render()
+                    self.Library:SafeCallback(self.Callback, n)
+                    self.Library:SafeCallback(self.Changed, n)
+                end
+
+                function slider:SetDisabled(d) self.Disabled = d; bar.Active = not d end
+                function slider:SetVisible(v) holder.Visible = v == true end
+                function slider:OnChanged(fn) self.Changed = fn end
+
+                local dragging = false
+                bar.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1
+                        or input.UserInputType == Enum.UserInputType.Touch then
+                        dragging = true
+                        local conn
+                        conn = UserInputService.InputChanged:Connect(function(i)
+                            if not dragging then return end
+                            if i.UserInputType == Enum.UserInputType.MouseMovement
+                                or i.UserInputType == Enum.UserInputType.Touch then
+                                local x = math.clamp((i.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+                                slider:SetValue(slider.Min + (slider.Max - slider.Min) * x)
+                            end
+                        end)
+                        local endConn
+                        endConn = input.Changed:Connect(function()
+                            if input.UserInputState == Enum.UserInputState.End then
+                                dragging = false
+                                conn:Disconnect()
+                                endConn:Disconnect()
+                            end
+                        end)
+                    end
+                end)
+
+                self.Options[idx or ("__slider_" .. tostring(#self.Options + 1))] = slider
+                render()
+                return slider
+            end
+
+            -- AddDropdown
+            function Groupbox:AddDropdown(idx, info)
+                info = info or {}
+                local holder = new("Frame", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 38),
+                })
+                new("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 14),
+                    Text = tostring(info.Text or "Dropdown"),
+                    TextColor3 = PALETTE.Font,
+                    TextTransparency = 0.2,
+                    TextSize = 13,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    FontFace = FONT,
+                    Parent = holder,
+                })
+                local btn = new("TextButton", {
+                    AnchorPoint = Vector2.new(0, 1),
+                    BackgroundColor3 = PALETTE.Main,
+                    Position = UDim2.new(0, 0, 1, 0),
+                    Size = UDim2.new(1, 0, 0, 20),
+                    Text = "",
+                    Parent = holder,
+                })
+                round(btn, 3); outline(btn)
+                new("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Position = UDim2.fromOffset(6, 0),
+                    Size = UDim2.new(1, -12, 1, 0),
+                    Text = "---",
+                    TextColor3 = PALETTE.Font,
+                    TextSize = 13,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    FontFace = FONT,
+                    Parent = btn,
+                }).Name = "Display"
+
+                addRow(holder)
+
+                local list = new("ScrollingFrame", {
+                    BackgroundColor3 = PALETTE.Main,
+                    Position = UDim2.fromOffset(0, 0),
+                    Size = UDim2.new(1, 0, 0, 120),
+                    CanvasSize = UDim2.new(0, 0, 0, 0),
+                    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                    ScrollBarThickness = 2,
+                    Visible = false,
+                    ZIndex = 20,
+                    Parent = holder,
+                })
+                round(list, 3); outline(list)
+                new("UIListLayout", {
+                    Padding = UDim.new(0, 0),
+                    Parent = list,
+                })
+
+                local values = info.Values or {}
+                local multi = info.Multi == true
+                local drop = {
+                    Value = multi and {} or nil,
+                    Values = values,
+                    Multi = multi,
+                    Type = "Dropdown",
+                    Callback = info.Callback,
+                    Changed = info.Changed,
+                    Holder = holder,
+                    Menu = list,
+                    Active = false,
+                }
+
+                local function getDisplay()
+                    if multi then
+                        local parts = {}
+                        for _, v in pairs(drop.Value) do
+                            if v == true then parts[#parts + 1] = v end
+                        end
+                        -- Multi is a dict
+                        local keys = {}
+                        for k, v in pairs(drop.Value) do
+                            if v == true then keys[#keys + 1] = tostring(k) end
+                        end
+                        if #keys == 0 then return "---" end
+                        return table.concat(keys, ", ")
+                    else
+                        if drop.Value == nil then return "---" end
+                        return tostring(drop.Value)
+                    end
+                end
+
+                local function refresh()
+                    btn.Display.Text = getDisplay()
+                end
+
+                -- 옵션 값 존재 확인
+                local function valueExists(v)
+                    if type(values) == "table" then
+                        for _, x in pairs(values) do
+                            if x == v then return true end
+                        end
+                    end
+                    return false
+                end
+
+                local function rebuildList()
+                    for _, c in list:GetChildren() do
+                        if c:IsA("TextButton") then c:Destroy() end
+                    end
+                    for _, val in pairs(values) do
+                        local item = new("TextButton", {
+                            BackgroundTransparency = 1,
+                            Size = UDim2.new(1, 0, 0, 20),
+                            Text = tostring(val),
+                            TextColor3 = PALETTE.Font,
+                            TextSize = 13,
+                            TextXAlignment = Enum.TextXAlignment.Left,
+                            FontFace = FONT,
+                            Parent = list,
+                        })
+                        new("UIPadding", {
+                            PaddingLeft = UDim.new(0, 6),
+                            Parent = item,
+                        })
+                        item.MouseButton1Click:Connect(function()
+                            if multi then
+                                drop.Value[val] = not drop.Value[val] or nil
+                            else
+                                drop.Value = val
+                                list.Visible = false
+                                drop.Active = false
+                            end
+                            refresh()
+                            self:SafeCallback(drop.Callback, drop.Value)
+                            self:SafeCallback(drop.Changed, drop.Value)
+                        end)
+                    end
+                end
+
+                function drop:SetValue(v)
+                    if multi then
+                        if type(v) == "table" then
+                            self.Value = {}
+                            for k, x in pairs(v) do
+                                if type(k) == "number" then
+                                    self.Value[x] = true
+                                else
+                                    self.Value[k] = x
+                                end
+                            end
+                        elseif type(v) == "string" then
+                            self.Value = { [v] = true }
+                        end
+                    else
+                        self.Value = v
+                    end
+                    refresh()
+                    self:SafeCallback(self.Callback, self.Value)
+                    self:SafeCallback(self.Changed, self.Value)
+                end
+
+                function drop:SetValues(newValues)
+                    values = newValues
+                    self.Values = newValues
+                    rebuildList()
+                end
+
+                function drop:SetDisabled(d)
+                    self.Disabled = d
+                    btn.Active = not d
+                end
+                function drop:SetVisible(v) holder.Visible = v == true end
+                function drop:OnChanged(fn) self.Changed = fn end
+
+                btn.MouseButton1Click:Connect(function()
+                    if drop.Disabled then return end
+                    drop.Active = not drop.Active
+                    list.Visible = drop.Active
+                end)
+
+                rebuildList()
+                refresh()
+
+                self.Options[idx or ("__dropdown_" .. tostring(#self.Options + 1))] = drop
+                return drop
+            end
+
+            -- AddInput
+            function Groupbox:AddInput(idx, info)
+                info = info or {}
+                local holder = new("Frame", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 38),
+                })
+                new("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 14),
+                    Text = tostring(info.Text or "Input"),
+                    TextColor3 = PALETTE.Font,
+                    TextTransparency = 0.2,
+                    TextSize = 13,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    FontFace = FONT,
+                    Parent = holder,
+                })
+                local box = new("TextBox", {
+                    AnchorPoint = Vector2.new(0, 1),
+                    BackgroundColor3 = PALETTE.Main,
+                    Position = UDim2.new(0, 0, 1, 0),
+                    Size = UDim2.new(1, 0, 0, 20),
+                    Text = tostring(info.Default or ""),
+                    PlaceholderText = tostring(info.Placeholder or ""),
+                    TextColor3 = PALETTE.Font,
+                    TextSize = 13,
+                    FontFace = FONT,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    ClearTextOnFocus = false,
+                    Parent = holder,
+                })
+                round(box, 3); outline(box)
+                new("UIPadding", {
+                    PaddingLeft = UDim.new(0, 6),
+                    PaddingRight = UDim.new(0, 6),
+                    Parent = box,
+                })
+
+                addRow(holder)
+
+                local input = {
+                    Value = tostring(info.Default or ""),
+                    Type = "Input",
+                    Callback = info.Callback,
+                    Changed = info.Changed,
+                    Holder = holder,
+                }
+
+                function input:SetValue(v)
+                    self.Value = tostring(v or "")
+                    box.Text = self.Value
+                    self.Library:SafeCallback(self.Callback, self.Value)
+                    self.Library:SafeCallback(self.Changed, self.Value)
+                end
+                function input:SetDisabled(d) box.TextEditable = not d end
+                function input:SetVisible(v) holder.Visible = v == true end
+                function input:OnChanged(fn) self.Changed = fn end
+
+                box.FocusLost:Connect(function()
+                    input.Value = box.Text
+                    self:SafeCallback(input.Callback, box.Text)
+                    self:SafeCallback(input.Changed, box.Text)
+                end)
+
+                self.Options[idx or ("__input_" .. tostring(#self.Options + 1))] = input
+                return input
+            end
+
+            -- AddButton
+            function Groupbox:AddButton(info)
+                if type(info) == "string" then
+                    info = { Text = info }
+                end
+                info = info or {}
+                local btn = new("TextButton", {
+                    BackgroundColor3 = PALETTE.Main,
+                    Size = UDim2.new(1, 0, 0, 22),
+                    Text = tostring(info.Text or "Button"),
+                    TextColor3 = PALETTE.Font,
+                    TextSize = 13,
+                    FontFace = FONT,
+                })
+                round(btn, 3); outline(btn)
+                addRow(btn)
+
+                local button = {
+                    Button = btn,
+                    Text = info.Text,
+                    Type = "Button",
+                }
+
+                function button:SetDisabled(d)
+                    btn.Active = not d
+                    btn.TextTransparency = d and 0.5 or 0
+                end
+                function button:SetText(t) btn.Text = tostring(t) end
+
+                btn.MouseButton1Click:Connect(function()
+                    self:SafeCallback(info.Func or info.Callback)
+                end)
+
+                self.Buttons[#self.Buttons + 1] = button
+                return button
+            end
+
+            -- AddDependencyBox
+            function Groupbox:AddDependencyBox()
+                local Sub = {
+                    Dependencies = {},
+                    Elements = {},
+                    Box = new("Frame", {
+                        BackgroundTransparency = 1,
+                        Size = UDim2.new(1, 0, 0, 0),
+                        AutomaticSize = Enum.AutomaticSize.Y,
+                        Visible = false,
+                        Parent = Content,
+                    }),
+                }
+                new("UIListLayout", {
+                    Padding = UDim.new(0, 6),
+                    Parent = Sub.Box,
+                })
+
+                -- 하위 그룹박스 API 상속 (자체 콘텐츠는 Sub.Box로)
+                local SubGroupbox = {}
+                for _, key in ipairs({ "AddToggle", "AddSlider", "AddDropdown", "AddButton", "AddLabel", "AddDivider", "AddInput" }) do
+                    SubGroupbox[key] = function(_, a, b, c)
+                        -- 원본 Groupbox의 메서드를 임시 Content로 호출
+                        local orig = Groupbox.Content
+                        Groupbox.Content = Sub.Box
+                        local fn = Groupbox[key]
+                        local ok, ret = pcall(fn, Groupbox, a, b, c)
+                        Groupbox.Content = orig
+                        if ok then return ret end
+                        error(ret)
+                    end
+                end
+                setmetatable(Sub, { __index = SubGroupbox })
+
+                function Sub:SetupDependencies(deps)
+                    self.Dependencies = deps or {}
+                    local function check()
+                        local ok = true
+                        for _, dep in ipairs(self.Dependencies) do
+                            local element = dep[1]
+                            local expected = dep[2]
+                            if not element or element.Value ~= expected then
+                                ok = false
+                                break
+                            end
+                        end
+                        self.Box.Visible = ok
+                    end
+                    check()
+                    -- 폴링 (Obsidian은 이벤트 기반이지만 미니에서는 0.1초 폴링)
+                    task.spawn(function()
+                        while self.Box.Parent do
+                            task.wait(0.1)
+                            check()
+                        end
+                    end)
+                end
+
+                table.insert(Groupbox.Elements, Sub.Box)
+                return Sub
+            end
+
+            return Groupbox
+        end
+
+        function Tab:AddGroupbox(info)
+            info = info or {}
+            local side = info.Side or "Left"
+            if type(side) == "number" then side = side == 1 and "Left" or "Right" end
+            return makeGroupbox(side, info.Name)
+        end
+        function Tab:AddLeftGroupbox(name) return makeGroupbox("Left", name) end
+        function Tab:AddRightGroupbox(name) return makeGroupbox("Right", name) end
+
+        -- 탭 클릭 시 표시
+        Button.MouseButton1Click:Connect(function()
+            for _, t in pairs(self.Tabs) do
+                if t.Page then t.Page.Visible = false end
+                if t.Button then t.Button.BackgroundTransparency = 1 end
+                if t.Button and t.Button:FindFirstChildOfClass("TextLabel") then
+                    t.Button:FindFirstChildOfClass("TextLabel").TextTransparency = 0.5
+                end
+            end
+            Page.Visible = true
+            Button.BackgroundTransparency = 0
+            local lbl = Button:FindFirstChildOfClass("TextLabel")
+            if lbl then lbl.TextTransparency = 0 end
+        end)
+
+        self.Tabs[#self.Tabs + 1] = Tab
+        if #self.Tabs == 1 then
+            Page.Visible = true
+            Button.BackgroundTransparency = 0
+        end
+
+        return Tab
+    end
+
+    -- 초기 상태
+    if info.AutoShow ~= false then
+        task.defer(function() self:Toggle(true) end)
+    end
+
+    return Window
+end
+
+--==================================================================
+-- 드래그
+--==================================================================
+function MinimalHub:MakeDraggable(main, handle)
+    local dragging, startPos, startFrame
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            startPos = input.Position
+            startFrame = main.Position
+            local conn1, conn2
+            conn1 = UserInputService.InputChanged:Connect(function(i)
+                if not dragging then return end
+                if i.UserInputType == Enum.UserInputType.MouseMovement
+                    or i.UserInputType == Enum.UserInputType.Touch then
+                    local delta = i.Position - startPos
+                    main.Position = UDim2.new(
+                        startFrame.X.Scale, startFrame.X.Offset + delta.X,
+                        startFrame.Y.Scale, startFrame.Y.Offset + delta.Y
+                    )
+                end
+            end)
+            conn2 = input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    conn1:Disconnect()
+                    conn2:Disconnect()
+                end
+            end)
+        end
+    end)
+end
+
+return MinimalHub
+local Players          = game:GetService("Players")
+local RunService       = game:GetService("RunService")
+local ReplicatedStorage= game:GetService("ReplicatedStorage")
+local workspace        = workspace
+
+
+local localPlayer = Players.LocalPlayer
+local inPlot      = localPlayer:WaitForChild("InPlot")
+local inOwnedPlot = localPlayer:WaitForChild("InOwnedPlot")
+local v17         = workspace:WaitForChild(localPlayer.Name .. "SpawnedInToys")
+
+
+flag11 = false
+
+
+local tbl7 = {
+    PartOwnerCache   = setmetatable({}, { __mode = "k" }),
+    RuntimeGates     = {},
+    States           = {},
+    LimbOffsetsRL    = {
+        Head        = CFrame.new(0, 1.5, 0),
+        ["Left Arm"]  = CFrame.new(-1.5, 0, 0),
+        ["Right Arm"] = CFrame.new(1.5, 0, 0),
+        ["Left Leg"]  = CFrame.new(-0.5, -2, 0),
+        ["Right Leg"] = CFrame.new(0.5, -2, 0),
+        Torso       = CFrame.new(),
+    },
+    FailedToys       = {},
+    SpawnQueue       = {},
+    SpawnOrder       = 0,
+    ToyAuraReserved  = setmetatable({}, { __mode = "k" }),
+    BrokenPlots      = {},
+    GrabbableParts   = {},
+    SelectedPlayers  = {},
+    TargetMethods    = {},
+}
+
+local tbl8 = {
+    EKI              = false,
+    LoopApplyMethodT = false,
+    RagdollInNK      = true,
+    DeleteShurInNK   = true,
+    DirectGrab       = false,
+    PositionPrediction = false,
+}
+
+local tbl9 = {
+    NKOffset    = 15,
+    NKDelayMode = "Normal",
+}
+
+local tbl11 = {
+    SetNetworkOwner   = ReplicatedStorage.GrabEvents.SetNetworkOwner,
+    DestroyGrabLine   = ReplicatedStorage.GrabEvents.DestroyGrabLine,
+    SpawnToy          = ReplicatedStorage.MenuToys.SpawnToyRemoteFunction,
+    DestroyToy        = ReplicatedStorage.MenuToys.DestroyToy,
+    StickyPartEvent   = ReplicatedStorage.Player.StickyPartEvent,
+    RagdollRemote     = ReplicatedStorage.Character.RagdollRemote,
+}
+
+
+sethiddenproperty = sethiddenproperty  -- 없으면 nil → EKI 자동 스킵
+
+
+
+local CharCache     = setmetatable({}, { __mode = "k" })  -- tbl12.Char 내부용 obj
+local VelocityCache = setmetatable({}, { __mode = "k" })  -- GetCustomVelocity 내부용 obj
+
+local function Char(arg)
+    if arg == nil then
+        arg = localPlayer
+    end
+
+    if arg then
+        if CharCache[arg] then
+            local character = CharCache[arg].Character
+            local rootPart  = CharCache[arg].RootPart
+            local humanoid  = CharCache[arg].Humanoid
+            if character and character.Parent
+               and rootPart and rootPart.Parent
+               and humanoid and humanoid.Parent
+            then
+                return character, rootPart, humanoid
+            end
+            CharCache[arg] = nil
+        end
+
+        local character = arg.Character
+
+        if character then
+            local realHrp = character:FindFirstChild("realHrp") or character:FindFirstChild("HumanoidRootPart")
+            local humanoid = character:FindFirstChild("Humanoid")
+            CharCache[arg] = { Character = character, RootPart = realHrp, Humanoid = humanoid }
+            return character, realHrp, humanoid
+        end
+    end
+end
+
+local function IsPartOwner(arg)
+    if not (arg and arg:IsA("BasePart")) then
+        return
+    end
+    local v24 = tbl7.PartOwnerCache[arg]
+    if v24 and v24.Parent then
+        return v24.Value == localPlayer.Name
+    end
+    local parent2 = arg.Parent
+    local head = arg.Name == "HumanoidRootPart" and parent2 and parent2:FindFirstChild("Head")
+    head = head and head:FindFirstChild("PartOwner")
+    if head and head.Value == localPlayer.Name then
+        tbl7.PartOwnerCache[arg] = head
+        return true
+    end
+    local partOwner = arg:FindFirstChild("PartOwner")
+    if partOwner and partOwner.Value == localPlayer.Name then
+        tbl7.PartOwnerCache[arg] = partOwner
+        return true
+    end
+    parent2 = parent2 and parent2:FindFirstChild("PartOwner", true)
+    if parent2 then
+        tbl7.PartOwnerCache[arg] = parent2
+        return parent2.Value == localPlayer.Name
+    end
+    return false
+end
+
+local function IsNetworkOwner(arg)
+    if not (arg and arg:IsA("BasePart")) then
+        return
+    end
+    local assemblyRootPart = arg.AssemblyRootPart or arg
+    return not assemblyRootPart.Anchored and assemblyRootPart.ReceiveAge == 0
+end
+
+local function GetMagnitude(arg, arg2)
+    if not arg or not arg2 then
+        return
+    end
+    return (arg.Position - arg2.Position).Magnitude
+end
+
+local function ResetVelocity(arg)
+    if not arg or not arg:IsA("BasePart") then
+        return false
+    end
+
+    if arg.AssemblyAngularVelocity ~= Vector3.zero then
+        arg.AssemblyAngularVelocity = Vector3.zero
+    end
+
+    if arg.AssemblyLinearVelocity ~= Vector3.zero then
+        arg.AssemblyLinearVelocity = Vector3.zero
+    end
+
+    return true
+end
+
+local function GetRuntimeGate(arg)
+    local v24 = tbl7.RuntimeGates[arg]
+    if v24 then
+        return v24
+    end
+    local bindableEvent = Instance.new("BindableEvent")
+    tbl7.RuntimeGates[arg] = bindableEvent
+    return bindableEvent
+end
+
+local function WaitForRuntimeToggle(arg)
+    if tbl8[arg] then
+        return true
+    end
+    local v24 = GetRuntimeGate(arg)
+
+    while true do
+        v24.Event:Wait()
+        if not (flag11 or tbl8[arg]) then
+            continue
+        end
+        break
+    end
+
+    return not flag11
+end
+
+local function GetCustomVelocity(arg)
+    local now3 = os.clock()
+    local position = arg.Position
+    local v24 = VelocityCache[arg]
+    if not v24 then
+        VelocityCache[arg] = { Position = position, Time = now3, Linear = Vector3.zero }
+        return Vector3.zero
+    end
+    local n36 = now3 - v24.Time
+    if n36 < 0.001 then
+        return v24.Linear
+    end
+    local n37 = (position - v24.Position) / n36
+
+    if n36 > 0.25 or n37.Magnitude > 300 then
+        v24.Linear = Vector3.zero
+    else
+        v24.Linear = v24.Linear:Lerp(n37, 1 - math.exp(-n36 * 40))
+
+        if v24.Linear.Magnitude < 0.05 then
+            v24.Linear = Vector3.zero
+        end
+    end
+
+    v24.Position = position
+    v24.Time = now3
+    return v24.Linear
+end
+
+local function PredictCFrame(arg, arg2)
+    local cFrame2 = arg2 or arg.CFrame
+    if not tbl8.PositionPrediction then
+        return cFrame2
+    end
+    local n36 = math.clamp(localPlayer:GetNetworkPing(), 0, 0.35)
+    return cFrame2 + GetCustomVelocity(arg) * n36
+end
+
+local function Grab(arg, arg2)
+    local v24, v25, v26 = Char()
+    if not v25 or not v26 or v26.Health == 0 or not arg or not arg.Parent or not arg:IsA("BasePart") then
+        return
+    end
+    local n36 = (arg2 or v25.CFrame) * CFrame.new(0, 1.593, 0)
+    local cframe = PredictCFrame(arg)
+
+    if not tbl8.DirectGrab then
+        cframe = CFrame.new(n36.Position, cframe.Position)
+    end
+
+    tbl11.SetNetworkOwner:FireServer(arg, cframe)
+end
+
+local function RNO(arg)
+    tbl11.DestroyGrabLine:FireServer(arg)
+end
+
+local function ToggleMotor6D(arg, enabled, arg2)
+    if not arg then
+        return
+    end
+    local humanoid = arg:FindFirstChild("Humanoid")
+    local torso = arg:FindFirstChild("Torso")
+    humanoid = humanoid and humanoid:FindFirstChild("Ragdolled")
+    if not torso or not humanoid then
+        return
+    end
+
+    if not humanoid.Value then
+        for _, v24 in torso:GetChildren() do
+            if v24:IsA("Motor6D") then
+                v24.Enabled = enabled
+            end
+        end
+    end
+
+    if arg2 and (enabled == false or humanoid.Value) then
+        for _, v24 in { "Left Leg", "Right Leg", "Left Arm", "Right Arm", "Head" }, nil, nil do
+            local ballSocketConstraint = arg:FindFirstChild(v24)
+            ballSocketConstraint = ballSocketConstraint and ballSocketConstraint:FindFirstChild("BallSocketConstraint")
+
+            if ballSocketConstraint then
+                ballSocketConstraint.Enabled = enabled
+            end
+        end
+    end
+end
+
+local LightPhysicalProperties = PhysicalProperties.new(0.01, 0.01, 0.01, 0.01, 0.01)
+
+local function ToggleCollisions(arg, canCollide, arg2, arg3)
+    if canCollide == nil then
+        canCollide = false
+    end
+
+    local lightPhysicalProperties
+
+    if arg3 then
+        lightPhysicalProperties = LightPhysicalProperties
+    else
+        lightPhysicalProperties = nil
+    end
+
+    for _, child in pairs(arg:GetChildren()) do
+        if child:IsA("BasePart") then
+            local flag12
+
+            if canCollide then
+                flag12 = child.Name == "Torso" or child.Name == "Head"
+            else
+                flag12 = canCollide
+            end
+
+            if flag12 then
+                if child.CanCollide ~= canCollide then
+                    child.CanCollide = canCollide
+                end
+            elseif not canCollide then
+                if child.CanCollide ~= canCollide then
+                    child.CanCollide = canCollide
+                end
+
+                if not arg2 then
+                    local ragdollLimbPart = child:FindFirstChild("RagdollLimbPart")
+
+                    if ragdollLimbPart and ragdollLimbPart.CanCollide then
+                        ragdollLimbPart.CanCollide = false
+                    end
+                end
+            end
+
+            if child.Name ~= "HumanoidRootPart" and child.CustomPhysicalProperties ~= lightPhysicalProperties then
+                child.CustomPhysicalProperties = lightPhysicalProperties
+            end
+        end
+    end
+end
+
+local function RepositionLimbs(arg, arg2)
+    local humanoidRootPart = arg:FindFirstChild("HumanoidRootPart")
+    local torso = arg:FindFirstChild("Torso")
+    if not humanoidRootPart or not torso then
+        return
+    end
+    local neck = torso:FindFirstChild("Neck")
+    if neck and neck.Enabled then
+        return
+    end
+    local lookVector = humanoidRootPart.CFrame.LookVector
+    local vector = Vector3.new(lookVector.X, 0, lookVector.Z)
+    if vector.Magnitude < 0.001 then
+        return
+    end
+    local cframe = CFrame.lookAt(humanoidRootPart.Position, humanoidRootPart.Position + vector.Unit)
+
+    for k, v24 in pairs(tbl7.LimbOffsetsRL) do
+        local v25 = arg:FindFirstChild(k)
+
+        if v25 and v25:IsA("BasePart") then
+            local cFrame2 = cframe * v24
+
+            if v25.CFrame ~= cFrame2 then
+                v25.CFrame = cFrame2
+            end
+
+            if arg2 then
+                ResetVelocity(v25)
+            end
+        end
+    end
+end
+
+local function FindNicePart(arg)
+    if not arg or not arg:IsA("Model") then
+        return
+    end
+    local v22 = tbl7.GrabbableParts[arg]
+    if v22 and v22:IsDescendantOf(arg) and v22.CanQuery and not v22.Anchored then
+        return v22
+    end
+    tbl7.GrabbableParts[arg] = nil
+    local v23 = nil
+
+    for _, v24 in ipairs(arg:QueryDescendants("BasePart")) do
+        if v24.CanQuery and not v24.Anchored and v24.Name ~= "Button" then
+            v23 = v23 or v24
+            if (v24.AssemblyRootPart or v24) == v24 then
+                tbl7.GrabbableParts[arg] = v24
+                return v24
+            end
+        end
+    end
+
+    tbl7.GrabbableParts[arg] = v23
+    return v23
+end
+
+local v22  
+
+local function Teleport(arg, cFrame2, arg2, arg3)
+    if not arg or not arg:IsA("BasePart") or not cFrame2 then
+        return false
+    end
+    local v24 = Char()
+    local v25 = v24 and arg:IsDescendantOf(v24)
+
+    if typeof(cFrame2) == "CFrame" then
+        if arg2 then
+            cFrame2 *= arg2
+        end
+    elseif typeof(cFrame2) == "Vector3" then
+        local cframe = CFrame.new
+
+        if arg2 then
+            cFrame2 += arg2.Position
+        end
+
+        cFrame2 = cframe(cFrame2)
+    else
+        if not (typeof(cFrame2) == "Instance" and cFrame2:IsA("BasePart")) then
+            return false
+        end
+
+        if arg2 then
+            cFrame2 = cFrame2.CFrame * arg2
+        else
+            cFrame2 = cFrame2.CFrame
+        end
+    end
+
+    if v25 and (arg.Name == "HumanoidRootPart" or arg.Name == "Torso") and tbl7.States["Anti Grab"] then
+        v22 = cFrame2
+    end
+
+    if arg.CFrame ~= cFrame2 then
+        arg.CFrame = cFrame2
+    end
+
+    if arg3 ~= false then
+        ResetVelocity(arg)
+    end
+
+    return true
+end
+
+local function PivotTo(arg, arg2, arg3, arg4)
+    if not arg or not arg:IsA("Model") or typeof(arg2) ~= "CFrame" then
+        return false
+    end
+    local n36 = arg2 * arg:GetPivot():Inverse()
+    arg3 = arg3 or arg:QueryDescendants("BasePart")
+    arg4 = arg4 or {}
+    table.clear(arg4)
+
+    for i, v24 in ipairs(arg3) do
+        local assemblyRootPart = v24:IsDescendantOf(arg) and v24.AssemblyRootPart
+
+        if assemblyRootPart and not v24.Anchored and not assemblyRootPart.Anchored then
+            arg4[i] = n36 * v24.CFrame
+        end
+    end
+
+    for k, v24 in pairs(arg4) do
+        arg3[k].CFrame = v24
+    end
+
+    return true
+end
+
+local function DestroyToy(arg)
+    if arg and arg:IsA("Model") then
+        tbl11.DestroyToy:FireServer(arg)
+    end
+end
+
+local function SpawnToy(arg, arg2, arg3, arg4)
+    if type(arg) ~= "string" or arg == "" then
+        return
+    end
+
+    if tbl7.FailedToys[arg] then
+        return
+    end
+    local n37 = tonumber(arg3) or 0
+
+    if tbl7.States.Spawning or #tbl7.SpawnQueue > 0 then
+        if n37 <= 0 then
+            return
+        end
+        tbl7.SpawnOrder = tbl7.SpawnOrder + 1
+        local tbl17 = { Priority = n37, Order = tbl7.SpawnOrder }
+        table.insert(tbl7.SpawnQueue, tbl17)
+
+        table.sort(tbl7.SpawnQueue, function(arg5, arg6)
+            local flag12
+
+            if arg5.Priority == arg6.Priority then
+                flag12 = arg5.Order < arg6.Order
+            else
+                flag12 = arg5.Priority > arg6.Priority
+            end
+
+            return flag12
+        end)
+
+        while true do
+            task.wait()
+            if not (flag11 or not tbl7.States.Spawning and tbl7.SpawnQueue[1] == tbl17) then
+                continue
+            end
+            break
+        end
+
+        table.remove(tbl7.SpawnQueue, table.find(tbl7.SpawnQueue, tbl17))
+        if flag11 then
+            return
+        end
+    end
+
+    local v22, v23 = Char()
+    if not v23 then
+        return
+    end
+    local flag12 = inPlot.Value and not inOwnedPlot.Value
+    if flag12 and tbl7.States.Owning then
+        return
+    end
+    tbl7.States.Spawning = true
+
+    if flag12 then
+        tbl7.States.Owning = true
+    end
+
+    if localPlayer.CanSpawnToy.Value == false then
+        repeat
+            task.wait()
+        until localPlayer.CanSpawnToy.Value
+    end
+
+    local cframe
+
+    if flag12 then
+        cframe = CFrame.new(0, 25, 0)
+    else
+        cframe = v23.CFrame + Vector3.new(0, 15, 0)
+    end
+
+    local n38 = CFrame.new((arg2 or cframe).Position) + Vector3.new(0, 0, 20)
+    local rotation
+
+    if workspace:FindFirstChild("RotateOrientPart") then
+        rotation = workspace.RotateOrientPart.Rotation
+    else
+        rotation = Vector3.zero
+    end
+
+    local v24 = rotation
+    local v25 = nil
+    local connection = nil
+
+    connection = v17.ChildAdded:Connect(function(child)
+        if child.Name == arg then
+            v25 = child
+
+            if arg4 then
+                tbl7.ToyAuraReserved[child] = true
+            end
+
+            if connection then
+                connection:Disconnect()
+            end
+        end
+    end)
+
+    local cFrame2 = v23.CFrame
+    local cframe2 = CFrame.new(0, 10, 0)
+    local connection2 = nil
+
+    if flag12 then
+        RunService:BindToRenderStep("STClient", Enum.RenderPriority.Camera.Value - 1, function()
+            v23.CFrame = cFrame2
+        end)
+
+        connection2 = RunService.Heartbeat:Connect(function()
+            cFrame2 = v23.CFrame
+            v23.CFrame = cframe2
+        end)
+    end
+
+    local now3 = tick()
+
+    task.spawn(function()
+        tbl11.SpawnToy:InvokeServer(arg, n38, v24)
+    end)
+
+    while true do
+        RunService.Heartbeat:Wait()
+
+        if flag12 then
+            task.spawn(function()
+                tbl11.SpawnToy:InvokeServer(arg, n38, v24)
+            end)
+        end
+
+        if not (v25 or tick() - now3 > 1.3) then
+            continue
+        end
+        break
+    end
+
+    if flag12 then
+        RunService:UnbindFromRenderStep("STClient")
+
+        if connection2 then
+            connection2:Disconnect()
+        end
+
+        if v23 then
+            v23.CFrame = cFrame2
+        end
+    end
+
+    if connection then
+        connection:Disconnect()
+    end
+
+    if not v25 then
+        tbl7.FailedToys[arg] = true
+
+        task.delay(2, function()
+            tbl7.FailedToys[arg] = nil
+        end)
+    end
+
+    tbl7.States.Spawning = false
+
+    if flag12 then
+        tbl7.States.Owning = false
+    end
+
+    return v25
+end
+
+local function WhichPlot(arg)
+    local plots = workspace:FindFirstChild("Plots")
+    if not plots then
+        return
+    end
+
+    for _, child in pairs(plots:GetChildren()) do
+        local plotArea = child:FindFirstChild("PlotArea")
+        if not plotArea then
+            continue
+        end
+        local partsInPart = workspace:GetPartsInPart(plotArea)
+
+        for _, v24 in pairs(partsInPart) do
+            if Players:GetPlayerFromCharacter(v24.Parent) == arg then
+                local inOwnedPlot2 = arg:FindFirstChild("InOwnedPlot")
+                return child, inOwnedPlot2 and inOwnedPlot2.Value
+            end
+        end
+    end
+end
+
+local BreakPlot  -- forward declaration
+local function SNO(arg, arg2, arg3)
+    local v24, v25, v26 = Char()
+    local head = v24 and v24:FindFirstChild("Head")
+    local ragdolled = v26 and v26:FindFirstChild("Ragdolled")
+    if not (head and ragdolled and v25 and v26 and v26.Health > 0) then
+        return false
+    end
+
+    if not arg or not arg:IsA("BasePart") or not arg.Parent or GetMagnitude(arg, workspace.SpawnLocation) > 10000000 then
+        return false
+    end
+
+    if IsPartOwner(arg) then
+        return true
+    end
+
+    if tbl7.States.Owning or arg3 and not arg3() then
+        return false
+    end
+    local flag12 = false
+    local cframe = CFrame.new()
+    local cframe2 = CFrame.new()
+    local cframe3 = CFrame.new()
+    local connection = nil
+
+    if (v25.Position - arg.Position).Magnitude >= 31 then
+        flag12 = true
+    end
+
+    local flag13 = arg.Name == "HumanoidRootPart" or arg.Name == "Torso"
+    local v27 = nil
+
+    if flag13 then
+        local v28 = Players:FindFirstChild(arg.Parent.Name)
+        v27 = nil
+
+        if v28 then
+            local v29, v30, v31 = Char(v28)
+            if not v31 or v31.Health == 0 then
+                return false
+            end
+            local inPlot2 = v28:FindFirstChild("InPlot")
+            inPlot2 = inPlot2 and inPlot2.Value == true
+            v27 = nil
+
+            if inPlot2 then
+                v27 = BreakPlot(v28)
+                if not v27 then
+                    return false
+                end
+            end
+        end
+    end
+
+    tbl7.States.Owning = true
+
+    local function fn21_inner()
+        cframe2 = v25.CFrame
+        cframe = head.CFrame
+        cframe3 = v25.CFrame
+
+        RunService:BindToRenderStep("RSCClient", Enum.RenderPriority.Camera.Value - 1, function()
+            v25.CFrame = cframe2
+            head.CFrame = cframe
+        end)
+
+        connection = RunService.Heartbeat:Connect(function()
+            cframe2 = v25.CFrame
+            cframe = head.CFrame
+            v25.CFrame = cframe3
+            head.CFrame = cframe3
+        end)
+    end
+
+    local function fn22_inner()
+        RunService:UnbindFromRenderStep("RSCClient")
+
+        if connection then
+            connection:Disconnect()
+            connection = nil
+        end
+
+        head.CFrame = cframe
+        v25.CFrame = cframe2
+    end
+
+    local ok, result = pcall(function()
+        if flag12 then
+            fn21_inner()
+        end
+
+        arg2 = arg2 or 0.65
+        local now3 = tick()
+
+        while not flag11 and arg.Parent and not IsPartOwner(arg) and v26.Health ~= 0 and v25.Parent and (not arg3 or arg3()) and tick() - now3 < arg2 do
+            if flag12 then
+                cframe3 = PredictCFrame(arg) - Vector3.new(0, 22, 0)
+            end
+
+            RunService.Heartbeat:Wait()
+            local grab = Grab
+            local v28
+
+            if flag12 then
+                v28 = cframe3
+            else
+                v28 = nil
+            end
+
+            grab(arg, v28)
+        end
+    end)
+
+    if flag12 then
+        pcall(fn22_inner)
+    end
+
+    if v27 then
+        task.delay(1, DestroyToy, v27)
+    end
+
+    tbl7.States.Owning = false
+    if not ok then
+        return warn(result)
+    end
+    return IsPartOwner(arg)
+end
+
+BreakPlot = function(arg)
+    local inPlot2 = nil
+
+    if arg:IsA("Player") then
+        inPlot2 = arg:FindFirstChild("InPlot")
+        if not inPlot2 then
+            return
+        end
+        arg = WhichPlot(arg)
+        if not arg then
+            return
+        end
+    end
+
+    if tbl7.BrokenPlots[arg.Name] then
+        return true
+    end
+    local plotArea = arg:FindFirstChild("PlotArea")
+    if not plotArea then
+        return
+    end
+    local NinjaShuriken = SpawnToy("NinjaShuriken")
+    if not NinjaShuriken then
+        return
+    end
+    local stickyPart = NinjaShuriken and NinjaShuriken:WaitForChild("StickyPart", 0.4)
+    local stickyWeld = stickyPart and stickyPart:WaitForChild("StickyWeld", 0.4)
+    local cframe = CFrame.new(1099511627776, 1099511627776, 1099511627776)
+
+    if arg.Name == "Plot5" then
+        cframe = CFrame.new(2147483648, 2147483648, 2147483648)
+    end
+
+    if not stickyWeld or not SNO(stickyPart) then
+        return
+    end
+    tbl11.StickyPartEvent:FireServer(stickyPart, plotArea, cframe)
+    local now3 = tick()
+
+    while true do
+        task.wait()
+        if not (stickyWeld.Part1 == plotArea and (not inPlot2 or not inPlot2.Value) or not stickyWeld.Parent or tick() - now3 > 0.8) then
+            continue
+        end
+        break
+    end
+
+    if not stickyWeld.Parent or stickyWeld.Part1 ~= plotArea or inPlot2 and inPlot2.Value == true then
+        if NinjaShuriken then
+            DestroyToy(NinjaShuriken)
+        end
+
+        return false
+    end
+
+    tbl7.BrokenPlots[arg.Name] = NinjaShuriken
+
+    NinjaShuriken.Destroying:Once(function()
+        tbl7.BrokenPlots[arg.Name] = nil
+    end)
+
+    return NinjaShuriken
+end
+
+local function GetInventory(arg)
+    local v22 = workspace:FindFirstChild(arg.Name .. "SpawnedInToys")
+    local v23 = nil
+
+    for _, child in pairs(workspace.Plots:GetChildren()) do
+        for _, child2 in pairs(child.PlotSign.ThisPlotsOwners:GetChildren()) do
+            if child2:IsA("StringValue") and child2.Value == arg.Name then
+                v23 = workspace.PlotItems:FindFirstChild(child.Name)
+            end
+        end
+    end
+
+    return v22, v23
+end
+
+local function Ragdoll(arg)
+    if not arg or not arg.Parent or tbl7.States.Ragdolling then
+        return
+    end
+    local head = arg:FindFirstChild("Head")
+    local torso = head and arg:FindFirstChild("Torso")
+    local humanoid = torso and arg:FindFirstChild("Humanoid")
+    humanoid = humanoid and humanoid:FindFirstChild("Ragdolled")
+
+    if humanoid and humanoid.Value == false then
+        tbl7.States.Ragdolling = true
+        local ragdollRSC = v17:FindFirstChild("RagdollRSC") or SpawnToy("PalletLightBrown")
+        local soundPart = ragdollRSC and ragdollRSC:WaitForChild("SoundPart", 0.5)
+        local main = soundPart and ragdollRSC:WaitForChild("Main", 0.5)
+        if not main or not SNO(soundPart) then
+            tbl7.States.Ragdolling = false
+            return DestroyToy(ragdollRSC)
+        end
+        ragdollRSC.Name = "RagdollRSC"
+
+        for _, child in pairs(ragdollRSC:GetChildren()) do
+            if child:IsA("BasePart") then
+                child.CanCollide = false
+            end
+        end
+
+        if not main:FindFirstChild("RagdollBP") then
+            local bodyPosition = Instance.new("BodyPosition")
+            bodyPosition.Name = "RagdollBP"
+            bodyPosition.D = 1500
+            bodyPosition.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bodyPosition.Position = Vector3.new(0, 100000, 0)
+            bodyPosition.Parent = main
+        end
+
+        local now3 = tick()
+
+        while true do
+            soundPart.Position = torso.Position
+            soundPart.Velocity = Vector3.new(0, -10, 0)
+            task.wait(0.1)
+            if not (humanoid.Value or not main.Parent or not arg.Parent or not head:FindFirstChild("PartOwner") or tick() - now3 > 0.5) then
+                continue
+            end
+            break
+        end
+
+        tbl7.States.Ragdolling = false
+        return humanoid.Value
+    end
+end
+
+local function RemoveSticky(arg, arg2)
+    if not arg or not arg.Parent then
+        return
+    end
+
+    for _, v24 in pairs(arg:QueryDescendants("BasePart")) do
+        if v24.Parent then
+            for _, v25 in pairs(v24:GetConnectedParts()) do
+                if v25.Name == "StickyPart" then
+                    for _, child in pairs(v25:GetChildren()) do
+                        if child:IsA("TouchInterest") then
+                            child:Destroy()
+                        end
+                    end
+
+                    local parent2 = v25.Parent and FindNicePart(v25.Parent)
+
+                    if parent2 then
+                        if not parent2:IsDescendantOf(workspace.PlotItems) then
+                            Grab(parent2)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if arg2 then
+        return
+    end
+    local playerFromCharacter = Players:GetPlayerFromCharacter(arg)
+    if not playerFromCharacter then
+        return
+    end
+    local v24 = GetInventory(playerFromCharacter)
+    if not v24 then
+        return
+    end
+    local humanoidRootPart = arg:FindFirstChild("HumanoidRootPart") or arg:FindFirstChild("Torso")
+    if not humanoidRootPart then
+        return
+    end
+
+    for _, v25 in v24:GetChildren() do
+        if v25:IsA("Model") then
+            local position = humanoidRootPart.Position
+
+            if (v25:GetPivot().Position - position).Magnitude < 10 then
+                local v26 = FindNicePart(v25)
+
+                if v26 then
+                    ToggleCollisions(v25, false)
+                    Grab(v26)
+
+                    if not v25:FindFirstChild("StickyPart") then
+                        if not v26:FindFirstChild("RscBV") then
+                            local bodyVelocity2 = Instance.new("BodyVelocity")
+                            bodyVelocity2.Velocity = Vector3.new(0, -50000, 0)
+                            bodyVelocity2.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                            bodyVelocity2.Name = "RscBV"
+                            bodyVelocity2.Parent = v26
+                        end
+
+                        PivotTo(v25, CFrame.new(0, -50000, 0))
+                        task.delay(1, RNO, v26)
+                    end
+                end
+            end
+        end
+    end
+end
+
+local tbl12 = {
+    Char              = Char,
+    IsPartOwner       = IsPartOwner,
+    IsNetworkOwner    = IsNetworkOwner,
+    GetMagnitude      = GetMagnitude,
+    ResetVelocity     = ResetVelocity,
+    GetRuntimeGate    = GetRuntimeGate,
+    WaitForRuntimeToggle = WaitForRuntimeToggle,
+    GetCustomVelocity = GetCustomVelocity,
+    PredictCFrame     = PredictCFrame,
+    Grab              = Grab,
+    RNO               = RNO,
+    ToggleMotor6D     = ToggleMotor6D,
+    LightPhysicalProperties = LightPhysicalProperties,
+    ToggleCollisions  = ToggleCollisions,
+    RepositionLimbs   = RepositionLimbs,
+    FindNicePart      = FindNicePart,
+    Teleport          = Teleport,
+    PivotTo           = PivotTo,
+    DestroyToy        = DestroyToy,
+    SpawnToy          = SpawnToy,
+    WhichPlot         = WhichPlot,
+    SNO               = SNO,
+    BreakPlot         = BreakPlot,
+    GetInventory      = GetInventory,
+    Ragdoll           = Ragdoll,
+    RemoveSticky      = RemoveSticky,
+}
+
+local tbl16 = {}
+
+local function fn21(arg, arg2)
+    if not arg or not tbl8.EKI then
+        return
+    end
+
+    return sethiddenproperty and pcall(function()
+        sethiddenproperty(arg, "PhysicsRepRootPart", arg2)
+    end)
+end
+
+local function fn22(arg)
+    if not arg then
+        return
+    end
+    local v22, v23, v24 = tbl12.Char(arg)
+
+    if v23 then
+        local kickAP = v23:FindFirstChild("KickAP")
+        local kickAO = v23:FindFirstChild("KickAO")
+        local weldHRP = v23:FindFirstChild("WeldHRP")
+
+        if kickAP then
+            kickAP:Destroy()
+        end
+
+        if kickAO then
+            kickAO:Destroy()
+        end
+
+        if weldHRP and v24:FindFirstChild("Ragdolled") and v24.Ragdolled.Value then
+            weldHRP.Enabled = true
+        end
+
+        if tbl12.IsNetworkOwner(v23) then
+            fn21(v23, nil)
+        end
+    end
+
+    if v22 then
+        task.spawn(tbl12.ToggleMotor6D, v22, true, true)
+        task.spawn(tbl12.ToggleCollisions, v22, true)
+    end
+end
+
+local function fn23(arg, arg2, arg3)
+    local n36 = 6.2831853071795862 / arg3 * (arg2 - 1)
+    local nkOffset = tbl9.NKOffset
+    return arg.Position + Vector3.new(math.cos(n36) * 10, nkOffset, math.sin(n36) * 10)
+end
+
+while task.wait() do
+    if flag11 then
+        for k in tbl16, nil, nil do
+            fn22(k)
+        end
+
+        return
+    end
+
+    if not tbl8.LoopApplyMethodT then
+        for k in tbl16, nil, nil do
+            fn22(k)
+            tbl16[k] = nil
+        end
+
+        if not tbl12.WaitForRuntimeToggle("LoopApplyMethodT") then
+            return
+        end
+    end
+
+    local loopApplyMethodT = tbl8.LoopApplyMethodT
+    local selectedPlayers = tbl7.SelectedPlayers
+    local targetMethods = tbl7.TargetMethods
+
+    for k in tbl16, nil, nil do
+        if k and (not k.Parent or not targetMethods.Kick or inPlot.Value or not loopApplyMethodT or not selectedPlayers[k]) then
+            fn22(k)
+            tbl16[k] = nil
+        end
+    end
+
+    if not (not loopApplyMethodT or not targetMethods.Kick or inPlot.Value) then
+        local v22, v23, v24 = tbl12.Char()
+
+        if v23 and v24 and v24.Health > 0 then
+            local tbl17 = {}
+
+            for k in selectedPlayers, nil, nil do
+                if k and k.Parent and k:IsA("Player") then
+                    table.insert(tbl17, k)
+                    tbl16[k] = true
+                end
+            end
+
+            if #tbl17 ~= 0 then
+                for i, v25 in ipairs(tbl17) do
+                    if v23 and v24 and v24.Health > 0 and not inPlot.Value then
+                        local v26, v27, v28 = tbl12.Char(v25)
+                        local torso = v26 and v26:FindFirstChild("Torso")
+
+                        if not (v27 and v28 and torso and v28.Health > 0) then
+                            fn22(v25)
+                        else
+                            local v29 = fn23(v23, i, #tbl17)
+                            local kickAP = v27:FindFirstChild("KickAP")
+                            local kickAO = v27:FindFirstChild("KickAO")
+                            local weldHRP = v27:FindFirstChild("WeldHRP")
+
+                            if not kickAP or not kickAO then
+                                if kickAP then
+                                    kickAP:Destroy()
+                                end
+
+                                if kickAO then
+                                    kickAO:Destroy()
+                                end
+
+                                kickAP = Instance.new("BodyPosition")
+                                local bodyGyro = Instance.new("BodyGyro")
+                                kickAP.D = 200
+                                kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                                kickAP.Position = v29
+                                kickAP.Parent = v27
+                                bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                                bodyGyro.D = 200
+                                bodyGyro.CFrame = CFrame.new()
+                                bodyGyro.Parent = v27
+                                kickAP.Name = "KickAP"
+                                bodyGyro.Name = "KickAO"
+                            end
+
+                            if weldHRP then
+                                weldHRP.Enabled = false
+                            end
+
+                            kickAP.Position = v29
+                            local flag12
+
+                            if not (tbl12.GetMagnitude(v23, v27) > 33) then
+                                tbl12.Grab(v27)
+                                flag12 = tbl9.NKDelayMode == "Faster but worse" or not tbl9.NKDelayMode
+
+                                if flag12 then
+                                    task.delay(0.2, tbl12.RNO, v27)
+                                elseif tbl9.NKDelayMode == "Normal" then
+                                    task.spawn(function()
+                                        task.wait()
+                                        tbl12.RNO(v27)
+                                    end)
+                                end
+
+                                if tbl8.RagdollInNK then
+                                    task.spawn(tbl12.Ragdoll, v26)
+                                end
+
+                                if tbl8.DeleteShurInNK then
+                                    task.spawn(tbl12.RemoveSticky, v26)
+                                end
+
+                                tbl12.ToggleCollisions(v26, false)
+                                tbl12.RepositionLimbs(v26, true)
+
+                                task.delay(0.6, function()
+                                    if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
+                                        fn21(v27, v27)
+                                    end
+                                end)
+                            elseif tbl12.SNO(v27) then
+                                tbl12.Teleport(v27, v29)
+                                tbl12.Grab(v27)
+                                flag12 = tbl9.NKDelayMode == "Faster but worse" or not tbl9.NKDelayMode
+
+                                if flag12 then
+                                    task.delay(0.2, tbl12.RNO, v27)
+                                elseif tbl9.NKDelayMode == "Normal" then
+                                    task.spawn(function()
+                                        task.wait()
+                                        tbl12.RNO(v27)
+                                    end)
+                                end
+
+                                if tbl8.RagdollInNK then
+                                    task.spawn(tbl12.Ragdoll, v26)
+                                end
+
+                                if tbl8.DeleteShurInNK then
+                                    task.spawn(tbl12.RemoveSticky, v26)
+                                end
+
+                                tbl12.ToggleCollisions(v26, false)
+                                tbl12.RepositionLimbs(v26, true)
+
+                                task.delay(0.6, function()
+                                    if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
+                                        fn21(v27, v27)
+                                    end
+                                end)
+                            else
+                                fn21(v27, nil)
+                            end
+                        end
+                    end
+                end
+
+                if tbl9.NKDelayMode == "Normal" then
+                    task.wait()
+                end
+            end
+        end
+    end
+end
+
+
+-- tbl10 (워커/토큰 관리)
+local tbl10 = { Workers = {}, Generations = {}, LoopTokens = {}, Epoch = 0 }
+tbl10.Cancel = function(arg)
+    tbl10.Generations[arg] = (tbl10.Generations[arg] or 0) + 1
+end
+tbl10.Compact = function(arg) -- ... (원본 Main 참조)
+tbl10.Enqueue = function(arg, arg2, arg3, arg4) -- ... (원본 Main 참조)
+tbl10.CancelAll = function() -- ... (원본 Main 참조)
+
+-- RunPlayerMethod
+tbl12.RunPlayerMethod = function(arg, arg2, arg3, arg4, arg5)
+    if not arg2 then return end
+    if arg4 then
+        tbl10.Enqueue(arg, arg2, arg3, arg5)
+        return
+    end
+    local ok, result = pcall(arg2, arg3)
+    if not ok then
+        warn(("[Resonance] %s failed: %s"):format(arg, tostring(result)))
+    end
+end
+
+-- ProcessPlayer (전체)
+tbl12.ProcessPlayer = function(arg, arg2, arg3, arg4, arg5)
+    local function fn21(arg6, arg7)
+        tbl12.RunPlayerMethod(arg6, arg7, arg, arg2, arg5)
+    end
+
+    if arg4 then
+        -- Blobman 브랜치
+        local blobMethod = tbl9.BlobMethod
+        if blobMethod == "Bring" then fn21("Blob_Bring", tbl14.Bring)
+        elseif blobMethod == "Kill" then fn21("Blob_Kill", tbl14.Kill)
+        elseif blobMethod == "Follow" then fn21("Blob_Follow", tbl14.Follow)
+        elseif blobMethod == "Remove Gucci" then fn21("Blob_RemoveGucci", tbl14.RemoveGucci)
+        elseif blobMethod == "Lock" then
+            local fn22
+            if arg2 then fn22 = function(arg6) tbl14.LoopLock(arg6, arg5) end
+            else fn22 = tbl14.Lock end
+            fn21("Blob_Lock", fn22)
+        elseif blobMethod == "Kick" and not arg3 then
+            local loopKick = arg2 and tbl14.LoopKick or tbl14.Kick
+            fn21("Blob_Kick", loopKick)
+        end
+        return
+    end
+
+    local targetMethods = tbl7.TargetMethods
+    local v22, v23 = tbl12.Char(arg)
+    if targetMethods["Remove Invisibility"] and v23 then
+        v23.Massless = false
+    end
+    if targetMethods.Bring then fn21("Bring", tbl12.BringPlayer) end
+
+    local kick = targetMethods.Kick
+    local flag12
+    if kick then
+        local flag13 = arg3 and tbl9.KickServerMethod == "Void"
+        if flag13 then flag12 = flag13
+        else flag12 = not arg3 and not arg2 end
+    else flag12 = kick end
+    if flag12 then fn21("Kick", tbl12.Void) end
+
+    if targetMethods.Kill then fn21("Kill", tbl12.Kill) end
+    if targetMethods.Void then fn21("Void", tbl12.Void) end
+    if targetMethods["Remove Gucci"] then fn21("Remove Gucci", tbl12.RemoveGucci) end
+    if targetMethods["Destroy Food"] then fn21("Destroy Food", tbl12.EatAntiInput) end
+    if targetMethods["Delete Seatables"] then fn21("Delete Seatables", tbl12.DeleteSeatables) end
+end
+
+-- CreateLoopToggle (원본 그대로)
+tbl12.CreateLoopToggle = function(arg, arg2, arg3, arg4, arg5, arg6, arg7)
+    local str5 = if arg4 then "Server" else "Selected"
+    local str6 = if arg4 then "all" else "selected"
+    local processPlayer = arg7 or tbl12.ProcessPlayer
+    local flag12 = processPlayer == tbl12.ProcessPlayer
+
+    arg:AddToggle(arg2, {
+        Text = "Loop Apply Method " .. str5,
+        Default = false,
+        Tooltip = "Keeps applying selected methods to " .. str6 .. " players",
+        Callback = function(arg8)
+            tbl12.SetRuntimeToggle(arg3, arg8)
+            tbl10.LoopTokens[arg3] = (tbl10.LoopTokens[arg3] or 0) + 1
+            tbl10.Cancel(arg3)
+            if not arg8 then return end
+            local v22 = tbl10.LoopTokens[arg3]
+
+            task.spawn(function()
+                while not flag11 and tbl8[arg3] and tbl10.LoopTokens[arg3] == v22 do
+                    if arg5 and arg4 and tbl9.BlobMethod == "Kick" then
+                        tbl14.KickServer()
+                        task.wait(1)
+                    else
+                        if flag12 and not arg5 and arg4 and tbl7.TargetMethods.Kick and tbl9.KickServerMethod == "Circle + Lag" then
+                            tbl12.KickServer(true)
+                        end
+                        for _, v23 in ipairs(tbl12.GetTargets(arg4, arg6)) do
+                            if not (not tbl8[arg3] or tbl10.LoopTokens[arg3] ~= v22) then
+                                processPlayer(v23, true, arg4, arg5, arg3)
+                                continue
+                            end
+                            break
+                        end
+                    end
+                    if flag12 and not arg5 and arg4 and tbl7.TargetMethods.Kick and tbl9.KickServerMethod == "Circle + Lag" then
+                        task.wait(10)
+                    else
+                        task.wait()
+                    end
+                end
+            end)
+        end,
+    })
+end
+
+-- 그 다음 호출:
+-- tbl12.CreateLoopToggle(Apply, "LoopApplyMethodTSel", "LoopApplyMethodT", false, false, tbl7.SelectedPlayers)
+
+--==================================================================
+-- [0] 필수 유틸
+--==================================================================
+
+-- SetRuntimeToggle: LoopApplyMethodT 토글의 on/off를 tbl8에 반영 + 게이트 wake
+tbl12.SetRuntimeToggle = function(arg, arg2)
+    tbl8[arg] = arg2
+    local v24 = tbl7.RuntimeGates[arg]
+
+    if v24 then
+        v24:Fire()
+    end
+end
+
+-- GetTargets: CreateLoopToggle 내부에서 사용
+tbl12.GetTargets = function(arg, arg2)
+    local tbl16 = {}
+
+    if arg then
+        for _, v22 in ipairs(tbl7.PlayerList) do
+            if v22 ~= localPlayer and not tbl12.IsProtectedPlayer(v22, true) then
+                table.insert(tbl16, v22)
+            end
+        end
+    else
+        for k in pairs(arg2) do
+            if k and k.Parent and not tbl12.IsProtectedPlayer(k) then
+                table.insert(tbl16, k)
+            else
+                arg2[k] = nil
+            end
+        end
+    end
+
+    return tbl16
+end
+
+--==================================================================
+-- [1] LoopApplyMethodT 토글 UI (Apply 그룹박스에 배치)
+--     원본: tbl12.CreateLoopToggle(Apply, "LoopApplyMethodTSel", "LoopApplyMethodT", false, false, tbl7.SelectedPlayers)
+--     → 최소 버전은 아래처럼 단순 AddToggle로도 충분히 while 루프를 구동함
+--==================================================================
+
+local Apply = tbl15.Target:AddLeftGroupbox("Apply", "dock")
+
+Apply:AddToggle("LoopApplyMethodTSel", {
+    Text = "Loop Apply Method Selected",
+    Default = false,
+    Tooltip = "Keeps applying selected methods to selected players",
+    Callback = function(value)
+        tbl12.SetRuntimeToggle("LoopApplyMethodT", value)
+    end,
+})
+
+-- (원본은 위를 tbl12.CreateLoopToggle로 감싸서 ProcessPlayer 루프도 함께 돌림.
+--  순수 Kick grab-루프만 원하면 위 단순 버전으로 충분.
+--  원본 그대로 쓰려면 아래 CreateLoopToggle + ProcessPlayer + tbl10 세트 필요.)
+
+--==================================================================
+-- [2] Method Settings 그룹박스 (Target 탭, 오른쪽)
+--==================================================================
+
+local v20 = tbl15.Target:AddRightGroupbox("Method Settings", "apple")
+
+-- 2-1. 어떤 메서드를 쓸지 (Kick이 반드시 선택돼야 while 루프가 동작)
+v20:AddDropdown("MethodSettingsTargets", {
+    Values = {
+        "Kick",
+        "Void",
+        "Kill",
+        "Bring",
+        "Destroy Food",
+        "Remove Gucci",
+        "Remove Invisibility",
+        "Delete Seatables",
+    },
+    Multi = true,
+    AllowNull = true,
+    Text = "Methods",
+    Callback = function(targetMethods)
+        tbl7.TargetMethods = targetMethods
+    end,
+})
+
+-- 2-2. Kick이 켜졌을 때만 보이는 Kick 설정들
+local v21 = v20:AddDependencyBox()
+v21:SetupDependencies({ { options.MethodSettingsTargets, "Kick" } })
+v21:AddDivider("Kick Settings")
+
+-- Delay Mode → tbl9.NKDelayMode  ("Normal" | "Faster but worse")
+v21:AddDropdown("NKDelayConf", {
+    Values = { "Normal", "Faster but worse" },
+    Multi = false,
+    Default = 1,
+    Text = "Delay Mode",
+    Callback = function(nkDelayMode)
+        tbl9.NKDelayMode = nkDelayMode
+    end,
+})
+
+-- Loop Ragdoll → tbl8.RagdollInNK
+v21:AddToggle("RagdollNK", {
+    Text = "Loop Ragdoll",
+    Default = true,
+    Callback = function(ragdollInNK)
+        tbl8.RagdollInNK = ragdollInNK
+    end,
+})
+
+-- Remove Anti-Kick → tbl8.DeleteShurInNK
+v21:AddToggle("AntiKickRemoverNK", {
+    Text = "Remove Anti-Kick",
+    Default = true,
+    Callback = function(deleteShurInNK)
+        tbl8.DeleteShurInNK = deleteShurInNK
+    end,
+})
+
+-- Experimental Kick Improvements → tbl8.EKI
+v21:AddToggle("EKIToggle", {
+    Text = "Experimental Kick Improvements [BETA]",
+    Risky = true,
+    Default = tbl8.EKI,
+    Tooltip = "Improves the kick, but can get very buggy! This also doesn't work on bad executors",
+    DisabledTooltip = "Your executor does not support this feature!",
+    Disabled = typeof(sethiddenproperty) ~= "function",
+    Callback = function(eki)
+        tbl8.EKI = eki
+    end,
+})
+
+-- Kick Height → tbl9.NKOffset
+v21:AddSlider("HeightNK", {
+    Text = "Kick Height",
+    Default = 15,
+    Min = 0,
+    Max = 28,
+    Compact = true,
+    Rounding = 0,
+    Callback = function(nkOffset)
+        tbl9.NKOffset = nkOffset
+    end,
+})
+
+-- TP To Void Platform (부가 기능)
+v21:AddButton({
+    Text = "TP To Void Platform",
+    Tooltip = "Teleports you to a platform where victim cant spawn anti-kick shurikens...",
+    Func = function()
+        local v22
+        v22, v22 = tbl12.Char()
+
+        if v22 then
+            tbl12.Teleport(v22, part3.CFrame + Vector3.new(0, 10, 0))
+        end
+    end,
+})
+
+-- Kick Server Method → tbl9.KickServerMethod
+v21:AddDivider("Kick Server Settings")
+
+v21:AddDropdown("KickServerMethod", {
+    Values = { "Circle + Lag", "Void" },
+    Multi = false,
+    Default = 1,
+    Text = "Kick Server Method",
+    Callback = function(kickServerMethod)
+        tbl9.KickServerMethod = kickServerMethod
+    end,
+})
+
+
+local Network = tbl15.Settings:AddRightGroupbox("Network", "radio-tower")
+
+-- Position Prediction → tbl8.PositionPrediction
+Network:AddToggle("PositionPrediction", {
+    Text = "Position Prediction",
+    Default = false,
+    Tooltip = "Predicts the next server position of the target before teleporting to them and trying to grab them. This can cause issues if target's movement sequence isn't linear",
+    Callback = function(positionPrediction)
+        tbl8.PositionPrediction = positionPrediction
+    end,
+})
+
+-- Direct Grab CFrame → tbl8.DirectGrab
+Network:AddToggle("DirectGrab", {
+    Text = "Direct Grab CFrame",
+    Default = false,
+    Tooltip = "Changes the position of the second argument to use direct part position instead of your head's LookAt CFrame. This can either help or just reduce your grab distance",
+    Callback = function(directGrab)
+        tbl8.DirectGrab = directGrab
+    end,
+})
