@@ -9308,8 +9308,6 @@ LoopTab:AddSection({
     Name = "Vexo Kick"
 })
                    
-            
-
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -9334,10 +9332,8 @@ local Config = {
     DeleteShurInNK = true,
     RagdollInNK = true,
     NKOffset = 20,
-    StickyCleanupInterval = 0.1,
-    EKIPulseInterval = 0.1,
-    DestroyGrabLineInterval = 0.03,
-    DragHoldFrames = 2,
+    StickyCleanupInterval = 0.15,
+    EKIPulseInterval = 0.15,
 }
 
 local ragdollPallet = nil
@@ -9769,9 +9765,6 @@ LoopTab:AddToggle({
                         pcall(function() myChar:PivotTo(tHRP.CFrame * CFrame.new(0, 2, 4)) end)
 
                         sno(tHRP)
-                        tHRP.AssemblyLinearVelocity = Vector3.zero
-                        tHRP.AssemblyAngularVelocity = Vector3.zero
-                        task.wait()
 
                         if not tHRP:FindFirstChild("KickAlign") then
                             pcall(function()
@@ -9806,9 +9799,6 @@ LoopTab:AddToggle({
                             if not Config.Active then break end
                             sno(tHRP)
 
-                            tHRP.AssemblyLinearVelocity = Vector3.zero
-                            tHRP.AssemblyAngularVelocity = Vector3.zero
-
                             if Config.EKI and tick() - lastEKIPulse > Config.EKIPulseInterval then
                                 lastEKIPulse = tick()
                                 if IsNetworkOwner(tHRP) then
@@ -9829,36 +9819,14 @@ LoopTab:AddToggle({
                             if myHead and align and align.Attachment1 then
                                 align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
                             end
-
-                            local rot = tHRP:FindFirstChild("KickRot")
-                            if rot then rot.CFrame = CFrame.Angles(0, 0, 0) end
-
-                            local bpLoop = tHRP:FindFirstChild("ControlBP")
-                            if bpLoop then
-                                bpLoop.Position = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
-                            end
-
                             task.wait()
                         end
 
                         if Config.Active then
-                            tHRP.AssemblyLinearVelocity = Vector3.zero
-                            tHRP.AssemblyAngularVelocity = Vector3.zero
-                            sno(tHRP)
-
                             pcall(function()
                                 myChar:PivotTo(currentSavedPos)
                                 tHRP.CFrame = currentSavedPos * CFrame.new(0, Config.NKOffset, 0)
                             end)
-
-                            for hi = 1, Config.DragHoldFrames do
-                                task.wait()
-                                if not tHRP or not tHRP.Parent then break end
-                                tHRP.AssemblyLinearVelocity = Vector3.zero
-                                tHRP.AssemblyAngularVelocity = Vector3.zero
-                                tHRP.CFrame = currentSavedPos * CFrame.new(0, Config.NKOffset, 0)
-                                sno(tHRP)
-                            end
                         end
                         continue
                     end
@@ -9894,9 +9862,6 @@ LoopTab:AddToggle({
 
                     sno(tHRP)
 
-                    tHRP.AssemblyLinearVelocity = Vector3.zero
-                    tHRP.AssemblyAngularVelocity = Vector3.zero
-
                     if Config.EKI and tick() - lastEKIPulse > Config.EKIPulseInterval then
                         lastEKIPulse = tick()
                         if IsNetworkOwner(tHRP) then
@@ -9908,6 +9873,9 @@ LoopTab:AddToggle({
                         RemoveSticky(targetPlayer.Character)
                         lastStickyCleanup = tick()
                     end
+
+                    tHRP.AssemblyLinearVelocity = Vector3.zero
+                    tHRP.AssemblyAngularVelocity = Vector3.zero
 
                     local align = tHRP:FindFirstChild("KickAlign")
                     if align and align.Attachment1 and Config.Active then
@@ -9927,7 +9895,7 @@ LoopTab:AddToggle({
                     end
                     bp.Position = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
 
-                    if tick() - lastRemoteFire > Config.DestroyGrabLineInterval and Config.Active then
+                    if tick() - lastRemoteFire > 0.05 and Config.Active then
                         pcall(function()
                             if DestroyGrabLine then DestroyGrabLine:FireServer(tHRP) end
                         end)
@@ -9952,7 +9920,6 @@ LoopTab:AddToggle({
 LoopTab:AddToggle({
     Name = " Lag <font color='rgb(150,150,255)'>Line Spam</font>",
     Default = false,
-    Flag = "2t89g2997g",
     Callback = function(Value)
         Config.EnableLagSpam = Value
         if Value and Config.Active then
@@ -9967,17 +9934,15 @@ LoopTab:AddToggle({
 
 LoopTab:AddToggle({
     Name = "Anti-Kick Remove <font color='rgb(255,200,60)'>Cleaner</font>",
-    Default = false,
-    Flag = "982gt2i9tg",
+    Default = true,
     Callback = function(Value)
         Config.DeleteShurInNK = Value
     end
 })
 
 LoopTab:AddToggle({
-    Name = "Air-lock <font color='rgb(55,120,200)'>PCLD fixed</font>",
+    Name = "Airlock <font color='rgb(55,120,200)'>PCLD fixed</font>",
     Default = false,
-    Flag = "8002g580t2",
     Callback = function(Value)
         Config.EKI = Value
         if not Value and Config.PlayerList then
@@ -9994,8 +9959,7 @@ LoopTab:AddToggle({
 
 LoopTab:AddToggle({
     Name = "Loop Ragdoll <font color='rgb(120,200,255)'>pallet</font>",
-    Default = false,
-    Flag = "wo8gttgq",
+    Default = true,
     Callback = function(Value)
         Config.RagdollInNK = Value
         if not Value then
@@ -10009,15 +9973,13 @@ LoopTab:AddSlider({
     Min = 10,
     Max = 29,
     Default = 20,
-    Flag = "97rf2u91gt",
     Step = 1,
     Callback = function(Value)
         Config.NKOffset = tonumber(Value) or 20
     end
-})
+})            
 
-
-                                
+      
                               
 end
     LoopTab:AddSection({
