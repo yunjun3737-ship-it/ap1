@@ -9309,6 +9309,7 @@ LoopTab:AddSection({
 })
                    
             
+
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -9329,12 +9330,12 @@ local Config = {
     MainTask = nil,
     RenderTask = nil,
 
-    
     EKI = false,
     DeleteShurInNK = true,
     RagdollInNK = true,
     NKOffset = 20,
-    StickyCleanupInterval = 0.3,
+    StickyCleanupInterval = 0.15,
+    EKICooldown = 2.0,
 }
 
 local ragdollPallet = nil
@@ -9364,17 +9365,21 @@ local function sno(part)
             SetNetworkOwner:FireServer(part, part.CFrame)
         end
     end)
-    if Config.EKI and sethiddenproperty then
-        pcall(function()
-            sethiddenproperty(part, "PhysicsRepRootPart", part)
-        end)
-    end
 end
 
 local function IsNetworkOwner(part)
     if not (part and part:IsA("BasePart")) then return false end
     local root = part.AssemblyRootPart or part
     return not root.Anchored and root.ReceiveAge == 0
+end
+
+local function EKIApply(part, mode)
+    if not part or not Config.EKI then return end
+    if sethiddenproperty then
+        pcall(function()
+            sethiddenproperty(part, "PhysicsRepRootPart", mode)
+        end)
+    end
 end
 
 local function ClearEKI(part)
@@ -9384,16 +9389,122 @@ local function ClearEKI(part)
     end)
 end
 
+local function FindNicePart(model)
+    if not model or not model:IsA("Model") then return nil end
+    local fallback = nil
+    for _, p in ipairs(model:QueryDescendants("BasePart")) do
+        if p.CanQuery and not p.Anchored and p.Name ~= "Button" then
+            fallback = fallback or p
+            if (p.AssemblyRootPart or p) == p then
+                return p
+            end
+        end
+    end
+    return fallback
+end
+
+local function ToggleCollisions(character, canCollide)
+    for _, child in ipairs(character:GetChildren()) do
+        if child:IsA("BasePart") then
+            if canCollide then
+                if child.Name == "Torso" or child.Name == "Head" then
+                    child.CanCollide = true
+                end
+            else
+                child.CanCollide = false
+                local rl = child:FindFirstChild("RagdollLimbPart")
+                if rl and rl.CanCollide then rl.CanCollide = false end
+            end
+        end
+    end
+end
+
+local function GetInventory(player)
+    local a = workspace:FindFirstChild(player.Name .. "SpawnedInToys")
+    local b = nil
+    local plots = workspace:FindFirstChild("Plots")
+    local plotItems = workspace:FindFirstChild("PlotItems")
+    if plots and plotItems then
+        for _, plot in ipairs(plots:GetChildren()) do
+            local sign = plot:FindFirstChild("PlotSign")
+            local owners = sign and sign:FindFirstChild("ThisPlotsOwners")
+            if owners then
+                for _, owner in ipairs(owners:GetChildren()) do
+                    if owner:IsA("StringValue") and owner.Value == player.Name then
+                        b = plotItems:FindFirstChild(plot.Name)
+                    end
+                end
+            end
+        end
+    end
+    return a, b
+end
+
+local function PivotTo(model, cf, parts, buffers)
+    if not model or not model:IsA("Model") or typeof(cf) ~= "CFrame" then return false end
+    local delta = cf * model:GetPivot():Inverse()
+    parts = parts or model:QueryDescendants("BasePart")
+    buffers = buffers or {}
+    table.clear(buffers)
+    for i, p in ipairs(parts) do
+        local root = p:IsDescendantOf(model) and p.AssemblyRootPart
+        if root and not p.Anchored and not root.Anchored then
+            buffers[i] = delta * p.CFrame
+        end
+    end
+    for i, newCF in pairs(buffers) do parts[i].CFrame = newCF end
+    return true
+end
+
 local function RemoveSticky(character, onlySticked)
     if not character or not character.Parent then return end
-    for _, p in pairs(character:GetDescendants()) do
-        if p:IsA("BasePart") then
-            for _, connected in pairs(p:GetConnectedParts()) do
+
+    for _, p in ipairs(character:QueryDescendants("BasePart")) do
+        if p.Parent then
+            for _, connected in ipairs(p:GetConnectedParts()) do
                 if connected.Name == "StickyPart" then
-                    for _, child in pairs(connected:GetChildren()) do
+                    for _, child in ipairs(connected:GetChildren()) do
                         if child:IsA("TouchInterest") then
                             child:Destroy()
                         end
+                    end
+                    local parent = connected.Parent and FindNicePart(connected.Parent)
+                    if parent and not parent:IsDescendantOf(workspace.PlotItems) then
+                        sno(parent)
+                    end
+                end
+            end
+        end
+    end
+
+    if onlySticked then return end
+
+    local owner = Players:GetPlayerFromCharacter(character)
+    if not owner then return end
+    local inv = GetInventory(owner)
+    if not inv then return end
+    local root = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso")
+    if not root then return end
+
+    for _, model in ipairs(inv:GetChildren()) do
+        if model:IsA("Model") then
+            if (model:GetPivot().Position - root.Position).Magnitude < 10 then
+                local p = FindNicePart(model)
+                if p then
+                    ToggleCollisions(model, false)
+                    sno(p)
+                    if not model:FindFirstChild("StickyPart") then
+                        if not p:FindFirstChild("RscBV") then
+                            local bv = Instance.new("BodyVelocity")
+                            bv.Velocity = Vector3.new(0, -50000, 0)
+                            bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                            bv.Name = "RscBV"
+                            bv.Parent = p
+                        end
+                        PivotTo(model, CFrame.new(0, -50000, 0))
+                        task.delay(1, function()
+                            pcall(function() if DestroyGrabLine then DestroyGrabLine:FireServer(p) end end)
+                        end)
                     end
                 end
             end
@@ -9409,10 +9520,10 @@ local function startLagSpam()
         while Config.LagSpamRunning do
             if spawnLocation and CreateGrabLine then
                 pcall(function()
-                    CreateGrabLine:FireServer(spawnLocation, CFrame.new(math.random(-2010000000, 2000000001), 0, math.random(-2008100000, 2000200000)))
+                    CreateGrabLine:FireServer(spawnLocation, CFrame.new(math.random(-112010000000, 112000000001), 0, math.random(-2008100000, 2000200000)))
                 end)
             end
-            task.wait()
+            task.wait(0.05)
         end
     end)
 end
@@ -9550,12 +9661,12 @@ local function cleanupTargetHolds(targetPlayer)
             local obj = tHRP:FindFirstChild(objName)
             if obj then obj:Destroy() end
         end
-        if Config.EKI then ClearEKI(tHRP) end
+        ClearEKI(tHRP)
         pcall(function() if DestroyGrabLine then DestroyGrabLine:FireServer(tHRP) end end)
     end
 end
 
-local TargetDropdown = LoopTab:AddPlayersDropdown({
+local TargetDropdown = LoopTab:AddDropdown({
     Name = "Select Target",
     Options = getPlayerNames(),
     Default = "",
@@ -9603,7 +9714,7 @@ LoopTab:AddToggle({
                 local tHum = targetPlayer.Character:FindFirstChild("Humanoid")
                 if not tHRP or not tHum or tHum.Health <= 0 then return end
 
-                               if Config.RagdollInNK then
+                if Config.RagdollInNK then
                     if ragdollPallet and (ragdollPallet:IsDescendantOf(workspace) or ragdollPallet:IsDescendantOf(localPlayer)) then
                         local sPart = ragdollPallet:FindFirstChild("SoundPart")
                         if not sPart or not sPart:FindFirstChild("PartOwner") then
@@ -9631,6 +9742,7 @@ LoopTab:AddToggle({
             Config.MainTask = task.spawn(function()
                 local lastRemoteFire = tick()
                 local lastStickyCleanup = 0
+                local lastEKIFire = 0
 
                 while Config.Active and RunService.Heartbeat:Wait() do
                     local myChar = localPlayer.Character
@@ -9689,7 +9801,6 @@ LoopTab:AddToggle({
                             if not Config.Active then break end
                             sno(tHRP)
 
-                            
                             if Config.DeleteShurInNK and tick() - lastStickyCleanup > Config.StickyCleanupInterval then
                                 RemoveSticky(targetPlayer.Character)
                                 lastStickyCleanup = tick()
@@ -9701,7 +9812,7 @@ LoopTab:AddToggle({
 
                             local align = tHRP:FindFirstChild("KickAlign")
                             if myHead and align and align.Attachment1 then
-                               align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
+                                align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
                             end
                             task.wait()
                         end
@@ -9709,9 +9820,26 @@ LoopTab:AddToggle({
                         if Config.Active then
                             pcall(function()
                                 myChar:PivotTo(currentSavedPos)
-                                
                                 tHRP.CFrame = currentSavedPos * CFrame.new(0, Config.NKOffset, 0)
                             end)
+
+                            if Config.EKI and tick() - lastEKIFire > Config.EKICooldown then
+                                lastEKIFire = tick()
+                                local ekiTarget = tHRP
+                                task.delay(0.6, function()
+                                    if not Config.EKI then return end
+                                    if not ekiTarget or not ekiTarget.Parent then return end
+                                    if not IsNetworkOwner(ekiTarget) then return end
+                                    EKIApply(ekiTarget, ekiTarget)
+                                    for ri = 1, 3 do
+                                        task.wait(0.4)
+                                        if not Config.EKI then break end
+                                        if not ekiTarget or not ekiTarget.Parent then break end
+                                        if not IsNetworkOwner(ekiTarget) then break end
+                                        EKIApply(ekiTarget, ekiTarget)
+                                    end
+                                end)
+                            end
                         end
                         continue
                     end
@@ -9747,7 +9875,6 @@ LoopTab:AddToggle({
 
                     sno(tHRP)
 
-                    
                     if Config.DeleteShurInNK and tick() - lastStickyCleanup > Config.StickyCleanupInterval then
                         RemoveSticky(targetPlayer.Character)
                         lastStickyCleanup = tick()
@@ -9758,7 +9885,6 @@ LoopTab:AddToggle({
 
                     local align = tHRP:FindFirstChild("KickAlign")
                     if align and align.Attachment1 and Config.Active then
-                        
                         align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
                     end
 
@@ -9773,13 +9899,31 @@ LoopTab:AddToggle({
                         bp.P = 800000
                         bp.Parent = tHRP
                     end
-                     bp.Position = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
+                    bp.Position = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
 
                     if tick() - lastRemoteFire > 0.05 and Config.Active then
                         pcall(function()
                             if DestroyGrabLine then DestroyGrabLine:FireServer(tHRP) end
                         end)
                         lastRemoteFire = tick()
+                    end
+
+                    if Config.EKI and tick() - lastEKIFire > Config.EKICooldown then
+                        lastEKIFire = tick()
+                        local ekiTarget = tHRP
+                        task.delay(0.6, function()
+                            if not Config.EKI then return end
+                            if not ekiTarget or not ekiTarget.Parent then return end
+                            if not IsNetworkOwner(ekiTarget) then return end
+                            EKIApply(ekiTarget, ekiTarget)
+                            for ri = 1, 3 do
+                                task.wait(0.4)
+                                if not Config.EKI then break end
+                                if not ekiTarget or not ekiTarget.Parent then break end
+                                if not IsNetworkOwner(ekiTarget) then break end
+                                EKIApply(ekiTarget, ekiTarget)
+                            end
+                        end)
                     end
                 end
             end)
@@ -9790,9 +9934,7 @@ LoopTab:AddToggle({
 
             cleanupRagdollFull()
             if Config.PlayerList then
-                for _, targetName in ipairs(Config.PlayerList) do
-                    cleanupTargetHolds(getPlayer(targetName))
-                end
+                for _, targetName in ipairs(Config.PlayerList) do cleanupTargetHolds(getPlayer(targetName)) end
             end
         end
     end
@@ -9802,6 +9944,7 @@ LoopTab:AddToggle({
 LoopTab:AddToggle({
     Name = " Lag <font color='rgb(150,150,255)'>Line Spam</font>",
     Default = false,
+    Flag = "979ft12",
     Callback = function(Value)
         Config.EnableLagSpam = Value
         if Value and Config.Active then
@@ -9816,15 +9959,17 @@ LoopTab:AddToggle({
 
 LoopTab:AddToggle({
     Name = "Anti-Kick Remove <font color='rgb(255,200,60)'>Cleaner</font>",
-    Default = true,
+    Default = false,
+    Flag = "08gwt892gt",
     Callback = function(Value)
         Config.DeleteShurInNK = Value
     end
 })
 
 LoopTab:AddToggle({
-    Name = "Airlock <font color='rgb(55,120,200)'>PCLD fixed</font>",
+    Name = "Air-lock <font color='rgb(55,120,200)'>PCLD fixed</font>",
     Default = false,
+    Flag = "082g280gt",
     Callback = function(Value)
         Config.EKI = Value
         if not Value and Config.PlayerList then
@@ -9841,7 +9986,8 @@ LoopTab:AddToggle({
 
 LoopTab:AddToggle({
     Name = "Loop Ragdoll <font color='rgb(120,200,255)'>pallet</font>",
-    Default = true,
+    Default = flase,
+    Flag = "0iqtgipqtg",
     Callback = function(Value)
         Config.RagdollInNK = Value
         if not Value then
@@ -9850,16 +9996,20 @@ LoopTab:AddToggle({
     end
 })
 
-LoopTab:AddDropdown({
+LoopTab:AddSlider({
     Name = "Kick Height",
-    Options = {"15", "18", "20", "22", "25", "28", "30"},
-    Default = "20",
-    MultipleOptions = false,
+    Min = 10,
+    Max = 29,
+    Default = 20,
+    Flag = "puft2uotf1",
+    Step = 1,
     Callback = function(Value)
         Config.NKOffset = tonumber(Value) or 20
     end
 })
+    
 
+              
                           
                               
 end
