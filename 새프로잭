@@ -9780,8 +9780,7 @@ LoopTab:AddToggle({
                         bp.P = 800000
                         bp.Parent = tHRP
                     end
-                    -- [수정] Config.NKOffset 사용
-                    bp.Position = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
+                                        bp.Position = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
 
                     if tick() - lastRemoteFire > 0.05 and Config.Active then
                         pcall(function()
@@ -9808,8 +9807,9 @@ LoopTab:AddToggle({
 
 
 LoopTab:AddToggle({
-    Name = " Lag Spam <font color='rgb(150,150,255)'>Line Option</font>",
+    Name = " Lag  <font color='rgb(150,150,255)'>Line Spam</font>",
     Default = false,
+    Flag = "if2otouft2",
     Callback = function(Value)
         Config.EnableLagSpam = Value
         if Value and Config.Active then
@@ -9824,15 +9824,17 @@ LoopTab:AddToggle({
 
 LoopTab:AddToggle({
     Name = "Anti-Kick Remove <font color='rgb(255,200,60)'>Cleaner</font>",
-    Default = true,
+    Default = false,
+    Flag = "oufr1fiotq",
     Callback = function(Value)
         Config.DeleteShurInNK = Value
     end
 })
 
 LoopTab:AddToggle({
-    Name = "Airlock <font color='rgb(55,120,200)'>PCLD fixed</font>",
+    Name = "Air-lock <font color='rgb(55,120,200)'>PCLD fixed</font>",
     Default = false,
+    Flag = "2dpqift9t7",
     Callback = function(Value)
         Config.EKI = Value
         if not Value and Config.PlayerList then
@@ -9849,7 +9851,8 @@ LoopTab:AddToggle({
 
 LoopTab:AddToggle({
     Name = "Loop Ragdoll <font color='rgb(120,200,255)'>pallet</font>",
-    Default = true,
+    Default = false,
+    Flag = "wof7tqidur",
     Callback = function(Value)
         Config.RagdollInNK = Value
         if not Value then
@@ -9866,6 +9869,7 @@ LoopTab:AddSlider({
     Min = 10,
     Max = 29,
     Default = 20,
+    Flag = "80f52opy",
     Step = 1,
     Callback = function(Value)
         Config.NKOffset = tonumber(Value) or 20
