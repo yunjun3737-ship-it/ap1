@@ -9307,6 +9307,7 @@ LoopTab:AddButton({
 LoopTab:AddSection({
     Name = "Vexo Kick"
 })
+
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -9363,6 +9364,11 @@ local function sno(part)
             SetNetworkOwner:FireServer(part, part.CFrame)
         end
     end)
+    if Config.EKI and sethiddenproperty then
+        pcall(function()
+            sethiddenproperty(part, "PhysicsRepRootPart", part)
+        end)
+    end
 end
 
 local function IsNetworkOwner(part)
@@ -9664,7 +9670,7 @@ local function cleanupTargetHolds(targetPlayer)
     end
 end
 
-local TargetDropdown = LoopTab:AddPlayersDropdown({
+local TargetDropdown = LoopTab:AddDropdown({
     Name = "Select Target",
     Options = getPlayerNames(),
     Default = "",
@@ -9976,7 +9982,7 @@ LoopTab:AddToggle({
 })
 
 LoopTab:AddToggle({
-    Name = "Air-lock <font color='rgb(55,120,200)'>PCLD fixed</font>",
+    Name = "Airlock <font color='rgb(55,120,200)'>PCLD fixed</font>",
     Default = false,
     Callback = function(Value)
         Config.EKI = Value
@@ -10013,6 +10019,11 @@ LoopTab:AddSlider({
         Config.NKOffset = tonumber(Value) or 20
     end
 })
+    
+    
+
+                          
+    
       
                               
 end
