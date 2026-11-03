@@ -1,4 +1,4 @@
-
+--1버전 oats
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -419,7 +419,7 @@ LoopTab:AddToggle({
 })
 
 
---또다른로직
+----2버전 랙돌
 
 
 LoopTab:AddToggle({
