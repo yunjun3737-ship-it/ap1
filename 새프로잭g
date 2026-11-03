@@ -9307,7 +9307,6 @@ LoopTab:AddButton({
 LoopTab:AddSection({
     Name = "Vexo Kick"
 })
-                   
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -9334,6 +9333,7 @@ local Config = {
     NKOffset = 20,
     StickyCleanupInterval = 0.15,
     EKIPulseInterval = 0.15,
+    EKICooldown = 2.0,
 }
 
 local ragdollPallet = nil
@@ -9664,7 +9664,7 @@ local function cleanupTargetHolds(targetPlayer)
     end
 end
 
-local TargetDropdown = LoopTab:AddDropdown({
+local TargetDropdown = LoopTab:AddPlayersDropdown({
     Name = "Select Target",
     Options = getPlayerNames(),
     Default = "",
@@ -9741,6 +9741,7 @@ LoopTab:AddToggle({
                 local lastRemoteFire = tick()
                 local lastStickyCleanup = 0
                 local lastEKIPulse = 0
+                local lastEKIFire = 0
 
                 while Config.Active and RunService.Heartbeat:Wait() do
                     local myChar = localPlayer.Character
@@ -9827,6 +9828,24 @@ LoopTab:AddToggle({
                                 myChar:PivotTo(currentSavedPos)
                                 tHRP.CFrame = currentSavedPos * CFrame.new(0, Config.NKOffset, 0)
                             end)
+
+                            if Config.EKI and tick() - lastEKIFire > Config.EKICooldown then
+                                lastEKIFire = tick()
+                                local ekiTarget = tHRP
+                                task.delay(0.6, function()
+                                    if not Config.EKI then return end
+                                    if not ekiTarget or not ekiTarget.Parent then return end
+                                    if not IsNetworkOwner(ekiTarget) then return end
+                                    EKIApply(ekiTarget, ekiTarget)
+                                    for ri = 1, 3 do
+                                        task.wait(0.4)
+                                        if not Config.EKI then break end
+                                        if not ekiTarget or not ekiTarget.Parent then break end
+                                        if not IsNetworkOwner(ekiTarget) then break end
+                                        EKIApply(ekiTarget, ekiTarget)
+                                    end
+                                end)
+                            end
                         end
                         continue
                     end
@@ -9901,6 +9920,24 @@ LoopTab:AddToggle({
                         end)
                         lastRemoteFire = tick()
                     end
+
+                    if Config.EKI and tick() - lastEKIFire > Config.EKICooldown then
+                        lastEKIFire = tick()
+                        local ekiTarget = tHRP
+                        task.delay(0.6, function()
+                            if not Config.EKI then return end
+                            if not ekiTarget or not ekiTarget.Parent then return end
+                            if not IsNetworkOwner(ekiTarget) then return end
+                            EKIApply(ekiTarget, ekiTarget)
+                            for ri = 1, 3 do
+                                task.wait(0.4)
+                                if not Config.EKI then break end
+                                if not ekiTarget or not ekiTarget.Parent then break end
+                                if not IsNetworkOwner(ekiTarget) then break end
+                                EKIApply(ekiTarget, ekiTarget)
+                            end
+                        end)
+                    end
                 end
             end)
         else
@@ -9930,8 +9967,6 @@ LoopTab:AddToggle({
     end
 })
 
-
-
 LoopTab:AddToggle({
     Name = "Anti-Kick Remove <font color='rgb(255,200,60)'>Cleaner</font>",
     Default = true,
@@ -9941,7 +9976,7 @@ LoopTab:AddToggle({
 })
 
 LoopTab:AddToggle({
-    Name = "Airlock <font color='rgb(55,120,200)'>PCLD fixed</font>",
+    Name = "Air-lock <font color='rgb(55,120,200)'>PCLD fixed</font>",
     Default = false,
     Callback = function(Value)
         Config.EKI = Value
@@ -9977,8 +10012,7 @@ LoopTab:AddSlider({
     Callback = function(Value)
         Config.NKOffset = tonumber(Value) or 20
     end
-})            
-
+})
       
                               
 end
