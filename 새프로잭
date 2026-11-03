@@ -9744,7 +9744,9 @@ LoopTab:AddSection({
 	Name = "SetNetworkOwner Top1"
 })    
 
-local Players = game:GetService("Players")
+
+     
+        local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -9761,12 +9763,11 @@ local Config = {
     LagSpamRunning = false,
     RagdollSpawning = false,
     PlayerList = {},
-    FetchDistance = 30,
-    RagdollInstance = nil
+    MainTask = nil,
+    RenderTask = nil
 }
 
-local renderConnection = nil
-local heartbeatConnection = nil
+local ragdollPallet = nil
 
 local function getPlayer(name)
     if not name or name == "" then return nil end
@@ -9782,35 +9783,32 @@ end
 local function getPlayerNames()
     local names = {}
     for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= localPlayer then
-            table.insert(names, p.Name)
-        end
+        if p ~= localPlayer then table.insert(names, p.Name) end
     end
     return names
 end
 
 local function sno(part)
-    if part and SetNetworkOwner then
-        pcall(function()
+    pcall(function()
+        if SetNetworkOwner then
             SetNetworkOwner:FireServer(part, part.CFrame)
-        end)
-    end
+        end
+    end)
 end
 
+-- [라인 렉 로직]
 local function startLagSpam()
     if Config.LagSpamRunning then return end
-    if not Config.PlayerList or #Config.PlayerList == 0 then return end
-    
     Config.LagSpamRunning = true
     task.spawn(function()
+        local spawnLocation = workspace:FindFirstChild("SpawnLocation") or workspace:FindFirstChild("Spawn")
         while Config.LagSpamRunning do
-            local spawnLocation = workspace:FindFirstChild("SpawnLocation") or workspace:FindFirstChild("Spawn") or (localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart"))
             if spawnLocation and CreateGrabLine then
                 pcall(function()
                     CreateGrabLine:FireServer(spawnLocation, CFrame.new(math.random(-112010000000, 112000000001), 0, math.random(-2008100000, 2000200000)))
                 end)
             end
-            task.wait(0.07)
+            task.wait(0.05)
         end
     end)
 end
@@ -9819,16 +9817,14 @@ local function stopLagSpam()
     Config.LagSpamRunning = false
 end
 
+-- [버전2 기반 래그돌 생성 로직 복원]
 local function spawnRagdollV2Full()
     if Config.RagdollSpawning then return nil end
     Config.RagdollSpawning = true
 
     local myChar = localPlayer.Character
     local myHRP = myChar and myChar:WaitForChild("HumanoidRootPart", 3)
-    if not myHRP then 
-        Config.RagdollSpawning = false 
-        return nil 
-    end
+    if not myHRP then Config.RagdollSpawning = false return nil end
 
     local waitCount = 0
     local inPlot = localPlayer:FindFirstChild("InPlot")
@@ -9840,9 +9836,9 @@ local function spawnRagdollV2Full()
         end
     end
 
-    waitCount = 0
     local canSpawnToy = localPlayer:FindFirstChild("CanSpawnToy")
     if canSpawnToy then
+        waitCount = 0
         while not canSpawnToy.Value and waitCount < 50 do
             task.wait(0.1)
             waitCount = waitCount + 1
@@ -9850,22 +9846,14 @@ local function spawnRagdollV2Full()
     end
 
     local spawnCF = myHRP.CFrame * CFrame.new(0, 14, 20)
-    
-    local targetFolder = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys")
-    if not targetFolder then
-        targetFolder = workspace:FindFirstChild("PlotItems")
-        if targetFolder then targetFolder = targetFolder:FindFirstChild("Plot1") end
-    end
-    if not targetFolder then targetFolder = workspace end
+    local targetFolder = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys") or workspace:FindFirstChild("PlotItems") and workspace.PlotItems:FindFirstChild("Plot1") or workspace
 
     local spawnedToy = nil
     local rsToys = ReplicatedStorage:FindFirstChild("MenuToys")
     local spawnRemote = rsToys and rsToys:FindFirstChild("SpawnToyRemoteFunction")
 
     local connection = targetFolder.ChildAdded:Connect(function(child)
-        if child.Name == "PalletLightBrown" then
-            spawnedToy = child
-        end
+        if child.Name == "PalletLightBrown" then spawnedToy = child end
     end)
 
     task.spawn(function()
@@ -9873,16 +9861,13 @@ local function spawnRagdollV2Full()
             if spawnRemote then
                 spawnRemote:InvokeServer("PalletLightBrown", spawnCF, spawnCF.Position)
             else
-                if typeof(spawntoy) == "function" then
-                    spawntoy("PalletLightBrown", spawnCF, Vector3.zero)
-                end
+                if typeof(spawntoy) == "function" then spawntoy("PalletLightBrown", spawnCF, Vector3.zero) end
             end
         end)
     end)
 
     local inv = localPlayer:FindFirstChild("Backpack")
     local startTime = tick()
-    
     repeat 
         task.wait(0.05)
         if inv and not spawnedToy then
@@ -9892,12 +9877,9 @@ local function spawnRagdollV2Full()
 
     connection:Disconnect()
 
-    if not spawnedToy then
-        Config.RagdollSpawning = false
-        return nil
-    end
-
+    if not spawnedToy then Config.RagdollSpawning = false return nil end
     local soundPart = spawnedToy:FindFirstChild("SoundPart") or spawnedToy:WaitForChild("SoundPart", 5)
+    
     if not soundPart then
         spawnedToy:Destroy()
         Config.RagdollSpawning = false
@@ -9906,18 +9888,10 @@ local function spawnRagdollV2Full()
 
     local retryCount = 0
     while retryCount < 10 do
-        if not Config.Active then
-            spawnedToy:Destroy()
-            Config.RagdollSpawning = false
-            return nil
-        end
-        
+        if not Config.Active then break end
         sno(soundPart)
         task.wait()
-        
-        if soundPart:FindFirstChild("PartOwner") then
-            break
-        end
+        if soundPart:FindFirstChild("PartOwner") then break end
         retryCount = retryCount + 1
     end
 
@@ -9935,7 +9909,6 @@ local function spawnRagdollV2Full()
     end
     
     spawnedToy.Name = "RagdollPalete"
-    
     local bv = Instance.new("BodyVelocity")
     bv.MaxForce = Vector3.new(0, math.huge, 0)
     bv.Velocity = Vector3.new(0, 900, 0)
@@ -9950,63 +9923,31 @@ local function cleanupRagdollFull()
     if inv then
         local deskToRemove = inv:FindFirstChild("RB") or inv:FindFirstChild("RagdollPalete") or inv:FindFirstChild("PalletLightBrown")
         if deskToRemove then
-            local rsToys = ReplicatedStorage:FindFirstChild("MenuToys")
-            if rsToys and rsToys:FindFirstChild("DestroyToy") then
-                pcall(function() rsToys.DestroyToy:FireServer(deskToRemove) end)
-            else
-                deskToRemove:Destroy()
-            end
+            pcall(function()
+                local rsToys = ReplicatedStorage:FindFirstChild("MenuToys")
+                if rsToys and rsToys:FindFirstChild("DestroyToy") then
+                    rsToys.DestroyToy:FireServer(deskToRemove)
+                else
+                    deskToRemove:Destroy()
+                end
+            end)
         end
     end
-    if Config.RagdollInstance then
-        pcall(function()
-            local rsToys = ReplicatedStorage:FindFirstChild("MenuToys")
-            if rsToys and rsToys:FindFirstChild("DestroyToy") then
-                rsToys.DestroyToy:FireServer(Config.RagdollInstance)
-            else
-                Config.RagdollInstance:Destroy()
-            end
-        end)
-        Config.RagdollInstance = nil
+    if ragdollPallet then
+        pcall(function() ragdollPallet:Destroy() end)
+        ragdollPallet = nil
     end
-end
-
-local function tpFetchTargetV2Full(targetPlayer, myHRP)
-    if not targetPlayer.Character then return end
-    local targetHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not targetHRP or not myHRP then return end
-    
-    local originalCF = targetHRP.CFrame
-    pcall(function()
-        targetHRP.CFrame = myHRP.CFrame * CFrame.new(0, 0, 2)
-        for i = 1, 23.1 do
-            sno(targetHRP)
-            task.wait()
-        end
-        targetHRP.CFrame = originalCF
-    end)
 end
 
 local function cleanupTargetHolds(targetPlayer)
     if not targetPlayer or not targetPlayer.Character then return end
     local tHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
     if tHRP then
-        local align = tHRP:FindFirstChild("KickAlign")
-        local rot = tHRP:FindFirstChild("KickRot")
-        local att0 = tHRP:FindFirstChild("KickAtt0")
-        local bp = tHRP:FindFirstChild("ControlBP")
-
-        if align then 
-            if align.Attachment1 then align.Attachment1:Destroy() end
-            align:Destroy() 
+        for _, objName in ipairs({"KickAlign", "KickRot", "KickAtt0", "ControlBP"}) do
+            local obj = tHRP:FindFirstChild(objName)
+            if obj then obj:Destroy() end
         end
-        if rot then rot:Destroy() end
-        if att0 then att0:Destroy() end
-        if bp then bp:Destroy() end
-
-        pcall(function()
-            if DestroyGrabLine then DestroyGrabLine:FireServer(tHRP) end
-        end)
+        pcall(function() if DestroyGrabLine then DestroyGrabLine:FireServer(tHRP) end end)
     end
 end
 
@@ -10018,9 +9959,7 @@ local TargetDropdown = LoopTab:AddDropdown({
     Callback = function(Options)
         table.clear(Config.PlayerList)
         if type(Options) == "table" then
-            for _, v in ipairs(Options) do
-                table.insert(Config.PlayerList, v)
-            end
+            for _, v in ipairs(Options) do table.insert(Config.PlayerList, v) end
         elseif type(Options) == "string" and Options ~= "" then
             table.insert(Config.PlayerList, Options)
         end
@@ -10028,19 +9967,15 @@ local TargetDropdown = LoopTab:AddDropdown({
 })
 
 Players.PlayerAdded:Connect(function()
-    if TargetDropdown and TargetDropdown.Refresh then
-        TargetDropdown:Refresh(getPlayerNames(), true)
-    end
+    if TargetDropdown and TargetDropdown.Refresh then TargetDropdown:Refresh(getPlayerNames(), true) end
+end)
+Players.PlayerRemoving:Connect(function()
+    if TargetDropdown and TargetDropdown.Refresh then TargetDropdown:Refresh(getPlayerNames(), true) end
 end)
 
-Players.PlayerRemoving:Connect(function()
-    if TargetDropdown and TargetDropdown.Refresh then
-        TargetDropdown:Refresh(getPlayerNames(), true)
-    end
-end)
 
 LoopTab:AddToggle({
-    Name = "Set Owner Kick Ultimate <font color='rgb(255,154,123)'>[Mixed]</font>",
+    Name = "Set Owner Kick NEW <font color='rgb(255,154,123)'>lol</font>",
     Default = false,
     Callback = function(Value)
         Config.Active = Value
@@ -10051,170 +9986,203 @@ LoopTab:AddToggle({
                 return
             end
             
-            if Config.EnableLagSpam then
-                task.defer(function()
-                    startLagSpam()
-                end)
-            end
+            if Config.EnableLagSpam then startLagSpam() end
             
-            local targetFolder = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys")
-
-            renderConnection = RunService.RenderStepped:Connect(function()
+            if Config.RenderTask then Config.RenderTask:Disconnect() Config.RenderTask = nil end
+            Config.RenderTask = RunService.RenderStepped:Connect(function()
                 if not Config.Active or #Config.PlayerList == 0 then return end
                 
-                local targetName = Config.PlayerList[1]
-                local targetPlayer = getPlayer(targetName)
+                local targetPlayer = getPlayer(Config.PlayerList[1])
                 if not targetPlayer or not targetPlayer.Character then return end
                 
                 local tHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
                 local tHum = targetPlayer.Character:FindFirstChild("Humanoid")
                 if not tHRP or not tHum or tHum.Health <= 0 then return end
                 
-                if Config.RagdollInstance and (Config.RagdollInstance:IsDescendantOf(workspace) or Config.RagdollInstance:IsDescendantOf(localPlayer)) then
-                    local sPart = Config.RagdollInstance:FindFirstChild("SoundPart")
-                    if sPart then
-                        if not sPart:FindFirstChild("PartOwner") then
-                            Config.RagdollInstance:Destroy()
-                            Config.RagdollInstance = nil
-                        end
-                    else
-                        Config.RagdollInstance:Destroy()
-                        Config.RagdollInstance = nil
+                if ragdollPallet and (ragdollPallet:IsDescendantOf(workspace) or ragdollPallet:IsDescendantOf(localPlayer)) then
+                    local sPart = ragdollPallet:FindFirstChild("SoundPart")
+                    if not sPart or not sPart:FindFirstChild("PartOwner") then
+                        ragdollPallet:Destroy()
+                        ragdollPallet = nil
                     end
                 else
-                    Config.RagdollInstance = nil
+                    ragdollPallet = nil
                 end
                 
-                if not Config.RagdollSpawning and not Config.RagdollInstance then
-                    Config.RagdollInstance = targetFolder and targetFolder:FindFirstChild("RagdollPalete") or spawnRagdollV2Full()
+                if not Config.RagdollSpawning and not ragdollPallet then
+                    ragdollPallet = workspace:FindFirstChild(localPlayer.Name.."SpawnedInToys") and workspace[localPlayer.Name.."SpawnedInToys"]:FindFirstChild("RagdollPalete") or spawnRagdollV2Full()
                 end
                 
-                if Config.RagdollInstance and Config.RagdollInstance:FindFirstChild("SoundPart") then
+                if ragdollPallet and ragdollPallet:FindFirstChild("SoundPart") then
                     local ragdolled = tHum:FindFirstChild("Ragdolled")
                     if ragdolled and not ragdolled.Value then
-                        Config.RagdollInstance.SoundPart.Position = tHRP.Position
+                        ragdollPallet.SoundPart.Position = tHRP.Position
                     end
                 end
             end)
 
-            local lastRemoteFire = tick()
+            if Config.MainTask then task.cancel(Config.MainTask) end
+            Config.MainTask = task.spawn(function()
+                local lastRemoteFire = tick()
 
-            heartbeatConnection = RunService.Heartbeat:Connect(function()
-                if not Config.Active or #Config.PlayerList == 0 then return end
-                
-                local myChar = localPlayer.Character
-                local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
-                local myHead = myChar and myChar:FindFirstChild("Head")
-                
-                if myChar and myHRP and myHead then
-                    for _, targetName in ipairs(Config.PlayerList) do
-                        local targetPlayer = getPlayer(targetName)
-                        if targetPlayer and targetPlayer.Character then
-                            local tHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                            local tHum = targetPlayer.Character:FindFirstChild("Humanoid")
-                            
-                            if tHRP and tHum and tHum.Health > 0 then
-                                local dist = (myHRP.Position - tHRP.Position).Magnitude
-                                
-                                if dist > Config.FetchDistance then
-                                    local currentSavedPos = myHRP.CFrame
-                                    tpFetchTargetV2Full(targetPlayer, myHRP)
-                                end
+                                while Config.Active and RunService.Heartbeat:Wait() do
+                    local myChar = localPlayer.Character
+                    local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                    local myHead = myChar and myChar:FindFirstChild("Head")
+                    local inv = localPlayer:FindFirstChild("Backpack")
 
-                                for _ = 1, 6.5 do
-                                    sno(tHRP)
-                                    if DestroyGrabLine then 
-                                        pcall(function() DestroyGrabLine:FireServer(tHRP) end)
-                                    end
-                                end
+                    if not (myChar and myHRP and myHead and inv) then continue end
 
-                                tHRP.AssemblyLinearVelocity = Vector3.zero
-                                tHRP.AssemblyAngularVelocity = Vector3.zero
+                    local targetPlayer = getPlayer(Config.PlayerList[1])
+                    if not targetPlayer or not targetPlayer.Character then continue end
+                    
+                    local tHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    local tHum = targetPlayer.Character:FindFirstChild("Humanoid")
+                    if not tHRP or not tHum or tHum.Health <= 0 then continue end
 
-                                if not tHRP:FindFirstChild("KickAlign") then
-                                    pcall(function()
-                                        local oldBp = tHRP:FindFirstChildOfClass("BodyPosition")
-                                        if oldBp then oldBp:Destroy() end
+                    local dist = (tHRP.Position - myHRP.Position).Magnitude
 
-                                        local att0 = Instance.new("Attachment", tHRP)
-                                        att0.Name = "KickAtt0"
-                                            
-                                        local att1 = workspace.Terrain:FindFirstChild("KickAtt1") or Instance.new("Attachment", workspace.Terrain)
-                                        att1.Name = "KickAtt1"
+                                  if dist > 30 then
+                        local currentSavedPos = myHRP.CFrame
 
-                                        local alignPos = Instance.new("AlignPosition")
-                                        alignPos.Name = "KickAlign"
-                                        alignPos.Attachment0 = att0
-                                        alignPos.Attachment1 = att1
-                                        alignPos.MaxForce = math.huge
-                                        alignPos.Responsiveness = 200
-                                        alignPos.Parent = tHRP
+                        
+                        pcall(function() myChar:PivotTo(tHRP.CFrame * CFrame.new(0, 2, 4)) end)
+                        
+                        sno(tHRP)
 
-                                        local alignRot = Instance.new("AlignOrientation")
-                                        alignRot.Name = "KickRot"
-                                        alignRot.Attachment0 = att0
-                                        alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment
-                                        alignRot.CFrame = CFrame.new() 
-                                        alignRot.MaxTorque = math.huge
-                                        alignRot.Responsiveness = 200
-                                        alignRot.Parent = tHRP
-                                    end)
-                                end
+                        if not tHRP:FindFirstChild("KickAlign") then
+                            pcall(function()
+                                local oldBp = tHRP:FindFirstChildOfClass("BodyPosition")
+                                if oldBp then oldBp:Destroy() end
 
-                                local align = tHRP:FindFirstChild("KickAlign")
-                                if align and align.Attachment1 then
-                                    align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, 20, 0)
-                                end
-                                
-                                local rot = tHRP:FindFirstChild("KickRot")
-                                if rot then 
-                                    rot.CFrame = CFrame.Angles(0, 0, 0) 
-                                end
+                                local att0 = Instance.new("Attachment", tHRP)
+                                att0.Name = "KickAtt0"
+                                local att1 = Instance.new("Attachment", workspace.Terrain)
+                                att1.Name = "KickAtt1"
 
-                                local bp = tHRP:FindFirstChild("ControlBP")
-                                if not bp then
-                                    bp = Instance.new("BodyPosition")
-                                    bp.Name = "ControlBP"
-                                    bp.MaxForce = Vector3.new(999999, 999999, 999999)
-                                    bp.P = 800000
-                                    bp.D = 5000
-                                    bp.Parent = tHRP
-                                end
-                                bp.Position = myHRP.Position + Vector3.new(5, 20, 0)
+                                local alignPos = Instance.new("AlignPosition")
+                                alignPos.Name = "KickAlign"
+                                alignPos.Attachment0 = att0
+                                alignPos.Attachment1 = att1
+                                alignPos.MaxForce = math.huge
+                                alignPos.Responsiveness = 200
+                                alignPos.Parent = tHRP
 
-                                if tick() - lastRemoteFire > 0.05 then
-                                    pcall(function()
-                                        if DestroyGrabLine then
-                                            DestroyGrabLine:FireServer(tHRP)
-                                        end
-                                    end)
-                                    lastRemoteFire = tick()
-                                end
-                            end
+                                local alignRot = Instance.new("AlignOrientation")
+                                alignRot.Name = "KickRot"
+                                alignRot.Attachment0 = att0
+                                alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment
+                                alignRot.CFrame = CFrame.new() 
+                                alignRot.MaxTorque = math.huge
+                                alignRot.Responsiveness = 200
+                                alignRot.Parent = tHRP
+                            end)
                         end
+
+                    
+                        for i = 1, 23.1 do
+                            if not Config.Active then break end
+                            sno(tHRP)
+                            pcall(function()
+                                if DestroyGrabLine then DestroyGrabLine:FireServer(tHRP) end
+                            end)
+                            
+                            local align = tHRP:FindFirstChild("KickAlign")
+                            if myHead and align and align.Attachment1 then
+                                align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, 15, 0)
+                            end
+                            task.wait() 
+                        end
+
+                    
+                        if Config.Active then
+                            pcall(function()
+                                myChar:PivotTo(currentSavedPos)
+                                tHRP.CFrame = currentSavedPos * CFrame.new(0, 15, 0)
+                            end)
+                        end
+                        continue
+                    end
+
+                
+                    if not tHRP:FindFirstChild("KickAlign") then
+                        pcall(function()
+                            local oldBp = tHRP:FindFirstChildOfClass("BodyPosition")
+                            if oldBp then oldBp:Destroy() end
+
+                            local att0 = Instance.new("Attachment", tHRP)
+                            att0.Name = "KickAtt0"
+                            local att1 = Instance.new("Attachment", workspace.Terrain)
+                            att1.Name = "KickAtt1"
+
+                            local alignPos = Instance.new("AlignPosition")
+                            alignPos.Name = "KickAlign"
+                            alignPos.Attachment0 = att0
+                            alignPos.Attachment1 = att1
+                            alignPos.MaxForce = math.huge
+                            alignPos.Responsiveness = 200
+                            alignPos.Parent = tHRP
+
+                            local alignRot = Instance.new("AlignOrientation")
+                            alignRot.Name = "KickRot"
+                            alignRot.Attachment0 = att0
+                            alignRot.Mode = Enum.OrientationAlignmentMode.OneAttachment
+                            alignRot.CFrame = CFrame.new() 
+                            alignRot.MaxTorque = math.huge
+                            alignRot.Responsiveness = 200
+                            alignRot.Parent = tHRP
+                        end)
+                    end
+
+                    sno(tHRP)
+                    
+                    
+                    tHRP.AssemblyLinearVelocity = Vector3.zero
+                    tHRP.AssemblyAngularVelocity = Vector3.zero
+
+                    local align = tHRP:FindFirstChild("KickAlign")
+                    if align and align.Attachment1 and Config.Active then
+                                           align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, 20, 0)
+                    end
+
+                    local rot = tHRP:FindFirstChild("KickRot")
+                    if rot then rot.CFrame = CFrame.Angles(0, 0, 0) end
+
+                    
+                    local bp = tHRP:FindFirstChild("ControlBP")
+                    if not bp then
+                        bp = Instance.new("BodyPosition")
+                        bp.Name = "ControlBP"
+                        bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                        bp.P = 800000
+                        bp.Parent = tHRP
+                    end
+                    bp.Position = myHead.Position + Vector3.new(0, 20, 0) -- Align과 동일 좌표로 맞추어 충돌/솟구침 방지
+
+                    if tick() - lastRemoteFire > 0.05 and Config.Active then
+                        pcall(function()
+                            if DestroyGrabLine then DestroyGrabLine:FireServer(tHRP) end
+                        end)
+                        lastRemoteFire = tick()
                     end
                 end
             end)
-            
         else
             stopLagSpam()
-            
-            if renderConnection then renderConnection:Disconnect() renderConnection = nil end
-            if heartbeatConnection then heartbeatConnection:Disconnect() heartbeatConnection = nil end
+            if Config.RenderTask then Config.RenderTask:Disconnect() Config.RenderTask = nil end
+            if Config.MainTask then task.cancel(Config.MainTask) Config.MainTask = nil end
             
             cleanupRagdollFull()
-
             if Config.PlayerList then
-                for _, targetName in ipairs(Config.PlayerList) do
-                    cleanupTargetHolds(getPlayer(targetName))
-                end
+                for _, targetName in ipairs(Config.PlayerList) do cleanupTargetHolds(getPlayer(targetName)) end
             end
         end
     end
 })
 
+
 LoopTab:AddToggle({
-    Name = "Enable Lag Spam <font color='rgb(150,150,255)'>[Line Option]</font>",
+    Name = " Lag Spam <font color='rgb(150,150,255)'>[Line Option]</font>",
     Default = false,
     Callback = function(Value)
         Config.EnableLagSpam = Value
@@ -10225,6 +10193,7 @@ LoopTab:AddToggle({
         end
     end
 })
+
 end
     LoopTab:AddSection({
 	Name = "Other"
