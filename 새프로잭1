@@ -9412,7 +9412,7 @@ local function startLagSpam()
                     CreateGrabLine:FireServer(spawnLocation, CFrame.new(math.random(-2010000000, 2000000001), 0, math.random(-2008100000, 2000200000)))
                 end)
             end
-            task.wait(0.05)
+            task.wait()
         end
     end)
 end
@@ -9689,7 +9689,7 @@ LoopTab:AddToggle({
                             if not Config.Active then break end
                             sno(tHRP)
 
-                            -- [추가] 안티킥 리무브 (throttle)
+                            
                             if Config.DeleteShurInNK and tick() - lastStickyCleanup > Config.StickyCleanupInterval then
                                 RemoveSticky(targetPlayer.Character)
                                 lastStickyCleanup = tick()
@@ -9701,8 +9701,7 @@ LoopTab:AddToggle({
 
                             local align = tHRP:FindFirstChild("KickAlign")
                             if myHead and align and align.Attachment1 then
-                                -- [수정] Config.NKOffset 사용
-                                align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
+                               align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
                             end
                             task.wait()
                         end
@@ -9710,7 +9709,7 @@ LoopTab:AddToggle({
                         if Config.Active then
                             pcall(function()
                                 myChar:PivotTo(currentSavedPos)
-                                -- [수정] Config.NKOffset 사용
+                                
                                 tHRP.CFrame = currentSavedPos * CFrame.new(0, Config.NKOffset, 0)
                             end)
                         end
@@ -9748,7 +9747,7 @@ LoopTab:AddToggle({
 
                     sno(tHRP)
 
-                    -- [추가] 안티킥 리무브 (throttle)
+                    
                     if Config.DeleteShurInNK and tick() - lastStickyCleanup > Config.StickyCleanupInterval then
                         RemoveSticky(targetPlayer.Character)
                         lastStickyCleanup = tick()
@@ -9759,7 +9758,7 @@ LoopTab:AddToggle({
 
                     local align = tHRP:FindFirstChild("KickAlign")
                     if align and align.Attachment1 and Config.Active then
-                        -- [수정] Config.NKOffset 사용
+                        
                         align.Attachment1.WorldPosition = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
                     end
 
@@ -9774,8 +9773,7 @@ LoopTab:AddToggle({
                         bp.P = 800000
                         bp.Parent = tHRP
                     end
-                    -- [수정] Config.NKOffset 사용
-                    bp.Position = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
+                     bp.Position = myHead.Position + Vector3.new(0, Config.NKOffset, 0)
 
                     if tick() - lastRemoteFire > 0.05 and Config.Active then
                         pcall(function()
@@ -9802,7 +9800,7 @@ LoopTab:AddToggle({
 
 
 LoopTab:AddToggle({
-    Name = " Lag Spam <font color='rgb(150,150,255)'>Line Option</font>",
+    Name = " Lag <font color='rgb(150,150,255)'>Line Spam</font>",
     Default = false,
     Callback = function(Value)
         Config.EnableLagSpam = Value
