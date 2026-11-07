@@ -10017,6 +10017,8 @@ Dev:AddLabel("개발자: 일본인(이름까먹)")
 Dev2:AddLabel("난독화해제&재업로드: 알파(alpha)")
 disc:AddLabel("여기에 이름적히고싶은분 DM: 제딬은 알아서 찾아오세요~", true)
 
+disc:AddLabel("이름: only you", true)
+
 
 
 MenuGroup:AddToggle("KeybindMenuOpen", {
