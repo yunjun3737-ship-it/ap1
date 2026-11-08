@@ -17401,7 +17401,7 @@ do
 							end
 
 							lib:Notify({
-								Title = arg2 or "Resonance",
+								Title = arg2 or "Xeron",
 								Description = arg,
 								Time = arg4 or 5,
 								SoundId = arg3 or n34,
