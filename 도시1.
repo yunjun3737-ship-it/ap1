@@ -191,7 +191,7 @@ do
         end
     end
 end
--[[
+--[[
 do
     local _allowedUsers = {
         [9902765941] = true, -- mirimirimirihyuk 도시
