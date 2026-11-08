@@ -37055,7 +37055,7 @@ Escape Timer: %*]]
 		})
 
 		v21:AddToggle("EKIToggle", {
-			Text = "Experimental Kick Improvements [BETA]",
+			Text = "airlock",
 			Risky = true,
 			Default = tbl8.EKI,
 			Tooltip = "Improves the kick, but can get very buggy! This also doesn't work on bad executors",
