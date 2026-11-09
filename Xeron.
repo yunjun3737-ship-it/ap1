@@ -22224,7 +22224,7 @@ end
 																				end
 
 																				if tbl16 == v27 then
-																					occupant = seat.Occupant
+																					--occupant = seat.Occupant
 																					playerFromCharacter = occupant and occupant ~= v26 and Players:GetPlayerFromCharacter(occupant.Parent)
 
 																					if playerFromCharacter then
