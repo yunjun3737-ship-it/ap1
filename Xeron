@@ -36083,7 +36083,8 @@ Escape Timer: %*]]
 				tbl9.LoboStrength = arg / 3
 			end,
 		})
-local SERVER = v20:AddTab("Server Sundown", "flask-conical")
+local SERVER = tbl15.Combat:AddRightGroupbox("SERVER SHUTDOWN", "spline")
+SERVER:AddDivider("Good bye Server")
 SERVER:AddButton({
 	Text = "Kick Server",
 	DoubleClick = true,
