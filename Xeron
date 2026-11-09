@@ -31384,7 +31384,7 @@ end
 
 			local function fn21(arg8)
 				if tbl12.IsProtectedPlayer(arg8) then
-					return fn18("This player has Resonance immunity.")
+					return fn18("This player has ALPHA immunity.")
 				end
 
 				if not flag13 then
