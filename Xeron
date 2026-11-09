@@ -36823,7 +36823,7 @@ tbl17.sno = function(arg, arg2)
 		task.delay(1, tbl17.dt, v25)
 	end
 	if not v26 then
-		warn("[Resonance sno] " .. tostring(v27))
+		warn("[ALPHA sno] " .. tostring(v27))
 		return false
 	end
 	return tbl17.ispartowner(arg)
@@ -36970,7 +36970,7 @@ tbl17.st = function(arg, arg2)
 	end)
 	cleanup()
 	if not ok2 then
-		warn(("[Resonance st] %s"):format(tostring(result2)))
+		warn(("[ALPHA st] %s"):format(tostring(result2)))
 		return nil
 	end
 	if not v25 then
