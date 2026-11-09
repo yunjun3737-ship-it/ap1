@@ -17401,7 +17401,7 @@ do
 							end
 
 							lib:Notify({
-								Title = arg2 or "Xeron",
+								Title = arg2 or "Alpha",
 								Description = arg,
 								Time = arg4 or 5,
 								SoundId = arg3 or n34,
@@ -30147,7 +30147,7 @@ end
 			kickServerState.Running = false
 
 			if not ok then
-				warn("[Resonance] Target Kick Server failed: " .. tostring(result))
+				warn("[Alpha] Target Kick Server failed: " .. tostring(result))
 			end
 
 			return ok and #tbl17 > 0
