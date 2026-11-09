@@ -17443,6 +17443,8 @@ do
 							AntiKick2 = false,
 							AntiPaint = false,
 							AntiBlobman = false,
+                            AntiBlobKillToggle = false,
+                            AntiBlob = false,
 							AutoAntiLag = true,
 							AntiInputLag = false,
 							AntiSticky = false,
