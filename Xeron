@@ -35063,7 +35063,7 @@ Escape Timer: %*]]
 				local floor = math.floor
 				local dataPing = Stats2.Network.ServerStatsItem["Data Ping"]
 				local getValue = dataPing.GetValue
-				setText(v23, ("XERON %s | %s fps | %s ms"):format("v6.7", math.floor(Stats2.Workspace.Heartbeat:GetValue()), floor(getValue(dataPing))))
+				setText(v23, ("ALPHA(TOP) %s | %s fps | %s ms"):format("v7.1", math.floor(Stats2.Workspace.Heartbeat:GetValue()), floor(getValue(dataPing))))
 				task.wait(1)
 			end
 		end)
