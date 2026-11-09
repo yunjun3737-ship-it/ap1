@@ -39380,15 +39380,21 @@ end
   local Config2 = tbl15.Invincibility:AddRightGroupbox("Anti grab Type", "settings")
      Config2:AddDivider("Anti-Grab Beta")
 
-	Config2:AddDropdown("AGTDropdown", {
+	
+
+Config2:AddDropdown("AGTDropdown", {
 	Values = { "Normal", "No Ragdoll", "Anti-Kill", "Escapes Anything, but buggy" },
-	Default = 1,
+	Default = "Normal",
 	Multi = false,
 	Text = "Anti-Grab Type",
 	Tooltip = "Type of default Anti-Grab",
 	Callback = function(agType)
-		if agType ~= nil then
-			tbl19.AGType = agType
+		if type(agType) == "number" then
+			local vals = { "Normal", "No Ragdoll", "Anti-Kill", "Escapes Anything, but buggy" }
+			agType = vals[agType]
+		end
+		if type(agType) == "string" and agType ~= "" then
+			tbl18.AGType = agType
 		end
 	end,
 })
@@ -39403,11 +39409,12 @@ Config2:AddDropdown("AntiInPlotsType", {
 		if type(Value) ~= "table" then
 			return
 		end
-		tbl19.AntiInPlotsType = Value
-		AntiInPlotsValues = { ["Players & Toy"] = false, ["Toy Grab"] = false, ["VehicleSeat"] = false }
+		tbl18.AntiInPlotsType = Value
+		local vals = { ["Players & Toy"] = false, ["Toy Grab"] = false, ["VehicleSeat"] = false }
 		for _, v in pairs(Value) do
-			AntiInPlotsValues[v] = true
+			vals[v] = true
 		end
+		tbl18.AntiInPlotsValues = vals
 	end,
 })
 
