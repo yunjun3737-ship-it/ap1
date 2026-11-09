@@ -43832,7 +43832,7 @@ Rejoined: %rejoinedPlayer%, %listCount%]],
 		"GroupOutline",
 	})
 
-	lib3:SetFolder("Resonance/FTAP")
+	lib3:SetFolder("ALPHA/FTAP")
 	lib3:BuildConfigSection(tbl15.Settings)
 	lib3:LoadAutoloadConfig()
 
