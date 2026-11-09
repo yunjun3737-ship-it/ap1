@@ -17558,7 +17558,7 @@ do
 							CustomACPresetName = "",
 							AntiLagSens = 3,
                             AntiInPlotsType = "Players & Toy",
-                            AGTDropdown = "Normal",
+                            AGType = "Normal",
 							InputLgDelay = 0.05,
 							GucciType = "CreatureBlobman",
 							AKType = "Shuriken",
