@@ -17210,7 +17210,7 @@ do
 								end
 
 								if getgenv().ResonanceRunning then
-									fn17("Resonance", "You can't execute the script two times! Unload if you want to restart the script.", 3)
+									fn17("ALPHA", "You can't execute the script two times! Unload if you want to restart the script.", 3)
 									return
 								end
 								getgenv().ResonanceRunning = true
