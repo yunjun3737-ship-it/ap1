@@ -17457,6 +17457,8 @@ do
 							AntiShurikenLag = false,
 							AntiBanana = false,
 							AntiSnowball = false,
+                            AntiGrabXeron = false,
+                          
 							AntiVoid = false,
 							AutoReset = true,
 							AutoLeave = true,
@@ -36298,6 +36300,934 @@ Escape Timer: %*]]
 				tbl12.AntiGrab()
 			end,
 		})
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local runService = game:GetService("RunService")
+local localPlayer = Players.LocalPlayer
+
+local isHeld = localPlayer:WaitForChild("IsHeld", 5)
+
+local resonanceExtractAdapters = getgenv and getgenv().ResonanceExtractAdapters or {}
+
+local tbl17 = {}
+local tbl18 = {
+	AGType = "Normal",
+}
+local tbl19 = {
+	AntiGrab = false,
+}
+local tbl20 = {
+	States = { Owning = false, Spawning = false, Ragdolling = false, Escaping = false },
+	FailedToys = {},
+	GrabbableParts = setmetatable({}, { __mode = "k" }),
+	LimbOffsetsRL = {
+		Head = CFrame.new(0, 1.5, 0),
+		["Left Arm"] = CFrame.new(-1.5, 0, 0),
+		["Right Arm"] = CFrame.new(1.5, 0, 0),
+		["Left Leg"] = CFrame.new(-0.5, -2, 0),
+		["Right Leg"] = CFrame.new(0.5, -2, 0),
+		Torso = CFrame.new(),
+	},
+}
+local tbl21 = {}
+local tbl22 = {}
+local tbl23 = {}
+local v21 = nil
+
+local function notify(arg, arg2)
+	if _NOTIFY then
+		local v22 = _NOTIFY
+		arg2 = arg2 and arg2 .. ": " or ""
+		v22(arg2 .. tostring(arg), 3)
+	else
+		warn((arg2 and arg2 .. ": " or "") .. tostring(arg))
+	end
+end
+
+local function recoveredYield(arg)
+	local n8 = arg or 0
+	local now = tick()
+	repeat
+		runService.Heartbeat:Wait()
+	until n8 <= tick() - now
+	return true
+end
+
+locateRemoteRoot = function()
+	local function isRemoteRoot(arg)
+		return arg and arg:FindFirstChild("GrabEvents") and arg:FindFirstChild("MenuToys") and arg:FindFirstChild("CharacterEvents")
+	end
+	if isRemoteRoot(replicatedStorage) then
+		return replicatedStorage
+	end
+	for _, descendant in ipairs(replicatedStorage:GetDescendants()) do
+		if isRemoteRoot(descendant) then
+			return descendant
+		end
+	end
+	return replicatedStorage
+end
+
+refreshRemotes = function()
+	v21 = locateRemoteRoot()
+	local grabEvents2 = replicatedStorage:FindFirstChild("GrabEvents")
+	local menuToys = v21 and v21:FindFirstChild("MenuToys")
+	local characterEvents = v21 and v21:FindFirstChild("CharacterEvents")
+	local playerEvents = v21 and v21:FindFirstChild("PlayerEvents")
+	tbl23.sno = grabEvents2 and grabEvents2:FindFirstChild("SetNetworkOwner") or nil
+	tbl23.cgl = grabEvents2 and grabEvents2:FindFirstChild("CreateGrabLine") or nil
+	tbl23.dgl = grabEvents2 and grabEvents2:FindFirstChild("DestroyGrabLine") or nil
+	tbl23.Struggle = characterEvents and characterEvents:FindFirstChild("Struggle") or nil
+	tbl23.RagdollRemote = characterEvents and characterEvents:FindFirstChild("RagdollRemote") or nil
+	tbl23.spe = playerEvents and playerEvents:FindFirstChild("StickyPartEvent") or nil
+	tbl23.spawnEvent = menuToys and menuToys:FindFirstChild("SpawnToyRemoteFunction") or nil
+	tbl23.destroyToyEvent = menuToys and menuToys:FindFirstChild("DestroyToy") or nil
+	return v21
+end
+
+refreshRemotes()
+
+fireRemote = function(arg, ...)
+	if not arg then
+		return false, nil
+	end
+	local ok2, result2 = pcall(function(...)
+		if arg:IsA("RemoteFunction") then
+			return arg:InvokeServer(...)
+		end
+		arg:FireServer(...)
+		return true
+	end, ...)
+	return ok2, result2
+end
+
+tbl17.charp = function(arg)
+	local character = arg or localPlayer
+	character = character and character.Character
+	if not character then
+		return nil, nil, nil
+	end
+	return character, character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso"), (character:FindFirstChildWhichIsA("Humanoid"))
+end
+
+tbl17.getMagnitude = function(arg, arg2)
+	if not arg or not arg2 or not arg:IsA("BasePart") or not arg2:IsA("BasePart") then
+		return math.huge
+	end
+	return (arg.Position - arg2.Position).Magnitude
+end
+
+tbl17.isnetworkowner = function(arg)
+	if typeof(arg) ~= "Instance" or not arg:IsA("BasePart") then
+		return false
+	end
+	local assemblyRootPart = arg
+	if arg.Massless and arg.AssemblyRootPart then
+		assemblyRootPart = arg.AssemblyRootPart
+	end
+	if not assemblyRootPart or assemblyRootPart.Anchored then
+		return false
+	end
+	if type(isnetworkowner) == "function" then
+		local ok2, result2 = pcall(isnetworkowner, assemblyRootPart)
+		if ok2 and type(result2) == "boolean" then
+			return result2
+		end
+	end
+	local ok2, result2 = pcall(function()
+		return assemblyRootPart.ReceiveAge
+	end)
+	return ok2 and result2 == 0
+end
+
+tbl17.ispartowner = function(arg)
+	if typeof(arg) ~= "Instance" or not arg:IsA("BasePart") then
+		return false
+	end
+	if arg.Name == "HumanoidRootPart" then
+		local parent = arg.Parent
+		if parent then
+			local head_ = parent:FindFirstChild("Head")
+			if head_ then
+				local partOwner = head_:FindFirstChild("PartOwner")
+				if partOwner then
+					return partOwner.Value == localPlayer.Name
+				end
+			end
+		end
+	end
+	local partOwner = arg:FindFirstChild("PartOwner")
+	if partOwner and partOwner.Value == localPlayer.Name then
+		return true
+	end
+	local parent = arg.Parent
+	if not parent then
+		return false
+	end
+	local partOwner2 = parent:FindFirstChild("PartOwner", true)
+	if not partOwner2 then
+		return false
+	end
+	return partOwner2.Value == localPlayer.Name
+end
+
+tbl17.resetVelocity = function(arg)
+	if arg and arg:IsA("BasePart") then
+		arg.AssemblyLinearVelocity = Vector3.zero
+		arg.AssemblyAngularVelocity = Vector3.zero
+	end
+end
+
+tbl17.teleport = function(arg, arg2, arg3)
+	if not arg then
+		return false
+	end
+	if typeof(arg) == "Instance" and arg:IsA("Model") then
+		arg = arg.PrimaryPart or arg:FindFirstChildWhichIsA("BasePart", true)
+	end
+	if typeof(arg) ~= "Instance" or not arg:IsA("BasePart") then
+		return false
+	end
+	local cframe
+	if typeof(arg2) == "CFrame" then
+		cframe = arg2
+	elseif typeof(arg2) == "Vector3" then
+		cframe = CFrame.new(arg2)
+	else
+		cframe = nil
+		if typeof(arg2) == "Instance" then
+			if arg2:IsA("BasePart") then
+				cframe = arg2.CFrame
+			else
+				cframe = nil
+				if arg2:IsA("Model") then
+					cframe = arg2:GetPivot()
+				end
+			end
+		end
+	end
+	if not cframe then
+		return false
+	end
+	if typeof(arg3) == "CFrame" then
+		cframe *= arg3
+	end
+	arg.CFrame = cframe
+	tbl17.resetVelocity(arg)
+	return true
+end
+
+tbl17.findNicePart = function(arg)
+	if typeof(arg) ~= "Instance" or not arg:IsA("Model") then
+		return nil
+	end
+	local v22 = tbl20.GrabbableParts[arg]
+	if v22 then
+		if v22.Parent and v22:IsA("BasePart") and v22.CanQuery and v22.Name ~= "Button" then
+			return v22
+		end
+		tbl20.GrabbableParts[arg] = nil
+	end
+	for _, child in pairs(arg:GetChildren()) do
+		if child:IsA("BasePart") and child.CanQuery and child.Name ~= "Button" then
+			tbl20.GrabbableParts[arg] = child
+			return child
+		end
+	end
+	return nil
+end
+
+tbl17.grab = function(arg, arg2)
+	if resonanceExtractAdapters.grab then
+		return resonanceExtractAdapters.grab(arg, arg2)
+	end
+	local v22, v23, v24 = tbl17.charp()
+	if not v23 or not v24 or v24.Health == 0 then
+		return
+	end
+	if not arg or not arg.Parent or not arg:IsA("BasePart") then
+		return
+	end
+	refreshRemotes()
+	if not tbl23.sno then
+		return
+	end
+	arg2 = arg2 or v23.CFrame
+	if typeof(arg2) ~= "CFrame" then
+		return
+	end
+	local position = arg.Position
+	local cframe = CFrame.new((arg2 * CFrame.new(0, 1.593, 0)).Position, position)
+	tbl23.sno:FireServer(arg, cframe)
+end
+
+tbl17.WhichPlot = function(arg)
+	if typeof(arg) ~= "Instance" or not arg:IsA("Player") then
+		return nil, nil
+	end
+	local plots = Workspace:FindFirstChild("Plots")
+	if not plots then
+		return nil, nil
+	end
+	for _, child in pairs(plots:GetChildren()) do
+		local plotArea = child:FindFirstChild("PlotArea")
+		if plotArea and plotArea:IsA("BasePart") then
+			local ok2, result2 = pcall(function()
+				return Workspace:GetPartsInPart(plotArea)
+			end)
+			if ok2 and type(result2) == "table" then
+				for _, v22 in pairs(result2) do
+					v22 = v22 and v22.Parent
+					if (v22 and Players:GetPlayerFromCharacter(v22)) == arg then
+						local inOwnedPlot = arg:FindFirstChild("InOwnedPlot")
+						return child, inOwnedPlot and inOwnedPlot.Value
+					end
+				end
+			end
+		end
+	end
+	return nil, nil
+end
+
+removeSpawnSound = function(arg)
+	task.spawn(function()
+		local main = arg and arg:WaitForChild("Main", 0.4)
+		local itemSpawnSound = main and main:WaitForChild("ItemSpawnSound", 0.4)
+		if itemSpawnSound then
+			itemSpawnSound:Destroy()
+		end
+	end)
+end
+
+tbl17.BreakPlot = function(arg)
+	if resonanceExtractAdapters.BreakPlot then
+		return resonanceExtractAdapters.BreakPlot(arg)
+	end
+	if typeof(arg) ~= "Instance" then
+		return false
+	end
+	local v22 = arg
+	local inPlot = nil
+	if arg:IsA("Player") then
+		inPlot = arg:FindFirstChild("InPlot")
+		if not inPlot then
+			return false
+		end
+		v22 = tbl17.WhichPlot(arg)
+		if not v22 then
+			return false
+		end
+	end
+	if typeof(v22) ~= "Instance" then
+		return false
+	end
+	if tbl20.BrokenPlots and tbl20.BrokenPlots[v22.Name] then
+		return true
+	end
+	local plotArea = v22:FindFirstChild("PlotArea")
+	if not plotArea then
+		return false
+	end
+	refreshRemotes()
+	if not tbl23.spe then
+		return false
+	end
+	local NinjaShuriken = tbl17.st("NinjaShuriken")
+	if not NinjaShuriken then
+		return false
+	end
+	removeSpawnSound(NinjaShuriken)
+	NinjaShuriken.Parent = nil
+	local stickyPart = NinjaShuriken:WaitForChild("StickyPart", 0.4)
+	local stickyWeld = stickyPart and stickyPart:WaitForChild("StickyWeld", 0.4)
+	if not stickyPart or not stickyWeld then
+		tbl17.dt(NinjaShuriken)
+		return false
+	end
+	local cframe = CFrame.new(1099511627776, 1099511627776, 1099511627776)
+	if v22.Name == "Plot5" then
+		cframe = CFrame.new(2147483648, 2147483648, 2147483648)
+	end
+	if not tbl17.sno(stickyPart) then
+		tbl17.dt(NinjaShuriken)
+		return false
+	end
+	fireRemote(tbl23.spe, stickyPart, plotArea, cframe)
+	local now = tick()
+	while true do
+		if stickyWeld.Parent and tick() - now <= 0.8 then
+			if not (stickyWeld.Part1 == plotArea and (not inPlot or inPlot.Value ~= true)) then
+				task.wait()
+				continue
+			end
+		end
+		break
+	end
+	if not stickyWeld.Parent or stickyWeld.Part1 ~= plotArea or inPlot and inPlot.Value == true then
+		tbl17.dt(NinjaShuriken)
+		return false
+	end
+	tbl20.BrokenPlots = tbl20.BrokenPlots or {}
+	tbl20.BrokenPlots[v22.Name] = NinjaShuriken
+	pcall(function()
+		NinjaShuriken.Destroying:Once(function()
+			if tbl20.BrokenPlots[v22.Name] == NinjaShuriken then
+				tbl20.BrokenPlots[v22.Name] = nil
+			end
+		end)
+	end)
+	return NinjaShuriken
+end
+
+performOwnershipGrabLoop = function(arg, arg2, arg3, arg4, arg5, arg6)
+	local cframe = CFrame.new()
+	local cframe2 = CFrame.new()
+	local cframe3 = CFrame.new()
+	local connection3 = nil
+	setupHiddenMove = function()
+		cframe = arg3.CFrame
+		cframe2 = arg4.CFrame
+		cframe3 = arg3.CFrame
+		pcall(function()
+			runService:UnbindFromRenderStep("RSCClient")
+		end)
+		runService:BindToRenderStep("RSCClient", Enum.RenderPriority.Camera.Value - 1, function()
+			if arg3.Parent then
+				arg3.CFrame = cframe
+			end
+			if arg4.Parent then
+				arg4.CFrame = cframe2
+			end
+		end)
+		connection3 = runService.Heartbeat:Connect(function()
+			if not arg3.Parent or not arg4.Parent then
+				return
+			end
+			cframe = arg3.CFrame
+			cframe2 = arg4.CFrame
+			arg3.CFrame = cframe3
+			arg4.CFrame = cframe3
+		end)
+	end
+	cleanupHiddenMove = function()
+		pcall(function()
+			runService:UnbindFromRenderStep("RSCClient")
+		end)
+		if connection3 then
+			connection3:Disconnect()
+			connection3 = nil
+		end
+		if arg4.Parent then
+			arg4.CFrame = cframe2
+		end
+		if arg3.Parent then
+			arg3.CFrame = cframe
+		end
+	end
+	local n8 = tonumber(arg2) or 0.65
+	local now = tick()
+	local ok2, result2 = pcall(function()
+		if arg6 then
+			setupHiddenMove()
+		end
+		while arg.Parent and not tbl17.ispartowner(arg) and arg5.Health ~= 0 and arg3.Parent and tick() - now < n8 do
+			if arg6 then
+				cframe3 = arg.CFrame - Vector3.new(0, 22, 0)
+			end
+			runService.Heartbeat:Wait()
+			tbl17.grab(arg, arg6 and cframe3 or nil)
+		end
+	end)
+	if arg6 then
+		pcall(cleanupHiddenMove)
+	end
+	return ok2, result2
+end
+
+tbl17.sno = function(arg, arg2)
+	if resonanceExtractAdapters.sno then
+		return resonanceExtractAdapters.sno(arg, arg2)
+	end
+	if typeof(arg) ~= "Instance" or not arg:IsA("BasePart") or not arg.Parent then
+		return false
+	end
+	local v22, v23, v24 = tbl17.charp()
+	local head_ = v22 and v22:FindFirstChild("Head")
+	local ragdolled = v24 and v24:FindFirstChild("Ragdolled")
+	if not v22 or not head_ or not v23 or not v24 or not ragdolled or v24.Health <= 0 then
+		return false
+	end
+	local spawnLocation = Workspace:FindFirstChild("SpawnLocation")
+	if not spawnLocation or tbl17.getMagnitude(arg, spawnLocation) > 10000000 then
+		return false
+	end
+	if tbl17.ispartowner(arg) then
+		return true
+	end
+	local flag2 = (v23.Position - arg.Position).Magnitude >= 31
+	if flag2 and tbl20.States.Owning == true then
+		return false
+	end
+	local flag3 = arg.Name == "HumanoidRootPart" or arg.Name == "Torso"
+	local v25 = nil
+	if flag3 then
+		local parent = arg.Parent and Players:FindFirstChild(arg.Parent.Name)
+		local isPlayer = parent and parent:IsA("Player")
+		v25 = nil
+		if isPlayer then
+			local v26, v27, v28 = tbl17.charp(parent)
+			if not v28 or v28.Health == 0 then
+				return false
+			end
+			local inPlot = parent:FindFirstChild("InPlot")
+			inPlot = inPlot and inPlot.Value == true
+			v25 = nil
+			if inPlot then
+				v25 = tbl17.BreakPlot(parent)
+				if not v25 then
+					return false
+				end
+			end
+		end
+	end
+	tbl20.States.Owning = true
+	local v26, v27 = performOwnershipGrabLoop(arg, arg2, v23, head_, v24, flag2)
+	tbl20.States.Owning = false
+	if typeof(v25) == "Instance" then
+		task.delay(1, tbl17.dt, v25)
+	end
+	if not v26 then
+		warn("[Resonance sno] " .. tostring(v27))
+		return false
+	end
+	return tbl17.ispartowner(arg)
+end
+
+tbl17.unsno = function(arg)
+	if resonanceExtractAdapters.unsno then
+		return resonanceExtractAdapters.unsno(arg)
+	end
+	if not arg then
+		return false
+	end
+	refreshRemotes()
+	if tbl23.dgl then
+		return (fireRemote(tbl23.dgl, arg))
+	end
+	return false
+end
+
+tbl17.st = function(arg, arg2)
+	if resonanceExtractAdapters.st then
+		return resonanceExtractAdapters.st(arg, arg2)
+	end
+	if type(arg) ~= "string" or tbl20.FailedToys[arg] then
+		return nil
+	end
+	local v22, v23 = tbl17.charp()
+	if not v23 or tbl20.States.Spawning then
+		return nil
+	end
+	local inPlot = localPlayer:FindFirstChild("InPlot")
+	local inOwnedPlot = localPlayer:FindFirstChild("InOwnedPlot")
+	local flag2 = inPlot ~= nil and inPlot.Value == true
+	if flag2 then
+		flag2 = not (inOwnedPlot ~= nil and inOwnedPlot.Value == true)
+	end
+	if flag2 and tbl20.States.Owning then
+		return nil
+	end
+	refreshRemotes()
+	if not tbl23.spawnEvent or not tbl23.spawnEvent:IsA("RemoteFunction") then
+		return nil
+	end
+	local v24 = Workspace:FindFirstChild(localPlayer.Name .. "SpawnedInToys")
+	if not v24 then
+		return nil
+	end
+	tbl20.States.Spawning = true
+	if flag2 then
+		tbl20.States.Owning = true
+	end
+	local connection3 = nil
+	local connection4 = nil
+	local flag3 = false
+	local cFrame = v23.CFrame
+	local v25 = nil
+	cleanup = function()
+		if flag3 then
+			pcall(function()
+				runService:UnbindFromRenderStep("STClient")
+			end)
+			flag3 = false
+		end
+		if connection4 then
+			connection4:Disconnect()
+			connection4 = nil
+		end
+		if connection3 then
+			connection3:Disconnect()
+			connection3 = nil
+		end
+		if flag2 and v23 and v23.Parent then
+			v23.CFrame = cFrame
+		end
+		tbl20.States.Spawning = false
+		if flag2 then
+			tbl20.States.Owning = false
+		end
+	end
+	local ok2, result2 = pcall(function()
+		local canSpawnToy = localPlayer:FindFirstChild("CanSpawnToy")
+		if canSpawnToy then
+			while canSpawnToy.Value == false do
+				task.wait()
+				if not v23.Parent then
+					return
+				end
+			end
+		end
+		local cframe = flag2 and CFrame.new(0, 25, 0) or v23.CFrame + Vector3.new(0, 15, 0)
+		local n8 = CFrame.new((typeof(arg2) == "CFrame" and arg2 or cframe).Position) + Vector3.new(0, 0, 20)
+		local rotateOrientPart = Workspace:FindFirstChild("RotateOrientPart")
+		local rotation = rotateOrientPart and rotateOrientPart.Rotation or Vector3.zero
+		connection3 = v24.ChildAdded:Connect(function(child)
+			if child.Name == arg then
+				v25 = child
+				if connection3 then
+					connection3:Disconnect()
+					connection3 = nil
+				end
+			end
+		end)
+		cFrame = v23.CFrame
+		if flag2 then
+			local cframe2 = CFrame.new(0, 10, 0)
+			pcall(function()
+				runService:UnbindFromRenderStep("STClient")
+			end)
+			runService:BindToRenderStep("STClient", Enum.RenderPriority.Camera.Value - 1, function()
+				if v23.Parent then
+					v23.CFrame = cFrame
+				end
+			end)
+			flag3 = true
+			connection4 = runService.Heartbeat:Connect(function()
+				if v23.Parent then
+					cFrame = v23.CFrame
+					v23.CFrame = cframe2
+				end
+			end)
+		end
+		invokeSpawn = function()
+			fireRemote(tbl23.spawnEvent, arg, n8, rotation)
+		end
+		task.spawn(invokeSpawn)
+		local now = tick()
+		while true do
+			runService.Heartbeat:Wait()
+			if flag2 then
+				task.spawn(invokeSpawn)
+			end
+			local v26 = v25
+			local flag4
+			if v25 then
+				flag4 = v26
+			else
+				flag4 = tick() - now > 1.3
+			end
+			if not flag4 then
+				continue
+			end
+			break
+		end
+	end)
+	cleanup()
+	if not ok2 then
+		warn(("[Resonance st] %s"):format(tostring(result2)))
+		return nil
+	end
+	if not v25 then
+		tbl20.FailedToys[arg] = true
+		task.delay(2, function()
+			tbl20.FailedToys[arg] = nil
+		end)
+	end
+	return v25
+end
+
+tbl17.dt = function(arg)
+	if resonanceExtractAdapters.dt then
+		return resonanceExtractAdapters.dt(arg)
+	end
+	if typeof(arg) ~= "Instance" or not arg:IsA("Model") then
+		return false
+	end
+	refreshRemotes()
+	if not tbl23.destroyToyEvent then
+		return false
+	end
+	return fireRemote(tbl23.destroyToyEvent, arg) == true
+end
+
+tbl17.ToggleCollisions = function(arg, arg2, arg3, arg4)
+	if resonanceExtractAdapters.ToggleCollisions then
+		return resonanceExtractAdapters.ToggleCollisions(arg, arg2, arg3, arg4)
+	end
+	if typeof(arg) ~= "Instance" or not arg:IsA("Model") then
+		return
+	end
+	for _, child in pairs(arg:GetChildren()) do
+		if child:IsA("BasePart") then
+			if arg2 then
+				if child.Name == "Torso" or child.Name == "Head" then
+					child.CanCollide = true
+				end
+			else
+				child.CanCollide = false
+				if not arg3 then
+					local ragdollLimbPart = child:FindFirstChild("RagdollLimbPart")
+					if ragdollLimbPart then
+						ragdollLimbPart.CanCollide = false
+					end
+				end
+			end
+			if child.Name ~= "HumanoidRootPart" then
+				local physicalProperties = nil
+				if arg4 then
+					physicalProperties = PhysicalProperties.new(0.01, 0.01, 0.01, 0.01, 0.01)
+				end
+				child.CustomPhysicalProperties = physicalProperties
+			end
+		end
+	end
+end
+
+tbl17.RepositionLimbs = function(arg, arg2)
+	if resonanceExtractAdapters.RepositionLimbs then
+		return resonanceExtractAdapters.RepositionLimbs(arg, arg2)
+	end
+	if typeof(arg) ~= "Instance" or not arg:IsA("Model") then
+		return false
+	end
+	local humanoidRootPart = arg:FindFirstChild("HumanoidRootPart")
+	if not humanoidRootPart then
+		return false
+	end
+	local weldHRP = humanoidRootPart:FindFirstChild("WeldHRP")
+	local torso_ = arg:FindFirstChild("Torso")
+	if not torso_ then
+		return false
+	end
+	local neck = torso_:FindFirstChild("Neck")
+	if neck and neck.Enabled == true then
+		return false
+	end
+	if weldHRP then
+	end
+	for k, v22 in pairs(tbl20.LimbOffsetsRL) do
+		local v23 = arg:FindFirstChild(k)
+		if v23 and v23:IsA("BasePart") then
+			v23.CFrame = humanoidRootPart.CFrame * v22
+			if arg2 then
+				tbl17.resetVelocity(v23)
+			end
+		end
+	end
+	return true
+end
+
+tbl17.ExtraEscape = function()
+	local v22, v23, v24 = tbl17.charp()
+	if not v23 or not v24 or v24.Health == 0 or tbl20.States.Escaping then
+		return
+	end
+	local inPlot = localPlayer:FindFirstChild("InPlot")
+	if not inPlot or inPlot.Value then
+		return
+	end
+	tbl20.States.Escaping = true
+	local waypoints = Workspace:FindFirstChild("Waypoints")
+	waypoints = waypoints and waypoints:FindFirstChild("TudorHouse")
+	if not waypoints then
+		tbl20.States.Escaping = false
+		return
+	end
+	local TractorGreen = tbl17.st("TractorGreen", waypoints.CFrame)
+	if not TractorGreen then
+		tbl20.States.Escaping = false
+		return
+	end
+	local vehicleSeat = TractorGreen:WaitForChild("VehicleSeat", 1)
+	if not vehicleSeat then
+		tbl20.States.Escaping = false
+		return tbl17.dt(TractorGreen)
+	end
+	local now = tick()
+	local flag2 = false
+	v24.Sit = false
+	vehicleSeat:Sit(v24)
+	local connection3 = vehicleSeat.ChildAdded:Connect(function(child)
+		if child.Name == "SeatWeld" then
+			child.Enabled = false
+			flag2 = true
+			child:Destroy()
+		end
+	end)
+	while true do
+		recoveredYield()
+		if flag2 then
+			break
+		elseif tick() - now > 0.7 then
+			break
+		end
+	end
+	connection3:Disconnect()
+	v24.Sit = false
+	tbl20.States.Escaping = false
+	return tbl17.dt(TractorGreen)
+end
+
+do
+	local connection3 = nil
+	local cFrame = nil
+
+	stopAntiGrab = function()
+		if connection3 then
+			connection3:Disconnect()
+			connection3 = nil
+		end
+		tbl20.States["Anti Grab"] = false
+		local v22, v23, v24 = tbl17.charp()
+		if v24 then
+			if tbl18.AGType == "Anti-Kill" then
+				task.delay(0.1, function()
+					if v24.Parent then
+						v24.Sit = false
+					end
+				end)
+			end
+			v24.AutoRotate = true
+		end
+	end
+
+	startAntiGrabIfNeeded = function()
+		if not tbl19.AntiGrab or not isHeld.Value or tbl20.States["Anti Grab"] then
+			return
+		end
+		refreshRemotes()
+		if tbl23.Struggle then
+			fireRemote(tbl23.Struggle)
+		end
+		local v22, v23, v24 = tbl17.charp()
+		local torso_ = v22 and v22:FindFirstChild("Torso")
+		local neck = torso_ and torso_:FindFirstChild("Neck")
+		if not v24 or not torso_ then
+			return
+		end
+		v24.RequiresNeck = false
+		tbl17.resetVelocity(v23 or torso_)
+		cFrame = torso_.CFrame
+		tbl20.States["Anti Grab"] = true
+		local flag2 = tbl18.AGType == "Escapes Anything, but buggy"
+		local sit = tbl18.AGType == "Anti-Kill"
+		local flag3 = tbl18.AGType == "No Ragdoll"
+		if flag2 then
+			task.spawn(tbl17.ExtraEscape)
+		end
+		local now = tick()
+		connection3 = runService.Heartbeat:Connect(function(deltaTime)
+			if tbl23.Struggle then
+				fireRemote(tbl23.Struggle)
+			end
+			if v23 and not flag2 and not flag3 and tbl23.RagdollRemote then
+				fireRemote(tbl23.RagdollRemote, v23, sit and 0.11 or 0)
+			end
+			if flag2 then
+				if tick() - now > 2 then
+					task.spawn(tbl17.ExtraEscape)
+					now = tick()
+				end
+			end
+			local moveDirection = v24.MoveDirection
+			local n8 = 16
+			if v24.WalkSpeed > 16 then
+				n8 = v24.WalkSpeed
+			end
+			if moveDirection.Magnitude > 0 then
+				cFrame += moveDirection.Unit * n8 * deltaTime
+				local vector = Vector3.new(moveDirection.X, 0, moveDirection.Z)
+				if vector.Magnitude > 0 then
+					local position = cFrame.Position
+					cFrame = cFrame:Lerp(CFrame.lookAt(position, position + vector.Unit), 0.12)
+				end
+			end
+			tbl17.resetVelocity(v23 or torso_)
+			torso_.CFrame = cFrame
+			v24.Sit = sit
+			task.spawn(tbl17.ToggleCollisions, v22, false)
+			if not neck or not neck.Enabled then
+				task.spawn(tbl17.RepositionLimbs, v22)
+			end
+			for _, v25 in ipairs(v24:GetPlayingAnimationTracks()) do
+				local animation = v25.Animation
+				if animation and animation.AnimationId == "rbxassetid://7047322890" then
+					v25:Stop()
+				end
+			end
+			if v23 then
+				local scream = v23:FindFirstChild("Scream")
+				if scream then
+					scream.Playing = false
+				end
+			end
+			if not isHeld.Value or not tbl19.AntiGrab then
+				tbl20.States["Anti Grab"] = false
+				if sit then
+					task.delay(0.1, function()
+						if v24.Parent then
+							v24.Sit = false
+						end
+					end)
+				end
+				v24.AutoRotate = true
+				if connection3 then
+					connection3:Disconnect()
+					connection3 = nil
+				end
+			end
+		end)
+	end
+end
+
+task.spawn(function()
+	while task.wait(0.03) do
+		if tbl19.AntiGrab then
+			startAntiGrabIfNeeded()
+		elseif tbl20.States["Anti Grab"] then
+			stopAntiGrab()
+		end
+	end
+end)
+
+Antis:AddToggle("AntiGrabXeron", {
+	Text = "Anti Grab BETA",
+	Default = false,
+	Tooltip = "안티그랩 베타 근데 존나좋을거로예상",
+	Callback = function(antiGrab)
+		tbl19.AntiGrab = antiGrab
+		if antiGrab then
+			startAntiGrabIfNeeded()
+		else
+			stopAntiGrab()
+		end
+	end,
+})
+
+
+
 local rs      = game:GetService("ReplicatedStorage")
 local rs2     = game:GetService("RunService")
 local Players = game:GetService("Players")
@@ -38446,6 +39376,19 @@ end
 	end
 
 	do
+  local Config2 = tbl15.Invincibility:AddRightGroupbox("Config2", "Anti grab Type")
+   Config2:AddDivider("Anti-Grab Beta")
+
+	Config2:AddDropdown("AGTDropdown", {
+	Values = { "Normal", "No Ragdoll", "Anti-Kill", "Escapes Anything" },
+	Default = "Normal",
+	Multi = false,
+	Text = "Anti-Grab Type",
+	Tooltip = "Type of default Anti-Grab",
+	Callback = function(agType)
+		tbl18.AGType = agType
+	end,
+})
 		local Config = tbl15.Invincibility:AddRightGroupbox("Config", "settings")
 
 		Config:AddSlider("AntiLagSens", {
@@ -38461,7 +39404,7 @@ end
      Config:AddDropdown("AntiInPlotsType", {
         Text = "Anti In Plots Type",
         Default = {},
-        Options = {"Players & Toy", "Toy Grab", "VehicleSeat"},
+        Values = {"Players & Toy", "Toy Grab", "VehicleSeat"},
         Multiple = true,
         Callback = function(Value)
             AntiInPlotsValues = {["Players & Toy"] = false, ["Toy Grab"] = false, ["VehicleSeat"] = false}
@@ -38684,7 +39627,7 @@ end
 		v21:AddDivider("Kick Settings")
 
 		v21:AddDropdown("NKDelayConf", {
-			Values = { "Normal", "Faster but worse" },
+			Values = { "Normal", "Faster" },
 			Multi = false,
 			Default = 1,
 			Text = "Delay Mode",
