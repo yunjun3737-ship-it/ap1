@@ -36892,7 +36892,250 @@ Antis:AddToggle("AntiGrabToggle", {
 				tbl12.SetRuntimeToggle("AntiBlobman", arg)
 			end,
 		})
+local rs           = game:GetService("ReplicatedStorage")
+local rs2          = game:GetService("RunService")
+local Players      = game:GetService("Players")
+local LocalPlayer  = Players.LocalPlayer
 
+local antiBlobKillConnection   = nil
+local antiBlobKillFrameCounter = 0
+
+local antiBlobGrabEnabled        = false
+local antiBlobGrabConnection     = nil
+local antiBlobGrabNotifyCooldown = {}
+local spawnedInToys              = workspace:WaitForChild(LocalPlayer.Name .. "SpawnedInToys")
+
+local function CheckBlobGrab(blobman, rootPart, rootAttachment, grabberName)
+    if not blobman:FindFirstChild("BlobmanSeatAndOwnerScript") then return end
+
+    for _, side in ipairs({ "Left", "Right" }) do
+        local detector = blobman:FindFirstChild(side .. "Detector")
+        if detector then
+            local weld             = detector:FindFirstChild(side .. "Weld")
+            local alignOrientation = detector:FindFirstChild(side .. "AlignOrientation")
+
+            local isGrabbingMe = weld
+                and weld:IsA("AlignPosition")
+                and weld.Attachment0 == rootAttachment
+
+            if isGrabbingMe then
+                local notifyKey = grabberName .. " → " .. side .. " Grab"
+                local now = tick()
+
+                if not antiBlobGrabNotifyCooldown[notifyKey]
+                   or now - antiBlobGrabNotifyCooldown[notifyKey] >= 2 then
+                    antiBlobGrabNotifyCooldown[notifyKey] = now
+                    Library:Notify({
+                        Title = "[ ✊ ]",
+                        Description = notifyKey,
+                        Time = 3,
+                    })
+                end
+
+                pcall(function()
+                    rs.CharacterEvents.RagdollRemote:FireServer(rootPart, 0)
+
+                    local character = LocalPlayer.Character
+                    if not character then return end
+
+                    local head     = character:FindFirstChild("Head")
+                    local leftArm  = character:FindFirstChild("Left Arm")
+                    local rightArm = character:FindFirstChild("Right Arm")
+                    local leftLeg  = character:FindFirstChild("Left Leg")
+                    local rightLeg = character:FindFirstChild("Right Leg")
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+
+                    if humanoid then humanoid.PlatformStand = true end
+
+                    local parts = {}
+                    if rootPart then table.insert(parts, rootPart) end
+                    if head     then table.insert(parts, head)     end
+                    if leftArm  then table.insert(parts, leftArm)  end
+                    if rightArm then table.insert(parts, rightArm) end
+                    if leftLeg  then table.insert(parts, leftLeg)  end
+                    if rightLeg then table.insert(parts, rightLeg) end
+
+                    for _, part in ipairs(parts) do
+                        part.AssemblyLinearVelocity  = Vector3.new(0, 0, 0)
+                        part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                    end
+
+                    alignOrientation.Attachment0 = nil
+                    weld.Attachment0             = nil
+                    weld.Enabled                 = false
+                    alignOrientation.Enabled     = false
+
+                    for _, part in ipairs(parts) do
+                        part.AssemblyLinearVelocity  = Vector3.new(0, 0, 0)
+                        part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                    end
+
+                    weld.Enabled             = true
+                    alignOrientation.Enabled = true
+
+                    if humanoid then humanoid.PlatformStand = false end
+
+                    for _, part in ipairs(parts) do
+                        part.AssemblyLinearVelocity  = Vector3.new(0, 0, 0)
+                        part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                    end
+                end)
+            end
+        end
+    end
+end
+
+local function StartAntiPermGrab()
+    if antiBlobGrabConnection then
+        antiBlobGrabConnection:Disconnect()
+        antiBlobGrabConnection = nil
+    end
+
+    antiBlobGrabConnection = rs2.Stepped:Connect(function()
+        if not antiBlobGrabEnabled then
+            if antiBlobGrabConnection then
+                antiBlobGrabConnection:Disconnect()
+                antiBlobGrabConnection = nil
+            end
+            return
+        end
+
+        local character = LocalPlayer.Character
+        if not character then return end
+
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+        local rootAttachment   = humanoidRootPart and humanoidRootPart:FindFirstChild("RootAttachment")
+
+        if not (humanoidRootPart and rootAttachment) then return end
+
+        if spawnedInToys then
+            for _, toy in ipairs(spawnedInToys:GetChildren()) do
+                if toy.Name == "CreatureBlobman" then
+                    local grabberName = "{me}"
+                    local vehicleSeat = toy:FindFirstChild("VehicleSeat")
+                    if vehicleSeat and vehicleSeat.Occupant then
+                        local occupantParent = vehicleSeat.Occupant.Parent
+                        if occupantParent then
+                            local occupantPlayer = Players:GetPlayerFromCharacter(occupantParent)
+                            if occupantPlayer then grabberName = occupantPlayer.Name end
+                        end
+                    end
+                    CheckBlobGrab(toy, humanoidRootPart, rootAttachment, grabberName)
+                end
+            end
+        end
+
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                local otherToys = workspace:FindFirstChild(player.Name .. "SpawnedInToys")
+                if otherToys then
+                    for _, toy in ipairs(otherToys:GetChildren()) do
+                        if toy.Name == "CreatureBlobman" then
+                            local grabberName = player.Name
+                            local vehicleSeat = toy:FindFirstChild("VehicleSeat")
+                            if vehicleSeat and vehicleSeat.Occupant then
+                                local occupantParent = vehicleSeat.Occupant.Parent
+                                if occupantParent then
+                                    local occupantPlayer = Players:GetPlayerFromCharacter(occupantParent)
+                                    if occupantPlayer then grabberName = occupantPlayer.Name end
+                                end
+                            end
+                            CheckBlobGrab(toy, humanoidRootPart, rootAttachment, grabberName)
+                        end
+                    end
+                end
+            end
+        end
+
+        local plotItems = workspace:FindFirstChild("PlotItems")
+        if plotItems then
+            for i = 1, 5 do
+                local plot = plotItems:FindFirstChild("Plot" .. i)
+                if plot then
+                    for _, toy in ipairs(plot:GetChildren()) do
+                        if toy.Name == "CreatureBlobman" then
+                            local grabberName = "Plot " .. i
+                            local vehicleSeat = toy:FindFirstChild("VehicleSeat")
+                            if vehicleSeat and vehicleSeat.Occupant then
+                                local occupantParent = vehicleSeat.Occupant.Parent
+                                if occupantParent then
+                                    local occupantPlayer = Players:GetPlayerFromCharacter(occupantParent)
+                                    if occupantPlayer then grabberName = occupantPlayer.Name end
+                                end
+                            end
+                            CheckBlobGrab(toy, humanoidRootPart, rootAttachment, grabberName)
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
+Antis:AddToggle("AntiBlobKillToggle", {
+    Text = "Anti blob Kill(자체제작)",
+    Default = false,
+    Tooltip = "Anti Perm Kill",
+    Callback = function(Value)
+        if Value then
+            local ragdollRemote = rs:WaitForChild("CharacterEvents"):FindFirstChild("RagdollRemote")
+            antiBlobKillFrameCounter = 0
+            if antiBlobKillConnection then
+                antiBlobKillConnection:Disconnect()
+                antiBlobKillConnection = nil
+            end
+
+            antiBlobKillConnection = rs2.Heartbeat:Connect(function()
+                antiBlobKillFrameCounter = antiBlobKillFrameCounter + 1
+                local character = LocalPlayer.Character
+                local hrp = character and character:FindFirstChild("HumanoidRootPart")
+                local humanoid = character and character:FindFirstChild("Humanoid")
+
+                if hrp and ragdollRemote then
+                    pcall(function() ragdollRemote:FireServer(hrp, -math.huge) end)
+                end
+
+                if humanoid then
+                    humanoid.Sit = true
+                end
+
+                if antiBlobKillFrameCounter >= 60 then
+                    antiBlobKillFrameCounter = 0
+                end
+            end)
+
+           -- Library:Notify({Title = "Anti BlobKill", Description = "ON", Time = 2})
+        else
+            if antiBlobKillConnection then
+                antiBlobKillConnection:Disconnect()
+                antiBlobKillConnection = nil
+            end
+            local character = LocalPlayer.Character
+            local humanoid = character and character:FindFirstChild("Humanoid")
+            if humanoid then humanoid.Sit = false end
+           -- Library:Notify({Title = "Anti BlobKill", Description = "OFF", Time = 2})
+        end
+    end,
+})
+
+Antis:AddToggle("AntiBlob", {
+    Text = "Anti blob Grab(쌔벼온거)",
+    Default = false,
+    Tooltip = "Anti Blob",
+    Callback = function(Value)
+        antiBlobGrabEnabled = Value
+        if antiBlobGrabEnabled then
+            StartAntiPermGrab()
+         --   Library:Notify({Title = "Anti Blobman", Description = "ON", Time = 1})
+        else
+            if antiBlobGrabConnection then
+                antiBlobGrabConnection:Disconnect()
+                antiBlobGrabConnection = nil
+            end
+            --Library:Notify({Title = "Anti Blob", Description = "OFF", Time = 1})
+        end
+    end,
+})
 		Antis:AddToggle("AntiInputLag", {
 			Text = "Anti Network Ownership",
 			Default = false,
