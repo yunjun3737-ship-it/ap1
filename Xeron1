@@ -17557,7 +17557,8 @@ do
 							SelectedACPose = "Default",
 							CustomACPresetName = "",
 							AntiLagSens = 3,
-                            AntiInPlotsType = "",
+                            AntiInPlotsType = "Players & Toy",
+                            AGTDropdown = "Normal",
 							InputLgDelay = 0.05,
 							GucciType = "CreatureBlobman",
 							AKType = "Shuriken",
@@ -39391,7 +39392,7 @@ end
 			agType = values[agType]
 		end
 		if agType ~= nil and agType ~= "" then
-			tbl18.AGType = agType
+			tbl19.AGType = agType
 		end
 	end,
 })
