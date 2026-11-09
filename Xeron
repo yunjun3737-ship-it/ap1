@@ -34966,8 +34966,8 @@ Escape Timer: %*]]
 		lib.ForceCheckbox = true
 
 		v19 = lib:CreateWindow({
-			Title = "<b>Xeron Onwer</b>",
-			Footer = ("<b>Xeron onwer%* | FTAP</b>"):format("v3.1"),
+			Title = "<b>ALPHA(Top)</b>",
+			Footer = ("<b>Alpha%* | FTAP</b>"):format("v7.1"),
 			ToggleKeybind = Enum.KeyCode.RightShift,
 			Center = true,
 			AutoShow = true,
