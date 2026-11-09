@@ -22224,7 +22224,7 @@ end
 																				end
 
 																				if tbl16 == v27 then
-																					--occupant = seat.Occupant
+																					occupant = seat.Occupant
 																					playerFromCharacter = occupant and occupant ~= v26 and Players:GetPlayerFromCharacter(occupant.Parent)
 
 																					if playerFromCharacter then
@@ -39376,19 +39376,38 @@ end
 	end
 
 	do
-  local Config2 = tbl15.Invincibility:AddRightGroupbox("Config2", "Anti grab Type")
-   Config2:AddDivider("Anti-Grab Beta")
+  local Config2 = tbl15.Invincibility:AddRightGroupbox("Anti grab Type", "settings")
+     Config2:AddDivider("Anti-Grab Beta")
 
 	Config2:AddDropdown("AGTDropdown", {
-	Values = { "Normal", "No Ragdoll", "Anti-Kill", "Escapes Anything" },
+	Values = { "Normal", "No Ragdoll", "Anti-Kill", "Escapes Anything, but buggy" },
 	Default = "Normal",
 	Multi = false,
 	Text = "Anti-Grab Type",
 	Tooltip = "Type of default Anti-Grab",
 	Callback = function(agType)
-		tbl18.AGType = agType
+		if type(agType) == "number" then
+			local values = { "Normal", "No Ragdoll", "Anti-Kill", "Escapes Anything, but buggy" }
+			agType = values[agType]
+		end
+		if agType ~= nil and agType ~= "" then
+			tbl18.AGType = agType
+		end
 	end,
 })
+Config2:AddDivider("Anti in plot mode")
+
+Config2:AddDropdown("AntiInPlotsType", {
+        Text = "Anti In Plots Type",
+        Default = {},
+        Values = {"Players & Toy", "Toy Grab", "VehicleSeat"},
+        Multiple = true,
+        Callback = function(Value)
+            AntiInPlotsValues = {["Players & Toy"] = false, ["Toy Grab"] = false, ["VehicleSeat"] = false}
+            for _, v in pairs(Value) do AntiInPlotsValues[v] = true end
+        end
+    })
+
 		local Config = tbl15.Invincibility:AddRightGroupbox("Config", "settings")
 
 		Config:AddSlider("AntiLagSens", {
@@ -39401,16 +39420,7 @@ end
 				tbl9.AntiLagSens = antiLagSens
 			end,
 		})
-     Config:AddDropdown("AntiInPlotsType", {
-        Text = "Anti In Plots Type",
-        Default = {},
-        Values = {"Players & Toy", "Toy Grab", "VehicleSeat"},
-        Multiple = true,
-        Callback = function(Value)
-            AntiInPlotsValues = {["Players & Toy"] = false, ["Toy Grab"] = false, ["VehicleSeat"] = false}
-            for _, v in pairs(Value) do AntiInPlotsValues[v] = true end
-        end
-    })
+     
 		Config:AddDivider("Auto Reset")
 
 		Config:AddToggle("AutoLeave", {
