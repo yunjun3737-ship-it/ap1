@@ -43503,7 +43503,7 @@ Antis:AddToggle("AntiBlob", {
 		Notifications:AddToggle("NotificationMaster", {
 			Text = "Master Switch",
 			Default = true,
-			Tooltip = "Enables or disables every Resonance notification",
+			Tooltip = "Enables or disables every ALPHA notification",
 			Callback = function(enabled)
 				tbl7.NotificationSettings.Enabled = enabled
 			end,
@@ -44173,7 +44173,7 @@ sources.Bootstrap = [====[
 local sources = ...
 local env = getgenv and getgenv() or _G
 if env.ResonanceRunning or env.ResonanceStarting then
-    warn("Resonance is already running or starting")
+    warn("ALPHA is already running or starting")
     return
 end
 assert(type(loadstring) == "function", "This executor does not support loadstring")
@@ -44222,7 +44222,7 @@ env.ResonanceStarting = false
 if not ok then
     if cleanup then pcall(cleanup) end
     env.ResonanceRunning = false
-    warn("Resonance initialization failed: " .. tostring(result))
+    warn("ALPHA initialization failed: " .. tostring(result))
     return nil, result
 end
 return result
