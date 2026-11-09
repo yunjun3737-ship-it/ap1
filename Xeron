@@ -17228,7 +17228,7 @@ do
 								do
 									local v24 = string.gsub([[
 
-  - ]], "ver", "v6.7")
+  - ]], "ver", "v7.1")
 
 									warn(v24)
 								end
@@ -17250,7 +17250,7 @@ do
 						end
 
 						if not lib3 then
-							fn17("Xeron V5", "Failed to load the UI Library! GitHub might be down/blocked by your ISP. Try using a VPN!", 5)
+							fn17("ALPHA ", "Failed to load the UI Library! GitHub might be down/blocked by your ISP. Try using a VPN!", 5)
 							getgenv().ResonanceRunning = false
 							return
 						end
@@ -30982,7 +30982,7 @@ end
 			tbl12.UpdateServerHopButton()
 
 			local v22 = lib:Notify({
-				Title = "XERON",
+				Title = "ALPHA",
 				Description = "Attempting to serverhop..",
 				Persist = true,
 				SoundId = n34,
