@@ -39384,21 +39384,24 @@ end
 
 Config2:AddDropdown("AGTDropdown", {
 	Values = { "Normal", "No Ragdoll", "Anti-Kill", "Escapes Anything, but buggy" },
-	Default = "Normal",
+	Default = 1,
 	Multi = false,
 	Text = "Anti-Grab Type",
 	Tooltip = "Type of default Anti-Grab",
-	Callback = function(agType)
-		if type(agType) == "number" then
-			local vals = { "Normal", "No Ragdoll", "Anti-Kill", "Escapes Anything, but buggy" }
-			agType = vals[agType]
-		end
-		if type(agType) == "string" and agType ~= "" then
-			tbl18.AGType = agType
+	Callback = function(arg)
+		if arg == "Normal" then
+			tbl9.AGType = "Normal"
+		elseif arg == "No Ragdoll" then
+			tbl9.AGType = "No Ragdoll"
+		elseif arg == "Anti-Kill" then
+			tbl9.AGType = "Anti-Kill"
+		elseif arg == "Escapes Anything, but buggy" then
+			tbl9.AGType = "Escapes Anything, but buggy"
 		end
 	end,
 })
 Config2:AddDivider("Anti in plot mode")
+
 
 Config2:AddDropdown("AntiInPlotsType", {
 	Text = "Anti In Plots Type",
@@ -39409,12 +39412,11 @@ Config2:AddDropdown("AntiInPlotsType", {
 		if type(Value) ~= "table" then
 			return
 		end
-		tbl18.AntiInPlotsType = Value
-		local vals = { ["Players & Toy"] = false, ["Toy Grab"] = false, ["VehicleSeat"] = false }
+		tbl9.AntiInPlotsType = Value
+		AntiInPlotsValues = { ["Players & Toy"] = false, ["Toy Grab"] = false, ["VehicleSeat"] = false }
 		for _, v in pairs(Value) do
-			vals[v] = true
+			AntiInPlotsValues[v] = true
 		end
-		tbl18.AntiInPlotsValues = vals
 	end,
 })
 
