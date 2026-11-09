@@ -37905,7 +37905,7 @@ Antis:AddToggle("AntiBlob", {
 
 		v21:AddButton({
 			Text = "TP To Void Platform",
-			Tooltip = "Teleports you to a platform where victim cant spawn anti-kick shurikens, though it affects you as well [ONLY WORKS WHEN YOU HAVE XERON ANTI-KICK ON AND ONLY WORKS GOOD ON CHEATERS]",
+			Tooltip = "Teleports you to a platform where victim cant spawn anti-kick shurikens, though it affects you as well [ONLY WORKS WHEN YOU HAVE ALPHA ANTI-KICK ON AND ONLY WORKS GOOD ON CHEATERS]",
 			Func = function()
 				local v22
 				v22, v22 = tbl12.Char()
