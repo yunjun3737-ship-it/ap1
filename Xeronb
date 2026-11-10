@@ -14937,6 +14937,7 @@ local ThemeManager = {
             OutlineColor = "505050",    
             BackgroundImage = "" 
         },  
+},
         ["BBot"] = {
             2,
             { FontColor = "ffffff", MainColor = "1e1e1e", AccentColor = "7e48a3", BackgroundColor = "232323", OutlineColor = "141414", BackgroundImage = "" },
