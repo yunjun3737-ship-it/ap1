@@ -45979,7 +45979,7 @@ Rejoined: %rejoinedPlayer%, %listCount%]],
 		end)
 	end
 
-	fn18("Script loaded in " .. math.round((tick() - getgenv().LoadTime) * 100) / 100 .. " seconds", "Resonance", 71450094482101)
+	fn18("Script loaded in " .. math.round((tick() - getgenv().LoadTime) * 100) / 100 .. " seconds", "ALPHA", 71450094482101)
 	getgenv().LoadTime = nil
 
 	return {
