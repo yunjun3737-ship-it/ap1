@@ -15331,6 +15331,12 @@ function ThemeManager:SetDefaultTheme(Theme: any)
         LibraryScheme[DefaultSchemeColor] = Library.Scheme[DefaultSchemeColor]
     end
 
+    
+    if typeof(Theme["BackgroundImage"]) == "string" and Theme["BackgroundImage"] ~= "" then
+        FinalTheme.BackgroundImage = Theme["BackgroundImage"]
+        LibraryScheme.BackgroundImage = Theme["BackgroundImage"]
+    end
+
     Library.Scheme = LibraryScheme
     ThemeManager.BuiltInThemes["Default"] = { 1, FinalTheme }
 
@@ -45660,17 +45666,14 @@ Rejoined: %rejoinedPlayer%, %listCount%]],
 	end
 
 	lib2:SetDefaultTheme({
-		BackgroundColor = Color3.fromRGB(15, 15, 15),
-		MainColor = Color3.fromRGB(25, 25, 25),
-		AccentColor = Color3.fromRGB(255, 255, 0),
-		OutlineColor = Color3.fromRGB(70, 70, 70),
-		FontColor = Color3.fromRGB(255, 255, 255),
-		FontFace = "Code",
-	})
-
-	task.spawn(function()
-		lib2:ApplyToTab(tbl15.Settings)
-	end)
+    BackgroundColor = Color3.fromRGB(0, 0, 0),
+    MainColor       = Color3.fromRGB(0, 0, 0),
+    AccentColor     = Color3.fromRGB(0, 255, 0),
+    OutlineColor    = Color3.fromRGB(80, 80, 80),
+    FontColor       = Color3.fromRGB(255, 255, 255),
+    FontFace        = "Code",
+    BackgroundImage = "113737893884553", 
+})
 
 	task.defer(function()
 		local function fn21(arg)
