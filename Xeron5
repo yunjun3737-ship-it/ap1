@@ -45678,9 +45678,6 @@ Rejoined: %rejoinedPlayer%, %listCount%]],
 })
 
 
-lib2.BuiltInThemes["Default"][2].BackgroundImage = "113737893884553"
-lib:SetBackgroundImage("113737893884553")
-
 	task.defer(function()
 		local function fn21(arg)
 			if not arg.Value or arg.Value == "None" then
