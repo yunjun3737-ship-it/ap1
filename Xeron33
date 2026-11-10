@@ -15292,10 +15292,7 @@ Library.Scheme = LibraryScheme
 ThemeManager.BuiltInThemes["Default"] = { 1, FinalTheme }
 
 
-if typeof(Theme["BackgroundImage"]) == "string" and Theme["BackgroundImage"] ~= "" then
-    FinalTheme.BackgroundImage = Theme["BackgroundImage"]
-    LibraryScheme.BackgroundImage = Theme["BackgroundImage"]
-end
+
 
 Library:UpdateColorsUsingRegistry()
 function ThemeManager:SetDefaultTheme(Theme: any)
@@ -15345,6 +15342,12 @@ function ThemeManager:SetDefaultTheme(Theme: any)
 
     for _, DefaultSchemeColor in { "RedColor", "DestructiveColor", "DarkColor", "WhiteColor" } do
         LibraryScheme[DefaultSchemeColor] = Library.Scheme[DefaultSchemeColor]
+    end
+
+    
+    if typeof(Theme["BackgroundImage"]) == "string" and Theme["BackgroundImage"] ~= "" then
+        FinalTheme.BackgroundImage = Theme["BackgroundImage"]
+        LibraryScheme.BackgroundImage = Theme["BackgroundImage"]
     end
 
     Library.Scheme = LibraryScheme
@@ -45684,7 +45687,7 @@ Rejoined: %rejoinedPlayer%, %listCount%]],
     OutlineColor    = Color3.fromRGB(80, 80, 80),
     FontColor       = Color3.fromRGB(255, 255, 255),
     FontFace        = "Code",
-    BackgroundImage = "113737893884553",   -- ★ 이 한 줄만 추가
+    BackgroundImage = "113737893884553", 
 })
 
 	task.defer(function()
