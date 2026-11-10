@@ -15995,7 +15995,9 @@ function ThemeManager:CreateThemeManager(Themesbox: any)
     FontColor:OnChanged(UpdateTheme)
     FontFace:OnChanged(function(Value) ThemeManager.Library:SetFont(Enum.Font[Value]) end)
     BackgroundImage:OnChanged(function(Value) ThemeManager.Library:SetBackgroundImage(Value) end)
-
+if not IsStringEmpty(BackgroundImage.Value) then
+    ThemeManager.Library:SetBackgroundImage(BackgroundImage.Value)
+end
     ThemeManager:LoadDefault()
     ThemeManager:UpdateContrastWarning()
     ThemeManager.AppliedToTab = true
