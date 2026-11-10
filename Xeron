@@ -15288,7 +15288,16 @@ function ThemeManager:GetDefaultTheme(): (string, boolean, string?)
     ThemeManager.DefaultThemeName = DefaultThemeName
     return DefaultThemeName, true
 end
+Library.Scheme = LibraryScheme
+ThemeManager.BuiltInThemes["Default"] = { 1, FinalTheme }
 
+
+if typeof(Theme["BackgroundImage"]) == "string" and Theme["BackgroundImage"] ~= "" then
+    FinalTheme.BackgroundImage = Theme["BackgroundImage"]
+    LibraryScheme.BackgroundImage = Theme["BackgroundImage"]
+end
+
+Library:UpdateColorsUsingRegistry()
 function ThemeManager:SetDefaultTheme(Theme: any)
     assert(ThemeManager.Library, "Library is not set, call ThemeManager:SetLibrary(Library) first.")
     assert(not ThemeManager.AppliedToTab, "Cannot set default theme after applying ThemeManager to a tab!")
@@ -45675,8 +45684,8 @@ Rejoined: %rejoinedPlayer%, %listCount%]],
     OutlineColor    = Color3.fromRGB(80, 80, 80),
     FontColor       = Color3.fromRGB(255, 255, 255),
     FontFace        = "Code",
+    BackgroundImage = "113737893884553",   -- ★ 이 한 줄만 추가
 })
-
 
 	task.defer(function()
 		local function fn21(arg)
