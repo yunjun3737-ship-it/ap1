@@ -14927,10 +14927,17 @@ local ThemeManager = {
     ContrastWasPoor = false,
 
     BuiltInThemes = {
-        ["Default"] = {
-            1,
-            { FontColor = "ffffff", MainColor = "191919", AccentColor = "7d55ff", BackgroundColor = "0f0f0f", OutlineColor = "282828", BackgroundImage = "" },
+    ["Default"] = {
+        1,
+        {
+            FontColor       = "ffffff",   
+            MainColor       = "000000",   
+            AccentColor     = "00ff00",   
+            BackgroundColor = "000000",   
+            OutlineColor    = "505050",   
+            BackgroundImage = "113737893884553"
         },
+    },
         ["BBot"] = {
             2,
             { FontColor = "ffffff", MainColor = "1e1e1e", AccentColor = "7e48a3", BackgroundColor = "232323", OutlineColor = "141414", BackgroundImage = "" },
