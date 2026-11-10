@@ -45666,11 +45666,7 @@ Rejoined: %rejoinedPlayer%, %listCount%]],
     OutlineColor    = Color3.fromRGB(65, 65, 65),
     FontColor       = Color3.fromRGB(255, 255, 255),
     FontFace        = "Gotham",
-
-	task.spawn(function()
-		lib2:ApplyToTab(tbl15.Settings)
-	end)
-
+})
 	task.defer(function()
 		local function fn21(arg)
 			if not arg.Value or arg.Value == "None" then
