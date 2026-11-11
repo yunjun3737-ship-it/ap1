@@ -34903,7 +34903,7 @@ Escape Timer: %*]]
 											flag12 = tbl9.NKDelayMode == "Faster but worse" or not tbl9.NKDelayMode
 
 											if flag12 then
-												task.delay(0.02, tbl12.RNO, v27)
+												task.delay(0.00000000002, tbl12.RNO, v27)
 											elseif tbl9.NKDelayMode == "Normal" then
 												task.spawn(function()
 													task.wait()
@@ -34933,7 +34933,7 @@ Escape Timer: %*]]
 											flag12 = tbl9.NKDelayMode == "Faster but worse" or not tbl9.NKDelayMode
 
 											if flag12 then
-												task.delay(0.02, tbl12.RNO, v27)
+												task.delay(0.000000002, tbl12.RNO, v27)
 											elseif tbl9.NKDelayMode == "Normal" then
 												task.spawn(function()
 													task.wait()
