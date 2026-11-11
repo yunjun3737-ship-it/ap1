@@ -34756,7 +34756,7 @@ Escape Timer: %*]]
 				end
 			end
 		end)
-
+--[[에어락]]
 		task.spawn(function()
 			local tbl16 = {}
 
@@ -34903,7 +34903,7 @@ Escape Timer: %*]]
 											flag12 = tbl9.NKDelayMode == "Faster but worse" or not tbl9.NKDelayMode
 
 											if flag12 then
-												task.delay(0.0002, tbl12.RNO, v27)
+												task.delay(0.00000002, tbl12.RNO, v27)
 											elseif tbl9.NKDelayMode == "Normal" then
 												task.spawn(function()
 													task.wait()
@@ -34933,7 +34933,7 @@ Escape Timer: %*]]
 											flag12 = tbl9.NKDelayMode == "Faster but worse" or not tbl9.NKDelayMode
 
 											if flag12 then
-												task.delay(0.00002, tbl12.RNO, v27)
+												task.delay(0.0000002, tbl12.RNO, v27)
 											elseif tbl9.NKDelayMode == "Normal" then
 												task.spawn(function()
 													task.wait()
@@ -34952,7 +34952,7 @@ Escape Timer: %*]]
 											tbl12.ToggleCollisions(v26, false)
 											tbl12.RepositionLimbs(v26, true)
 
-											task.delay(0.6, function()
+											task.delay(0.00000001, function()
 												if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
 													fn21(v27, v27)
 												end
