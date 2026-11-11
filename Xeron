@@ -34900,10 +34900,10 @@ Escape Timer: %*]]
 
 										if not (tbl12.GetMagnitude(v23, v27) > 33) then
 											tbl12.Grab(v27)
-											flag12 = tbl9.NKDelayMode == "Faster but worse" or not tbl9.NKDelayMode
+											flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
 
 											if flag12 then
-												task.delay(0.00000000002, tbl12.RNO, v27)
+												task.delay(0.0000000000002, tbl12.RNO, v27)
 											elseif tbl9.NKDelayMode == "Normal" then
 												task.spawn(function()
 													task.wait()
@@ -34930,10 +34930,10 @@ Escape Timer: %*]]
 										elseif tbl12.SNO(v27) then
 											tbl12.Teleport(v27, v29)
 											tbl12.Grab(v27)
-											flag12 = tbl9.NKDelayMode == "Faster but worse" or not tbl9.NKDelayMode
+											flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
 
 											if flag12 then
-												task.delay(0.000000002, tbl12.RNO, v27)
+												task.delay(0.00000000002, tbl12.RNO, v27)
 											elseif tbl9.NKDelayMode == "Normal" then
 												task.spawn(function()
 													task.wait()
