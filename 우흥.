@@ -339,7 +339,7 @@ local DAY_CHANCE_PER_MINUTE = 1 / 360 -- resto do dia: em média 1 vez a cada 6 
 -- Dias em que ele volta (hora local). Fora deles o Happy.Start() não faz ele aparecer, só
 -- fica esperando virar um desses dias. O comando :happy (Happy.StartNow) funciona sempre.
 local SPECIAL_DAYS = {
-	ONLY = true, -- false = aparece em qualquer dia, como era antes
+	ONLY = false, -- false = aparece em qualquer dia, como era antes
 	HALLOWEEN_FIRST = 31, -- outubro, do dia 31...
 	HALLOWEEN_LAST = 31, -- ...até o dia 31 (ex: 24 até 31 = a última semana inteira)
 	FRIDAY_13 = true, -- toda sexta-feira 13
