@@ -34952,7 +34952,7 @@ Escape Timer: %*]]
 											tbl12.ToggleCollisions(v26, false)
 											tbl12.RepositionLimbs(v26, true)
 
-											task.delay(0.1, function()
+											task.delay(0.2, function()
 												if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
 													fn21(v27, v27)
 												end
