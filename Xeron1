@@ -34803,7 +34803,7 @@ Escape Timer: %*]]
 					task.spawn(tbl12.ToggleCollisions, v22, true)
 				end
 			end
-
+-- [[킥루프]]
 			local function fn23(arg, arg2, arg3)
 				local n36 = 6.2831853071795862 / arg3 * (arg2 - 1)
 				local nkOffset = tbl9.NKOffset
@@ -34903,7 +34903,7 @@ Escape Timer: %*]]
 											flag12 = tbl9.NKDelayMode == "Faster but worse" or not tbl9.NKDelayMode
 
 											if flag12 then
-												task.delay(0.2, tbl12.RNO, v27)
+												task.delay(0.0002, tbl12.RNO, v27)
 											elseif tbl9.NKDelayMode == "Normal" then
 												task.spawn(function()
 													task.wait()
@@ -34933,7 +34933,7 @@ Escape Timer: %*]]
 											flag12 = tbl9.NKDelayMode == "Faster but worse" or not tbl9.NKDelayMode
 
 											if flag12 then
-												task.delay(0.2, tbl12.RNO, v27)
+												task.delay(0.00002, tbl12.RNO, v27)
 											elseif tbl9.NKDelayMode == "Normal" then
 												task.spawn(function()
 													task.wait()
