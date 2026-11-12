@@ -37840,7 +37840,7 @@ do
     Antis:AddToggle("AntiGrabSeatless", {
         Text = "Anti Grab (Seatless)",
         Default = false,
-        Tooltip = "Anti Grab Seatless",
+        Tooltip = "안티그랩이지만 오카리나를 소환해 일반적인 방법이아닌 토이형식으로 막습니다.",
         Callback = function(Value)
             antiGrabV2Active = Value
             if Value then
@@ -38267,7 +38267,7 @@ do
     Antis:AddToggle("AntiKillSetOwnerTractor", {
         Text = "Anti kill (SetOwner+tractor)",
         Default = false,
-        Tooltip = "Anti kill",
+        Tooltip = "셋오너킬(루프킬)을 당하면 트랙터를 타서 차단합니다.(일부는 막히지않을수도 있습니다.",
         Callback = function(Value)
             runtimeFlags.AntiGrab = Value
             if not Value then stopAntiGrab() end
@@ -38478,9 +38478,9 @@ local function StartAntiPermGrab()
 end
 
 Antis:AddToggle("AntiBlobKillToggle", {
-    Text = "Anti blob Kill(자체제작)",
+    Text = "Anti blob Kill(래그돌형)",
     Default = false,
-    Tooltip = "Anti Perm Kill",
+    Tooltip = "블롭킬을 감지시 킬을 방지하고 블롭을 탈수있지만 고정형과다르게 고정을 쓰지않고 래그돌을 써서 케릭터가 날라갈수도있습니다.",
     Callback = function(Value)
         if Value then
             local ragdollRemote = rs:WaitForChild("CharacterEvents"):FindFirstChild("RagdollRemote")
@@ -38522,11 +38522,64 @@ Antis:AddToggle("AntiBlobKillToggle", {
         end
     end,
 })
+do
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local Workspace = game:GetService("Workspace")
+    local Camera = Workspace.CurrentCamera
 
+    local blobKillRunning = false
+    local blobKillCon = nil
+
+    local function GetCharacter()
+        return LocalPlayer.Character
+    end
+
+    Antis:AddToggle("AntiBlobKill", {
+        Text = "Anti blob kill(고정형)",
+        Default = false,
+        Tooltip = "화면에 케릭터가고정되고 블롭킬을 당하지 않지만 sit part에 앉을수 없습니다.",
+        Callback = function(Value)
+            blobKillRunning = Value
+            if Value then
+                if blobKillCon then task.cancel(blobKillCon) end
+                blobKillCon = task.spawn(function()
+                    while blobKillRunning do
+                        local char = GetCharacter()
+                        if char then
+                            local hum = char:FindFirstChild("Humanoid")
+                            local hrp = char:FindFirstChild("HumanoidRootPart")
+                            if hum and hrp and hum.Health > 0 then
+                                hum.Sit = true
+                                pcall(function() hum:ChangeState(Enum.HumanoidStateType.Running) end)
+                                if Camera then
+                                    local lookVec = Camera.CFrame.LookVector
+                                    hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + Vector3.new(lookVec.X, 0, lookVec.Z))
+                                end
+                            end
+                        end
+                        task.wait()
+                    end
+                end)
+            else
+                if blobKillCon then
+                    task.cancel(blobKillCon)
+                    blobKillCon = nil
+                end
+                local char = GetCharacter()
+                local hum = char and char:FindFirstChild("Humanoid")
+                if hum and hum.Health > 0 then
+                    hum.Sit = false
+                    pcall(function() hum:ChangeState(Enum.HumanoidStateType.Running) end)
+                end
+            end
+        end
+    })
+end
 Antis:AddToggle("AntiBlob", {
-    Text = "Anti blob Grab(쌔벼온거)",
+    Text = "Anti blob Grab",
     Default = false,
-    Tooltip = "Anti Blob",
+    Tooltip = "블롭이 그랩할수없게 해줍니다.",
     Callback = function(Value)
         antiBlobGrabEnabled = Value
         if antiBlobGrabEnabled then
@@ -38734,7 +38787,7 @@ Antis:AddToggle("AntiBlob", {
     Antis:AddToggle("AntiSpawnExplode", {
         Text = "Anti spawn Explode",
         Default = false,
-        Tooltip = "Anti spawn Explode",
+        Tooltip = "폭탄 스폰을 막고 스폰될시 오븐을 활용해 폭탄을 제거합니다.",
         Callback = function(Value)
             AntiBombRunning = Value
             getgenv().AntiBombRunning = Value
@@ -38850,7 +38903,7 @@ do
     Antis:AddToggle("AntiBananaEat", {  
         Text = 'Anti Banana (EAT)',  
         Default = false,  
-        Tooltip = "Anti Banana",
+        Tooltip = "바나나가 소환될시 바나나를 삭제 시킵니다.",
         Callback = function(value42)  
             local v146 = 0  
             if value42 then  
@@ -39000,7 +39053,7 @@ do
     Antis:AddToggle("AntiMassless", {
         Text = "Anti Massless",
         Default = false,
-        Tooltip = "Anti Massless",
+        Tooltip = "마스리스(무질량)  상태가 당하는것을 막고 블롭을 이용한 앵커킥을 차단합니다.",
         Callback = function(Value)
             if Value then
                 for _, player in ipairs(Players:GetPlayers()) do
@@ -39036,7 +39089,7 @@ do
     Antis:AddToggle("AntiInPlot", {
         Text = "Anti in plot",
         Default = false,
-        Tooltip = "Anti in plot",
+        Tooltip = "플롯내부를 교란시켜 블롭맨이 잡을수있게도와주고 서포트 해줍니다.",
         Callback = function(Value)
             if Value then
                 if AntiInPlotsC then AntiInPlotsC:Disconnect() end
@@ -39108,6 +39161,139 @@ do
                 AntiInPlotsEnabled = false
                 if AntiInPlotsC then AntiInPlotsC:Disconnect() AntiInPlotsC = nil end
             end
+        end
+    })
+end
+do
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local Workspace = game:GetService("Workspace")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+    local isRunning = false
+    local thread = nil
+
+    local function cleanup()
+        local char = LocalPlayer.Character
+        if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local truePosPart = char:FindFirstChild("TruePositionPart")
+            if hrp and truePosPart then
+                local rootAttachment = truePosPart:FindFirstChild("RootAttachment")
+                if rootAttachment then
+                    rootAttachment.Parent = hrp
+                end
+            end
+            if truePosPart then
+                truePosPart:Destroy()
+            end
+        end
+    end
+
+    Antis:AddToggle("AntiBring", {
+        Text = "Anti Bring",
+        Default = false,
+        Tooltip = "bring을 감지하며 그자리를 저장하고 탈출시 다시 그자리로 되돌아 갑니다.",
+        Callback = function(Value)
+            isRunning = Value
+            if not Value then
+                if thread then
+                    task.cancel(thread)
+                    thread = nil
+                end
+                cleanup()
+                return
+            end
+
+            local char = LocalPlayer.Character
+            if char and not char:FindFirstChild("TruePositionPart") then
+                local truePosPart = Instance.new("Part")
+                truePosPart.Parent = char
+                truePosPart.Name = "TruePositionPart"
+                truePosPart.Anchored = true
+                truePosPart.Transparency = 1
+                truePosPart.CanCollide = false
+                truePosPart.Size = Vector3.new(0.1, 0.1, 0.1)
+                truePosPart.CFrame = CFrame.new(0, -1E4, 0)
+            end
+
+            thread = task.spawn(function()
+                while isRunning do
+                    local c = LocalPlayer.Character
+                    if c then
+                        local hrp = c:FindFirstChild("HumanoidRootPart")
+                        local truePosPart = c:FindFirstChild("TruePositionPart")
+                        if hrp and truePosPart then
+                            local rootAttachment = hrp:FindFirstChild("RootAttachment")
+                            if rootAttachment and rootAttachment.Parent == hrp then
+                                rootAttachment.Parent = truePosPart
+                            end
+                            for _, part in pairs(c:GetChildren()) do
+                                if part:IsA("Part") and part.Massless then
+                                    part.Massless = false
+                                    local plotItems = Workspace:FindFirstChild("PlotItems")
+                                    if plotItems then
+                                        for _, plot in pairs(plotItems:GetChildren()) do
+                                            if plot.Name ~= "PlayersInPlots" then
+                                                for _, item in pairs(plot:GetChildren()) do
+                                                    if item.Name == "CreatureBlobman" then
+                                                        local blobScript = item:FindFirstChild("BlobmanSeatAndOwnerScript")
+                                                        local rightDetector = item:FindFirstChild("RightDetector")
+                                                        local leftDetector = item:FindFirstChild("LeftDetector")
+                                                        if blobScript and rightDetector and leftDetector then
+                                                            local dropEvent = blobScript:FindFirstChild("CreatureDrop")
+                                                            local rightWeld = rightDetector:FindFirstChild("RightWeld")
+                                                            local leftWeld = leftDetector:FindFirstChild("LeftWeld")
+                                                            if dropEvent and rightWeld and hrp then
+                                                                dropEvent:FireServer(rightWeld, hrp)
+                                                            end
+                                                            if dropEvent and leftWeld and hrp then
+                                                                dropEvent:FireServer(leftWeld, hrp)
+                                                            end
+                                                            local struggleEvent = ReplicatedStorage:FindFirstChild("CharacterEvents") and ReplicatedStorage.CharacterEvents:FindFirstChild("Struggle")
+                                                            if struggleEvent then
+                                                                struggleEvent:FireServer(LocalPlayer)
+                                                            end
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                    for _, plr in pairs(Players:GetPlayers()) do
+                                        local toyFolder = Workspace:FindFirstChild(plr.Name .. "SpawnedInToys")
+                                        if toyFolder then
+                                            for _, item in pairs(toyFolder:GetChildren()) do
+                                                if item.Name == "CreatureBlobman" then
+                                                    local blobScript = item:FindFirstChild("BlobmanSeatAndOwnerScript")
+                                                    local rightDetector = item:FindFirstChild("RightDetector")
+                                                    local leftDetector = item:FindFirstChild("LeftDetector")
+                                                    if blobScript and rightDetector and leftDetector then
+                                                        local dropEvent = blobScript:FindFirstChild("CreatureDrop")
+                                                        local rightWeld = rightDetector:FindFirstChild("RightWeld")
+                                                        local leftWeld = leftDetector:FindFirstChild("LeftWeld")
+                                                        if dropEvent and rightWeld and hrp then
+                                                            dropEvent:FireServer(rightWeld, hrp)
+                                                        end
+                                                        if dropEvent and leftWeld and hrp then
+                                                            dropEvent:FireServer(leftWeld, hrp)
+                                                        end
+                                                        local struggleEvent = ReplicatedStorage:FindFirstChild("CharacterEvents") and ReplicatedStorage.CharacterEvents:FindFirstChild("Struggle")
+                                                        if struggleEvent then
+                                                            struggleEvent:FireServer(LocalPlayer)
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait()
+                end
+            end)
         end
     })
 end
@@ -39345,7 +39531,118 @@ end
 				end
 			end,
 		})
+do
+    local Players = game:GetService("Players")
+    local Workspace = game:GetService("Workspace")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local LocalPlayer = Players.LocalPlayer
 
+    local GrabEventsObj = ReplicatedStorage:FindFirstChild("GrabEvents")
+    local EndGrabRemote = GrabEventsObj and GrabEventsObj:FindFirstChild("EndGrabEarly")
+
+    local targetPos = CFrame.new(0, -9.9e9, 0)
+    local isMonitoring = false
+    local descendantConnection = nil
+    local processedItems = {}
+
+    local function SafeInvoke(remote, ...)
+        if not remote then return end
+        local args = {...}
+        task.spawn(function()
+            pcall(function()
+                remote:InvokeServer(unpack(args))
+            end)
+        end)
+    end
+
+    local function ProcessItem(item)
+        if not item or not item:IsA("Instance") then return end
+        if processedItems[item] then return end
+        
+        local myToyFolder = Workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+        if myToyFolder and item:IsDescendantOf(myToyFolder) then
+            return
+        end
+
+        processedItems[item] = true
+
+        task.spawn(function()
+            local holdPart = item:FindFirstChild("HoldPart") or item:WaitForChild("HoldPart", 2)
+            if not holdPart then 
+                processedItems[item] = nil
+                return 
+            end
+
+            local grabFunc = holdPart:WaitForChild("HoldItemRemoteFunction", 3)
+            local dropFunc = holdPart:WaitForChild("DropItemRemoteFunction", 3)
+
+            if grabFunc and dropFunc then
+                while isMonitoring and item.Parent and holdPart.Parent == item do
+                    local char = LocalPlayer.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") then
+                        SafeInvoke(grabFunc, item, char)
+                        
+                        task.wait(0.05)
+
+                        for _ = 1, 2 do
+                            SafeInvoke(dropFunc, item, targetPos, targetPos)
+                        end
+
+                        if EndGrabRemote then
+                            pcall(function()
+                                EndGrabRemote:FireServer()
+                            end)
+                        end
+                    end
+                    task.wait(0.1)
+                end
+            end
+            
+            processedItems[item] = nil
+        end)
+    end
+
+    local function ScanAndProcess()
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if not isMonitoring then break end
+            if obj.Name == "HoldPart" and obj.Parent then
+                ProcessItem(obj.Parent)
+            end
+        end
+    end
+
+    Miscellaneous:AddToggle("AntiSpawnFood", {
+        Text = "Anti spawn Food",
+        Default = false,
+        Tooltip = "모든 음식소환을 감지하여 음식을 소환하면 삭제 시킵니다.",
+        Callback = function(Value)
+            isMonitoring = Value
+
+            if descendantConnection then
+                descendantConnection:Disconnect()
+                descendantConnection = nil
+            end
+
+            if not isMonitoring then
+                table.clear(processedItems)
+                return
+            end
+
+            task.spawn(ScanAndProcess)
+
+            descendantConnection = Workspace.DescendantAdded:Connect(function(obj)
+                if not isMonitoring then return end
+                if obj.Name == "HoldPart" then
+                    task.defer(function()
+                        if obj.Parent and isMonitoring then
+                            ProcessItem(obj.Parent)
+                        end
+                    end)
+                end
+            end)
+        end
+    })
+end
 		local LastGrabbedLabel = Miscellaneous:AddLabel("LastGrabbedLabel", { Text = "Last person who grabbed you: nobody", DoesWrap = true })
 
 		tbl12.UpdateLastGrabbedLabel = function()
