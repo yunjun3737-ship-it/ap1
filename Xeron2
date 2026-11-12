@@ -17425,6 +17425,7 @@ do
 							InfJump = false,
 							Noclip = false,
 							Flight = false,
+                            BgToggle = false,
 							MoreLineExtend = false,
 							SuperStrength = false,
 							Desync = false,
