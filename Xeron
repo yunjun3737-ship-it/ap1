@@ -36300,7 +36300,7 @@ do
     Text = "볼륨 조절",
     Default = 3,
     Min = 1,
-    Max = 10,
+    Max = 20,
     Rounding = 0,
     Callback = function(val)
         tbl9.MusicVolume = val
