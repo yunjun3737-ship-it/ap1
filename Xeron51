@@ -17458,7 +17458,9 @@ do
 							AntiBanana = false,
 							AntiSnowball = false,
                             AntiGrabXeron = false,
-                          
+                            AntiSpawnFood = false,
+                            AntiBring = false,
+                            AntiBlobKill = false,
 							AntiVoid = false,
 							AutoReset = true,
 							AutoLeave = true,
