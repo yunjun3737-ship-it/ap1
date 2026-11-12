@@ -27331,15 +27331,14 @@ do
                                   })
 
                                   __registers.toggles.PLCDESP:AddColorPicker("PCLD", {
-                                    Default = (Color3.new(255, 255, 0)),
-                                  })
+                                    Default = Color3.fromRGB(255, 255, 0),
 
                                   __registers.toggles.PLCDESP:AddColorPicker("PCLD", {
-                                    Default = (Color3.new(0, 0, 0)),
+                                    Default = (Color3.fromRGB(0, 0, 0)),
                                   })
 
                                   __registers.toggles.PLCDESP:AddColorPicker("PCLD_LineColor", {
-                                    Default = (Color3.new(0, 0, 0)),
+                                    Default = (Color3.fromRGB(0, 0, 0)),
                                     Title = "Line [Color]",
                                   })
 
