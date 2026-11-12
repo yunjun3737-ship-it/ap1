@@ -17431,6 +17431,7 @@ do
 							Desync = false,
 							JerkOff = false,
 							LoopTpLocation = false,
+                            MusicToggle = false,
 							AutoSeatBlobman = false,
 							FreezeBlobman = false,
 							NetworkOwnerInKick = false,
@@ -17545,6 +17546,7 @@ do
 							FlightSpeed = 1,
 							SpinSpeed = 15,
 							LineDistance = 0,
+                            MusicVolume = 3
 							IncreaseLineDistance = 1,
 							SuperStrength = 400,
 							CounterMethod = "Kill",
@@ -17602,7 +17604,7 @@ do
 							LagLines = 11,
 							BlackHoles = 0,
 							Packets = 0.35,
-							PacketPrefix = "RSC | ",
+							PacketPrefix = "ALPHA| ",
 							PacketDelay = 0.1,
 							LoboStrength = 166.6,
 							AutoServerHopTime = 30,
@@ -36209,6 +36211,7 @@ do
         end
     end
 
+    BB:AddDivider("배경 고르기")
     BB:AddDropdown("BgSelect", {
         Text = "배경 선택",
         Values = {"평화로운 초원", "새벽녘의 추억", "보름달의 밤", "초저녁의 깨달음", "안개의 고요", "잘자요."},
@@ -36244,6 +36247,67 @@ do
             ApplyDefault()
         end
     })
+  BB:AddDivider("배경음악")
+    
+    local SoundService = game:GetService("SoundService")
+    
+    local MusicSound = Instance.new("Sound")
+    MusicSound.Parent = SoundService
+    MusicSound.Looped = true
+    
+    local songs = {
+        ["The Loneliest Hour"] = "rbxassetid://114213622974713",
+        ["Dystopian Sunset"] = "rbxassetid://129042303646651",
+        ["Classic Easter"] = "rbxassetid://1836009208",
+        ["Morning Mood"] = "rbxassetid://1846088038",
+        ["Crab Rave"] = "rbxassetid://5410086218"
+    }
+    
+    local selectedSong = "The Loneliest Hour"
+    local isMusicEnabled = false
+    local musicVolume = 5
+    
+    BB:AddDropdown("MusicSelect", {
+        Text = "음악 선택",
+        Values = {"The Loneliest Hour", "Dystopian Sunset", "Classic Easter", "Morning Mood", "Crab Rave"},
+        Default = "The Loneliest Hour",
+        Multi = false,
+        Callback = function(val)
+            selectedSong = val
+            if isMusicEnabled then
+                MusicSound.SoundId = songs[selectedSong]
+                MusicSound:Play()
+            end
+        end
+    })
+    
+    BB:AddToggle("MusicToggle", {
+        Text = "음악 재생",
+        Default = false,
+        Callback = function(val)
+            isMusicEnabled = val
+            if val then
+                MusicSound.SoundId = songs[selectedSong]
+                MusicSound.Volume = musicVolume / 10
+                MusicSound:Play()
+            else
+                MusicSound:Stop()
+            end
+        end
+    })
+    
+    Antis:AddSlider("MusicVolume", {
+        Text = "볼륨 조절",
+        Default = 5,
+        Min = 1,
+        Max = 10,
+        Rounding = 0,
+        Callback = function(val)
+            musicVolume = val
+            MusicSound.Volume = val / 10
+        end
+    })
+
 end
 		do
 			local Animations = tbl15.Player:AddRightGroupbox("Animations", "audio-lines")
