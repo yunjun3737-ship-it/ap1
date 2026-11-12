@@ -26422,7 +26422,7 @@ do
                                       end)
                                     else
                                       getgenv_f171()
-                                      (getgenv()).IsInstantReseating = false
+                                      ;(getgenv()).IsInstantReseating = false
 
                                       local character169
                                       character169 = localPlayer2.Character
