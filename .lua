@@ -8247,10 +8247,10 @@ do
                                     return
                                   end
 
-                                  ;(getgenv()).BananaAutoRefill_Enabled = false
+                                  (getgenv()).BananaAutoRefill_Enabled = false
 
                                   function findfirstchild32_f39()
-                                    ;(getgenv()).BananaAutoRefill_Enabled = false
+                                    (getgenv()).BananaAutoRefill_Enabled = false
                                     rbxscriptconnection_f36(connect3)
                                     connect3 = nil
                                     rbxscriptconnection_f36(connect4)
@@ -8262,7 +8262,7 @@ do
                                     local v1450 = menuToys
                                     local spawnToyRemoteFunction4 = (menuToys:WaitForChild("SpawnToyRemoteFunction"))
                                     local v1451, v1452, v1453, v1454
-                                    ;(getgenv()).BananaAutoRefill_Enabled = true
+                                    (getgenv()).BananaAutoRefill_Enabled = true
 
                                     local findFirstChild32 = workspace:FindFirstChild(localPlayer5.Name
                                       .. "SpawnedInToys")
