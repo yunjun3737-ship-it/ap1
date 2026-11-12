@@ -35700,7 +35700,548 @@ Escape Timer: %*]]
 				end,
 			})
 		end
+local BB = tbl15.Player:AddRightGroupbox("SKYBOX", "BOX")
 
+do
+    local Lighting = game:GetService("Lighting")
+
+    local function CleanLighting()
+        for _, obj in ipairs(Lighting:GetChildren()) do
+            if obj:IsA("Sky") or obj:IsA("Atmosphere") 
+            or obj:IsA("BloomEffect") or obj:IsA("ColorCorrectionEffect") 
+            or obj:IsA("SunRaysEffect") or obj:IsA("BlurEffect") 
+            or obj:IsA("DepthOfFieldEffect") then
+                obj:Destroy()
+            end
+        end
+    end
+
+    local function ApplyDefault()
+        CleanLighting()
+        Lighting.Ambient = Color3.fromRGB(120, 120, 120)
+        Lighting.Brightness = 2
+        Lighting.ColorShift_Bottom = Color3.fromRGB(0, 0, 0)
+        Lighting.ColorShift_Top = Color3.fromRGB(0, 0, 0)
+        Lighting.EnvironmentDiffuseScale = 0
+        Lighting.EnvironmentSpecularScale = 0.25
+        Lighting.GlobalShadows = true
+        Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 200)
+        Lighting.ShadowSoftness = 0.2
+        Lighting.Technology = Enum.Technology.Future
+        Lighting.ClockTime = 14
+        Lighting.GeographicLatitude = 41.735
+        Lighting.FogColor = Color3.fromRGB(192, 192, 192)
+        Lighting.FogEnd = 100000
+        Lighting.FogStart = 0
+        
+        local sky = Instance.new("Sky")
+        sky.Parent = Lighting
+        sky.CelestialBodiesShown = true
+        sky.MoonAngularSize = 0
+        sky.MoonTextureId = "rbxasset://sky/moon.jpg"
+        sky.SkyboxBk = "rbxassetid://8995816670"
+        sky.SkyboxDn = "rbxassetid://8995686153"
+        sky.SkyboxFt = "rbxassetid://8995816670"
+        sky.SkyboxLf = "rbxassetid://8995816670"
+        sky.SkyboxRt = "rbxassetid://8995816670"
+        sky.SkyboxUp = "rbxassetid://8995814929"
+        sky.StarCount = 3000
+        sky.SunAngularSize = 30
+        sky.SunTextureId = "rbxassetid://8923082571"
+    end
+
+    local function ApplyPreset1()
+        CleanLighting()
+        Lighting.Brightness = 2
+        Lighting.ClockTime = 10
+        Lighting.TimeOfDay = "10:00:00"
+        Lighting.GeographicLatitude = 20
+        Lighting.FogStart = 0
+        Lighting.FogEnd = 100000
+        Lighting.FogColor = Color3.fromRGB(192,192,192)
+        Lighting.Ambient = Color3.fromRGB(161,161,161)
+        Lighting.OutdoorAmbient = Color3.fromRGB(158,149,118)
+        Lighting.ColorShift_Top = Color3.fromRGB(0,0,0)
+        Lighting.ColorShift_Bottom = Color3.fromRGB(0,0,0)
+        Lighting.ExposureCompensation = 0.4399999976158142
+        Lighting.EnvironmentDiffuseScale = 1
+        Lighting.EnvironmentSpecularScale = 1
+        Lighting.GlobalShadows = true
+        Lighting.ShadowSoftness = 1
+        
+        local sky = Instance.new('Sky')
+        sky.SkyboxBk = "rbxassetid://18351376859"
+        sky.SkyboxDn = "rbxassetid://18351374919"
+        sky.SkyboxFt = "rbxassetid://18351376800"
+        sky.SkyboxLf = "rbxassetid://18351376469"
+        sky.SkyboxRt = "rbxassetid://18351376457"
+        sky.SkyboxUp = "rbxassetid://18351377189"
+        sky.SunAngularSize = 11
+        sky.MoonAngularSize = 9
+        sky.StarCount = 3000
+        sky.CelestialBodiesShown = true
+        sky.Parent = Lighting
+        
+        local atm = Instance.new("Atmosphere")
+        atm.Density = 0.33500000834465027
+        atm.Offset = 1
+        atm.Color = Color3.fromRGB(200,170,108)
+        atm.Decay = Color3.fromRGB(92,60,14)
+        atm.Glare = 0
+        atm.Haze = 0
+        atm.Parent = Lighting
+        
+        local bloom = Instance.new("BloomEffect")
+        bloom.Enabled = true
+        bloom.Intensity = 0.10000000149011612
+        bloom.Size = 56
+        bloom.Threshold = 2.5
+        bloom.Parent = Lighting
+        
+        local cc = Instance.new("ColorCorrectionEffect")
+        cc.Enabled = true
+        cc.Brightness = 0
+        cc.Contrast = 0.20000000298023224
+        cc.Saturation = 0.20000000298023224
+        cc.TintColor = Color3.fromRGB(255,255,240)
+        cc.Parent = Lighting
+        
+        local sun = Instance.new("SunRaysEffect")
+        sun.Enabled = true
+        sun.Intensity = 0.0010000000474974513
+        sun.Spread = 0.10000000149011612
+        sun.Parent = Lighting
+    end
+
+    local function ApplyPreset2()
+        CleanLighting()
+        Lighting.Brightness = 1.2000000476837158
+        Lighting.ClockTime = 6.824999809265137
+        Lighting.TimeOfDay = "06:49:30"
+        Lighting.GeographicLatitude = 0
+        Lighting.FogStart = 0
+        Lighting.FogEnd = 1000
+        Lighting.FogColor = Color3.fromRGB(192,192,192)
+        Lighting.Ambient = Color3.fromRGB(75,47,29)
+        Lighting.OutdoorAmbient = Color3.fromRGB(70,70,70)
+        Lighting.ColorShift_Top = Color3.fromRGB(255,166,0)
+        Lighting.ColorShift_Bottom = Color3.fromRGB(0,0,0)
+        Lighting.ExposureCompensation = 0
+        Lighting.EnvironmentDiffuseScale = 0.10000000149011612
+        Lighting.EnvironmentSpecularScale = 0.5
+        Lighting.GlobalShadows = true
+        Lighting.ShadowSoftness = 0.4000000059604645
+        
+        local sky = Instance.new('Sky')
+        sky.SkyboxBk = "rbxassetid://600830446"
+        sky.SkyboxDn = "rbxassetid://600831635"
+        sky.SkyboxFt = "rbxassetid://600832720"
+        sky.SkyboxLf = "rbxassetid://600886090"
+        sky.SkyboxRt = "rbxassetid://600833862"
+        sky.SkyboxUp = "rbxassetid://600835177"
+        sky.SunAngularSize = 11
+        sky.MoonAngularSize = 11
+        sky.StarCount = 3000
+        sky.CelestialBodiesShown = true
+        sky.Parent = Lighting
+        
+        local bloom = Instance.new("BloomEffect")
+        bloom.Enabled = true
+        bloom.Intensity = 1
+        bloom.Size = 56
+        bloom.Threshold = 0.800000011920929
+        bloom.Parent = Lighting
+        
+        local blur = Instance.new("BlurEffect")
+        blur.Enabled = true
+        blur.Size = 2
+        blur.Parent = Lighting
+        
+        local cc = Instance.new("ColorCorrectionEffect")
+        cc.Enabled = true
+        cc.Brightness = 0
+        cc.Contrast = 0
+        cc.Saturation = 0.5
+        cc.TintColor = Color3.fromRGB(255,255,255)
+        cc.Parent = Lighting
+        
+        local dof = Instance.new("DepthOfFieldEffect")
+        dof.Enabled = true
+        dof.FarIntensity = 0
+        dof.FocusDistance = 0
+        dof.InFocusRadius = 25
+        dof.NearIntensity = 0.15000000596046448
+        dof.Parent = Lighting
+        
+        local sun = Instance.new("SunRaysEffect")
+        sun.Enabled = true
+        sun.Intensity = 0.10300000011920929
+        sun.Spread = 0.014000000432133675
+        sun.Parent = Lighting
+        
+        local atm = Instance.new("Atmosphere")
+        atm.Density = 0.4189999997615814
+        atm.Offset = 0
+        atm.Color = Color3.fromRGB(75,47,29)
+        atm.Decay = Color3.fromRGB(0,0,0)
+        atm.Glare = 1
+        atm.Haze = 0
+        atm.Parent = Lighting
+    end
+
+    local function ApplyPreset3()
+        CleanLighting()
+        Lighting.Brightness = 1.2000000476837158
+        Lighting.ClockTime = 18.825000762939453
+        Lighting.TimeOfDay = "18:49:30"
+        Lighting.GeographicLatitude = 0
+        Lighting.FogStart = 0
+        Lighting.FogEnd = 1000
+        Lighting.FogColor = Color3.fromRGB(192,192,192)
+        Lighting.Ambient = Color3.fromRGB(124,124,124)
+        Lighting.OutdoorAmbient = Color3.fromRGB(70,70,70)
+        Lighting.ColorShift_Top = Color3.fromRGB(255,166,0)
+        Lighting.ColorShift_Bottom = Color3.fromRGB(0,0,0)
+        Lighting.ExposureCompensation = 0.8000000715255737
+        Lighting.EnvironmentDiffuseScale = 0.10000000149011612
+        Lighting.EnvironmentSpecularScale = 0.5
+        Lighting.GlobalShadows = true
+        Lighting.ShadowSoftness = 0.4000000059604645
+        
+        local sky = Instance.new('Sky')
+        sky.SkyboxBk = "rbxasset://textures/sky/sky512_bk.tex"
+        sky.SkyboxDn = "rbxasset://textures/sky/sky512_dn.tex"
+        sky.SkyboxFt = "rbxasset://textures/sky/sky512_ft.tex"
+        sky.SkyboxLf = "rbxasset://textures/sky/sky512_lf.tex"
+        sky.SkyboxRt = "rbxasset://textures/sky/sky512_rt.tex"
+        sky.SkyboxUp = "rbxasset://textures/sky/sky512_up.tex"
+        sky.SunAngularSize = 21
+        sky.MoonAngularSize = 14
+        sky.StarCount = 3500
+        sky.CelestialBodiesShown = true
+        sky.Parent = Lighting
+        
+        local bloom = Instance.new("BloomEffect")
+        bloom.Enabled = true
+        bloom.Intensity = 1
+        bloom.Size = 56
+        bloom.Threshold = 0.800000011920929
+        bloom.Parent = Lighting
+        
+        local blur = Instance.new("BlurEffect")
+        blur.Enabled = true
+        blur.Size = 2
+        blur.Parent = Lighting
+        
+        local cc = Instance.new("ColorCorrectionEffect")
+        cc.Enabled = true
+        cc.Brightness = 0
+        cc.Contrast = 0
+        cc.Saturation = 0.5
+        cc.TintColor = Color3.fromRGB(255,255,255)
+        cc.Parent = Lighting
+        
+        local dof = Instance.new("DepthOfFieldEffect")
+        dof.Enabled = true
+        dof.FarIntensity = 0
+        dof.FocusDistance = 0
+        dof.InFocusRadius = 25
+        dof.NearIntensity = 0.15000000596046448
+        dof.Parent = Lighting
+        
+        local sun = Instance.new("SunRaysEffect")
+        sun.Enabled = true
+        sun.Intensity = 0.10300000011920929
+        sun.Spread = 0.014000000432133675
+        sun.Parent = Lighting
+        
+        local atm = Instance.new("Atmosphere")
+        atm.Density = 0.4189999997615814
+        atm.Offset = 0
+        atm.Color = Color3.fromRGB(75,47,29)
+        atm.Decay = Color3.fromRGB(0,0,0)
+        atm.Glare = 1
+        atm.Haze = 0
+        atm.Parent = Lighting
+    end
+
+    local function ApplyPreset4()
+        CleanLighting()
+        Lighting.Brightness = 2
+        Lighting.ClockTime = 17.54972267150879
+        Lighting.TimeOfDay = "17:32:59"
+        Lighting.GeographicLatitude = 0
+        Lighting.FogStart = 0
+        Lighting.FogEnd = 100000
+        Lighting.FogColor = Color3.fromRGB(192,192,192)
+        Lighting.Ambient = Color3.fromRGB(40,40,40)
+        Lighting.OutdoorAmbient = Color3.fromRGB(70,70,70)
+        Lighting.ColorShift_Top = Color3.fromRGB(255,150,0)
+        Lighting.ColorShift_Bottom = Color3.fromRGB(0,0,0)
+        Lighting.ExposureCompensation = 0
+        Lighting.EnvironmentDiffuseScale = 0.30000001192092896
+        Lighting.EnvironmentSpecularScale = 1
+        Lighting.GlobalShadows = true
+        Lighting.ShadowSoftness = 0.20000000298023224
+        
+        local sky = Instance.new('Sky')
+        sky.SkyboxBk = "rbxassetid://2673271663"
+        sky.SkyboxDn = "rbxassetid://2673271148"
+        sky.SkyboxFt = "rbxassetid://2673271285"
+        sky.SkyboxLf = "rbxassetid://2673270998"
+        sky.SkyboxRt = "rbxassetid://2673271813"
+        sky.SkyboxUp = "rbxassetid://2673271464"
+        sky.SunAngularSize = 10
+        sky.MoonAngularSize = 1.5
+        sky.StarCount = 500
+        sky.CelestialBodiesShown = true
+        sky.Parent = Lighting
+        
+        local sun = Instance.new("SunRaysEffect")
+        sun.Enabled = true
+        sun.Intensity = 0.10000000149011612
+        sun.Spread = 0.699999988079071
+        sun.Parent = Lighting
+        
+        local atm = Instance.new("Atmosphere")
+        atm.Density = 0.44999998807907104
+        atm.Offset = 0.6000000238418579
+        atm.Color = Color3.fromRGB(199,199,199)
+        atm.Decay = Color3.fromRGB(95,66,2)
+        atm.Glare = 1
+        atm.Haze = 0.5
+        atm.Parent = Lighting
+        
+        local bloom = Instance.new("BloomEffect")
+        bloom.Enabled = true
+        bloom.Intensity = 0.699999988079071
+        bloom.Size = 24
+        bloom.Threshold = 1
+        bloom.Parent = Lighting
+        
+        local dof = Instance.new("DepthOfFieldEffect")
+        dof.Enabled = true
+        dof.FarIntensity = 0.15000000596046448
+        dof.FocusDistance = 0.05000000074505806
+        dof.InFocusRadius = 15
+        dof.NearIntensity = 0.75
+        dof.Parent = Lighting
+        
+        local cc = Instance.new("ColorCorrectionEffect")
+        cc.Enabled = true
+        cc.Brightness = 0
+        cc.Contrast = 0
+        cc.Saturation = 0
+        cc.TintColor = Color3.fromRGB(255,255,255)
+        cc.Parent = Lighting
+        
+        local blur = Instance.new("BlurEffect")
+        blur.Enabled = false
+        blur.Size = 0
+        blur.Parent = Lighting
+    end
+
+    local function ApplyPreset5()
+        CleanLighting()
+        Lighting.Brightness = 1.5
+        Lighting.ClockTime = 6.199999809265137
+        Lighting.TimeOfDay = "06:12:00"
+        Lighting.GeographicLatitude = 0
+        Lighting.FogStart = 0
+        Lighting.FogEnd = 100000
+        Lighting.FogColor = Color3.fromRGB(192,192,192)
+        Lighting.Ambient = Color3.fromRGB(40,40,40)
+        Lighting.OutdoorAmbient = Color3.fromRGB(70,70,70)
+        Lighting.ColorShift_Top = Color3.fromRGB(255,150,0)
+        Lighting.ColorShift_Bottom = Color3.fromRGB(0,0,0)
+        Lighting.ExposureCompensation = 0
+        Lighting.EnvironmentDiffuseScale = 0.30000001192092896
+        Lighting.EnvironmentSpecularScale = 1
+        Lighting.GlobalShadows = true
+        Lighting.ShadowSoftness = 0.20000000298023224
+        
+        local sky = Instance.new('Sky')
+        sky.SkyboxBk = "rbxassetid://2673271663"
+        sky.SkyboxDn = "rbxassetid://2673271148"
+        sky.SkyboxFt = "rbxassetid://2673271285"
+        sky.SkyboxLf = "rbxassetid://2673270998"
+        sky.SkyboxRt = "rbxassetid://2673271813"
+        sky.SkyboxUp = "rbxassetid://2673271464"
+        sky.SunAngularSize = 10
+        sky.MoonAngularSize = 1.5
+        sky.StarCount = 500
+        sky.CelestialBodiesShown = true
+        sky.Parent = Lighting
+        
+        local sun = Instance.new("SunRaysEffect")
+        sun.Enabled = true
+        sun.Intensity = 0.10000000149011612
+        sun.Spread = 1
+        sun.Parent = Lighting
+        
+        local atm = Instance.new("Atmosphere")
+        atm.Density = 0.5
+        atm.Offset = 0.3499999940395355
+        atm.Color = Color3.fromRGB(199,199,199)
+        atm.Decay = Color3.fromRGB(95,66,2)
+        atm.Glare = 0.550000011920929
+        atm.Haze = 2.0999999046325684
+        atm.Parent = Lighting
+        
+        local bloom = Instance.new("BloomEffect")
+        bloom.Enabled = true
+        bloom.Intensity = 0.699999988079071
+        bloom.Size = 24
+        bloom.Threshold = 1
+        bloom.Parent = Lighting
+        
+        local dof = Instance.new("DepthOfFieldEffect")
+        dof.Enabled = true
+        dof.FarIntensity = 0.15000000596046448
+        dof.FocusDistance = 0.05000000074505806
+        dof.InFocusRadius = 15
+        dof.NearIntensity = 0.75
+        dof.Parent = Lighting
+        
+        local cc = Instance.new("ColorCorrectionEffect")
+        cc.Enabled = true
+        cc.Brightness = 0
+        cc.Contrast = 0
+        cc.Saturation = 0
+        cc.TintColor = Color3.fromRGB(255,255,255)
+        cc.Parent = Lighting
+        
+        local blur = Instance.new("BlurEffect")
+        blur.Enabled = false
+        blur.Size = 0
+        blur.Parent = Lighting
+    end
+
+    local function ApplyPreset6()
+        CleanLighting()
+        Lighting.Brightness = 10
+        Lighting.ClockTime = 4.099999904632568
+        Lighting.TimeOfDay = "04:06:00"
+        Lighting.GeographicLatitude = 0
+        Lighting.FogStart = 0
+        Lighting.FogEnd = 100000
+        Lighting.FogColor = Color3.fromRGB(192,192,192)
+        Lighting.Ambient = Color3.fromRGB(40,40,40)
+        Lighting.OutdoorAmbient = Color3.fromRGB(0,0,0)
+        Lighting.ColorShift_Top = Color3.fromRGB(0,0,0)
+        Lighting.ColorShift_Bottom = Color3.fromRGB(0,0,0)
+        Lighting.ExposureCompensation = 0.20000000298023224
+        Lighting.EnvironmentDiffuseScale = 0.3499999940395355
+        Lighting.EnvironmentSpecularScale = 1
+        Lighting.GlobalShadows = true
+        Lighting.ShadowSoftness = 0.20000000298023224
+        
+        local sky = Instance.new('Sky')
+        sky.SkyboxBk = "rbxassetid://1666456837"
+        sky.SkyboxDn = "rbxassetid://1666455881"
+        sky.SkyboxFt = "rbxassetid://1666457447"
+        sky.SkyboxLf = "rbxassetid://1666455318"
+        sky.SkyboxRt = "rbxassetid://1666456385"
+        sky.SkyboxUp = "rbxassetid://1666458034"
+        sky.SunAngularSize = 0
+        sky.MoonAngularSize = 5
+        sky.StarCount = 2000
+        sky.CelestialBodiesShown = true
+        sky.Parent = Lighting
+        
+        local sun = Instance.new("SunRaysEffect")
+        sun.Enabled = true
+        sun.Intensity = 0.10000000149011612
+        sun.Spread = 1
+        sun.Parent = Lighting
+        
+        local atm = Instance.new("Atmosphere")
+        atm.Density = 0.6000000238418579
+        atm.Offset = 0.6000000238418579
+        atm.Color = Color3.fromRGB(199,199,199)
+        atm.Decay = Color3.fromRGB(95,66,2)
+        atm.Glare = 0
+        atm.Haze = 0
+        atm.Parent = Lighting
+        
+        local bloom = Instance.new("BloomEffect")
+        bloom.Enabled = true
+        bloom.Intensity = 0.699999988079071
+        bloom.Size = 24
+        bloom.Threshold = 1
+        bloom.Parent = Lighting
+        
+        local dof = Instance.new("DepthOfFieldEffect")
+        dof.Enabled = true
+        dof.FarIntensity = 0
+        dof.FocusDistance = 0.05000000074505806
+        dof.InFocusRadius = 0
+        dof.NearIntensity = 0.75
+        dof.Parent = Lighting
+        
+        local cc = Instance.new("ColorCorrectionEffect")
+        cc.Enabled = true
+        cc.Brightness = 0
+        cc.Contrast = 0
+        cc.Saturation = 0
+        cc.TintColor = Color3.fromRGB(255,255,255)
+        cc.Parent = Lighting
+        
+        local blur = Instance.new("BlurEffect")
+        blur.Enabled = false
+        blur.Size = 0
+        blur.Parent = Lighting
+    end
+
+    local bgSelected = "Preset 1"
+    local bgEnabled = false
+
+    local function ApplyBackground(name)
+        if name == "Preset 1" then ApplyPreset1()
+        elseif name == "Preset 2" then ApplyPreset2()
+        elseif name == "Preset 3" then ApplyPreset3()
+        elseif name == "Preset 4" then ApplyPreset4()
+        elseif name == "Preset 5" then ApplyPreset5()
+        elseif name == "Preset 6" then ApplyPreset6()
+        end
+    end
+
+    BB:AddDropdown("BgSelect", {
+        Text = "배경 선택",
+        Values = {"Preset 1", "Preset 2", "Preset 3", "Preset 4", "Preset 5", "Preset 6"},
+        Default = "Preset 1",
+        Multi = false,
+        Callback = function(val)
+            bgSelected = val
+            if bgEnabled then
+                ApplyBackground(val)
+            end
+        end
+    })
+
+    BB:AddToggle("BgToggle", {
+        Text = "SKY BOX",
+        Default = false,
+        Callback = function(val)
+            bgEnabled = val
+            if val then
+                ApplyBackground(bgSelected)
+            else
+                ApplyDefault()
+            end
+        end
+    })
+
+    BB:AddButton("BgResetBtn", {
+        Text = "Reset Skybox",
+        Func = function()
+            if bgEnabled then
+                Antis.Toggles["BgToggle"]:SetValue(false)
+            end
+            ApplyDefault()
+        end
+    })
+end
 		do
 			local Animations = tbl15.Player:AddRightGroupbox("Animations", "audio-lines")
 
