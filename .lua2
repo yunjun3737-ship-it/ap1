@@ -26039,7 +26039,7 @@ do
                                     else
                                       if (getgenv()).InstantSitEvent then
 
-                                        ;(getgenv()).InstantSitEvent:Disconnect()
+                                        (getgenv()).InstantSitEvent:Disconnect()
                                       end
 
                                       local v3557
@@ -26132,14 +26132,14 @@ do
                                                         end)
                                                       end
 
-                                                      ;(game:GetService("RunService")).Heartbeat:Wait()
+                                                      (game:GetService("RunService")).Heartbeat:Wait()
                                                     end
                                                   else
                                                     break
                                                   end
                                                 end
 
-                                                ;(getgenv()).IsInstantReseating = false
+                                                (getgenv()).IsInstantReseating = false
                                                 return
                                               end)
                                             end
@@ -26161,7 +26161,7 @@ do
 
                                     if (getgenv()).SpawnCatchEvent then
 
-                                      ;(getgenv()).SpawnCatchEvent:Disconnect()
+                                      (getgenv()).SpawnCatchEvent:Disconnect()
                                     end
 
                                     local v3577 = localPlayer2.Name .. "SpawnedInToys"
@@ -26317,7 +26317,7 @@ do
 
                                   toggles.Toggle_AntiStunBlobman:OnChanged(function()
                                     local v3601, v3602, v3603, v3604, v3605, v3606, v3607, v3608
-                                    ;(getgenv()).AntiStunEnabled = toggles.Toggle_AntiStunBlobman.Value
+                                    (getgenv()).AntiStunEnabled = toggles.Toggle_AntiStunBlobman.Value
                                     local creatureBlobman3, destroyToy10
 
                                     if (getgenv()).AntiStunEnabled then
@@ -26333,7 +26333,7 @@ do
 
                                       if (getgenv()).AntiStunConnection then
 
-                                        ;(getgenv()).AntiStunConnection:Disconnect()
+                                        (getgenv()).AntiStunConnection:Disconnect()
                                       end
 
                                       local v3610
@@ -26422,7 +26422,7 @@ do
                                       end)
                                     else
                                       getgenv_f171()
-                                      ;(getgenv()).IsInstantReseating = false
+                                      (getgenv()).IsInstantReseating = false
 
                                       local character169
                                       character169 = localPlayer2.Character
@@ -26480,7 +26480,7 @@ do
                                   VirtualInputManager = game:GetService("VirtualInputManager")
                                   v426 = false
 
-                                  ;(getgenv()).ExecuteClientBlobMan = function()
+                                  (getgenv()).ExecuteClientBlobMan = function()
                                     local v3632, v3633, v3634, v3635, v3636, v3637, v3638,
                                       v3639, v3640, v3641
 
