@@ -17546,7 +17546,7 @@ do
 							FlightSpeed = 1,
 							SpinSpeed = 15,
 							LineDistance = 0,
-                            MusicVolume = 3
+                            MusicVolume = 3,
 							IncreaseLineDistance = 1,
 							SuperStrength = 400,
 							CounterMethod = "Kill",
