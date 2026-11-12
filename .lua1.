@@ -25997,28 +25997,28 @@ do
 
                                     if (getgenv()).AntiStunConnection then
 
-                                      ;(getgenv()).AntiStunConnection:Disconnect()
+                                      (getgenv()).AntiStunConnection:Disconnect()
                                     end
 
                                     if (getgenv()).InstantSitEvent then
 
-                                      ;(getgenv()).InstantSitEvent:Disconnect()
+                                      (getgenv()).InstantSitEvent:Disconnect()
                                     end
 
                                     if (getgenv()).CharAddedEvent then
 
-                                      ;(getgenv()).CharAddedEvent:Disconnect()
+                                      (getgenv()).CharAddedEvent:Disconnect()
                                     end
 
                                     if (getgenv()).SpawnCatchEvent then
 
-                                      ;(getgenv()).SpawnCatchEvent:Disconnect()
+                                      (getgenv()).SpawnCatchEvent:Disconnect()
                                     end
 
                                     return
                                   end
 
-                                  ;(getgenv()).AntiStunEnabled = false
+                                  (getgenv()).AntiStunEnabled = false
 
                                   local v3552
                                   v3552 = getgenv()
