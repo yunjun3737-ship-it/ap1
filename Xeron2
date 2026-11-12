@@ -35674,8 +35674,8 @@ Escape Timer: %*]]
 			local v22 = tbl15.Player:AddRightGroupbox("Look Event Figures", "person-standing")
 
 			v22:AddDropdown("LookFigure", {
-				Text = "Figure",
-				Values = { "Sideways", "Upside Down" },
+				Text = "자세",
+				Values = { "sid", "Upside Down" },
 				Default = tbl7.LookFigures.Figure,
 				Multi = false,
 				Callback = function(figure)
@@ -35701,8 +35701,10 @@ Escape Timer: %*]]
 				end,
 			})
 		end
-local BB = tbl15.Player:AddRightGroupbox("SKYBOX", "BOX")
+local BB = tbl15.Player:AddRightGroupbox("배경", "BOX")
 
+ 
+  
 do
     local Lighting = game:GetService("Lighting")
 
@@ -36194,23 +36196,23 @@ do
         blur.Parent = Lighting
     end
 
-    local bgSelected = "Preset 1"
+    local bgSelected = "평화로운 초원"
     local bgEnabled = false
 
     local function ApplyBackground(name)
-        if name == "Preset 1" then ApplyPreset1()
-        elseif name == "Preset 2" then ApplyPreset2()
-        elseif name == "Preset 3" then ApplyPreset3()
-        elseif name == "Preset 4" then ApplyPreset4()
-        elseif name == "Preset 5" then ApplyPreset5()
-        elseif name == "Preset 6" then ApplyPreset6()
+        if name == "평화로운 초원" then ApplyPreset1()
+        elseif name == "새벽녘의 추억" then ApplyPreset2()
+        elseif name == "보름달의 밤" then ApplyPreset3()
+        elseif name == "초저녁의 깨달음" then ApplyPreset4()
+        elseif name == "안개의 고요" then ApplyPreset5()
+        elseif name == "잘자요." then ApplyPreset6()
         end
     end
 
     BB:AddDropdown("BgSelect", {
         Text = "배경 선택",
-        Values = {"Preset 1", "Preset 2", "Preset 3", "Preset 4", "Preset 5", "Preset 6"},
-        Default = "Preset 1",
+        Values = {"평화로운 초원", "새벽녘의 추억", "보름달의 밤", "초저녁의 깨달음", "안개의 고요", "잘자요."},
+        Default = "평화로운 초원",
         Multi = false,
         Callback = function(val)
             bgSelected = val
@@ -36221,7 +36223,7 @@ do
     })
 
     BB:AddToggle("BgToggle", {
-        Text = "SKY BOX",
+        Text = "배경 적용",
         Default = false,
         Callback = function(val)
             bgEnabled = val
@@ -36234,7 +36236,7 @@ do
     })
 
     BB:AddButton("BgResetBtn", {
-        Text = "Reset Skybox",
+        Text = "배경 초기화",
         Func = function()
             if bgEnabled then
                 Antis.Toggles["BgToggle"]:SetValue(false)
