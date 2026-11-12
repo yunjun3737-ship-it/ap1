@@ -36296,18 +36296,17 @@ do
         end
     })
     
-    Antis:AddSlider("MusicVolume", {
-        Text = "볼륨 조절",
-        Default = 5,
-        Min = 1,
-        Max = 10,
-        Rounding = 0,
-        Callback = function(val)
-            musicVolume = val
-            MusicSound.Volume = val / 10
-        end
-    })
-
+    BB:AddSlider("MusicVolume", {
+    Text = "볼륨 조절",
+    Default = 3,
+    Min = 1,
+    Max = 10,
+    Rounding = 0,
+    Callback = function(val)
+        tbl9.MusicVolume = val
+        MusicSound.Volume = val / 10
+    end
+})
 end
 		do
 			local Animations = tbl15.Player:AddRightGroupbox("Animations", "audio-lines")
