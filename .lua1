@@ -12481,7 +12481,7 @@ do
                                     if (getgenv()).NetworkOwnerConnection then
 
                                       (getgenv()).NetworkOwnerConnection:Disconnect()
-                                      (getgenv()).NetworkOwnerConnection = nil
+                                      ;(getgenv()).NetworkOwnerConnection = nil
                                     else
                                       v1931 = 1
                                       v1932 = 0
