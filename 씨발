@@ -14,6 +14,7 @@ do
                         do
                           do
                             do
+                --[[
                                 local __registers = {}
                                 local floor = math.floor
                                 local random = math.random
@@ -124,7 +125,7 @@ do
                                 local v291 = v281
                                 local v292 = decodeObfuscatedString
                                 _G.IsUnloading = false
-
+               ]]
                                 Players = game:GetService("Players")
                                 local localPlayer = Players.LocalPlayer
 
