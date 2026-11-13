@@ -19179,215 +19179,299 @@ do
 						end
 
 						do
-     --[[킥루프]]
-							local obj = setmetatable({}, { __mode = "k" })
+--[[킥루프]]
+		local obj = setmetatable({}, { __mode = "k" })
 
-							tbl12.GetCustomVelocity = function(arg)
-								local now3 = os.clock()
-								local position = arg.Position
-								local v24 = obj[arg]
-								if not v24 then
-									obj[arg] = { Position = position, Time = now3, Linear = Vector3.zero }
-									return Vector3.zero
-								end
-								local n36 = now3 - v24.Time
-								if n36 < 0.001 then
-									return v24.Linear
-								end
-								local n37 = (position - v24.Position) / n36
+		tbl12.GetCustomVelocity = function(arg)
+			local now3 = os.clock()
+			local position = arg.Position
+			local v24 = obj[arg]
+			if not v24 then
+				obj[arg] = { Position = position, Time = now3, Linear = Vector3.zero }
+				return Vector3.zero
+			end
+			local n36 = now3 - v24.Time
+			if n36 < 0.001 then
+				return v24.Linear
+			end
+			local n37 = (position - v24.Position) / n36
 
-								if n36 > 0.25 or n37.Magnitude > 300 then
-									v24.Linear = Vector3.zero
-								else
-									v24.Linear = v24.Linear:Lerp(n37, 1 - math.exp(-n36 * 40))
+			if n36 > 0.25 or n37.Magnitude > 300 then
+				v24.Linear = Vector3.zero
+			else
+				v24.Linear = v24.Linear:Lerp(n37, 1 - math.exp(-n36 * 40))
 
-									if v24.Linear.Magnitude < 0.05 then
-										v24.Linear = Vector3.zero
-									end
-								end
+				if v24.Linear.Magnitude < 0.05 then
+					v24.Linear = Vector3.zero
+				end
+			end
 
-								v24.Position = position
-								v24.Time = now3
-								return v24.Linear
-							end
-						end
-					end
+			v24.Position = position
+			v24.Time = now3
+			return v24.Linear
+		end
+	end
+end
 
-					tbl12.PredictCFrame = function(arg, arg2)
-						local cFrame2 = arg2 or arg.CFrame
-						if not tbl8.PositionPrediction then
-							return cFrame2
-						end
-						local n36 = math.clamp(localPlayer:GetNetworkPing(), 0, 0.35)
-						return cFrame2 + tbl12.GetCustomVelocity(arg) * n36
-					end
+tbl12.PredictCFrame = function(arg, arg2)
+	local cFrame2 = arg2 or arg.CFrame
+	if not tbl8.PositionPrediction then
+		return cFrame2
+	end
+	local n36 = math.clamp(localPlayer:GetNetworkPing(), 0, 0.35)
+	return cFrame2 + tbl12.GetCustomVelocity(arg) * n36
+end
 
-					tbl12.Grab = function(arg, arg2)
-						local v24, v25, v26 = tbl12.Char()
-						if not v25 or not v26 or v26.Health == 0 or not arg or not arg.Parent or not arg:IsA("BasePart") then
-							return
-						end
-						local n36 = (arg2 or v25.CFrame) * CFrame.new(0, 1.593, 0)
-						local cframe = tbl12.PredictCFrame(arg)
+tbl12.Grab = function(arg, arg2)
+	local v24, v25, v26 = tbl12.Char()
+	if not v25 or not v26 or v26.Health == 0 or not arg or not arg.Parent or not arg:IsA("BasePart") then
+		return
+	end
+	local n36 = (arg2 or v25.CFrame) * CFrame.new(0, 1.593, 0)
+	local cframe = tbl12.PredictCFrame(arg)
 
-						if not tbl8.DirectGrab then
-							cframe = CFrame.new(n36.Position, cframe.Position)
-						end
+	if not tbl8.DirectGrab then
+		cframe = CFrame.new(n36.Position, cframe.Position)
+	end
 
-						tbl11.SetNetworkOwner:FireServer(arg, cframe)
-					end
+	tbl11.SetNetworkOwner:FireServer(arg, cframe)
+	tbl11.SetNetworkOwner:FireServer(arg, cframe)
+	tbl11.SetNetworkOwner:FireServer(arg, cframe)
+	tbl11.SetNetworkOwner:FireServer(arg, cframe)
+	tbl11.SetNetworkOwner:FireServer(arg, cframe)
+end
 
-					tbl12.SNO = function(arg, arg2, arg3)
-						local v24, v25, v26 = tbl12.Char()
-						local head = v24 and v24:FindFirstChild("Head")
-						local ragdolled = v26 and v26:FindFirstChild("Ragdolled")
-						if not (head and ragdolled and v25 and v26 and v26.Health > 0) then
-							return false
-						end
+tbl12.SNO = function(arg, arg2, arg3)
+	local v24, v25, v26 = tbl12.Char()
+	local head = v24 and v24:FindFirstChild("Head")
+	local ragdolled = v26 and v26:FindFirstChild("Ragdolled")
+	if not (head and ragdolled and v25 and v26 and v26.Health > 0) then
+		return false
+	end
 
-						if not arg or not arg:IsA("BasePart") or not arg.Parent or tbl12.GetMagnitude(arg, workspace.SpawnLocation) > 10000000 then
-							return false
-						end
+	if not arg or not arg:IsA("BasePart") or not arg.Parent or tbl12.GetMagnitude(arg, workspace.SpawnLocation) > 10000000 then
+		return false
+	end
 
-						if tbl12.IsPartOwner(arg) then
-							return true
-						end
+	if tbl12.IsPartOwner(arg) then
+		return true
+	end
 
-						if tbl7.States.Owning or arg3 and not arg3() then
-							return false
-						end
-						local flag12 = false
-						local cframe = CFrame.new()
-						local cframe2 = CFrame.new()
-						local cframe3 = CFrame.new()
-						local connection = nil
+	if tbl7.States.Owning or arg3 and not arg3() then
+		return false
+	end
+	local flag12 = false
+	local cframe = CFrame.new()
+	local cframe2 = CFrame.new()
+	local cframe3 = CFrame.new()
+	local connection = nil
 
-						if (v25.Position - arg.Position).Magnitude >= 31 then
-							flag12 = true
-						end
+	if (v25.Position - arg.Position).Magnitude >= 31 then
+		flag12 = true
+	end
 
-						local flag13 = arg.Name == "HumanoidRootPart" or arg.Name == "Torso"
-						local v27 = nil
+	local flag13 = arg.Name == "HumanoidRootPart" or arg.Name == "Torso"
+	local v27 = nil
 
-						if flag13 then
-							local v28 = Players:FindFirstChild(arg.Parent.Name)
-							v27 = nil
+	if flag13 then
+		local v28 = Players:FindFirstChild(arg.Parent.Name)
+		v27 = nil
 
-							if v28 then
-								local v29, v30, v31 = tbl12.Char(v28)
-								if not v31 or v31.Health == 0 then
-									return false
-								end
-								local inPlot2 = v28:FindFirstChild("InPlot")
-								inPlot2 = inPlot2 and inPlot2.Value == true
-								v27 = nil
+		if v28 then
+			local v29, v30, v31 = tbl12.Char(v28)
+			if not v31 or v31.Health == 0 then
+				return false
+			end
+			local inPlot2 = v28:FindFirstChild("InPlot")
+			inPlot2 = inPlot2 and inPlot2.Value == true
+			v27 = nil
 
-								if inPlot2 then
-									v27 = tbl12.BreakPlot(v28)
-									if not v27 then
-										return false
-									end
-								end
-							end
-						end
+			if inPlot2 then
+				v27 = tbl12.BreakPlot(v28)
+				if not v27 then
+					return false
+				end
+			end
+		end
+	end
 
-						tbl7.States.Owning = true
+	tbl7.States.Owning = true
 
-						local function fn21()
-							cframe2 = v25.CFrame
-							cframe = head.CFrame
-							cframe3 = v25.CFrame
+	local extraParts = {}
+	local descConn = nil
+	local bgSpam = true
+	local seatSeen = nil
 
-							RunService:BindToRenderStep("RSCClient", Enum.RenderPriority.Camera.Value - 1, function()
-								v25.CFrame = cframe2
-								head.CFrame = cframe
-							end)
+	local function fn21()
+		cframe2 = v25.CFrame
+		cframe = head.CFrame
+		cframe3 = v25.CFrame
 
-							connection = RunService.Heartbeat:Connect(function()
-								cframe2 = v25.CFrame
-								cframe = head.CFrame
-								v25.CFrame = cframe3
-								head.CFrame = cframe3
-							end)
-						end
+		RunService:BindToRenderStep("RSCClient", Enum.RenderPriority.Camera.Value - 1, function()
+			v25.CFrame = cframe2
+			head.CFrame = cframe
+		end)
 
-						local function fn22()
-							RunService:UnbindFromRenderStep("RSCClient")
+		connection = RunService.Heartbeat:Connect(function()
+			cframe2 = v25.CFrame
+			cframe = head.CFrame
+			v25.CFrame = cframe3
+			head.CFrame = cframe3
+		end)
+	end
 
-							if connection then
-								connection:Disconnect()
-								connection = nil
-							end
+	local function fn22()
+		RunService:UnbindFromRenderStep("RSCClient")
 
-							head.CFrame = cframe
-							v25.CFrame = cframe2
-						end
+		if connection then
+			connection:Disconnect()
+			connection = nil
+		end
 
-						local ok, result = pcall(function()
-							if flag12 then
-								fn21()
-							end
+		head.CFrame = cframe
+		v25.CFrame = cframe2
+	end
 
-							arg2 = arg2 or 0.65
-							local now3 = tick()
+	local ok, result = pcall(function()
+		if flag12 then
+			fn21()
+		end
 
-							while not flag11 and arg.Parent and not tbl12.IsPartOwner(arg) and v26.Health ~= 0 and v25.Parent and (not arg3 or arg3()) and tick() - now3 < arg2 do
-								if flag12 then
-									cframe3 = tbl12.PredictCFrame(arg) - Vector3.new(0, 22, 0)
-								end
+		arg2 = arg2 or 0.65
+		local now3 = tick()
 
-								RunService.Heartbeat:Wait()
-								local grab = tbl12.Grab
-								local v28
+		if arg.Parent and arg.Parent:IsA("Model") then
+			for _, desc in ipairs(arg.Parent:GetDescendants()) do
+				if desc:IsA("BasePart") then
+					extraParts[desc] = true
+				end
+			end
+			descConn = arg.Parent.DescendantAdded:Connect(function(desc)
+				if desc:IsA("BasePart") then
+					extraParts[desc] = true
+				end
+			end)
+		end
 
-								if flag12 then
-									v28 = cframe3
-								else
-									v28 = nil
-								end
+		task.spawn(function()
+			while bgSpam and not flag11 and arg and arg.Parent do
+				local cf
+				if flag12 then
+					cf = tbl12.PredictCFrame(arg) - Vector3.new(0, 22, 0)
+				else
+					cf = v25.CFrame * CFrame.new(0, 1.593, 0)
+				end
+				for _ = 1, 3 do
+					pcall(function()
+						tbl11.SetNetworkOwner:FireServer(arg, cf)
+					end)
+				end
+				task.wait()
+			end
+		end)
 
-								grab(arg, v28)
-							end
-						end)
+		while not flag11 and arg.Parent and not tbl12.IsPartOwner(arg) and v26.Health ~= 0 and v25.Parent and (not arg3 or arg3()) and tick() - now3 < arg2 do
+			if flag12 then
+				cframe3 = tbl12.PredictCFrame(arg) - Vector3.new(0, 22, 0)
+			end
 
-						if flag12 then
-							pcall(fn22)
-						end
+			RunService.Heartbeat:Wait()
+			local grab = tbl12.Grab
+			local v28
 
-						if v27 then
-							task.delay(1, tbl12.DestroyToy, v27)
-						end
+			if flag12 then
+				v28 = cframe3
+			else
+				v28 = nil
+			end
 
-						tbl7.States.Owning = false
-						if not ok then
-							return warn(result)
-						end
-						return tbl12.IsPartOwner(arg)
-					end
+			grab(arg, v28)
 
-					tbl12.RNO = function(arg)
-						tbl11.DestroyGrabLine:FireServer(arg)
-					end
+			local basePos
+			if flag12 then
+				basePos = cframe3.Position
+			else
+				basePos = v25.CFrame.Position + Vector3.new(0, 1.593, 0)
+			end
 
-					tbl12.DisableEndGrabEarly = function()
-						local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
-						if not grabEvents then
-							return
-						end
-						local endGrabEarly = grabEvents:FindFirstChild("EndGrabEarly")
-						if endGrabEarly == remoteEvent then
-							return endGrabEarly
-						end
+			for _ = 1, 8 do
+				local jx = (math.random() - 0.5) * 4
+				local jy = (math.random() - 0.5) * 4
+				local jz = (math.random() - 0.5) * 4
+				pcall(function()
+					tbl11.SetNetworkOwner:FireServer(arg, CFrame.new(basePos + Vector3.new(jx, jy, jz)))
+				end)
+			end
 
-						if endGrabEarly then
-							endGrabEarly:Destroy()
-						end
+			for part in pairs(extraParts) do
+				if part.Parent and not tbl12.IsPartOwner(part) then
+					pcall(function()
+						tbl11.SetNetworkOwner:FireServer(part, CFrame.new(basePos))
+						tbl11.DestroyGrabLine:FireServer(part)
+					end)
+				end
+			end
 
-						remoteEvent = Instance.new("RemoteEvent")
-						remoteEvent.Name = "EndGrabEarly"
-						remoteEvent.Parent = grabEvents
-						return remoteEvent
-					end
+			if v26.SeatPart and v26.SeatPart.Parent then
+				seatSeen = v26.SeatPart
+				pcall(function()
+					tbl11.SetNetworkOwner:FireServer(v26.SeatPart, CFrame.new(basePos))
+					tbl11.DestroyGrabLine:FireServer(v26.SeatPart)
+				end)
+			end
+
+			if seatSeen and seatSeen.Parent and seatSeen ~= v26.SeatPart then
+				pcall(function()
+					tbl11.SetNetworkOwner:FireServer(seatSeen, CFrame.new(basePos))
+					tbl11.DestroyGrabLine:FireServer(seatSeen)
+				end)
+			end
+		end
+	end)
+
+	bgSpam = false
+	if descConn and descConn.Connected then
+		descConn:Disconnect()
+	end
+
+	if flag12 then
+		pcall(fn22)
+	end
+
+	if v27 then
+		task.delay(1, tbl12.DestroyToy, v27)
+	end
+
+	tbl7.States.Owning = false
+	if not ok then
+		return warn(result)
+	end
+	return tbl12.IsPartOwner(arg)
+end
+
+tbl12.RNO = function(arg)
+	tbl11.DestroyGrabLine:FireServer(arg)
+end
+
+tbl12.DisableEndGrabEarly = function()
+	local grabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
+	if not grabEvents then
+		return
+	end
+	local endGrabEarly = grabEvents:FindFirstChild("EndGrabEarly")
+	if endGrabEarly == remoteEvent then
+		return endGrabEarly
+	end
+
+	if endGrabEarly then
+		endGrabEarly:Destroy()
+	end
+
+	remoteEvent = Instance.new("RemoteEvent")
+	remoteEvent.Name = "EndGrabEarly"
+	remoteEvent.Parent = grabEvents
+	return remoteEvent
+end
 
 					do
 						local function fn21(arg)
