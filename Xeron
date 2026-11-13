@@ -19178,7 +19178,7 @@ do
 							return flag12
 						end
 
-						do
+						 	do
 --[[킥루프]]
 		local obj = setmetatable({}, { __mode = "k" })
 
@@ -19234,9 +19234,6 @@ tbl12.Grab = function(arg, arg2)
 		cframe = CFrame.new(n36.Position, cframe.Position)
 	end
 
-	tbl11.SetNetworkOwner:FireServer(arg, cframe)
-	tbl11.SetNetworkOwner:FireServer(arg, cframe)
-	tbl11.SetNetworkOwner:FireServer(arg, cframe)
 	tbl11.SetNetworkOwner:FireServer(arg, cframe)
 	tbl11.SetNetworkOwner:FireServer(arg, cframe)
 end
@@ -19361,12 +19358,10 @@ tbl12.SNO = function(arg, arg2, arg3)
 				else
 					cf = v25.CFrame * CFrame.new(0, 1.593, 0)
 				end
-				for _ = 1, 3 do
-					pcall(function()
-						tbl11.SetNetworkOwner:FireServer(arg, cf)
-					end)
-				end
-				task.wait()
+				pcall(function()
+					tbl11.SetNetworkOwner:FireServer(arg, cf)
+				end)
+				task.wait(0.03)
 			end
 		end)
 
@@ -19394,7 +19389,7 @@ tbl12.SNO = function(arg, arg2, arg3)
 				basePos = v25.CFrame.Position + Vector3.new(0, 1.593, 0)
 			end
 
-			for _ = 1, 8 do
+			for _ = 1, 3.5 do
 				local jx = (math.random() - 0.5) * 4
 				local jy = (math.random() - 0.5) * 4
 				local jz = (math.random() - 0.5) * 4
@@ -19407,7 +19402,6 @@ tbl12.SNO = function(arg, arg2, arg3)
 				if part.Parent and not tbl12.IsPartOwner(part) then
 					pcall(function()
 						tbl11.SetNetworkOwner:FireServer(part, CFrame.new(basePos))
-						tbl11.DestroyGrabLine:FireServer(part)
 					end)
 				end
 			end
@@ -19416,14 +19410,12 @@ tbl12.SNO = function(arg, arg2, arg3)
 				seatSeen = v26.SeatPart
 				pcall(function()
 					tbl11.SetNetworkOwner:FireServer(v26.SeatPart, CFrame.new(basePos))
-					tbl11.DestroyGrabLine:FireServer(v26.SeatPart)
 				end)
 			end
 
 			if seatSeen and seatSeen.Parent and seatSeen ~= v26.SeatPart then
 				pcall(function()
 					tbl11.SetNetworkOwner:FireServer(seatSeen, CFrame.new(basePos))
-					tbl11.DestroyGrabLine:FireServer(seatSeen)
 				end)
 			end
 		end
