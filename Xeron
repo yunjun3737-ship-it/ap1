@@ -19179,6 +19179,7 @@ do
 						end
 
 						do
+     --[[킥루프]]
 							local obj = setmetatable({}, { __mode = "k" })
 
 							tbl12.GetCustomVelocity = function(arg)
@@ -19407,7 +19408,7 @@ do
 							end
 
 							if v24 == localPlayer and arg3 then
-								return "You"
+								return "나"
 							end
 							local str6 = "%*%* (@%*)"
 							local format = str6.format
