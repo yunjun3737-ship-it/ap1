@@ -17430,6 +17430,11 @@ do
 							SuperStrength = false,
 							Desync = false,
 							JerkOff = false,
+                            ForestToggle                = false,
+                            ForestSounds                = true,
+                            ForestSoundAmbient          = true,
+                            ForestSoundBackground       = true,
+                            ForestSoundRiver            = true,
 							LoopTpLocation = false,
                             MusicToggle = false,
 							AutoSeatBlobman = false,
@@ -17547,6 +17552,9 @@ do
 							SpinSpeed = 15,
 							LineDistance = 0,
                             MusicVolume = 3,
+                            ForestVolAmbientMusic = 50,
+                            ForestVolBackgroundAmbience = 50,
+                            ForestVolRiverSound = 50,
 							IncreaseLineDistance = 1,
 							SuperStrength = 400,
 							CounterMethod = "Kill",
@@ -43273,7 +43281,680 @@ Config2:AddDropdown("AntiInPlotsType", {
 
 		tbl12.AddRainbowToggle(Character, "RGBChinaHat", "RGB China Hat", "ChinaHatColor")
 	end
+                
+do
+    local Forest_loaded         = false
+    local Forest_soundObjects   = {}
+    local Forest_zoneConns      = {}
+    local Forest_soundsEnabled  = true
+    local Forest_soundInstances = {}
+    local Forest_soundToggles   = {
+        ForestAmbientMusic       = true,
+        ForestBackgroundAmbience = true,
+    }
+    local Forest_soundVolumes   = {
+        ForestAmbientMusic       = (tbl19.ForestVolAmbientMusic or 20) / 100,
+        ForestBackgroundAmbience = (tbl19.ForestVolBackgroundAmbience or 20) / 100,
+    }
+    local Forest_fadeAlpha  = 0
+    local Forest_inZone     = false
+    local Forest_fadeConn   = nil
 
+    local Forest_soundAssets = {
+        ForestAmbientMusic       = "rbxassetid://140087640246134",
+        ForestBackgroundAmbience = "rbxassetid://9112781680",
+    }
+    local Forest_fadeSpeed = 0.33333333333333331
+
+    local RIVER_A        = Vector3.new(-80, 58, -1671)
+    local RIVER_B        = Vector3.new(19, 58, -1307)
+    local RIVER_MIN_DIST = 40
+    local RIVER_MAX_DIST = 350
+
+    local _riverSoundEnabled  = true
+    local _riverSoundObj      = nil
+    local _riverSoundMaxVol   = (tbl19.ForestVolRiverSound or 50) / 100
+    local _riverSoundSelected = true
+    local _riverFadeConn      = nil
+    local _riverProxRunning   = false
+
+    local _startForestZoneDetection, _setupForestSounds
+    local _stopForestZoneDetection, _cleanupForestSounds
+    local _forestRunFade
+    local _isInForestZone, _distToRiverLine
+    local _riverDestroySound, _riverStopProx, _riverCreateSoundObj, _riverStartProx
+    local _forestPostLoadCleanup, _forestStartHawkFlight, _forestLoadModel
+    local _launchForest, _destroyForest
+
+    _distToRiverLine = function(pos)
+        local dx = RIVER_B.X - RIVER_A.X
+        local dz = RIVER_B.Z - RIVER_A.Z
+        local t  = math.clamp(
+            ((pos.X - RIVER_A.X) * dx + (pos.Z - RIVER_A.Z) * dz)
+            / (dx * dx + dz * dz), 0, 1)
+        return math.sqrt(
+            (pos.X - RIVER_A.X + dx * t) ^ 2 +
+            (pos.Z - RIVER_A.Z + dz * t) ^ 2)
+    end
+
+    do
+        local zone1Min = Vector3.new(-728,  40, -1690)
+        local zone1Max = Vector3.new( -24, 300,  -870)
+        local zone2Min = Vector3.new(-412,  40, -1109)
+        local zone2Max = Vector3.new(  40, 300,  -428)
+
+        _isInForestZone = function(pos)
+            local cx = math.clamp(pos.X, zone1Min.X, zone1Max.X)
+            local cy = math.clamp(pos.Y, zone1Min.Y, zone1Max.Y)
+            local cz = math.clamp(pos.Z, zone1Min.Z, zone1Max.Z)
+            if (pos - Vector3.new(cx, cy, cz)).Magnitude == 0 then return true end
+
+            local cx2 = math.clamp(pos.X, zone2Min.X, zone2Max.X)
+            local cy2 = math.clamp(pos.Y, zone2Min.Y, zone2Max.Y)
+            local cz2 = math.clamp(pos.Z, zone2Min.Z, zone2Max.Z)
+            if (pos - Vector3.new(cx2, cy2, cz2)).Magnitude == 0 then return true end
+            return false
+        end
+    end
+
+    local Forest_modelDefs = {}
+
+    Forest_modelDefs[1] = {
+        name    = "Model",
+        assetId = "128041595717353",
+        cframe  = CFrame.new(-226.081299, 76.8, -765.237,
+            -0.965930283, 0, -0.258802325,
+             0,           1,  0,
+             0.258802325, 0, -0.965930283),
+    }
+
+    Forest_modelDefs[2] = {
+        name    = "Model",
+        assetId = "90896795257560",
+        cframe  = CFrame.new(-350.424377, 151.6, -1376.97949,
+            -0.965929627, 0, -0.258804858,
+             0,           1,  0,
+             0.258804858, 0, -0.965929627),
+    }
+
+    Forest_modelDefs[3]  = { name = "SAVITAR", assetId = "102653559929681",
+        cframe = CFrame.fromMatrix(Vector3.new(-396,  73,  -638),
+            Vector3.new(0.866, 0, 0.5),   Vector3.new(0, 1, 0), Vector3.new(-0.5,  0, 0.866)) }
+    Forest_modelDefs[4]  = { name = "SAVITAR", assetId = "102653559929681",
+        cframe = CFrame.fromMatrix(Vector3.new( -55,  71,  -723),
+            Vector3.new(0.5736, 0, 0.8192), Vector3.new(0, 1, 0), Vector3.new(-0.8192, 0, 0.5736)) }
+    Forest_modelDefs[5]  = { name = "SAVITAR", assetId = "102653559929681",
+        cframe = CFrame.fromMatrix(Vector3.new(-271,  83,  -812),
+            Vector3.new(0, 0, 1), Vector3.new(0, 1, 0), Vector3.new(-1, 0, 0)) }
+    Forest_modelDefs[6]  = { name = "SAVITAR", assetId = "102653559929681",
+        cframe = CFrame.fromMatrix(Vector3.new(-116,  78,  -903),
+            Vector3.new(-0.5, 0, 0.866), Vector3.new(0, 1, 0), Vector3.new(-0.866, 0, -0.5)) }
+    Forest_modelDefs[7]  = { name = "SAVITAR", assetId = "102653559929681",
+        cframe = CFrame.fromMatrix(Vector3.new(-220,  79,  -954),
+            Vector3.new(-0.8192, 0, 0.5736), Vector3.new(0, 1, 0), Vector3.new(-0.5736, 0, -0.8192)) }
+    Forest_modelDefs[8]  = { name = "SAVITAR", assetId = "102653559929681",
+        cframe = CFrame.fromMatrix(Vector3.new(-386,  96,  -862),
+            Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1)) }
+    Forest_modelDefs[9]  = { name = "SAVITAR", assetId = "102653559929681",
+        cframe = CFrame.fromMatrix(Vector3.new(-601, 105, -1452),
+            Vector3.new(0.7071, 0, 0.7071), Vector3.new(0, 1, 0), Vector3.new(-0.7071, 0, 0.7071)) }
+    Forest_modelDefs[10] = { name = "SAVITAR", assetId = "102653559929681",
+        cframe = CFrame.fromMatrix(Vector3.new(-335, 103, -1299),
+            Vector3.new(0.4226, 0, 0.9063), Vector3.new(0, 1, 0), Vector3.new(-0.9063, 0, 0.4226)) }
+    Forest_modelDefs[11] = { name = "SAVITAR", assetId = "102653559929681",
+        cframe = CFrame.fromMatrix(Vector3.new(-349, 127, -1268),
+            Vector3.new(-0.4226, 0, 0.9063), Vector3.new(0, 1, 0), Vector3.new(-0.9063, 0, -0.4226)) }
+    Forest_modelDefs[12] = { name = "SAVITAR", assetId = "102653559929681",
+        cframe = CFrame.fromMatrix(Vector3.new(-763, 121, -1265),
+            Vector3.new(0.9063, 0, 0.4226), Vector3.new(0, 1, 0), Vector3.new(-0.4226, 0, 0.9063)) }
+    Forest_modelDefs[13] = { name = "SAVITAR", assetId = "102653559929681",
+        cframe = CFrame.fromMatrix(Vector3.new(-469, 177, -1580),
+            Vector3.new(-0.7071, 0, 0.7071), Vector3.new(0, 1, 0), Vector3.new(-0.7071, 0, -0.7071)) }
+    Forest_modelDefs[14] = { name = "SAVITAR", assetId = "102653559929681",
+        cframe = CFrame.fromMatrix(Vector3.new(   2, 151, -1384),
+            Vector3.new(0.5, 0, 0.866), Vector3.new(0, 1, 0), Vector3.new(-0.866, 0, 0.5)) }
+    Forest_modelDefs[15] = { name = "SAVITAR", assetId = "102653559929681",
+        cframe = CFrame.fromMatrix(Vector3.new( -92, 146, -1629),
+            Vector3.new(0.8192, 0, 0.5736), Vector3.new(0, 1, 0), Vector3.new(-0.5736, 0, 0.8192)) }
+
+    local Forest_objectsToHide = {
+        { name = "Кусты",      pos = Vector3.new(-157.23575, 62.350605, -517.2822) },
+        { name = "Кусты",      pos = Vector3.new(-236.85118, 62.35659,  -495.9508) },
+        { name = "Кусты",      pos = Vector3.new(-316.38513, 62.350605, -474.6412) },
+        { name = "Кусты",      pos = Vector3.new(-397.1149,  62.34548,  -453.01123) },
+        { name = "Кусты",      pos = Vector3.new( -77.70172, 62.35659,  -538.5918) },
+        { name = "Кусты",      pos = Vector3.new(   1.9259033, 62.350605, -559.9265) },
+        { name = "Кусты",      pos = Vector3.new(  78.14462, 62.35659,  -580.34784) },
+        { name = "Кусты",      pos = Vector3.new(-212.60387, 62.35659,  -1042.0884) },
+        { name = "ObjectPart", pos = Vector3.new(-201.13731, 83.65677, -969.5293) },
+        { name = "ObjectPart", pos = Vector3.new(-212.17032, 83.65677, -1007.9739) },
+        { name = "ObjectPart", pos = Vector3.new(-222.288,   83.65677, -1029.6207) },
+        { name = "ObjectPart", pos = Vector3.new(-201.561,   76.5367,  -1005.3441) },
+        { name = "ObjectPart", pos = Vector3.new(-230.39551, 76.5367,  -977.1399) },
+        { name = "ObjectPart", pos = Vector3.new(-252.15839, 83.65677, -1033.4275) },
+        { name = "ObjectPart", pos = Vector3.new(-225.2774,  83.65677, -945.6317) },
+        { name = "ObjectPart", pos = Vector3.new(-325.79816, 133.09818, -1010.7625) },
+        { name = "ObjectPart", pos = Vector3.new(   4.6144714, 133.09818, -1401.8629) },
+        { name = "ObjectPart", pos = Vector3.new(-343.90988, 268.8607, -1348.0813) },
+        { name = "ObjectPart", pos = Vector3.new(-506.7219,  186.8316, -1274.6776) },
+        { name = "ObjectPart", pos = Vector3.new(-453.46524, 186.8316, -1412.6395) },
+        { name = "ObjectPart", pos = Vector3.new(-591.88885, 144.685,  -1352.2633) },
+        { name = "ObjectPart", pos = Vector3.new(-207.57669, 222.14117, -1255.5945) },
+    }
+
+    _forestPostLoadCleanup = function()
+        task.spawn(function()
+            local function hideDescendants(obj)
+                if not obj then return end
+                pcall(function()
+                    for _, d in ipairs(obj:GetDescendants()) do
+                        if d:IsA("BasePart") then
+                            d.Transparency = 1
+                            d.CanCollide   = false
+                            d.CanTouch     = false
+                            d.CanQuery     = false
+                        end
+                    end
+                    if obj:IsA("BasePart") then
+                        obj.Transparency = 1
+                        obj.CanCollide   = false
+                        obj.CanTouch     = false
+                        obj.CanQuery     = false
+                    end
+                end)
+            end
+
+            task.spawn(function()
+                local targetPositions = {
+                    [576] = Vector3.new(-325.79816, 133.09818, -1010.7625),
+                    [478] = Vector3.new(-255.17525, 102.498024, -987.6846),
+                }
+                local function processChild(child)
+                    local children = child:GetChildren()
+                    for idx, pos in pairs(targetPositions) do
+                        local obj = children[idx]
+                        if obj then hideDescendants(obj) end
+                    end
+                end
+
+                for _ = 1, 60 do
+                    local allDone = true
+                    for _, child in ipairs(workspace:GetChildren()) do
+                        if child:IsA("Model") and child.Name == "Model" then
+                            if #child:GetChildren() >= 478 then
+                                processChild(child)
+                            else
+                                allDone = false
+                            end
+                        end
+                    end
+                    if not allDone then task.wait(0.5) else break end
+                end
+            end)
+
+            local function hideByNameAndPos()
+                local matched  = {}
+                local bestDist = {}
+                for i = 1, #Forest_objectsToHide do bestDist[i] = math.huge end
+
+                for _, d in ipairs(workspace:GetDescendants()) do
+                    if d:IsA("BasePart") then
+                        for i, def in ipairs(Forest_objectsToHide) do
+                            if d.Name == def.name then
+                                local dist = (d.Position - def.pos).Magnitude
+                                if dist < bestDist[i] then
+                                    matched[i]  = d
+                                    bestDist[i] = dist
+                                end
+                            end
+                        end
+                    end
+                end
+
+                local stillMissing = false
+                for i = 1, #Forest_objectsToHide do
+                    if matched[i] and bestDist[i] < 50 then
+                        hideDescendants(matched[i])
+                    else
+                        stillMissing = true
+                    end
+                end
+                return stillMissing
+            end
+
+            if hideByNameAndPos() then
+                task.wait(0.5)
+                hideByNameAndPos()
+            end
+        end)
+    end
+
+    _forestStartHawkFlight = function(model, baseCFrame, index)
+        task.spawn(function()
+            task.wait(0.5)
+            for _, d in ipairs(model:GetDescendants()) do
+                if d:IsA("BasePart") then d.Anchored = true end
+            end
+
+            local animController = model:FindFirstChildWhichIsA("AnimationController", true)
+            if animController then
+                local animator = animController:FindFirstChildOfClass("Animator")
+                if animator then
+                    local anim = Instance.new("Animation")
+                    anim.AnimationId = "rbxassetid://6409102589"
+                    local ok, track = pcall(function() return animator:LoadAnimation(anim) end)
+                    if ok and track then
+                        track:Play(0, 1, 0.8 + math.random() * 0.4)
+                    end
+                end
+            end
+
+            local origin   = baseCFrame.Position
+            local radius   = 70 + index % 5 * 8
+            local baseY    = origin.Y
+            local angSpeed = 0.18 + index % 7 * 0.015
+            local angle    = (index * 1.37 + math.random() * math.pi) % (2 * math.pi)
+
+            local conn
+            conn = game:GetService("RunService").Heartbeat:Connect(function(dt)
+                if not model or not model.Parent then
+                    conn:Disconnect()
+                    return
+                end
+                angle += angSpeed * dt
+                local bob    = math.sin(angle * 2.3) * 4
+                local x1     = origin.X + math.cos(angle) * radius
+                local z1     = origin.Z + math.sin(angle) * radius
+                local y      = baseY + bob
+                local la     = angle + 0.05
+                local x2     = origin.X + math.cos(la) * radius
+                local z2     = origin.Z + math.sin(la) * radius
+                local pos    = Vector3.new(x1, y, z1)
+                local look   = Vector3.new(x2, y, z2)
+                local cf     = CFrame.lookAt(pos, look) * CFrame.Angles(0, 0, -0.20943951023931956)
+                pcall(function() model:PivotTo(cf) end)
+            end)
+
+            table.insert(Forest_zoneConns, conn)
+        end)
+    end
+
+    _forestLoadModel = function(def, index)
+        local ok, result = pcall(function()
+            return game:GetObjects("rbxassetid://" .. def.assetId)
+        end)
+        if not ok or not result or not result[1] then return end
+
+        local model = result[1]
+        model.Name = def.name
+        model.Parent = workspace
+        model:SetAttribute("_isForestModel", true)
+        table.insert(Forest_soundObjects, model)
+
+        for _, d in ipairs(model:GetDescendants()) do
+            if d:IsA("BasePart") then d.Anchored = true end
+        end
+
+        task.defer(function()
+            pcall(function() model:PivotTo(def.cframe) end)
+        end)
+
+        if def.name == "SAVITAR" then
+            _forestStartHawkFlight(model, def.cframe, index)
+        end
+        return model
+    end
+
+    _launchForest = function()
+        Forest_loaded = true
+        Forest_soundObjects = {}
+
+        task.spawn(function()
+            for i, def in ipairs(Forest_modelDefs) do
+                _forestLoadModel(def, i)
+                task.wait(0.2)
+            end
+            _forestPostLoadCleanup()
+        end)
+
+        if Forest_soundsEnabled then
+            _setupForestSounds()
+            _startForestZoneDetection()
+        end
+        if _riverSoundEnabled then
+            _riverStartProx()
+        end
+    end
+
+    _destroyForest = function()
+        Forest_loaded = false
+        _stopForestZoneDetection()
+        _cleanupForestSounds()
+        _riverDestroySound()
+
+        for _, conn in pairs(Forest_zoneConns) do
+            pcall(function() conn:Disconnect() end)
+        end
+        Forest_zoneConns = {}
+
+        for _, model in pairs(Forest_soundObjects) do
+            pcall(function()
+                if model and model.Parent then model:Destroy() end
+            end)
+        end
+        Forest_soundObjects = {}
+    end
+
+    _cleanupForestSounds = function()
+        if Forest_fadeConn then
+            Forest_fadeConn:Disconnect()
+            Forest_fadeConn = nil
+        end
+        for _, snd in pairs(Forest_soundInstances) do
+            pcall(function() snd:Destroy() end)
+        end
+        Forest_soundInstances = {}
+        Forest_fadeAlpha = 0
+    end
+
+    _stopForestZoneDetection = function()
+        Forest_inZone = false
+        if Forest_fadeConn then
+            Forest_fadeConn:Disconnect()
+            Forest_fadeConn = nil
+        end
+    end
+
+    _setupForestSounds = function()
+        _cleanupForestSounds()
+        local SoundService = game:GetService("SoundService")
+        for key, soundId in pairs(Forest_soundAssets) do
+            local sound = Instance.new("Sound")
+            sound.SoundId     = soundId
+            sound.Volume      = 0
+            sound.Looped      = true
+            sound.RollOffMode = Enum.RollOffMode.InverseTapered
+            sound.MaxDistance = 10000
+            sound.Parent      = SoundService
+            Forest_soundInstances[key] = sound
+        end
+    end
+
+    _forestRunFade = function(targetAlpha)
+        if Forest_fadeConn then
+            Forest_fadeConn:Disconnect()
+            Forest_fadeConn = nil
+        end
+        Forest_fadeConn = game:GetService("RunService").Heartbeat:Connect(function(dt)
+            if Forest_fadeAlpha < targetAlpha then
+                Forest_fadeAlpha = math.min(Forest_fadeAlpha + Forest_fadeSpeed * dt, targetAlpha)
+            else
+                Forest_fadeAlpha = math.max(Forest_fadeAlpha - Forest_fadeSpeed * dt, targetAlpha)
+            end
+
+            for key, sound in pairs(Forest_soundInstances) do
+                if Forest_soundToggles[key] then
+                    local vol = Forest_fadeAlpha * Forest_soundVolumes[key]
+                    sound.Volume = vol
+                    if vol > 0.001 and not sound.IsPlaying then
+                        sound:Play()
+                    elseif vol <= 0.001 and sound.IsPlaying then
+                        sound:Pause()
+                    end
+                end
+            end
+
+            if math.abs(Forest_fadeAlpha - targetAlpha) < 0.001 then
+                Forest_fadeConn:Disconnect()
+                Forest_fadeConn = nil
+            end
+        end)
+    end
+
+    _startForestZoneDetection = function()
+        _stopForestZoneDetection()
+        Forest_inZone = false
+        local Players = game:GetService("Players")
+
+        task.spawn(function()
+            local wasInZone = false
+            local charConn = Players.LocalPlayer.CharacterAdded:Connect(function()
+                wasInZone     = false
+                Forest_inZone = false
+                _forestRunFade(0)
+            end)
+
+            while Forest_soundsEnabled do
+                local char = Players.LocalPlayer.Character
+                if char then
+                    char = char:FindFirstChild("saviHRP") or char:FindFirstChild("HumanoidRootPart")
+                end
+                local nowInZone = char ~= nil and _isInForestZone(char.Position)
+
+                if nowInZone ~= wasInZone then
+                    wasInZone     = nowInZone
+                    Forest_inZone = nowInZone
+                    if nowInZone then _forestRunFade(1) else _forestRunFade(0) end
+                end
+                task.wait(0.5)
+            end
+            charConn:Disconnect()
+        end)
+    end
+
+    _riverDestroySound = function()
+        _riverProxRunning = false
+        if _riverFadeConn then
+            _riverFadeConn:Disconnect()
+            _riverFadeConn = nil
+        end
+        if _riverSoundObj then
+            pcall(function() _riverSoundObj:Destroy() end)
+            _riverSoundObj = nil
+        end
+    end
+
+    _riverStopProx = function()
+        _riverProxRunning = false
+        if _riverFadeConn then
+            _riverFadeConn:Disconnect()
+            _riverFadeConn = nil
+        end
+        if _riverSoundObj then
+            _riverSoundObj:Pause()
+            _riverSoundObj.Volume = 0
+        end
+    end
+
+    _riverCreateSoundObj = function()
+        if _riverSoundObj then
+            pcall(function() _riverSoundObj:Destroy() end)
+        end
+        local SoundService = game:GetService("SoundService")
+        local sound = Instance.new("Sound")
+        sound.SoundId     = "rbxassetid://9120552671"
+        sound.Volume      = 0
+        sound.Looped      = true
+        sound.RollOffMode = Enum.RollOffMode.InverseTapered
+        sound.MaxDistance = 10000
+        sound.Parent      = SoundService
+        _riverSoundObj    = sound
+    end
+
+    _riverStartProx = function()
+        _riverDestroySound()
+        _riverCreateSoundObj()
+        _riverProxRunning = true
+        local Players = game:GetService("Players")
+
+        task.spawn(function()
+            local charConn = Players.LocalPlayer.CharacterAdded:Connect(function()
+                if _riverSoundObj then
+                    _riverSoundObj:Pause()
+                    _riverSoundObj.Volume = 0
+                end
+            end)
+
+            while _riverProxRunning do
+                local char = Players.LocalPlayer.Character
+                if char then
+                    char = char:FindFirstChild("saviHRP") or char:FindFirstChild("HumanoidRootPart")
+                end
+
+                local inZone = char and _riverSoundSelected and _isInForestZone(char.Position)
+                local volume = 0
+
+                if inZone then
+                    local distToRiver = _distToRiverLine(char.Position) - RIVER_MIN_DIST
+                    volume = (1 - math.clamp(
+                        distToRiver / (RIVER_MAX_DIST - RIVER_MIN_DIST), 0, 1)) * _riverSoundMaxVol
+                end
+
+                if _riverSoundObj then
+                    _riverSoundObj.Volume = volume
+                    if volume > 0.001 and not _riverSoundObj.IsPlaying then
+                        _riverSoundObj:Play()
+                    elseif volume <= 0.001 and _riverSoundObj.IsPlaying then
+                        _riverSoundObj:Pause()
+                    end
+                end
+                task.wait(0.1)
+            end
+            charConn:Disconnect()
+        end)
+    end
+local L = tbl15.Visual:AddLeftTabbox("숲")
+
+    L:AddToggle("ForestToggle", {
+        Text = "숲 로드(안티킥 추천)",
+        Default = false,
+        Callback = function(enabled)
+            if enabled then
+                if toggles.DefAntiKick and not toggles.DefAntiKick.Value then
+                    pcall(function() toggles.DefAntiKick:SetValue(true) end)
+                end
+                _launchForest()
+            else
+                _destroyForest()
+            end
+        end,
+    })
+
+    L:AddToggle("ForestAtmosphereSound", {
+        Text = "Forest Sounds",
+        Default = true,
+        Callback = function(enabled)
+            Forest_soundsEnabled = enabled
+            _riverSoundEnabled   = enabled
+            if enabled then
+                if Forest_loaded then
+                    _setupForestSounds()
+                    _startForestZoneDetection()
+                    _riverStartProx()
+                end
+            else
+                _stopForestZoneDetection()
+                _cleanupForestSounds()
+                _riverDestroySound()
+            end
+        end,
+    })
+
+    L:AddDropdown("ForestSoundSelect", {
+        Text = "Active Sounds",
+        Values = {
+            "Ambient Forest Music",
+            "Forest Background Ambience",
+            "River Sound",
+        },
+        Default = {
+            "Ambient Forest Music",
+            "Forest Background Ambience",
+            "River Sound",
+        },
+        Multi = true,
+        Callback = function(selected)
+            local function isSel(name)
+                for _, v in pairs(selected) do
+                    if v == name then return true end
+                end
+                return false
+            end
+
+            Forest_soundToggles.ForestAmbientMusic       = isSel("Ambient Forest Music")
+            Forest_soundToggles.ForestBackgroundAmbience = isSel("Forest Background Ambience")
+
+            for label, key in pairs({
+                ["Ambient Forest Music"]       = "ForestAmbientMusic",
+                ["Forest Background Ambience"] = "ForestBackgroundAmbience",
+            }) do
+                local snd = Forest_soundInstances[key]
+                if snd then
+                    if not Forest_soundToggles[key] then
+                        snd:Pause()
+                        snd.Volume = 0
+                    else
+                        local vol = Forest_fadeAlpha * Forest_soundVolumes[key]
+                        snd.Volume = vol
+                        if vol > 0.001 and not snd.IsPlaying then snd:Play() end
+                    end
+                end
+            end
+
+            _riverSoundSelected = isSel("River Sound")
+            if not _riverSoundSelected and _riverSoundObj then
+                _riverSoundObj:Pause()
+                _riverSoundObj.Volume = 0
+            end
+        end,
+    })
+
+    L:AddSlider("ForestVolAmbientMusic", {
+        Text = "Ambient Forest Music Volume",
+        Default = tbl19.ForestVolAmbientMusic or 20,
+        Min = 0,
+        Max = 100,
+        Rounding = 0,
+        Callback = function(v)
+            tbl19.ForestVolAmbientMusic = v
+            Forest_soundVolumes.ForestAmbientMusic = v / 100
+            local snd = Forest_soundInstances.ForestAmbientMusic
+            if snd and Forest_soundToggles.ForestAmbientMusic then
+                snd.Volume = Forest_fadeAlpha * Forest_soundVolumes.ForestAmbientMusic
+            end
+        end,
+    })
+
+    L:AddSlider("ForestVolBackgroundAmbience", {
+        Text = "Background Ambience Volume",
+        Default = tbl19.ForestVolBackgroundAmbience or 20,
+        Min = 0,
+        Max = 100,
+        Rounding = 0,
+        Callback = function(v)
+            tbl19.ForestVolBackgroundAmbience = v
+            Forest_soundVolumes.ForestBackgroundAmbience = v / 100
+            local snd = Forest_soundInstances.ForestBackgroundAmbience
+            if snd and Forest_soundToggles.ForestBackgroundAmbience then
+                snd.Volume = Forest_fadeAlpha * Forest_soundVolumes.ForestBackgroundAmbience
+            end
+        end,
+    })
+
+    L:AddSlider("ForestVolRiverSound", {
+        Text = "River Sound Volume",
+        Default = tbl19.ForestVolRiverSound or 50,
+        Min = 0,
+        Max = 100,
+        Rounding = 0,
+        Callback = function(v)
+            tbl19.ForestVolRiverSound = v
+            _riverSoundMaxVol = v / 100
+        end,
+    })
+end
+            
+                
 	do
 		local v20 = tbl15.Visual:AddLeftTabbox("Game Tweaks")
 		local v21 = v20:AddTab(nil, "spline")
