@@ -19178,7 +19178,9 @@ do
 							return flag12
 						end
 
-						 	do
+						 	
+
+		do
 --[[킥루프]]
 		local obj = setmetatable({}, { __mode = "k" })
 
@@ -19294,11 +19296,6 @@ tbl12.SNO = function(arg, arg2, arg3)
 
 	tbl7.States.Owning = true
 
-	local extraParts = {}
-	local descConn = nil
-	local bgSpam = true
-	local seatSeen = nil
-
 	local function fn21()
 		cframe2 = v25.CFrame
 		cframe = head.CFrame
@@ -19336,34 +19333,7 @@ tbl12.SNO = function(arg, arg2, arg3)
 
 		arg2 = arg2 or 0.65
 		local now3 = tick()
-
-		if arg.Parent and arg.Parent:IsA("Model") then
-			for _, desc in ipairs(arg.Parent:GetDescendants()) do
-				if desc:IsA("BasePart") then
-					extraParts[desc] = true
-				end
-			end
-			descConn = arg.Parent.DescendantAdded:Connect(function(desc)
-				if desc:IsA("BasePart") then
-					extraParts[desc] = true
-				end
-			end)
-		end
-
-		task.spawn(function()
-			while bgSpam and not flag11 and arg and arg.Parent do
-				local cf
-				if flag12 then
-					cf = tbl12.PredictCFrame(arg) - Vector3.new(0, 22, 0)
-				else
-					cf = v25.CFrame * CFrame.new(0, 1.593, 0)
-				end
-				pcall(function()
-					tbl11.SetNetworkOwner:FireServer(arg, cf)
-				end)
-				task.wait(0.03)
-			end
-		end)
+		local hitCount = 0
 
 		while not flag11 and arg.Parent and not tbl12.IsPartOwner(arg) and v26.Health ~= 0 and v25.Parent and (not arg3 or arg3()) and tick() - now3 < arg2 do
 			if flag12 then
@@ -19382,49 +19352,19 @@ tbl12.SNO = function(arg, arg2, arg3)
 
 			grab(arg, v28)
 
-			local basePos
-			if flag12 then
-				basePos = cframe3.Position
-			else
-				basePos = v25.CFrame.Position + Vector3.new(0, 1.593, 0)
-			end
-
-			for _ = 1, 3.5 do
-				local jx = (math.random() - 0.5) * 4
-				local jy = (math.random() - 0.5) * 4
-				local jz = (math.random() - 0.5) * 4
+			hitCount = hitCount + 1
+			if hitCount >= 18 and not tbl12.IsPartOwner(arg) then
+				hitCount = 0
 				pcall(function()
-					tbl11.SetNetworkOwner:FireServer(arg, CFrame.new(basePos + Vector3.new(jx, jy, jz)))
+					tbl11.DestroyGrabLine:FireServer(arg)
 				end)
-			end
-
-			for part in pairs(extraParts) do
-				if part.Parent and not tbl12.IsPartOwner(part) then
-					pcall(function()
-						tbl11.SetNetworkOwner:FireServer(part, CFrame.new(basePos))
-					end)
+				task.wait(0.065)
+				if arg.Parent and not flag11 and v25.Parent and v26.Health ~= 0 and not tbl12.IsPartOwner(arg) then
+					grab(arg, v28)
 				end
-			end
-
-			if v26.SeatPart and v26.SeatPart.Parent then
-				seatSeen = v26.SeatPart
-				pcall(function()
-					tbl11.SetNetworkOwner:FireServer(v26.SeatPart, CFrame.new(basePos))
-				end)
-			end
-
-			if seatSeen and seatSeen.Parent and seatSeen ~= v26.SeatPart then
-				pcall(function()
-					tbl11.SetNetworkOwner:FireServer(seatSeen, CFrame.new(basePos))
-				end)
 			end
 		end
 	end)
-
-	bgSpam = false
-	if descConn and descConn.Connected then
-		descConn:Disconnect()
-	end
 
 	if flag12 then
 		pcall(fn22)
