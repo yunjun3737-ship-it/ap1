@@ -43850,7 +43850,7 @@ end
             charConn:Disconnect()
         end)
     end
-local L = tbl15.Visual:AddLeftTabbox("숲")
+local L = tbl15.Visual:AddRightGroupbox("숲", "bolt")
 
     L:AddToggle("ForestToggle", {
         Text = "숲 로드(안티킥 추천)",
