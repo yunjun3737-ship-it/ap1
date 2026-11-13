@@ -43283,6 +43283,33 @@ Config2:AddDropdown("AntiInPlotsType", {
 	end
                 
 do
+if not tbl19 then
+    tbl19 = {}
+end
+if tbl19.ForestVolAmbientMusic == nil then
+    tbl19.ForestVolAmbientMusic = 20
+end
+if tbl19.ForestVolBackgroundAmbience == nil then
+    tbl19.ForestVolBackgroundAmbience = 20
+end
+if tbl19.ForestVolRiverSound == nil then
+    tbl19.ForestVolRiverSound = 50
+end
+if tbl19.ForestToggle == nil then
+    tbl19.ForestToggle = false
+end
+if tbl19.ForestSounds == nil then
+    tbl19.ForestSounds = true
+end
+if tbl19.ForestSoundAmbient == nil then
+    tbl19.ForestSoundAmbient = true
+end
+if tbl19.ForestSoundBackground == nil then
+    tbl19.ForestSoundBackground = true
+end
+if tbl19.ForestSoundRiver == nil then
+    tbl19.ForestSoundRiver = true
+end
     local Forest_loaded         = false
     local Forest_soundObjects   = {}
     local Forest_zoneConns      = {}
