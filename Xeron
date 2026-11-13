@@ -19296,6 +19296,52 @@ tbl12.SNO = function(arg, arg2, arg3)
 
 	tbl7.States.Owning = true
 
+local _tgtChar = arg.Parent
+local _poBlockedConns = {}
+local _poBlocking = false
+local _poOwnConn = nil
+local _torFallback = nil
+if _tgtChar and _tgtChar:IsA("Model") then
+	_poBlocking = true
+	if getconnections then
+		pcall(function()
+			for _, _c in ipairs(getconnections(_tgtChar.DescendantAdded)) do
+				if _c.Enabled then
+					pcall(function() _c:Disable() end)
+					_poBlockedConns[#_poBlockedConns + 1] = _c
+				end
+			end
+		end)
+	end
+	_poOwnConn = _tgtChar.DescendantAdded:Connect(function(_desc)
+		if _poBlocking and _desc.Name == "PartOwner" then
+			pcall(function() _desc:Destroy() end)
+		end
+	end)
+	local _tor = _tgtChar:FindFirstChild("Torso")
+	if _tor and _tor:IsA("BasePart") and _tor ~= arg then
+		_torFallback = _tor
+	end
+	local _burstCF
+	if flag12 then
+		_burstCF = tbl12.PredictCFrame(arg) - Vector3.new(0, 22, 0)
+	else
+		_burstCF = v25.CFrame * CFrame.new(0, 1.593, 0)
+	end
+	for _i = 1, 6 do
+		pcall(function()
+			tbl11.SetNetworkOwner:FireServer(arg, _burstCF)
+		end)
+	end
+	if _torFallback then
+		for _i = 1, 4 do
+			pcall(function()
+				tbl11.SetNetworkOwner:FireServer(_torFallback, _burstCF)
+			end)
+		end
+	end
+end
+
 	local function fn21()
 		cframe2 = v25.CFrame
 		cframe = head.CFrame
@@ -19351,6 +19397,19 @@ tbl12.SNO = function(arg, arg2, arg3)
 			end
 
 			grab(arg, v28)
+      
+if _torFallback and _torFallback.Parent and not tbl12.IsPartOwner(arg) then
+	local _torCF
+	if flag12 then
+		_torCF = tbl12.PredictCFrame(_torFallback) - Vector3.new(0, 22, 0)
+	else
+		_torCF = v25.CFrame * CFrame.new(0, 1.593, 0)
+	end
+	pcall(function()
+		tbl11.SetNetworkOwner:FireServer(_torFallback, _torCF)
+	end)
+end
+
 
 			hitCount = hitCount + 1
 			if hitCount >= 18 and not tbl12.IsPartOwner(arg) then
@@ -19366,9 +19425,18 @@ tbl12.SNO = function(arg, arg2, arg3)
 		end
 	end)
 
-	if flag12 then
-		pcall(fn22)
-	end
+_poBlocking = false
+if _poOwnConn then
+	_poOwnConn:Disconnect()
+end
+for _, _c in ipairs(_poBlockedConns) do
+	pcall(function() _c:Enable() end)
+end
+table.clear(_poBlockedConns)
+
+if flag12 then
+	pcall(fn22)
+end
 
 	if v27 then
 		task.delay(1, tbl12.DestroyToy, v27)
