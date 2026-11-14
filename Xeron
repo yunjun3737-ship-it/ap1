@@ -17481,6 +17481,7 @@ do
 							LoopApplyMethodT = false,
 							LoopApplyMethodTServer = false,
 							RagdollInNK = true,
+                            EKILockToggle = false,
 							RagdollInRG = false,
 							DeleteShurInNK = true,
 							EKI = false,
