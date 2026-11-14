@@ -34996,7 +34996,8 @@ Escape Timer: %*]]
 										end
 
 										kickAP.Position = v29
-										local flag12
+                               tbl12.LockedKick(v27, v29)
+                           local flag12
 
 										if not (tbl12.GetMagnitude(v23, v27) > 33) then
 											tbl12.Grab(v27)
