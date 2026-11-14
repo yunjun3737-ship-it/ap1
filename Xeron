@@ -39953,6 +39953,102 @@ Antis:AddDivider("안티 오너&네트워크 계열")
 
 		
 do
+local spilled = {}
+spilled.Players = game:GetService("Players")
+spilled.ReplicatedStorage = game:GetService("ReplicatedStorage")
+spilled.Workspace = game:GetService("Workspace")
+spilled.RunService = game:GetService("RunService")
+spilled.LocalPlayer = spilled.Players.LocalPlayer
+
+spilled.LocalPlayer:WaitForChild("CanSpawnToy", 10)
+spilled.LocalPlayer:WaitForChild("InOwnedPlot", 10)
+
+spilled.MenuToys = spilled.ReplicatedStorage:WaitForChild("MenuToys", 15)
+spilled.SpawnToyRemoteFunction = spilled.MenuToys:WaitForChild("SpawnToyRemoteFunction", 10)
+spilled.DestroyToy = spilled.MenuToys:WaitForChild("DestroyToy", 10)
+
+spilled.getCharacter = function()
+    return spilled.LocalPlayer.Character
+end
+
+spilled.getRootPart = function()
+    local char = spilled.getCharacter()
+    return char and char:FindFirstChild("HumanoidRootPart")
+end
+
+spilled.getToysFolder = function()
+    return spilled.Workspace:FindFirstChild(spilled.LocalPlayer.Name .. "SpawnedInToys")
+end
+
+getOwnedPlotItems = function()
+    local Name = spilled.LocalPlayer.Name
+    if not spilled.Workspace or not spilled.Workspace:FindFirstChild("Plots") then
+        return false
+    end
+    for i = 1, 5 do
+        local plot = spilled.Workspace.Plots:FindFirstChild("Plot" .. i)
+        if plot then
+            local ThisPlotsOwners = plot:FindFirstChild("PlotSign") and plot.PlotSign:FindFirstChild("ThisPlotsOwners")
+            if ThisPlotsOwners then
+                for _, child in ipairs(ThisPlotsOwners:GetChildren()) do
+                    if child.Value == Name then
+                        return spilled.Workspace.PlotItems:FindFirstChild("Plot" .. i)
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
+spawnToy = function(toyName, targetCFrame, rotationVec, targetParent)
+    if not toyName or not targetCFrame then return false end
+    if not spilled.LocalPlayer.CanSpawnToy.Value then return false end
+
+    local child2
+    local connection9
+    local plotItems = targetParent
+
+    if not plotItems then
+        local flag = false
+        pcall(function() flag = spilled.LocalPlayer.InOwnedPlot.Value end)
+        if flag then
+            plotItems = getOwnedPlotItems()
+        else
+            plotItems = spilled.getToysFolder()
+        end
+    end
+
+    if plotItems then
+        connection9 = plotItems.ChildAdded:Connect(function(child)
+            if child.Name == toyName and child:IsA("Model") then
+                child2 = child
+            end
+        end)
+    end
+
+    task.spawn(function()
+        if not spilled.SpawnToyRemoteFunction then return end
+        if typeof(rotationVec) == "string" and string.lower(rotationVec) == "headup" then
+            spilled.SpawnToyRemoteFunction:InvokeServer(toyName, targetCFrame, Vector3.new(0, 0, 0))
+        else
+            spilled.SpawnToyRemoteFunction:InvokeServer(toyName, targetCFrame, rotationVec or Vector3.new(0, 0, 0))
+        end
+    end)
+
+    local calcVal = (spilled.LocalPlayer:GetNetworkPing() or 0.1) + 2
+    local now3 = tick()
+
+    while true do
+        task.wait()
+        if child2 then break
+        elseif calcVal <= tick() - now3 or not spilled.getCharacter() then break end
+    end
+
+    if connection9 then connection9:Disconnect() end
+    local Parent = child2 and child2.Parent and child2 or false
+    return Parent
+end
     local connection = nil
 
     Antis:AddToggle("AntiOwner", {
