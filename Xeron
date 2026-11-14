@@ -34909,7 +34909,55 @@ Escape Timer: %*]]
 				local nkOffset = tbl9.NKOffset
 				return arg.Position + Vector3.new(math.cos(n36) * 10, nkOffset, math.sin(n36) * 10)
 			end
+local function applyKickLock(rootPart, targetPos)
+	if not (rootPart and rootPart.Parent) then
+		return
+	end
+	tbl12.Grab(rootPart, targetPos)
+	if tbl12.IsPartOwner(rootPart) then
+		if rootPart.Anchored then
+			rootPart.Anchored = false
+		end
+		if sethiddenproperty then
+			pcall(sethiddenproperty, rootPart, "PhysicsRepRootPart", rootPart)
+		end
+	end
+end
 
+local function startKickKeeper(targetPlayer, targetRoot)
+	if not (targetPlayer and targetRoot and targetRoot.Parent) then
+		return
+	end
+	if targetRoot:FindFirstChild("KickKeeper") then
+		return
+	end
+	local tag = Instance.new("BoolValue")
+	tag.Name = "KickKeeper"
+	tag.Parent = targetRoot
+	task.spawn(function()
+		while tag.Parent and targetRoot.Parent and not flag11 do
+			if not tbl8.LoopApplyMethodT or not tbl7.SelectedPlayers[targetPlayer] then
+				break
+			end
+			if tbl12.IsProtectedPlayer(targetPlayer, true) then
+				break
+			end
+			tbl12.Grab(targetRoot, nil)
+			if tbl12.IsPartOwner(targetRoot) then
+				if targetRoot.Anchored then
+					targetRoot.Anchored = false
+				end
+				if sethiddenproperty then
+					pcall(sethiddenproperty, targetRoot, "PhysicsRepRootPart", targetRoot)
+				end
+			end
+			RunService.Heartbeat:Wait()
+		end
+		if tag.Parent then
+			tag:Destroy()
+		end
+	end)
+end
 			while task.wait() do
 				if flag11 then
 					for k in tbl16, nil, nil do
@@ -34996,12 +35044,14 @@ Escape Timer: %*]]
 										end
 
 										kickAP.Position = v29
-										local flag12
+                                        applyKickLock(v27, v29)
+                                         local flag12
 
 										if not (tbl12.GetMagnitude(v23, v27) > 33) then
-											tbl12.Grab(v27)
-											flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
-
+                                        tbl12.Grab(v27)
+                                        applyKickLock(v27, v29)             
+                                        startKickKeeper(v25, v27)           
+                                        flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
 											if flag12 then
 												task.delay(0.00000000000000002, tbl12.RNO, v27)
 											elseif tbl9.NKDelayMode == "Normal" then
@@ -35027,11 +35077,13 @@ Escape Timer: %*]]
 													fn21(v27, v27)
 												end
 											end)
-										elseif tbl12.SNO(v27) then
-											tbl12.Teleport(v27, v29)
-											tbl12.Grab(v27)
-											flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
-
+										else 
+                                              if tbl12.SNO(v27) then
+                                              tbl12.Teleport(v27, v29)
+                                              tbl12.Grab(v27)
+                                              applyKickLock(v27, v29)              
+                                              startKickKeeper(v25, v27)           
+                                              flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
 											if flag12 then
 												task.delay(0.0000000000002, tbl12.RNO, v27)
 											elseif tbl9.NKDelayMode == "Normal" then
