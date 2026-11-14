@@ -34905,10 +34905,97 @@ Escape Timer: %*]]
 			end
 -- [[킥루프]]
 			local function fn23(arg, arg2, arg3)
-				local n36 = 6.2831853071795862 / arg3 * (arg2 - 1)
-				local nkOffset = tbl9.NKOffset
-				return arg.Position + Vector3.new(math.cos(n36) * 10, nkOffset, math.sin(n36) * 10)
+	local n36 = 6.2831853071795862 / arg3 * (arg2 - 1)
+	local nkOffset = tbl9.NKOffset
+	return arg.Position + Vector3.new(math.cos(n36) * 10, nkOffset, math.sin(n36) * 10)
+end
+
+local function applyKickLock(rootPart, targetPos)
+	if not (rootPart and rootPart.Parent and targetPos) then
+		return
+	end
+	local char = rootPart.Parent
+
+	if rootPart.Anchored then
+		rootPart.Anchored = false
+	end
+
+	if sethiddenproperty then
+		pcall(sethiddenproperty, rootPart, "PhysicsRepRootPart", rootPart)
+	end
+
+	local bp = rootPart:FindFirstChild("KickAP")
+	if not bp then
+		bp = Instance.new("BodyPosition")
+		bp.Name = "KickAP"
+		bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+		bp.Parent = rootPart
+	end
+	bp.D = 2500
+	bp.P = 80000
+	bp.Position = targetPos
+
+	local bg = rootPart:FindFirstChild("KickAO")
+	if not bg then
+		bg = Instance.new("BodyGyro")
+		bg.Name = "KickAO"
+		bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+		bg.Parent = rootPart
+	end
+	bg.D = 800
+	bg.P = 30000
+	bg.CFrame = CFrame.new(targetPos)
+
+	for _, name in ipairs({"Torso", "Head", "Left Leg", "Right Leg", "Left Arm", "Right Arm"}) do
+		local part = char:FindFirstChild(name)
+		if part and part:IsA("BasePart") then
+			if part.Anchored then
+				part.Anchored = false
 			end
+			local pbp = part:FindFirstChild("KickAPLimb")
+			if not pbp then
+				pbp = Instance.new("BodyPosition")
+				pbp.Name = "KickAPLimb"
+				pbp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+				pbp.Parent = part
+			end
+			pbp.D = 2500
+			pbp.P = 80000
+			pbp.Position = targetPos
+		end
+	end
+
+	local dist = (rootPart.Position - targetPos).Magnitude
+	if dist > 1.5 then
+		rootPart.CFrame = CFrame.new(targetPos)
+		rootPart.AssemblyLinearVelocity = Vector3.zero
+		rootPart.AssemblyAngularVelocity = Vector3.zero
+	end
+
+	if not rootPart:FindFirstChild("KickLockTick") then
+		local marker = Instance.new("BoolValue")
+		marker.Name = "KickLockTick"
+		marker.Parent = rootPart
+		local trackedBp = bp
+
+		task.spawn(function()
+			while marker.Parent and not flag11 and rootPart.Parent do
+				RunService.PostSimulation:Wait()
+				if marker.Parent and rootPart.Parent and trackedBp.Parent then
+					if (rootPart.Position - trackedBp.Position).Magnitude > 1 then
+						rootPart.CFrame = CFrame.new(trackedBp.Position)
+						rootPart.AssemblyLinearVelocity = Vector3.zero
+						rootPart.AssemblyAngularVelocity = Vector3.zero
+					end
+				end
+			end
+			if marker.Parent then
+				marker:Destroy()
+			end
+		end)
+	end
+end
+
 
 			while task.wait() do
 				if flag11 then
@@ -34996,8 +35083,8 @@ Escape Timer: %*]]
 										end
 
 										kickAP.Position = v29
-                               tbl12.LockedKick(v27, v29)
-                           local flag12
+                                        applyKickLock(v27, v29)      
+                                        local flag12
 
 										if not (tbl12.GetMagnitude(v23, v27) > 33) then
 											tbl12.Grab(v27)
