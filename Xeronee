@@ -38537,66 +38537,57 @@ Antis:AddToggle("AntiGrabToggle", {
     end,
 })
 
- do
-    local E = _G._EchoDefence
-    local P = E.P
-    local WS = E.WS
-    local RS = E.RS
-    local StruggleEvent = E.StruggleEvent
-    local RagdollRemote = E.RagdollRemote
-    local DestroyToy = E.DestroyToy
-    
+do
+    local antiGrabEnabled = false
+    local antiGrabMode = "No Ragdoll"
+    local coreReady = false
+    local coreLoading = true
+
+    local E, P, WS, RS, StruggleEvent, RagdollRemote, DestroyToy
     local Players = game:GetService("Players")
     local ContextActionService = game:GetService("ContextActionService")
     local AntiGrabRunService = game:GetService("RunService")
+    local SetNetOwner
 
-    local SetNetOwner = RS:FindFirstChild("GrabEvents") and RS.GrabEvents:FindFirstChild("SetNetworkOwner")
-
-    local antiGrabEnabled = false
-    local antiGrabMode = "No Ragdoll"
-
-    function isHeld()
-        local v = P:FindFirstChild("IsHeld")
+    -- [내부 함수 1] 상태 확인 및 유틸리티
+    local function isHeld()
+        local v = P and P:FindFirstChild("IsHeld")
         return v ~= nil and v.Value == true
     end
 
-    function ownerIsSet(owner)
+    local function ownerIsSet(owner)
         if not owner or not owner:IsA("StringValue") then return false end
         local ok, value = pcall(function() return owner.Value end)
         return ok and type(value) == "string" and value ~= ""
     end
 
-    function headOwned(head)
+    local function headOwned(head)
         local char = head and head.Parent
         if not char then return false end
         for _, object in ipairs(char:GetDescendants()) do
-            if object.Name == "PartOwner" and ownerIsSet(object) then
-                return true
-            end
+            if object.Name == "PartOwner" and ownerIsSet(object) then return true end
         end
         return false
     end
 
-    function characterIsGrabbed(char)
-        if not char or char ~= P.Character then return false end
+    local function characterIsGrabbed(char)
+        if not char or not P or char ~= P.Character then return false end
         return isHeld() or headOwned(char:FindFirstChild("Head"))
     end
 
-    function antiGrabAlive(state, token, char)
-        return state.active
-            and state._token == token
-            and P.Character == char
-            and char.Parent ~= nil
+    local function antiGrabAlive(state, token, char)
+        return state.active and state._token == token and P.Character == char and char.Parent ~= nil
     end
 
-    function disconnectAntiGrabConnections(state)
+    local function disconnectAntiGrabConnections(state)
         for _, connection in pairs(state.conns or {}) do
             pcall(function() connection:Disconnect() end)
         end
         state.conns = {}
     end
 
-    function disableRagdoll(char)
+    -- [내부 함수 2] 래그돌 제어
+    local function disableRagdoll(char)
         for _, v in pairs(char:GetChildren()) do
             if v:IsA("BasePart") and v:FindFirstChild("BallSocketConstraint") and v.Name ~= "Head" then
                 pcall(function() v.BallSocketConstraint.Enabled = false end)
@@ -38607,7 +38598,7 @@ Antis:AddToggle("AntiGrabToggle", {
         end
     end
 
-    function enableRagdoll(char)
+    local function enableRagdoll(char)
         for _, v in pairs(char:GetChildren()) do
             if v:IsA("BasePart") and v:FindFirstChild("BallSocketConstraint") and v.Name ~= "Head" then
                 pcall(function() v.BallSocketConstraint.Enabled = true end)
@@ -38618,7 +38609,7 @@ Antis:AddToggle("AntiGrabToggle", {
         end
     end
 
-    function restoreAntiGrabCharacter(char)
+    local function restoreAntiGrabCharacter(char)
         if not char then return end
         local hrp = char:FindFirstChild("HumanoidRootPart")
         local hum = char:FindFirstChildOfClass("Humanoid")
@@ -38632,7 +38623,7 @@ Antis:AddToggle("AntiGrabToggle", {
         pcall(enableRagdoll, char)
     end
 
-    function weldOn(w)
+    local function weldOn(w)
         if not w then return false end
         local ok, res = pcall(function()
             if w.Parent == nil then return false end
@@ -38641,13 +38632,9 @@ Antis:AddToggle("AntiGrabToggle", {
         return ok and res or false
     end
 
-    function destroyGrabLineRemote()
-        local ge = RS:FindFirstChild("GrabEvents")
-        return ge and ge:FindFirstChild("DestroyGrabLine")
-    end
-
-    function clearGrabLines()
-        local remote = destroyGrabLineRemote()
+    local function clearGrabLines()
+        local ge = RS and RS:FindFirstChild("GrabEvents")
+        local remote = ge and ge:FindFirstChild("DestroyGrabLine")
         if not remote then return end
         for _, player in ipairs(Players:GetPlayers()) do
             if player ~= P and player.Character then
@@ -38665,8 +38652,9 @@ Antis:AddToggle("AntiGrabToggle", {
         end
     end
 
-    function seatKind()
-        local hum = P.Character and P.Character:FindFirstChildOfClass("Humanoid")
+    -- [내부 함수 3] 시트 및 상태 체크
+    local function seatKind()
+        local hum = P and P.Character and P.Character:FindFirstChildOfClass("Humanoid")
         if not (hum and hum.SeatPart) then return nil end
         local o = hum.SeatPart
         local seen = {}
@@ -38680,25 +38668,21 @@ Antis:AddToggle("AntiGrabToggle", {
         return nil
     end
 
-    function onBlobSeat()
-        return seatKind() == "blob"
-    end
+    local function onBlobSeat() return seatKind() == "blob" end
+    local function onProtectedSeat() return seatKind() ~= nil end
 
-    function onProtectedSeat()
-        return seatKind() ~= nil
-    end
-
+    -- [모드 1] No Ragdoll
     local xocu = { conns = {}, proc = false, active = false }
 
-    function xocuClean()
+    local function xocuClean()
         xocu.active = false
         xocu.proc = false
         xocu._token = (xocu._token or 0) + 1
         disconnectAntiGrabConnections(xocu)
-        restoreAntiGrabCharacter(P.Character)
+        if P then restoreAntiGrabCharacter(P.Character) end
     end
 
-    function xocuApply(char)
+    local function xocuApply(char)
         if not char then return end
         xocu._token = (xocu._token or 0) + 1
         local token = xocu._token
@@ -38771,14 +38755,15 @@ Antis:AddToggle("AntiGrabToggle", {
         beginEscape()
     end
 
-    function xocuStart()
+    local function xocuStart()
         xocuClean()
         xocuApply(P.Character)
     end
 
+    -- [모드 2] Ragdoll
     local nrd = { conns = {}, proc = false, active = false, walk = false }
 
-    function nrdDisableLimbs(char)
+    local function nrdDisableLimbs(char)
         for _, v in pairs(char:GetChildren()) do
             if v:IsA("BasePart") and v:FindFirstChild("BallSocketConstraint") and v.Name ~= "Head" then
                 pcall(function() v.BallSocketConstraint.Enabled = false end)
@@ -38789,16 +38774,16 @@ Antis:AddToggle("AntiGrabToggle", {
         end
     end
 
-    function nrdClean()
+    local function nrdClean()
         nrd.active = false
         nrd.proc = false
         nrd.walk = false
         nrd._token = (nrd._token or 0) + 1
         disconnectAntiGrabConnections(nrd)
-        restoreAntiGrabCharacter(P.Character)
+        if P then restoreAntiGrabCharacter(P.Character) end
     end
 
-    function nrdApply(char)
+    local function nrdApply(char)
         if not char then return end
         nrd._token = (nrd._token or 0) + 1
         local token = nrd._token
@@ -38872,15 +38857,16 @@ Antis:AddToggle("AntiGrabToggle", {
         beginEscape()
     end
 
-    function nrdStart()
+    local function nrdStart()
         nrdClean()
         nrdApply(P.Character)
     end
 
+    -- [모드 3] Escape Everything
     local ACGE = false
     local cheekyThread = nil
 
-    function checkgrab(obj)
+    local function checkgrab(obj)
         if obj:FindFirstAncestor('Plots') or obj:FindFirstAncestor('Slots') or obj:FindFirstAncestor('Map') then
             return
         end
@@ -38888,9 +38874,7 @@ Antis:AddToggle("AntiGrabToggle", {
             or obj:FindFirstChild('Main') or obj:FindFirstChild('Balloon')
         if obj:FindFirstChild('Humanoid') then
             if not obj.Humanoid.SeatPart then
-                if prt and prt.ReceiveAge ~= 0 then
-                    return false
-                end
+                if prt and prt.ReceiveAge ~= 0 then return false end
             elseif obj.Humanoid.SeatPart.Parent then
                 return checkgrab(obj.Humanoid.SeatPart.Parent)
             end
@@ -38900,7 +38884,7 @@ Antis:AddToggle("AntiGrabToggle", {
         return true
     end
 
-    function cheekyAntiGrab()
+    local function cheekyAntiGrab()
         local model
         while ACGE do
             local char = P.Character
@@ -38958,13 +38942,13 @@ Antis:AddToggle("AntiGrabToggle", {
         end
     end
 
-    function cheekyCleanup()
-        local toyFolder = WS:FindFirstChild(P.Name .. 'SpawnedInToys')
+    local function cheekyCleanup()
+        local toyFolder = WS and WS:FindFirstChild(P.Name .. 'SpawnedInToys')
         if toyFolder then
             local model = toyFolder:FindFirstChild('FoodMayonnaise')
             if model then pcall(function() DestroyToy:FireServer(model) end) end
         end
-        local char = P.Character
+        local char = P and P.Character
         if char then
             local hum = char:FindFirstChildOfClass('Humanoid')
             if hum then
@@ -38974,13 +38958,13 @@ Antis:AddToggle("AntiGrabToggle", {
         end
     end
 
-    function cheekyStart()
+    local function cheekyStart()
         ACGE = true
         if cheekyThread then task.cancel(cheekyThread) end
         cheekyThread = task.spawn(cheekyAntiGrab)
     end
 
-    function cheekyStop()
+    local function cheekyStop()
         ACGE = false
         if cheekyThread then
             task.cancel(cheekyThread)
@@ -38989,13 +38973,15 @@ Antis:AddToggle("AntiGrabToggle", {
         cheekyCleanup()
     end
 
-    function stopAll()
+    -- [모드 제어 및 유니버설 쉴드]
+    local function stopAll()
         xocuClean()
         nrdClean()
         cheekyStop()
     end
 
-    function startMode(m)
+    local function startMode(m)
+        if not P then return end
         if m == "No Ragdoll" then
             xocuStart()
         elseif m == "Ragdoll" then
@@ -39006,24 +38992,11 @@ Antis:AddToggle("AntiGrabToggle", {
     end
 
     local HOSTILE_CONSTRAINT_TYPES = {
-        WeldConstraint = true,
-        Weld = true,
-        RopeConstraint = true,
-        SpringConstraint = true,
-        RodConstraint = true,
-        BallSocketConstraint = true,
-        HingeConstraint = true,
-        AlignPosition = true,
-        AlignOrientation = true,
-        LinearVelocity = true,
-        AngularVelocity = true,
-        BodyVelocity = true,
-        BodyAngularVelocity = true,
-        BodyPosition = true,
-        BodyGyro = true,
-        BodyForce = true,
-        VectorForce = true,
-        Torque = true,
+        WeldConstraint = true, Weld = true, RopeConstraint = true, SpringConstraint = true,
+        RodConstraint = true, BallSocketConstraint = true, HingeConstraint = true,
+        AlignPosition = true, AlignOrientation = true, LinearVelocity = true,
+        AngularVelocity = true, BodyVelocity = true, BodyAngularVelocity = true,
+        BodyPosition = true, BodyGyro = true, BodyForce = true, VectorForce = true, Torque = true,
     }
 
     local universalShieldConn = nil
@@ -39045,8 +39018,7 @@ Antis:AddToggle("AntiGrabToggle", {
                 local shouldNuke = false
                 pcall(function()
                     if desc:IsA("WeldConstraint") or desc:IsA("Weld") then
-                        shouldNuke = isPartFromOtherPlayer(desc.Part0)
-                                  or isPartFromOtherPlayer(desc.Part1)
+                        shouldNuke = isPartFromOtherPlayer(desc.Part0) or isPartFromOtherPlayer(desc.Part1)
                     elseif desc.ClassName == "RopeConstraint"
                         or desc.ClassName == "SpringConstraint"
                         or desc.ClassName == "RodConstraint"
@@ -39054,8 +39026,7 @@ Antis:AddToggle("AntiGrabToggle", {
                         or desc.ClassName == "HingeConstraint" then
                         local a0 = desc.Attachment0 and desc.Attachment0.Parent
                         local a1 = desc.Attachment1 and desc.Attachment1.Parent
-                        shouldNuke = isPartFromOtherPlayer(a0)
-                                  or isPartFromOtherPlayer(a1)
+                        shouldNuke = isPartFromOtherPlayer(a0) or isPartFromOtherPlayer(a1)
                     else
                         if antiGrabMode == "No Ragdoll" then
                             shouldNuke = not desc.Parent:IsDescendantOf(character)
@@ -39074,7 +39045,7 @@ Antis:AddToggle("AntiGrabToggle", {
     local function startUniversalShield()
         if universalShieldConn then return end
         universalShieldConn = AntiGrabRunService.Heartbeat:Connect(function()
-            if not antiGrabEnabled then return end
+            if not antiGrabEnabled or not P then return end
             local character = P.Character
             if not character then return end
 
@@ -39085,12 +39056,10 @@ Antis:AddToggle("AntiGrabToggle", {
                 local hrp = character:FindFirstChild("HumanoidRootPart")
                 if hum then
                     if hum.PlatformStand then hum.PlatformStand = false end
-                    if hum.Sit          then hum.Sit = false           end
+                    if hum.Sit then hum.Sit = false end
                 end
                 if hrp and hrp.AssemblyLinearVelocity.Magnitude > 220 then
-                    pcall(function()
-                        hrp.AssemblyLinearVelocity = Vector3.zero
-                    end)
+                    pcall(function() hrp.AssemblyLinearVelocity = Vector3.zero end)
                 end
             end
 
@@ -39113,24 +39082,82 @@ Antis:AddToggle("AntiGrabToggle", {
         universalShieldFrame = 0
     end
 
-    
-    Antis:AddToggle("AntiGrabMaster2", {
-    Text = "Anti Grab Pro",
+    -- [로드 대기 및 초기화]
+    task.spawn(function()
+        repeat task.wait(0.1) until _G._EchoDefence and _G._EchoDefence.P
+        E = _G._EchoDefence
+        P = E.P
+        WS = E.WS
+        RS = E.RS
+        StruggleEvent = E.StruggleEvent
+        RagdollRemote = E.RagdollRemote
+        DestroyToy = E.DestroyToy
+        SetNetOwner = RS:FindFirstChild("GrabEvents") and RS.GrabEvents:FindFirstChild("SetNetworkOwner")
+
+        P.CharacterAdded:Connect(function()
+            task.wait(0.5)
+            if not antiGrabEnabled then return end
+            if antiGrabMode == "No Ragdoll" then
+                xocuClean()
+                xocuApply(P.Character)
+            elseif antiGrabMode == "Ragdoll" then
+                nrdClean()
+                nrdApply(P.Character)
+            else
+                cheekyStart()
+            end
+            stopUniversalShield()
+            startUniversalShield()
+        end)
+
+        coreReady = true
+        coreLoading = false
+    end)
+
+    pcall(function()
+        if Library and Library.OnUnload then
+            Library:OnUnload(function()
+                antiGrabEnabled = false
+                stopAll()
+                stopUniversalShield()
+            end)
+        end
+    end)
+
+    -- [전역 함수 선언]
+    function SetAntiGrabEnabled(v)
+        task.spawn(function()
+            repeat task.wait(0.1) until coreReady
+            antiGrabEnabled = v
+            stopAll()
+            if v then
+                startMode(antiGrabMode)
+                startUniversalShield()
+            else
+                stopUniversalShield()
+            end
+        end)
+    end
+
+    function SetAntiGrabMode(m)
+        task.spawn(function()
+            repeat task.wait(0.1) until coreReady
+            antiGrabMode = m
+            if antiGrabEnabled then
+                stopAll()
+                startMode(m)
+            end
+        end)
+    end
+end
+Antis:AddToggle("AntiGrabMaster2", {
+    Text = "Anti Grab pro",
     Default = false,
     Tooltip = "Anti Grab Master",
     Callback = function(Value)
-        antiGrabEnabled = Value
-        stopAll()
-        if Value then
-            startMode(antiGrabMode)
-            startUniversalShield()
-        else
-            stopUniversalShield()
-        end
+        if SetAntiGrabEnabled then SetAntiGrabEnabled(Value) end
     end,
 })
-    
-end   
 
 do
     local antiGrabV2Active = false
@@ -41027,11 +41054,7 @@ Config2:AddDropdown("AntiGrabMode", {
     Multi = false,
     Tooltip = "Anti Grab Mode",
     Callback = function(m)
-        antiGrabMode = m
-        if antiGrabEnabled then
-            stopAll()
-            startMode(m)
-        end
+        if SetAntiGrabMode then SetAntiGrabMode(m) end
     end,
 })
 Config2:AddDivider("Anti in plot mode")
