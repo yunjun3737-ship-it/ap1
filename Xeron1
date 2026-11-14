@@ -30429,14 +30429,14 @@ end
 				local v29, v30 = tbl12.CreateAlign(v26, true)
 				v29.Position = n36.Position
 
-				task.delay(0.2, function()
+				task.delay(0.7, function()
 					tbl12.Grab(v26)
 					tbl12.RNO(v26)
 				end)
 
 				v28.CreatureDrop:FireServer(v28.RightWeld)
 				v28.CreatureDrop:FireServer(v28.LeftWeld)
-				task.wait(0.06)
+				task.wait(0.001)
 				rootAttachment.Parent = v25
 
 				while arg.Parent and v26.Parent and v27.Parent and v27.Health > 0 and parent and parent.Parent and tbl7.SelectedPlayersBlob[arg] and tbl8.LoopApplyMethod and tbl9.BlobMethod == "Kick" and tbl12.GetMagnitude(v23, v26) <= 41 and not v27.SeatPart and v24.Sit do
@@ -30459,10 +30459,11 @@ end
 					end
 
 					if tbl9.BKMethod == 1 then
-						v28.CreatureGrab:FireServer(nil, v26, v28.RightWeld)
-						task.wait()
-						v28.CreatureDrop:FireServer(v28.RightWeld)
-						task.wait()
+                      	for _ = 1, 4 do
+	                 	v28.CreatureGrab:FireServer(nil, v26, v28.RightWeld)
+	                	v28.CreatureDrop:FireServer(v28.RightWeld)
+                	end
+	                  task.wait()
 
 						if tbl8.NetworkOwnerInKick then
 							tbl12.Grab(v26)
