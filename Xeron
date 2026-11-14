@@ -35000,7 +35000,7 @@ Escape Timer: %*]]
                                          local flag12
 
 										if not (tbl12.GetMagnitude(v23, v27) > 33) then
-                              for i = 1, 5 do
+                              for i = 1, 8 do
                                   tbl12.Grab(v27)
                               end
                               
@@ -35010,7 +35010,7 @@ Escape Timer: %*]]
 	                     elseif tbl9.NKDelayMode == "Normal" then
 	                    	task.spawn(function()
 		           	task.wait()
-		             	for i = 1, 5 do
+		             	for i = 1, 8 do
 			       	tbl12.RNO(v27)
 		                 	end
 	                  	end)
@@ -35034,17 +35034,20 @@ Escape Timer: %*]]
 											end)
 										elseif tbl12.SNO(v27) then
 	                                    tbl12.Teleport(v27, v29)
-                                         	for i = 1, 5 do
+                                         	for i = 1, 7 do
 	                                      	tbl12.Grab(v27)
                                         	        end
 	      
                                          flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
 	                                       if flag12 then
-		                                     task.delay(0.0000000000000002, tbl12.RNO, v27)
-                                               elseif tbl9.NKDelayMode == "Normal" then
-		                                        task.spawn(function()
+                                           	task.delay(0.00000000000000002, function()
+	                                             	for i = 1, 8 do
+			                                         tbl12.RNO(v27)
+		                                                  end
+	                                              end)
+                                                  elseif tbl9.NKDelayMode == "Normal" then             task.spawn(function()
 			                                task.wait()
-		                                  	for i = 1, 5 do
+		                                  	for i = 1, 8 do
 			                              	tbl12.RNO(v27)
 		                                	end
 		                                       end)
