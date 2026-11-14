@@ -39628,7 +39628,7 @@ end
 			NoUI = false,
 			SyncToggleState = true,
 		})
-
+Antis:AddDivider("안티 블롭&블롭킬 계열")
 		Antis:AddToggle("AntiBlobman", {
 			Text = "Anti Blobman",
 			Default = false,
@@ -39637,7 +39637,7 @@ end
 				tbl12.SetRuntimeToggle("AntiBlobman", arg)
 			end,
 		})
-Antis:AddDivider("안티 블롭&블롭킬 계열")
+
 local rs           = game:GetService("ReplicatedStorage")
 local rs2          = game:GetService("RunService")
 local Players      = game:GetService("Players")
@@ -40008,7 +40008,7 @@ do
     })
 end
   do
-  Antis:AddDivider("안티 폭탄 계열")
+  Antis:AddDivider("안티 폭탄,불 계열")
 Antis:AddToggle("AntiExplosion", {
 			Text = "Anti Explosion",
 			Default = false,
@@ -40193,7 +40193,7 @@ Antis:AddToggle("AntiExplosion", {
             if Value then InitAntiBomb() else AntiBombGeneration += 1 end
         end
     })
-end
+end    
 		Antis:AddToggle("AntiBurn", {
 			Text = "Anti Burn",
 			Default = false,
@@ -40211,7 +40211,7 @@ end
 				tbl12.SetRuntimeToggle("AntiVoid", arg)
 			end,
 		})
-
+      Antis:AddDivider("안티 킥 계열")
 		Antis:AddToggle("AntiKick", {
 			Text = "Anti Kick",
 			Default = false,
