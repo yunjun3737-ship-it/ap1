@@ -34913,7 +34913,8 @@ local function applyKickLock(rootPart, targetPos)
 	if not (rootPart and rootPart.Parent) then
 		return
 	end
-	tbl12.Grab(rootPart, targetPos)
+	local targetCF = typeof(targetPos) == "Vector3" and CFrame.new(targetPos) or targetPos
+	tbl12.Grab(rootPart, targetCF) 
 	if tbl12.IsPartOwner(rootPart) then
 		if rootPart.Anchored then
 			rootPart.Anchored = false
