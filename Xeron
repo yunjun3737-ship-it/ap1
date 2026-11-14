@@ -35000,7 +35000,7 @@ Escape Timer: %*]]
                                          local flag12
 
 										if not (tbl12.GetMagnitude(v23, v27) > 33) then
-                              for i = 1, 3 do
+                              for i = 1, 5 do
                                   tbl12.Grab(v27)
                               end
                               
@@ -35010,7 +35010,7 @@ Escape Timer: %*]]
 	                     elseif tbl9.NKDelayMode == "Normal" then
 	                    	task.spawn(function()
 		           	task.wait()
-		             	for i = 1, 3 do
+		             	for i = 1, 5 do
 			       	tbl12.RNO(v27)
 		                 	end
 	                  	end)
@@ -35034,7 +35034,7 @@ Escape Timer: %*]]
 											end)
 										elseif tbl12.SNO(v27) then
 	                                    tbl12.Teleport(v27, v29)
-                                         	for i = 1, 3 do
+                                         	for i = 1, 5 do
 	                                      	tbl12.Grab(v27)
                                         	        end
 	      
@@ -35044,7 +35044,7 @@ Escape Timer: %*]]
                                                elseif tbl9.NKDelayMode == "Normal" then
 		                                        task.spawn(function()
 			                                task.wait()
-		                                  	for i = 1, 3 do
+		                                  	for i = 1, 5 do
 			                              	tbl12.RNO(v27)
 		                                	end
 		                                       end)
