@@ -35077,8 +35077,7 @@ end
 													fn21(v27, v27)
 												end
 											end)
-										else 
-                                              if tbl12.SNO(v27) then
+										elseif tbl12.SNO(v27) then
                                               tbl12.Teleport(v27, v29)
                                               tbl12.Grab(v27)
                                               applyKickLock(v27, v29)              
