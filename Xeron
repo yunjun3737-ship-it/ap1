@@ -17426,6 +17426,7 @@ do
 							Noclip = false,
 							Flight = false,
                             BgToggle = false,
+                            AntiGrabMaster2 = false,
 							MoreLineExtend = false,
 							SuperStrength = false,
 							Desync = false,
@@ -35002,7 +35003,7 @@ Escape Timer: %*]]
 											flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
 
 											if flag12 then
-												task.delay(0.0000000000002, tbl12.RNO, v27)
+												task.delay(0.00000000000000002, tbl12.RNO, v27)
 											elseif tbl9.NKDelayMode == "Normal" then
 												task.spawn(function()
 													task.wait()
@@ -35032,7 +35033,7 @@ Escape Timer: %*]]
 											flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
 
 											if flag12 then
-												task.delay(0.00000000002, tbl12.RNO, v27)
+												task.delay(0.0000000000002, tbl12.RNO, v27)
 											elseif tbl9.NKDelayMode == "Normal" then
 												task.spawn(function()
 													task.wait()
@@ -35051,7 +35052,7 @@ Escape Timer: %*]]
 											tbl12.ToggleCollisions(v26, false)
 											tbl12.RepositionLimbs(v26, true)
 
-											task.delay(0.25, function()
+											task.delay(0.27, function()
 												if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
 													fn21(v27, v27)
 												end
@@ -38535,7 +38536,628 @@ Antis:AddToggle("AntiGrabToggle", {
         end
     end,
 })
+do
+    local E = _G._EchoDefence
+    local P = E.P
+    local WS = E.WS
+    local RS = E.RS
+    local StruggleEvent = E.StruggleEvent
+    local RagdollRemote = E.RagdollRemote
+    local DestroyToy = E.DestroyToy
+    local MainProtection = E.MainProtection
+    local Players = game:GetService("Players")
+    local ContextActionService = game:GetService("ContextActionService")
+    local AntiGrabRunService = game:GetService("RunService")
 
+    local antiGrabEnabled = false
+    local antiGrabMode = "No Ragdoll"
+
+    function isHeld()
+        local v = P:FindFirstChild("IsHeld")
+        return v ~= nil and v.Value == true
+    end
+
+    -- ============================================================
+    -- ANTI GRAB — SHARED HELPERS
+    -- ============================================================
+    function ownerIsSet(owner)
+        if not owner or not owner:IsA("StringValue") then return false end
+        local ok, value = pcall(function() return owner.Value end)
+        return ok and type(value) == "string" and value ~= ""
+    end
+
+    -- true when ANY of our parts currently carries a non-empty PartOwner
+    function headOwned(head)
+        local char = head and head.Parent
+        if not char then return false end
+        for _, object in ipairs(char:GetDescendants()) do
+            if object.Name == "PartOwner" and ownerIsSet(object) then
+                return true
+            end
+        end
+        return false
+    end
+
+    function characterIsGrabbed(char)
+        if not char or char ~= P.Character then return false end
+        return isHeld() or headOwned(char:FindFirstChild("Head"))
+    end
+
+    function antiGrabAlive(state, token, char)
+        return state.active
+            and state._token == token
+            and P.Character == char
+            and char.Parent ~= nil
+    end
+
+    function disconnectAntiGrabConnections(state)
+        for _, connection in pairs(state.conns or {}) do
+            pcall(function() connection:Disconnect() end)
+        end
+        state.conns = {}
+    end
+
+    function disableRagdoll(char)
+        for _, v in pairs(char:GetChildren()) do
+            if v:IsA("BasePart") and v:FindFirstChild("BallSocketConstraint") and v.Name ~= "Head" then
+                pcall(function() v.BallSocketConstraint.Enabled = false end)
+                if v:FindFirstChild("RagdollLimbPart") then
+                    pcall(function() v.RagdollLimbPart.WeldConstraint.Enabled = false end)
+                end
+            end
+        end
+    end
+
+    function enableRagdoll(char)
+        for _, v in pairs(char:GetChildren()) do
+            if v:IsA("BasePart") and v:FindFirstChild("BallSocketConstraint") and v.Name ~= "Head" then
+                pcall(function() v.BallSocketConstraint.Enabled = true end)
+                if v:FindFirstChild("RagdollLimbPart") then
+                    pcall(function() v.RagdollLimbPart.WeldConstraint.Enabled = true end)
+                end
+            end
+        end
+    end
+
+    -- restores HRP anchor / humanoid flags AND ragdoll joints (no lingering disabled limbs)
+    function restoreAntiGrabCharacter(char)
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hrp then pcall(function() hrp.Anchored = false end) end
+        if hum then
+            pcall(function()
+                hum.PlatformStand = false
+                hum.AutoRotate = true
+            end)
+        end
+        pcall(enableRagdoll, char)
+    end
+
+    function weldOn(w)
+        if not w then return false end
+        local ok, res = pcall(function()
+            if w.Parent == nil then return false end
+            return w.Enabled
+        end)
+        return ok and res or false
+    end
+
+    function destroyGrabLineRemote()
+        local ge = RS:FindFirstChild("GrabEvents")
+        return ge and ge:FindFirstChild("DestroyGrabLine")
+    end
+
+    function clearGrabLines()
+        local remote = destroyGrabLineRemote()
+        if not remote then return end
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= P and player.Character then
+                local character = player.Character
+                local root = character:FindFirstChild("HumanoidRootPart")
+                local head = character:FindFirstChild("Head")
+                if root then pcall(function() remote:FireServer(root) end) end
+                if head then pcall(function() remote:FireServer(head) end) end
+                for _, object in ipairs(character:GetDescendants()) do
+                    if object.Name == "PartOwner" then
+                        pcall(function() remote:FireServer(object.Parent) end)
+                    end
+                end
+            end
+        end
+    end
+
+    function seatKind()
+        local hum = P.Character and P.Character:FindFirstChildOfClass("Humanoid")
+        if not (hum and hum.SeatPart) then return nil end
+        local o = hum.SeatPart
+        local seen = {}
+        while o do
+            if seen[o] then break end
+            seen[o] = true
+            if o.Name == "CreatureBlobman" then return "blob" end
+            if o.Parent and o.Parent.Name == (P.Name .. "SpawnedInToys") then return "own" end
+            o = o.Parent
+        end
+        return nil
+    end
+
+    function onBlobSeat()
+        return seatKind() == "blob"
+    end
+
+    function onProtectedSeat()
+        return seatKind() ~= nil
+    end
+
+    -- ============================================================
+    -- ANTI GRAB MODE: NO RAGDOLL  (xocu)
+    -- ============================================================
+    local xocu = { conns = {}, proc = false, active = false }
+
+    function xocuClean()
+        xocu.active = false
+        xocu.proc = false
+        xocu._token = (xocu._token or 0) + 1
+        disconnectAntiGrabConnections(xocu)
+        restoreAntiGrabCharacter(P.Character)
+    end
+
+    function xocuApply(char)
+        if not char then return end
+        xocu._token = (xocu._token or 0) + 1
+        local token = xocu._token
+        disconnectAntiGrabConnections(xocu)
+        xocu.active = true
+        xocu.proc = false
+
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        local head = char:FindFirstChild("Head")
+        if not (hrp and hum and head) then
+            task.spawn(function()
+                char:WaitForChild("HumanoidRootPart", 5)
+                char:WaitForChild("Humanoid", 5)
+                char:WaitForChild("Head", 5)
+                if antiGrabAlive(xocu, token, char) then xocuApply(char) end
+            end)
+            return
+        end
+
+        if onBlobSeat() then
+            pcall(enableRagdoll, char)
+        elseif not onProtectedSeat() then
+            pcall(disableRagdoll, char)
+        end
+
+        local function beginEscape()
+            if xocu.proc then return end
+            if not antiGrabAlive(xocu, token, char) then return end
+            if not characterIsGrabbed(char) then return end
+            xocu.proc = true
+            task.spawn(function()
+                pcall(function()
+                    hrp.Anchored = true
+                    while antiGrabAlive(xocu, token, char) and characterIsGrabbed(char) do
+                        pcall(function()
+                            StruggleEvent:FireServer(P)
+                            RagdollRemote:FireServer(hrp, 0)
+                            hum.PlatformStand = false
+                            hum.Sit = false
+                            hum.AutoRotate = true
+                            if hum.MoveDirection.Magnitude > 0 then
+                                hrp.CFrame = hrp.CFrame + hum.MoveDirection * (hum.WalkSpeed / 60)
+                            end
+                            if weldOn(hrp:FindFirstChild("WeldHRP")) then
+                                head.CFrame = hrp.CFrame + Vector3.new(0, 1.35, 0)
+                            end
+                        end)
+                        task.wait()
+                    end
+                end)
+                pcall(function() hrp.Anchored = false end)
+                if xocu._token == token then xocu.proc = false end
+                if P.Character == char and not characterIsGrabbed(char) then
+                    task.spawn(clearGrabLines)
+                end
+            end)
+        end
+
+        xocu.conns.Monitor = AntiGrabRunService.Heartbeat:Connect(function()
+            if not antiGrabAlive(xocu, token, char) then return end
+            local ragdolled = hum:FindFirstChild("Ragdolled")
+            if ragdolled and ragdolled.Value and not onBlobSeat() then
+                pcall(disableRagdoll, char)
+                pcall(function() hum:ChangeState(Enum.HumanoidStateType.GettingUp) end)
+            end
+            beginEscape()
+        end)
+
+        beginEscape()
+    end
+
+    function xocuStart()
+        xocuClean()
+        xocuApply(P.Character)
+    end
+
+    -- ============================================================
+    -- ANTI GRAB MODE: RAGDOLL  (nrd)
+    -- ============================================================
+    local nrd = { conns = {}, proc = false, active = false, walk = false }
+
+    function nrdDisableLimbs(char)
+        for _, v in pairs(char:GetChildren()) do
+            if v:IsA("BasePart") and v:FindFirstChild("BallSocketConstraint") and v.Name ~= "Head" then
+                pcall(function() v.BallSocketConstraint.Enabled = false end)
+                if v:FindFirstChild("RagdollLimbPart") then
+                    pcall(function() v.RagdollLimbPart.WeldConstraint.Enabled = false end)
+                end
+            end
+        end
+    end
+
+    function nrdClean()
+        nrd.active = false
+        nrd.proc = false
+        nrd.walk = false
+        nrd._token = (nrd._token or 0) + 1
+        disconnectAntiGrabConnections(nrd)
+        restoreAntiGrabCharacter(P.Character)
+    end
+
+    function nrdApply(char)
+        if not char then return end
+        nrd._token = (nrd._token or 0) + 1
+        local token = nrd._token
+        disconnectAntiGrabConnections(nrd)
+        nrd.active = true
+        nrd.proc = false
+        nrd.walk = false
+
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        local head = char:FindFirstChild("Head")
+        if not (hrp and hum and head) then
+            task.spawn(function()
+                char:WaitForChild("HumanoidRootPart", 5)
+                char:WaitForChild("Humanoid", 5)
+                char:WaitForChild("Head", 5)
+                if antiGrabAlive(nrd, token, char) then nrdApply(char) end
+            end)
+            return
+        end
+
+        if not onProtectedSeat() then
+            nrdDisableLimbs(char)
+        end
+
+        local function beginEscape()
+            if nrd.proc then return end
+            if not antiGrabAlive(nrd, token, char) then return end
+            if not characterIsGrabbed(char) then return end
+            nrd.proc = true
+            task.spawn(function()
+                pcall(function()
+                    hrp.Anchored = false
+                    while antiGrabAlive(nrd, token, char) and characterIsGrabbed(char) do
+                        pcall(function()
+                            StruggleEvent:FireServer(P)
+                            RagdollRemote:FireServer(hrp, 0)
+                            hum.Sit = false
+                            hum.AutoRotate = true
+                            if hum.MoveDirection.Magnitude > 0 then
+                                hrp.CFrame = hrp.CFrame + hum.MoveDirection * 0.43
+                            end
+                            if weldOn(hrp:FindFirstChild("WeldHRP")) then
+                                head.CFrame = hrp.CFrame + Vector3.new(0, 1.35, 0)
+                            end
+                            local ragdolled = hum:FindFirstChild("Ragdolled")
+                            if ragdolled and ragdolled.Value and not onBlobSeat() then
+                                nrdDisableLimbs(char)
+                            end
+                        end)
+                        task.wait()
+                    end
+                end)
+                pcall(function() hrp.Anchored = false end)
+                if nrd._token == token then nrd.proc = false end
+                if P.Character == char and not characterIsGrabbed(char) then
+                    task.spawn(clearGrabLines)
+                end
+            end)
+        end
+
+        nrd.conns.Monitor = AntiGrabRunService.Heartbeat:Connect(function()
+            if not antiGrabAlive(nrd, token, char) then return end
+            local ragdolled = hum:FindFirstChild("Ragdolled")
+            if ragdolled and ragdolled.Value and not onBlobSeat() then
+                nrdDisableLimbs(char)
+            end
+            beginEscape()
+        end)
+
+        beginEscape()
+    end
+
+    function nrdStart()
+        nrdClean()
+        nrdApply(P.Character)
+    end
+
+    -- ============================================================
+    -- ANTI GRAB MODE: ESCAPE EVERYTHING  (cheeky)
+    -- ============================================================
+    local ACGE = false
+    local cheekyThread = nil
+
+    function checkgrab(obj)
+        if obj:FindFirstAncestor('Plots') or obj:FindFirstAncestor('Slots') or obj:FindFirstAncestor('Map') then
+            return
+        end
+        local prt = obj:FindFirstChild('SoundPart') or obj:FindFirstChild('HumanoidRootPart')
+            or obj:FindFirstChild('Main') or obj:FindFirstChild('Balloon')
+        if obj:FindFirstChild('Humanoid') then
+            if not obj.Humanoid.SeatPart then
+                if prt and prt.ReceiveAge ~= 0 then
+                    return false
+                end
+            elseif obj.Humanoid.SeatPart.Parent then
+                return checkgrab(obj.Humanoid.SeatPart.Parent)
+            end
+        elseif prt and prt.ReceiveAge ~= 0 then
+            return false
+        end
+        return true
+    end
+
+    function cheekyAntiGrab()
+        local model
+        while ACGE do
+            local char = P.Character
+            if char and char:FindFirstChild('Humanoid') then
+                for _, track in ipairs(char.Humanoid:GetPlayingAnimationTracks()) do
+                    if track.Animation.AnimationId == 'rbxassetid://7047322890' then
+                        track:Stop()
+                    end
+                end
+            end
+
+            local toyFolder = WS:FindFirstChild(P.Name .. 'SpawnedInToys')
+            if toyFolder then
+                model = toyFolder:FindFirstChild('FoodMayonnaise')
+            end
+
+            if char and not checkgrab(char) then
+                local hum = char:FindFirstChild('Humanoid')
+                local ragdolled = hum and hum:FindFirstChild('Ragdolled') and hum.Ragdolled.Value
+
+                if ragdolled or not model then
+                    pcall(function() StruggleEvent:FireServer(P) end)
+                    if hum then
+                        for _, track in ipairs(hum:GetPlayingAnimationTracks()) do
+                            if track.Animation.AnimationId == 'rbxassetid://7047322890' then
+                                track:Stop()
+                            end
+                        end
+                    end
+                else
+                    if model and model:FindFirstChild('HoldPart') then
+                        local hold = model.HoldPart
+                        if hold:FindFirstChild('HoldItemRemoteFunction') then
+                            task.spawn(function()
+                                pcall(function()
+                                    hold.HoldItemRemoteFunction:InvokeServer(model, char)
+                                end)
+                            end)
+                            pcall(function() DestroyToy:FireServer(model) end)
+                            if hum then
+                                hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+                                hum.AutoRotate = true
+                                hum.Sit = false
+                            end
+                            pcall(function()
+                                ContextActionService:UnbindAction('Escape')
+                                ContextActionService:UnbindAction('JumpRemover')
+                            end)
+                        end
+                    end
+                end
+            end
+
+            task.wait()
+        end
+    end
+
+    function cheekyCleanup()
+        local toyFolder = WS:FindFirstChild(P.Name .. 'SpawnedInToys')
+        if toyFolder then
+            local model = toyFolder:FindFirstChild('FoodMayonnaise')
+            if model then pcall(function() DestroyToy:FireServer(model) end) end
+        end
+        local char = P.Character
+        if char then
+            local hum = char:FindFirstChildOfClass('Humanoid')
+            if hum then
+                pcall(function() hum.Sit = false end)
+                pcall(function() hum.PlatformStand = false end)
+            end
+        end
+    end
+
+    function cheekyStart()
+        ACGE = true
+        if cheekyThread then task.cancel(cheekyThread) end
+        cheekyThread = task.spawn(cheekyAntiGrab)
+    end
+
+    function cheekyStop()
+        ACGE = false
+        if cheekyThread then
+            task.cancel(cheekyThread)
+            cheekyThread = nil
+        end
+        cheekyCleanup()
+    end
+
+    -- ============================================================
+    -- MODE DISPATCH / UI
+    -- ============================================================
+    function stopAll()
+        xocuClean()
+        nrdClean()
+        cheekyStop()
+    end
+
+    function startMode(m)
+        if m == "No Ragdoll" then
+            xocuStart()
+        elseif m == "Ragdoll" then
+            nrdStart()
+        else
+            cheekyStart()
+        end
+    end
+
+    -- ══════════════════════════════════════════════════════════════
+    -- UNIVERSAL SHIELD — constraint sweep + network-ownership reclaim
+    -- Runs every Heartbeat when Anti Grab is enabled (both modes).
+    -- Destroys any Weld / WeldConstraint / RopeConstraint /
+    -- SpringConstraint that originates from another player's assembly.
+    -- Also re-claims SetNetworkOwner on HRP every 60 frames.
+    -- ══════════════════════════════════════════════════════════════
+
+    local HOSTILE_CONSTRAINT_TYPES = {
+        WeldConstraint = true,
+        Weld = true,
+        RopeConstraint = true,
+        SpringConstraint = true,
+        RodConstraint = true,
+        BallSocketConstraint = true,
+        HingeConstraint = true,
+        AlignPosition = true,
+        AlignOrientation = true,
+        LinearVelocity = true,
+        AngularVelocity = true,
+        BodyVelocity = true,
+        BodyAngularVelocity = true,
+        BodyPosition = true,
+        BodyGyro = true,
+        BodyForce = true,
+        VectorForce = true,
+        Torque = true,
+    }
+
+    local universalShieldConn = nil
+    local universalShieldFrame = 0
+
+    local function isPartFromOtherPlayer(part)
+        if not part or not part:IsA("BasePart") then return false end
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= P and p.Character and part:IsDescendantOf(p.Character) then
+                return true
+            end
+        end
+        return false
+    end
+
+    local function sweepConstraints(character)
+        for _, desc in ipairs(character:GetDescendants()) do
+            if HOSTILE_CONSTRAINT_TYPES[desc.ClassName] then
+                local shouldNuke = false
+                pcall(function()
+                    if desc:IsA("WeldConstraint") or desc:IsA("Weld") then
+                        shouldNuke = isPartFromOtherPlayer(desc.Part0)
+                                  or isPartFromOtherPlayer(desc.Part1)
+                    elseif desc.ClassName == "RopeConstraint"
+                        or desc.ClassName == "SpringConstraint"
+                        or desc.ClassName == "RodConstraint"
+                        or desc.ClassName == "BallSocketConstraint"
+                        or desc.ClassName == "HingeConstraint" then
+                        local a0 = desc.Attachment0 and desc.Attachment0.Parent
+                        local a1 = desc.Attachment1 and desc.Attachment1.Parent
+                        shouldNuke = isPartFromOtherPlayer(a0)
+                                  or isPartFromOtherPlayer(a1)
+                    else
+                        -- Movers: nuke in NoRagdoll when parent is external.
+                        if antiGrabMode == "No Ragdoll" then
+                            shouldNuke = not desc.Parent:IsDescendantOf(character)
+                        else
+                            shouldNuke = isPartFromOtherPlayer(desc.Parent)
+                        end
+                    end
+                end)
+                if shouldNuke then
+                    pcall(function() desc:Destroy() end)
+                end
+            end
+        end
+    end
+
+    local function startUniversalShield()
+        if universalShieldConn then return end
+        universalShieldConn = AntiGrabRunService.Heartbeat:Connect(function()
+            if not antiGrabEnabled then return end
+            local character = P.Character
+            if not character then return end
+
+            -- Constraint sweep every frame.
+            sweepConstraints(character)
+
+            -- NoRagdoll extras: keep state from flipping, clamp fling velocity.
+            if antiGrabMode == "No Ragdoll" then
+                local hum = character:FindFirstChildOfClass("Humanoid")
+                local hrp = character:FindFirstChild("HumanoidRootPart")
+                if hum then
+                    if hum.PlatformStand then hum.PlatformStand = false end
+                    if hum.Sit          then hum.Sit = false           end
+                end
+                if hrp and hrp.AssemblyLinearVelocity.Magnitude > 220 then
+                    pcall(function()
+                        hrp.AssemblyLinearVelocity = Vector3.zero
+                    end)
+                end
+            end
+
+            -- Network ownership reclaim every 60 frames.
+            universalShieldFrame = universalShieldFrame + 1
+            if universalShieldFrame >= 60 then
+                universalShieldFrame = 0
+                local hrp = character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    pcall(function() SetNetOwner:FireServer(hrp, hrp.CFrame) end)
+                end
+            end
+        end)
+    end
+
+    local function stopUniversalShield()
+        if universalShieldConn then
+            pcall(function() universalShieldConn:Disconnect() end)
+            universalShieldConn = nil
+        end
+        universalShieldFrame = 0
+    end
+
+    -- ── UI ────────────────────────────────────────────────────────
+
+    Antis:AddToggle("AntiGrabMaster2", {
+        Text = "Anti Grab pro",
+        Default = false,
+        Callback = function(Value)
+            antiGrabEnabled = Value
+            stopAll()
+            if Value then
+                startMode(antiGrabMode)
+                startUniversalShield()
+            else
+                stopUniversalShield()
+            end
+        end,
+    })
+
+    
+end
 do
     local antiGrabV2Active = false
     local antiGrabV2Task = nil
@@ -40423,6 +41045,44 @@ Config2:AddDropdown("AGTDropdown", {
 		end
 	end,
 })
+Config2:AddDivider("Anti Grab Pro Type")
+Config2:AddDropdown("AntiGrabMode", {
+        Text = "Anti Grab Mode",
+        Values = { "No Ragdoll", "Ragdoll", "Escape Everything" },
+        Default = "No Ragdoll",
+        Callback = function(m)
+            antiGrabMode = m
+            if antiGrabEnabled then
+                stopAll()
+                startMode(m)
+            end
+        end,
+    })
+
+    
+        task.wait(0.5)
+        if not antiGrabEnabled then return end
+        
+        if antiGrabMode == "No Ragdoll" then
+            xocuClean()
+            xocuApply(P.Character)
+        elseif antiGrabMode == "Ragdoll" then
+            nrdClean()
+            nrdApply(P.Character)
+        else
+            cheekyStart()
+        end
+        
+        startUniversalShield()
+    end)
+
+    pcall(function()
+        Library:OnUnload(function()
+            antiGrabEnabled = false
+            stopAll()
+            stopUniversalShield()
+        end)
+    end)
 Config2:AddDivider("Anti in plot mode")
 
 
