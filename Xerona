@@ -41074,7 +41074,7 @@ Config2:AddDropdown("AntiGrabMode", {
         end
         
         startUniversalShield()
-    end)
+    --end)
 
     pcall(function()
         Library:OnUnload(function()
