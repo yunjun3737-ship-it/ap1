@@ -38536,7 +38536,8 @@ Antis:AddToggle("AntiGrabToggle", {
         end
     end,
 })
-do
+
+ do
     local E = _G._EchoDefence
     local P = E.P
     local WS = E.WS
@@ -38544,10 +38545,12 @@ do
     local StruggleEvent = E.StruggleEvent
     local RagdollRemote = E.RagdollRemote
     local DestroyToy = E.DestroyToy
-    local MainProtection = E.MainProtection
+    
     local Players = game:GetService("Players")
     local ContextActionService = game:GetService("ContextActionService")
     local AntiGrabRunService = game:GetService("RunService")
+
+    local SetNetOwner = RS:FindFirstChild("GrabEvents") and RS.GrabEvents:FindFirstChild("SetNetworkOwner")
 
     local antiGrabEnabled = false
     local antiGrabMode = "No Ragdoll"
@@ -38557,16 +38560,12 @@ do
         return v ~= nil and v.Value == true
     end
 
-    -- ============================================================
-    -- ANTI GRAB — SHARED HELPERS
-    -- ============================================================
     function ownerIsSet(owner)
         if not owner or not owner:IsA("StringValue") then return false end
         local ok, value = pcall(function() return owner.Value end)
         return ok and type(value) == "string" and value ~= ""
     end
 
-    -- true when ANY of our parts currently carries a non-empty PartOwner
     function headOwned(head)
         local char = head and head.Parent
         if not char then return false end
@@ -38619,7 +38618,6 @@ do
         end
     end
 
-    -- restores HRP anchor / humanoid flags AND ragdoll joints (no lingering disabled limbs)
     function restoreAntiGrabCharacter(char)
         if not char then return end
         local hrp = char:FindFirstChild("HumanoidRootPart")
@@ -38690,9 +38688,6 @@ do
         return seatKind() ~= nil
     end
 
-    -- ============================================================
-    -- ANTI GRAB MODE: NO RAGDOLL  (xocu)
-    -- ============================================================
     local xocu = { conns = {}, proc = false, active = false }
 
     function xocuClean()
@@ -38781,9 +38776,6 @@ do
         xocuApply(P.Character)
     end
 
-    -- ============================================================
-    -- ANTI GRAB MODE: RAGDOLL  (nrd)
-    -- ============================================================
     local nrd = { conns = {}, proc = false, active = false, walk = false }
 
     function nrdDisableLimbs(char)
@@ -38885,9 +38877,6 @@ do
         nrdApply(P.Character)
     end
 
-    -- ============================================================
-    -- ANTI GRAB MODE: ESCAPE EVERYTHING  (cheeky)
-    -- ============================================================
     local ACGE = false
     local cheekyThread = nil
 
@@ -39000,9 +38989,6 @@ do
         cheekyCleanup()
     end
 
-    -- ============================================================
-    -- MODE DISPATCH / UI
-    -- ============================================================
     function stopAll()
         xocuClean()
         nrdClean()
@@ -39018,14 +39004,6 @@ do
             cheekyStart()
         end
     end
-
-    -- ══════════════════════════════════════════════════════════════
-    -- UNIVERSAL SHIELD — constraint sweep + network-ownership reclaim
-    -- Runs every Heartbeat when Anti Grab is enabled (both modes).
-    -- Destroys any Weld / WeldConstraint / RopeConstraint /
-    -- SpringConstraint that originates from another player's assembly.
-    -- Also re-claims SetNetworkOwner on HRP every 60 frames.
-    -- ══════════════════════════════════════════════════════════════
 
     local HOSTILE_CONSTRAINT_TYPES = {
         WeldConstraint = true,
@@ -39079,7 +39057,6 @@ do
                         shouldNuke = isPartFromOtherPlayer(a0)
                                   or isPartFromOtherPlayer(a1)
                     else
-                        -- Movers: nuke in NoRagdoll when parent is external.
                         if antiGrabMode == "No Ragdoll" then
                             shouldNuke = not desc.Parent:IsDescendantOf(character)
                         else
@@ -39101,10 +39078,8 @@ do
             local character = P.Character
             if not character then return end
 
-            -- Constraint sweep every frame.
             sweepConstraints(character)
 
-            -- NoRagdoll extras: keep state from flipping, clamp fling velocity.
             if antiGrabMode == "No Ragdoll" then
                 local hum = character:FindFirstChildOfClass("Humanoid")
                 local hrp = character:FindFirstChild("HumanoidRootPart")
@@ -39119,12 +39094,11 @@ do
                 end
             end
 
-            -- Network ownership reclaim every 60 frames.
             universalShieldFrame = universalShieldFrame + 1
             if universalShieldFrame >= 60 then
                 universalShieldFrame = 0
                 local hrp = character:FindFirstChild("HumanoidRootPart")
-                if hrp then
+                if hrp and SetNetOwner then
                     pcall(function() SetNetOwner:FireServer(hrp, hrp.CFrame) end)
                 end
             end
@@ -39139,11 +39113,11 @@ do
         universalShieldFrame = 0
     end
 
-    -- ── UI ────────────────────────────────────────────────────────
-
+    
     Antis:AddToggle("AntiGrabMaster2", {
         Text = "Anti Grab pro",
         Default = false,
+        Tooltip = "Anti Grab pro but beta",
         Callback = function(Value)
             antiGrabEnabled = Value
             stopAll()
@@ -39157,7 +39131,8 @@ do
     })
 
     
-end
+end   
+
 do
     local antiGrabV2Active = false
     local antiGrabV2Task = nil
@@ -41050,6 +41025,8 @@ Config2:AddDropdown("AntiGrabMode", {
         Text = "Anti Grab Mode",
         Values = { "No Ragdoll", "Ragdoll", "Escape Everything" },
         Default = "No Ragdoll",
+        Multi = false,
+        Tooltip = "Anti Grab Mode",
         Callback = function(m)
             antiGrabMode = m
             if antiGrabEnabled then
@@ -41059,10 +41036,9 @@ Config2:AddDropdown("AntiGrabMode", {
         end,
     })
 
-    
+    P.CharacterAdded:Connect(function()
         task.wait(0.5)
         if not antiGrabEnabled then return end
-        
         if antiGrabMode == "No Ragdoll" then
             xocuClean()
             xocuApply(P.Character)
@@ -41072,9 +41048,9 @@ Config2:AddDropdown("AntiGrabMode", {
         else
             cheekyStart()
         end
-        
+        stopUniversalShield()
         startUniversalShield()
-    --end)
+    end)
 
     pcall(function()
         Library:OnUnload(function()
