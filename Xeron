@@ -35003,7 +35003,7 @@ Escape Timer: %*]]
                               for i = 1, 3 do
                                   tbl12.Grab(v27)
                               end
-                              applyKickLock(v27, v29)
+                              
                               flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
                     	if flag12 then
 	                      	task.delay(0.00000000000000002, tbl12.RNO, v27)
