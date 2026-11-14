@@ -34909,17 +34909,6 @@ Escape Timer: %*]]
 				local nkOffset = tbl9.NKOffset
 				return arg.Position + Vector3.new(math.cos(n36) * 10, nkOffset, math.sin(n36) * 10)
 			end
-local function applyKickLock(rootPart, targetPos)
-	if not (rootPart and rootPart.Parent) then
-		return
-	end
-	if rootPart.Anchored then
-		rootPart.Anchored = false
-	end
-	if sethiddenproperty then
-		pcall(sethiddenproperty, rootPart, "PhysicsRepRootPart", rootPart)
-	end
-end
 
 			while task.wait() do
 				if flag11 then
@@ -35011,8 +35000,7 @@ end
                                          local flag12
 
 										if not (tbl12.GetMagnitude(v23, v27) > 33) then
-                                        tbl12.Grab(v27)
-                                        applyKickLock(v27, v29)                 
+                                        tbl12.Grab(v27)        
                                         flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
 											if flag12 then
 												task.delay(0.00000000000000002, tbl12.RNO, v27)
@@ -35041,8 +35029,7 @@ end
 											end)
 										elseif tbl12.SNO(v27) then
                                               tbl12.Teleport(v27, v29)
-                                              tbl12.Grab(v27)
-                                              applyKickLock(v27, v29)                     
+                                              tbl12.Grab(v27)                  
                                               flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
 											if flag12 then
 												task.delay(0.0000000000002, tbl12.RNO, v27)
