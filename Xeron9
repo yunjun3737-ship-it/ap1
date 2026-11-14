@@ -35012,8 +35012,7 @@ end
 
 										if not (tbl12.GetMagnitude(v23, v27) > 33) then
                                         tbl12.Grab(v27)
-                                        applyKickLock(v27, v29)             
-                                        startKickKeeper(v25, v27)           
+                                        applyKickLock(v27, v29)                 
                                         flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
 											if flag12 then
 												task.delay(0.00000000000000002, tbl12.RNO, v27)
@@ -35043,8 +35042,7 @@ end
 										elseif tbl12.SNO(v27) then
                                               tbl12.Teleport(v27, v29)
                                               tbl12.Grab(v27)
-                                              applyKickLock(v27, v29)              
-                                              startKickKeeper(v25, v27)           
+                                              applyKickLock(v27, v29)                     
                                               flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
 											if flag12 then
 												task.delay(0.0000000000002, tbl12.RNO, v27)
