@@ -39115,21 +39115,20 @@ Antis:AddToggle("AntiGrabToggle", {
 
     
     Antis:AddToggle("AntiGrabMaster2", {
-        Text = "Anti Grab pro",
-        Default = false,
-        Tooltip = "Anti Grab pro but beta",
-        Callback = function(Value)
-            antiGrabEnabled = Value
-            stopAll()
-            if Value then
-                startMode(antiGrabMode)
-                startUniversalShield()
-            else
-                stopUniversalShield()
-            end
-        end,
-    })
-
+    Text = "Anti Grab Pro",
+    Default = false,
+    Tooltip = "Anti Grab Master",
+    Callback = function(Value)
+        antiGrabEnabled = Value
+        stopAll()
+        if Value then
+            startMode(antiGrabMode)
+            startUniversalShield()
+        else
+            stopUniversalShield()
+        end
+    end,
+})
     
 end   
 
@@ -41022,43 +41021,19 @@ Config2:AddDropdown("AGTDropdown", {
 })
 Config2:AddDivider("Anti Grab Pro Type")
 Config2:AddDropdown("AntiGrabMode", {
-        Text = "Anti Grab Mode",
-        Values = { "No Ragdoll", "Ragdoll", "Escape Everything" },
-        Default = "No Ragdoll",
-        Multi = false,
-        Tooltip = "Anti Grab Mode",
-        Callback = function(m)
-            antiGrabMode = m
-            if antiGrabEnabled then
-                stopAll()
-                startMode(m)
-            end
-        end,
-    })
-
-    P.CharacterAdded:Connect(function()
-        task.wait(0.5)
-        if not antiGrabEnabled then return end
-        if antiGrabMode == "No Ragdoll" then
-            xocuClean()
-            xocuApply(P.Character)
-        elseif antiGrabMode == "Ragdoll" then
-            nrdClean()
-            nrdApply(P.Character)
-        else
-            cheekyStart()
-        end
-        stopUniversalShield()
-        startUniversalShield()
-    end)
-
-    pcall(function()
-        Library:OnUnload(function()
-            antiGrabEnabled = false
+    Text = "Anti Grab Mode",
+    Values = { "No Ragdoll", "Ragdoll", "Escape Everything" },
+    Default = "No Ragdoll",
+    Multi = false,
+    Tooltip = "Anti Grab Mode",
+    Callback = function(m)
+        antiGrabMode = m
+        if antiGrabEnabled then
             stopAll()
-            stopUniversalShield()
-        end)
-    end)
+            startMode(m)
+        end
+    end,
+})
 Config2:AddDivider("Anti in plot mode")
 
 
