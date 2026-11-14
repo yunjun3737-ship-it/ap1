@@ -17470,6 +17470,7 @@ do
                             AntiBring = false,
                             AntiBlobKill = false,
 							AntiVoid = false,
+                            AntiOwner = false,
 							AutoReset = true,
 							AutoLeave = true,
 							LoopTP = false,
@@ -37030,7 +37031,7 @@ SERVER:AddButton({
 
 	do
 		local Antis = tbl15.Invincibility:AddLeftGroupbox("Antis", "brick-wall-shield")
-
+       Antis:AddDivider("안티 그랩 계열")
 		Antis:AddToggle("AntiGrab", {
 			Text = "Anti Grab",
 			Default = false,
@@ -39612,6 +39613,7 @@ do
         end
     })
 end
+
 		Antis:AddToggle("GucciAntiGrab", {
 			Text = "[GUCCI] Anti Grab",
 			Default = false,
@@ -39635,6 +39637,7 @@ end
 				tbl12.SetRuntimeToggle("AntiBlobman", arg)
 			end,
 		})
+Antis:AddDivider("안티 블롭&블롭킬 계열")
 local rs           = game:GetService("ReplicatedStorage")
 local rs2          = game:GetService("RunService")
 local Players      = game:GetService("Players")
@@ -39932,6 +39935,7 @@ Antis:AddToggle("AntiBlob", {
         end
     end,
 })
+Antis:AddDivider("안티 오너&네트워크 계열")
 		Antis:AddToggle("AntiInputLag", {
 			Text = "Anti Network Ownership",
 			Default = false,
@@ -39947,7 +39951,65 @@ Antis:AddToggle("AntiBlob", {
 			SyncToggleState = true,
 		})
 
-		Antis:AddToggle("AntiExplosion", {
+		
+do
+    local connection = nil
+
+    Antis:AddToggle("AntiOwner", {
+        Text = "Anti Owner",
+        Default = false,
+        Tooltip = "Anti Owner (Hamburger)",
+        Callback = function(enabled)
+            if connection then
+                connection:Disconnect()
+                connection = nil
+            end
+
+            if enabled then
+                connection = spilled.RunService.Heartbeat:Connect(function()
+                    task.spawn(function()
+                        pcall(function()
+                            local hrp = spilled.getRootPart()
+                            if not hrp then return end
+
+                            local FoodHamburger = spawnToy(
+                                "FoodHamburger", hrp.CFrame * CFrame.new(0, 4000000, 20)
+                            )
+
+                            if FoodHamburger and FoodHamburger.Parent then
+                                local HoldPart = FoodHamburger:WaitForChild("HoldPart", 1)
+                                if not HoldPart then
+                                    spilled.DestroyToy:FireServer(FoodHamburger)
+                                    return
+                                end
+
+                                local HoldItemRemoteFunction = HoldPart:WaitForChild("HoldItemRemoteFunction", 1)
+                                if not HoldItemRemoteFunction then
+                                    spilled.DestroyToy:FireServer(FoodHamburger)
+                                    return
+                                end
+
+                                HoldItemRemoteFunction:InvokeServer(
+                                    FoodHamburger, spilled.LocalPlayer.Character
+                                )
+                                
+                                local ping = spilled.LocalPlayer:GetNetworkPing() or 0.1
+                                task.wait(ping)
+
+                                if FoodHamburger.Parent then
+                                    spilled.DestroyToy:FireServer(FoodHamburger)
+                                end
+                            end
+                        end)
+                    end)
+                end)
+            end
+        end
+    })
+end
+  do
+  Antis:AddDivider("안티 폭탄 계열")
+Antis:AddToggle("AntiExplosion", {
 			Text = "Anti Explosion",
 			Default = false,
 			Tooltip = "Makes you not able to be exploded",
@@ -39955,7 +40017,6 @@ Antis:AddToggle("AntiBlob", {
 				tbl8.AntiExplosion = antiExplosion
 			end,
 		})
-  do
     local AntiBombRunning = false
     local AntiBombGeneration = 0
 
@@ -40169,7 +40230,15 @@ end
 				tbl12.SetRuntimeToggle("AntiKick2", arg)
 			end,
 		})
-
+        Antis:AddToggle("AutoReset", {
+			Text = "Auto Reset",
+			Default = true,
+			Tooltip = "Checks for kick frame and resets when needed",
+			Callback = function(autoReset)
+				tbl8.AutoReset = autoReset
+			end,
+		})
+Antis:AddDivider("헬퍼 안티  계열")
 		Antis:AddToggle("AntiSticky", {
 			Text = "Anti Sticky",
 			Default = false,
@@ -40225,7 +40294,7 @@ end
 				end
 			end,
 		})
-
+   Antis:AddDivider("안티 바나나 계열")
 		Antis:AddToggle("AntiBanana", {
 			Text = "Anti Banana",
 			Default = false,
@@ -40296,6 +40365,7 @@ do
         end,  
     })  
 end
+       Antis:AddDivider("안티 페인트,독 계열")
 		Antis:AddToggle("AntiPaint", {
 			Text = "Anti Paint",
 			Default = false,
@@ -40387,7 +40457,7 @@ do
             table.insert(connections, c2)
         end
     end
-
+    Antis:AddDivider("안티 마스리스,플롯,브링 계열")
     Antis:AddToggle("AntiMassless", {
         Text = "Anti Massless",
         Default = false,
@@ -40527,7 +40597,7 @@ do
             end
         end
     end
-
+     
     Antis:AddToggle("AntiBring", {
         Text = "Anti Bring",
         Default = false,
@@ -40634,7 +40704,8 @@ do
             end)
         end
     })
-end
+end  
+Antis:AddDivider("안티 렉 계열")
 		Antis:AddToggle("AntiLag", {
 			Text = "Anti Lag",
 			Default = false,
@@ -40679,7 +40750,7 @@ end
 				tbl8.AutoAntiLag = autoAntiLag
 			end,
 		})
-
+Antis:AddDivider("기타")
 		Antis:AddToggle("AntiInvis", {
 			Text = "Anti Invis",
 			Default = false,
@@ -40712,15 +40783,7 @@ end
 			end,
 		})
 
-		Antis:AddToggle("AutoReset", {
-			Text = "Auto Reset",
-			Default = true,
-			Tooltip = "Checks for kick frame and resets when needed",
-			Callback = function(autoReset)
-				tbl8.AutoReset = autoReset
-			end,
-		})
-
+		
 		Antis:AddToggle("LoopTP", {
 			Text = "Loop TP",
 			Default = false,
