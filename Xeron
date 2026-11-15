@@ -40202,6 +40202,7 @@ end
 end
 
 do
+Antis:AddDivider("안티 오너쉽 스팸 계열")
 if not State then State = {} end
 if not State.antiOwnershipConns then State.antiOwnershipConns = {} end
 if not Settings then Settings = {} end
