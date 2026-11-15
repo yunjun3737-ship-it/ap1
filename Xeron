@@ -40206,6 +40206,8 @@ Antis:AddDivider("안티 오너쉽 스팸 계열")
 Settings = Settings or {}
 Settings.Anti = Settings.Anti or {}
 Settings.Anti.AntiOwnership2 = false
+
+
 Antis:AddToggle("AntiOwnership", {
     Text = "Anti Ownership spam [PartOwner형]",
     Default = false,
@@ -40277,14 +40279,14 @@ Antis:AddToggle("AntiOwnership", {
         end
     end
 })
-
+State.antiOwnershipConns = State.antiOwnershipConns or {}
 Antis:AddToggle("AntiOwnership2", {
     Text = "Anti Ownership [IsHeld형]",
     Default = false,
     Tooltip = "오너쉽을 감지하여 탈출합니다",
     Callback = function(v)
         Settings.Anti.AntiOwnership2 = v
-        if not v then RemoteDispatcher:Flush() end
+        
 
         if v then
             pcall(function()
