@@ -40226,6 +40226,8 @@ local function GetAliveCharacter()
 
     return character
 end
+GetAliveCharacter() ~= nil
+--[[
 function Utility.isLocalAlive()
     if State.isRespawning then return false end
 
@@ -40256,7 +40258,7 @@ function Utility.isLocalAlive()
 
     return true
 end
-
+]]
 function RemoteDispatcher:_canSend(name)
     local now = tick()
     local limit = self._limits[name] or self._limits._default
