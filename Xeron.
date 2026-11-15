@@ -34859,43 +34859,8 @@ Escape Timer: %*]]
 			end
 		end)
 				 
-            
-
-                    --[[에어락]]
+  --[[에어락]]
 do
-    local frameKick = setmetatable({}, { __mode = "k" })
-
-    local function cleanKickConst(char)
-        if not char then return end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
-        local ap = hrp:FindFirstChild("KickAP")
-        local ao = hrp:FindFirstChild("KickAO")
-        if ap then pcall(function() ap:Destroy() end) end
-        if ao then pcall(function() ao:Destroy() end) end
-    end
-
-    local function unlockPlayer(player)
-        if not player then return end
-        local char, root = tbl12.Char(player)
-        if root and root.Parent then
-            pcall(function()
-                if sethiddenproperty then
-                    sethiddenproperty(root, "PhysicsRepRootPart", nil)
-                end
-            end)
-            local hum = char and char:FindFirstChildOfClass("Humanoid")
-            if hum and hum:FindFirstChild("Ragdolled") and hum.Ragdolled.Value then
-                local weld = root:FindFirstChild("WeldHRP")
-                if weld then pcall(function() weld.Enabled = true end) end
-            end
-        end
-        if char then
-            pcall(function() task.spawn(tbl12.ToggleMotor6D, char, true, true) end)
-            pcall(function() task.spawn(tbl12.ToggleCollisions, char, true) end)
-        end
-    end
-
     task.spawn(function()
         local tbl16 = {}
 
@@ -35004,7 +34969,9 @@ do
 
         while task.wait() do
             if flag11 then
-                for k in pairs(tbl16) do fn22(k) end
+                for k in pairs(tbl16) do
+                    fn22(k)
+                end
                 return
             end
 
@@ -35072,6 +35039,9 @@ do
                                     local flag12
                                     if not (tbl12.GetMagnitude(v23, v27) > 33) then
                                         for j = 1, 7 do tbl12.Grab(v27) end
+                                        if (tbl8.EKI or tbl8.EKILock) and tbl12.IsNetworkOwner(v27) then
+                                            fn21(v27, v27)
+                                        end
                                         flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
                                         if flag12 then
                                             task.delay(0.00000000000000002, tbl12.RNO, v27)
@@ -35093,6 +35063,9 @@ do
                                     elseif tbl12.SNO(v27) then
                                         tbl12.Teleport(v27, v29)
                                         for j = 1, 7 do tbl12.Grab(v27) end
+                                        if (tbl8.EKI or tbl8.EKILock) and tbl12.IsNetworkOwner(v27) then
+                                            fn21(v27, v27)
+                                        end
                                         flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
                                         if flag12 then
                                             task.delay(0.00000000000000002, function()
@@ -35125,85 +35098,9 @@ do
             end
         end
     end)
-
-    
-    RunService.Heartbeat:Connect(function()
-        if flag11 then return end
-        if not tbl8.LoopApplyMethodT then return end
-        if not tbl7.TargetMethods.Kick then return end
-        if inPlot and inPlot.Value then return end
-
-        local _, myRoot, myHum = tbl12.Char()
-        if not myRoot or not myHum or myHum.Health <= 0 then
-            for player in pairs(frameKick) do
-                cleanKickConst(tbl12.Char(player))
-                unlockPlayer(player)
-                frameKick[player] = nil
-            end
-            return
-        end
-
-        for player in pairs(frameKick) do
-            if not tbl7.SelectedPlayers[player] or not player.Parent then
-                cleanKickConst(tbl12.Char(player))
-                unlockPlayer(player)
-                frameKick[player] = nil
-            end
-        end
-
-        local targets = {}
-        for player in pairs(tbl7.SelectedPlayers) do
-            if player and player.Parent and player:IsA("Player") then
-                table.insert(targets, player)
-            end
-        end
-        if #targets == 0 then return end
-
-        for i, target in ipairs(targets) do
-            local tChar, tRoot, tHum = tbl12.Char(target)
-            if tRoot and tHum and tHum.Health > 0 and tChar then
-                local kickAP = tRoot:FindFirstChild("KickAP")
-                if not kickAP then
-                    kickAP = Instance.new("BodyPosition")
-                    kickAP.Name = "KickAP"
-                    kickAP.D = 200
-                    kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                    kickAP.Parent = tRoot
-                end
-                local kickAO = tRoot:FindFirstChild("KickAO")
-                if not kickAO then
-                    kickAO = Instance.new("BodyGyro")
-                    kickAO.Name = "KickAO"
-                    kickAO.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-                    kickAO.D = 200
-                    kickAO.CFrame = CFrame.new()
-                    kickAO.Parent = tRoot
-                end
-
-                local angle = (math.pi * 2 / #targets) * (i - 1)
-                local offY = tbl9.NKOffset or 15
-                kickAP.Position = myRoot.Position + Vector3.new(math.cos(angle) * 10, offY, math.sin(angle) * 10)
-
-                local weld = tRoot:FindFirstChild("WeldHRP")
-                if weld then weld.Enabled = false end
-
-                tbl12.Grab(tRoot)
+end          
 
                 
-                if (tbl8.EKI or tbl8.EKILock) and tbl12.IsNetworkOwner(tRoot) then
-                    tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
-                    tbl7.EKILockTargets[target] = true
-                    pcall(sethiddenproperty, tRoot, "PhysicsRepRootPart", tRoot)
-                end
-                
-
-                tbl12.RNO(tRoot)
-                frameKick[target] = true
-            end
-        end
-    end)
-end
-
 		lib.ForceCheckbox = true
 
 		v19 = lib:CreateWindow({
