@@ -40202,146 +40202,12 @@ end
 end
 
 do
-Antis:AddDivider("안티 오너쉽 스팸 계열")
-Settings = Settings or {}
-Settings.Anti = Settings.Anti or {}
-Settings.Anti.AntiOwnership2 = false
+if not State then State = {} end
+if not State.antiOwnershipConns then State.antiOwnershipConns = {} end
+if not Settings then Settings = {} end
+if not Settings.Anti then Settings.Anti = {} end
 
-
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LocalPlayer = Players.LocalPlayer
-
-local AntiOwn2 = {
-    Enabled = false,
-    Changed = nil,
-    CharacterAdded = nil,
-    Task = nil,
-    SavedCFrame = nil
-}
-
-local function AntiOwn2Alive()
-    local char = LocalPlayer.Character
-    local hum = char and char:FindFirstChildOfClass("Humanoid")
-    return hum and hum.Health > 0
-end
-
-local function AntiOwn2Restore()
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-
-    if hrp then
-        pcall(function()
-            hrp.Anchored = false
-
-            if AntiOwn2.SavedCFrame then
-                hrp.CFrame = AntiOwn2.SavedCFrame
-            end
-        end)
-    end
-end
-
-local function AntiOwn2Stop()
-    AntiOwn2.Enabled = false
-
-    if AntiOwn2.Changed then
-        AntiOwn2.Changed:Disconnect()
-        AntiOwn2.Changed = nil
-    end
-
-    if AntiOwn2.CharacterAdded then
-        AntiOwn2.CharacterAdded:Disconnect()
-        AntiOwn2.CharacterAdded = nil
-    end
-
-    if AntiOwn2.Task then
-        task.cancel(AntiOwn2.Task)
-        AntiOwn2.Task = nil
-    end
-
-    AntiOwn2Restore()
-end
-
-Antis:AddToggle("AntiOwnership2", {
-    Text = "Anti Ownership [IsHeld형]",
-    Default = false,
-    Tooltip = "IsHeld 상태를 감지합니다.",
-
-    Callback = function(v)
-        AntiOwn2Stop()
-
-        if not v then
-            return
-        end
-
-        AntiOwn2.Enabled = true
-
-        task.spawn(function()
-            local success, err = pcall(function()
-                local isHeld = LocalPlayer:WaitForChild("IsHeld", 10)
-                local event = ReplicatedStorage
-                    :WaitForChild("CharacterEvents", 10)
-                    :WaitForChild("Struggle", 10)
-
-                assert(isHeld, "IsHeld not found")
-                assert(event, "Struggle not found")
-
-                local function StartEscape()
-                    if AntiOwn2.Task then return end
-
-                    local char = LocalPlayer.Character
-                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-
-                    if hrp then
-                        AntiOwn2.SavedCFrame = hrp.CFrame
-                        hrp.Anchored = true
-                    end
-
-                    AntiOwn2.Task = task.spawn(function()
-                        while AntiOwn2.Enabled
-                            and isHeld.Parent
-                            and isHeld.Value
-                            and AntiOwn2Alive() do
-
-                            pcall(function()
-                                event:FireServer(LocalPlayer)
-                            end)
-
-                            task.wait(0.1)
-                        end
-
-                        AntiOwn2Restore()
-                        AntiOwn2.Task = nil
-                    end)
-                end
-
-                AntiOwn2.Changed = isHeld.Changed:Connect(function(value)
-                    if not AntiOwn2.Enabled then return end
-
-                    if value then
-                        StartEscape()
-                    else
-                        AntiOwn2Restore()
-                    end
-                end)
-
-                AntiOwn2.CharacterAdded =
-                    LocalPlayer.CharacterAdded:Connect(function()
-                        AntiOwn2.SavedCFrame = nil
-                    end)
-
-                if isHeld.Value then
-                    StartEscape()
-                end
-            end)
-
-            if not success then
-                warn("[AntiOwnership2] " .. tostring(err))
-                AntiOwn2Stop()
-            end
-        end)
-    end
-})
+local Antis = Antis or library
 
 Antis:AddToggle("AntiOwnership", {
     Text = "Anti Ownership spam [PartOwner형]",
@@ -40349,214 +40215,179 @@ Antis:AddToggle("AntiOwnership", {
     Tooltip = "오너쉽 스팸을 방지합니다.",
     Callback = function(v)
         Settings.Anti.AntiOwnership = v
-        if not v then RemoteDispatcher:Flush() end
-
-        if v then
-            State.antiOwnershipConns["task"] = task.spawn(function()
-                pcall(function()
-                    local Struggle = ReplicatedStorage:WaitForChild("CharacterEvents"):WaitForChild("Struggle")
-
-                    while Settings.Anti.AntiOwnership do
-                        task.wait(0.1)
-                        if not Utility.isLocalAlive() then continue end
-
-                        local character = LocalPlayer.Character
-                        if character and character:FindFirstChild("Head") then
-                            local head = character.Head
-
-                            if head:FindFirstChild("PartOwner") then
-                                RemoteDispatcher:Fire(Struggle, LocalPlayer)
-
-                                for _, part in pairs(character:GetChildren()) do
-                                    if part:IsA("BasePart") then
-                                        pcall(function()
-                                            part.Anchored = true
-                                        end)
-                                    end
-                                end
-
-                                local isHeld = LocalPlayer:FindFirstChild("IsHeld")
-
-                                while isHeld and isHeld.Value
-                                    and Settings.Anti.AntiOwnership
-                                    and Utility.isLocalAlive() do
-                                    task.wait(0.05)
-                                end
-
-                                for _, part in pairs(character:GetChildren()) do
-                                    if part:IsA("BasePart") then
-                                        pcall(function()
-                                            part.Anchored = false
-                                        end)
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end)
-            end)
-        else
-            if State.antiOwnershipConns["task"] then
-                task.cancel(State.antiOwnershipConns["task"])
-                State.antiOwnershipConns["task"] = nil
+        
+        if not v then 
+            if RemoteDispatcher and RemoteDispatcher.Flush then 
+                RemoteDispatcher:Flush() 
             end
-
+            
+            if State.antiOwnershipConns["AntiOwn1Task"] then
+                task.cancel(State.antiOwnershipConns["AntiOwn1Task"])
+                State.antiOwnershipConns["AntiOwn1Task"] = nil
+            end
+            
             local char = LocalPlayer.Character
             if char then
                 for _, part in pairs(char:GetChildren()) do
                     if part:IsA("BasePart") then
-                        pcall(function()
-                            part.Anchored = false
-                        end)
+                        pcall(function() part.Anchored = false end)
                     end
                 end
             end
+            return
         end
-    end
-})
-State.antiOwnershipConns = State.antiOwnershipConns or {}
-Antis:AddToggle("AntiOwnership2", {
-    Text = "Anti Ownership [IsHeld형]",
-    Default = false,
-    Tooltip = "오너쉽을 감지하여 탈출합니다",
-    Callback = function(v)
-        Settings.Anti.AntiOwnership2 = v
-        
 
-        if v then
-            pcall(function()
-                local plr = LocalPlayer
-                local isHeld = plr:WaitForChild("IsHeld", 10)
+        if State.antiOwnershipConns["AntiOwn1Task"] then return end
 
-                if not isHeld then
-                    warn("Anti Ownership 2: IsHeld not found")
-                    return
+        State.antiOwnershipConns["AntiOwn1Task"] = task.spawn(function()
+            while Settings.Anti.AntiOwnership do
+                task.wait(0.1)
+                
+                if Utility and Utility.isLocalAlive and not Utility.isLocalAlive() then 
+                    continue 
                 end
 
-                local struggleEvent = ReplicatedStorage:WaitForChild("CharacterEvents"):WaitForChild("Struggle")
-                local savedCFrame = nil
+                local character = LocalPlayer.Character
+                if character and character:FindFirstChild("Head") then
+                    local head = character.Head
 
-                State.antiOwnershipConns["AntiOwn2Conn"] = isHeld.Changed:Connect(function(heldState)
-                    if not Utility.isLocalAlive() then return end
-
-                    local char = plr.Character
-                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-
-                    if heldState then
-                        if hrp then
-                            savedCFrame = hrp.CFrame
-                            pcall(function()
-                                hrp.Anchored = true
-                            end)
+                    if head:FindFirstChild("PartOwner") then
+                        if struggleEvent then
+                            RemoteDispatcher:Fire(struggleEvent, LocalPlayer)
                         end
 
-                        State.antiOwnershipConns["AntiOwn2Task"] = task.spawn(function()
-                            while isHeld and isHeld.Value
-                                and Settings.Anti.AntiOwnership2
-                                and Utility.isLocalAlive() do
-                                RemoteDispatcher:Fire(struggleEvent, plr)
-                                task.wait(0.05)
+                        for _, part in pairs(character:GetChildren()) do
+                            if part:IsA("BasePart") then
+                                pcall(function() part.Anchored = true end)
                             end
-
-                            if hrp and hrp.Parent then
-                                pcall(function()
-                                    hrp.Anchored = false
-
-                                    if savedCFrame and Utility.isLocalAlive() then
-                                        hrp.CFrame = savedCFrame
-                                    end
-                                end)
-                            end
-                        end)
-                    else
-                        if hrp and hrp.Parent then
-                            pcall(function()
-                                hrp.Anchored = false
-
-                                if savedCFrame and Utility.isLocalAlive() then
-                                    hrp.CFrame = savedCFrame
-                                end
-                            end)
                         end
-                    end
-                end)
 
-                State.antiOwnershipConns["AntiOwn2CharConn"] = plr.CharacterAdded:Connect(function(char)
-                    savedCFrame = nil
-                    task.wait(0.6)
-
-                    if Utility.isLocalAlive() then
-                        pcall(function()
-                            local hrp = char:WaitForChild("HumanoidRootPart", 5)
-                            if hrp then
-                                savedCFrame = hrp.CFrame
-                            end
-                        end)
-                    end
-                end)
-
-                if isHeld.Value then
-                    local char = plr.Character
-                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-
-                    if hrp then
-                        savedCFrame = hrp.CFrame
-                        pcall(function()
-                            hrp.Anchored = true
-                        end)
-                    end
-
-                    State.antiOwnershipConns["AntiOwn2Task"] = task.spawn(function()
-                        while isHeld and isHeld.Value
-                            and Settings.Anti.AntiOwnership2 do
-                            RemoteDispatcher:Fire(struggleEvent, plr)
+                        local isHeld = LocalPlayer:FindFirstChild("IsHeld")
+                        while isHeld and isHeld.Value and Settings.Anti.AntiOwnership and Utility and Utility.isLocalAlive and Utility.isLocalAlive() do
                             task.wait(0.05)
                         end
 
-                        if hrp and hrp.Parent then
-                            pcall(function()
-                                hrp.Anchored = false
-
-                                if savedCFrame then
-                                    hrp.CFrame = savedCFrame
-                                end
-                            end)
+                        for _, part in pairs(character:GetChildren()) do
+                            if part:IsA("BasePart") then
+                                pcall(function() part.Anchored = false end)
+                            end
                         end
-                    end)
+                    end
                 end
-            end)
-        else
+            end
+        end)
+    end
+})
+
+Antis:AddToggle("AntiOwnership2", {
+    Text = "Anti Ownership [IsHeld형]",
+    Default = false,
+    Tooltip = "IsHeld 상태를 감지하여 탈출합니다.",
+    Callback = function(v)
+        Settings.Anti.AntiOwnership2 = v
+        
+        if not v then
             if State.antiOwnershipConns["AntiOwn2Conn"] then
-                pcall(function()
-                    State.antiOwnershipConns["AntiOwn2Conn"]:Disconnect()
-                end)
+                pcall(function() State.antiOwnershipConns["AntiOwn2Conn"]:Disconnect() end)
                 State.antiOwnershipConns["AntiOwn2Conn"] = nil
             end
-
             if State.antiOwnershipConns["AntiOwn2Task"] then
                 task.cancel(State.antiOwnershipConns["AntiOwn2Task"])
                 State.antiOwnershipConns["AntiOwn2Task"] = nil
             end
-
-            if State.antiOwnershipConns["AntiOwn2CharConn"] then
-                pcall(function()
-                    State.antiOwnershipConns["AntiOwn2CharConn"]:Disconnect()
-                end)
-                State.antiOwnershipConns["AntiOwn2CharConn"] = nil
-            end
-
             local char = LocalPlayer.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
-
             if hrp then
-                pcall(function()
-                    hrp.Anchored = false
-                end)
+                pcall(function() hrp.Anchored = false end)
             end
+            return
         end
+
+        task.spawn(function()
+            local success, err = pcall(function()
+                local isHeld = isHeldValue or LocalPlayer:WaitForChild("IsHeld", 10)
+                if not isHeld then return end
+                
+                local savedCFrame = nil
+
+                local function restorePosition()
+                    local char = LocalPlayer.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                    if hrp and hrp.Parent then
+                        pcall(function()
+                            hrp.Anchored = false
+                            if savedCFrame and Utility and Utility.isLocalAlive and Utility.isLocalAlive() then
+                                hrp.CFrame = savedCFrame
+                            end
+                        end)
+                    end
+                end
+
+                local function attemptEscape()
+                    if State.antiOwnershipConns["AntiOwn2Task"] then return end
+                    
+                    local char = LocalPlayer.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                    
+                    if hrp then
+                        savedCFrame = hrp.CFrame
+                        pcall(function() hrp.Anchored = true end)
+                    end
+
+                    State.antiOwnershipConns["AntiOwn2Task"] = task.spawn(function()
+                        while (isHeld and isHeld.Value) do
+                            if not Settings.Anti.AntiOwnership2 then break end
+                            if Utility and Utility.isLocalAlive and not Utility.isLocalAlive() then break end
+                            
+                            if struggleEvent and RemoteDispatcher then
+                                RemoteDispatcher:Fire(struggleEvent, LocalPlayer)
+                            end
+                            task.wait(0.05)
+                        end
+                        
+                        restorePosition()
+                        State.antiOwnershipConns["AntiOwn2Task"] = nil
+                    end)
+                end
+
+                State.antiOwnershipConns["AntiOwn2Conn"] = isHeld.Changed:Connect(function(heldState)
+                    if not Settings.Anti.AntiOwnership2 then return end
+                    if Utility and Utility.isLocalAlive and not Utility.isLocalAlive() then return end
+
+                    if heldState then
+                        attemptEscape()
+                    else
+                        restorePosition()
+                    end
+                end)
+
+                if State.antiOwnershipConns["AntiOwn2CharConn"] then
+                    State.antiOwnershipConns["AntiOwn2CharConn"]:Disconnect()
+                end
+                State.antiOwnershipConns["AntiOwn2CharConn"] = LocalPlayer.CharacterAdded:Connect(function(char)
+                    savedCFrame = nil
+                    task.wait(0.6)
+                    if Utility and Utility.isLocalAlive and Utility.isLocalAlive() then
+                        local hrp = char:WaitForChild("HumanoidRootPart", 5)
+                        if hrp then savedCFrame = hrp.CFrame end
+                    end
+                end)
+
+                if isHeld.Value then
+                    attemptEscape()
+                end
+            end)
+
+            if not success then
+                warn("[AntiOwnership2] Error: " .. tostring(err))
+                Settings.Anti.AntiOwnership2 = false
+            end
+        end)
     end
 })
 end
+                    
+
   do
   Antis:AddDivider("안티 폭탄,불 계열")
 Antis:AddToggle("AntiExplosion", {
