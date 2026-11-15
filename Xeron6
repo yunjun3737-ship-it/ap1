@@ -34873,45 +34873,40 @@ Escape Timer: %*]]
 			end
 
 			local function fn22(arg)
-				if not arg then
-					return
-				end
-            
-         if tbl7.EKILockActiveTarget == arg then
-              tbl7.EKILockActiveTarget = nil
-                  end
-				local v22, v23, v24 = tbl12.Char(arg)
-
-				if v23 then
-					local kickAP = v23:FindFirstChild("KickAP")
-					local kickAO = v23:FindFirstChild("KickAO")
-					local weldHRP = v23:FindFirstChild("WeldHRP")
-
-					if kickAP then
-						kickAP:Destroy()
-					end
-
-					if kickAO then
-						kickAO:Destroy()
-					end
-
-					if weldHRP and v24:FindFirstChild("Ragdolled") and v24.Ragdolled.Value then
-	weldHRP.Enabled = true
-end
-
-if tbl12.IsNetworkOwner(v23) then
-	
-	if not tbl8.EKILock or not tbl7.EKILockTargets or not tbl7.EKILockTargets[arg] then
-		fn21(v23, nil)
+	if not arg then
+		return
 	end
-	
-end
+	local v22, v23, v24 = tbl12.Char(arg)
 
-				if v22 then
-					task.spawn(tbl12.ToggleMotor6D, v22, true, true)
-					task.spawn(tbl12.ToggleCollisions, v22, true)
-				end
+	if v23 then
+		local kickAP = v23:FindFirstChild("KickAP")
+		local kickAO = v23:FindFirstChild("KickAO")
+		local weldHRP = v23:FindFirstChild("WeldHRP")
+
+		if kickAP then
+			kickAP:Destroy()
+		end
+
+		if kickAO then
+			kickAO:Destroy()
+		end
+
+		if weldHRP and v24:FindFirstChild("Ragdolled") and v24.Ragdolled.Value then
+			weldHRP.Enabled = true
+		end
+
+		if tbl12.IsNetworkOwner(v23) then
+			if not tbl8.EKILock or not tbl7.EKILockTargets or not tbl7.EKILockTargets[arg] then
+				fn21(v23, nil)
 			end
+		end
+	end
+
+	if v22 then
+		task.spawn(tbl12.ToggleMotor6D, v22, true, true)
+		task.spawn(tbl12.ToggleCollisions, v22, true)
+	end
+end
 -- [[킥루프]]
 			local function fn23(arg, arg2, arg3)
 				local n36 = 6.2831853071795862 / arg3 * (arg2 - 1)
@@ -35087,9 +35082,9 @@ end
     end
     
     if tbl8.EKILock then
-        tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
-        tbl7.EKILockTargets[v25] = true
-    end
+    tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
+    tbl7.EKILockTargets[v25] = true
+end
     
     flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
     if flag12 then
