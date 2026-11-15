@@ -34863,26 +34863,25 @@ Escape Timer: %*]]
 			local tbl16 = {}
 
 			local function fn21(arg, arg2)
-    if not arg then return end
-    
-        if tbl8.EKILock then
-        local player = Players:GetPlayerFromCharacter(arg.Parent)
-        if player then
-            tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
-            if arg2 then
-                tbl7.EKILockTargets[player] = true  -- 락 켜기 (원본이 락을 걸 때)
-            else
-                tbl7.EKILockTargets[player] = nil   -- 락 끄기 (원본이 락을 풀 때)
-            end
-        end
-    end
-    
+		if tbl8.EKILock and arg and arg.Parent then
+		local player = Players:GetPlayerFromCharacter(arg.Parent)
+		if player then
+			tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
+			if arg2 then
+				tbl7.EKILockTargets[player] = true
+			else
+				tbl7.EKILockTargets[player] = nil
+			end
+		end
+	end
+	
+	if not arg or not tbl8.EKI then
+		return
+	end
 
-    
-    if not tbl8.EKI then return end
-    return sethiddenproperty and pcall(function()
-        sethiddenproperty(arg, "PhysicsRepRootPart", arg2)
-    end)
+	return sethiddenproperty and pcall(function()
+		sethiddenproperty(arg, "PhysicsRepRootPart", arg2)
+	end)
 end
 	local v22, v23, v24 = tbl12.Char(arg)
 
