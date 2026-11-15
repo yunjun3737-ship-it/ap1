@@ -35110,7 +35110,7 @@ end
     tbl12.RepositionLimbs(v26, true)
 
     
-task.delay(0.7, function()
+task.delay(0.8, function()
     if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
         if tbl8.EKILock then
             tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
@@ -35122,7 +35122,7 @@ task.delay(0.7, function()
 end)
 
 
-task.delay(0.5, function()
+task.delay(0.6, function()
     if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
         if tbl8.EKILock then
             tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
@@ -35170,7 +35170,7 @@ elseif tbl12.SNO(v27) then
     tbl12.ToggleCollisions(v26, false)
     tbl12.RepositionLimbs(v26, true)
 
-    task.delay(0.5, function()
+    task.delay(0.27, function()
         if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
             fn21(v27, v27)
         end
