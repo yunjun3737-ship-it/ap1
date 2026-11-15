@@ -35141,17 +35141,18 @@ end
                                          local flag12
 
 										
-                                        if not (tbl12.GetMagnitude(v23, v27) > 33) then
+                                        
+    
+
+    if not (tbl12.GetMagnitude(v23, v27) > 33) then
     for i = 1, 6 do
         tbl12.Grab(v27)
     end
-    
     
     if tbl8.EKILock then
         tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
         tbl7.EKILockTargets[v25] = true
     end
-    
     
     flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
     if flag12 then
@@ -35164,36 +35165,34 @@ end
             end
         end)
     end
-											if tbl8.RagdollInNK then
-												task.spawn(tbl12.Ragdoll, v26)
-											end
 
-											if tbl8.DeleteShurInNK then
-												task.spawn(tbl12.RemoveSticky, v26)
-											end
+    if tbl8.RagdollInNK then
+        task.spawn(tbl12.Ragdoll, v26)
+    end
 
-											tbl12.ToggleCollisions(v26, false)
-											tbl12.RepositionLimbs(v26, true)
+    if tbl8.DeleteShurInNK then
+        task.spawn(tbl12.RemoveSticky, v26)
+    end
 
-											task.delay(0.6, function()
-												if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
-													fn21(v27, v27)
-												end
-											end)
-										elseif tbl12.SNO(v27) then
-                                    tbl1elseif tbl12.SNO(v27) then
+    tbl12.ToggleCollisions(v26, false)
+    tbl12.RepositionLimbs(v26, true)
+
+    task.delay(0.6, function()
+        if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
+            fn21(v27, v27)
+        end
+    end)
+elseif tbl12.SNO(v27) then
     tbl12.Teleport(v27, v29)
     for i = 1, 6 do
         tbl12.Grab(v27)
     end
-    
     
     if tbl8.EKILock then
         tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
         tbl7.EKILockTargets[v25] = true
     end
     
-
     flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
     if flag12 then
         task.delay(0.00000000000000002, function()
@@ -35209,25 +35208,26 @@ end
             end
         end)
     end
+    
+    if tbl8.RagdollInNK then
+        task.spawn(tbl12.Ragdoll, v26)
+    end
 
-											if tbl8.RagdollInNK then
-												task.spawn(tbl12.Ragdoll, v26)
-											end
+    if tbl8.DeleteShurInNK then
+        task.spawn(tbl12.RemoveSticky, v26)
+    end
 
-											if tbl8.DeleteShurInNK then
-												task.spawn(tbl12.RemoveSticky, v26)
-											end
+    tbl12.ToggleCollisions(v26, false)
+    tbl12.RepositionLimbs(v26, true)
 
-											tbl12.ToggleCollisions(v26, false)
-											tbl12.RepositionLimbs(v26, true)
+    task.delay(0.27, function()
+        if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
+            fn21(v27, v27)
+        end
+    end)
+else
+    fn21(v27, nil)
 
-											task.delay(0.27, function()
-												if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
-													fn21(v27, v27)
-												end
-											end)
-										else
-											fn21(v27, nil)
 										end
 									end
 								end
