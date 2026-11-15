@@ -35140,7 +35140,7 @@ end
                                         
                                          local flag12
 
-										if not (tbl12.GetMagnitude(v23, v27) > 33) then
+										
                                         if not (tbl12.GetMagnitude(v23, v27) > 33) then
     for i = 1, 6 do
         tbl12.Grab(v27)
