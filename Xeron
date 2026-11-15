@@ -41659,8 +41659,8 @@ Config2:AddDropdown("AntiInPlotsType", {
 		})
 
 		v21:AddToggle("EKIToggle", {
-			Text = "에어락",
-			Risky = true,
+			Text = "에어락 [PCLD LOCK]",
+			Risky = false,
 			Default = tbl8.EKI,
 			Tooltip = "킥을 개선하지만, 매우 불편할 수 있습니다 이것은 좆같은 실행기도 효과가 없습니다.",
 			DisabledTooltip = "Your executor does not support this feature!",
@@ -41670,10 +41670,10 @@ Config2:AddDropdown("AntiInPlotsType", {
 			end,
 		})
       v21:AddToggle("EKILockToggle", {
-    Text = "airlock 강화",
+    Text = "에어락 [Anti-Grab Bypass]",
     Risky = true,
     Default = false,
-    Tooltip = "타겟의 PCLD 추적을 매 프레임 강제로 차단합니다. 기존 airlock과 독립적으로 동작합니다.",
+    Tooltip = "타겟의 PCLD 추적을 매 프레임 강제로 차단합니다. 기존 에어락과 독립적으로 동작합니다.",
     DisabledTooltip = "Your executor does not support this feature!",
     Disabled = typeof(sethiddenproperty) ~= "function",
     Callback = function(arg)
