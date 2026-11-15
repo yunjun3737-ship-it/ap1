@@ -34876,6 +34876,10 @@ Escape Timer: %*]]
 				if not arg then
 					return
 				end
+            
+         if tbl7.EKILockActiveTarget == arg then
+              tbl7.EKILockActiveTarget = nil
+                  end
 				local v22, v23, v24 = tbl12.Char(arg)
 
 				if v23 then
@@ -34912,20 +34916,47 @@ Escape Timer: %*]]
 				return arg.Position + Vector3.new(math.cos(n36) * 10, nkOffset, math.sin(n36) * 10)
 			end
 
-       if not tbl7.EKILockHeartbeat then
+if not tbl7.EKILockHeartbeat then
     tbl7.EKILockLocked = tbl7.EKILockLocked or setmetatable({}, { __mode = "k" })
+    tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
+    
     tbl7.EKILockHeartbeat = RunService.Heartbeat:Connect(function()
         if flag11 then return end
-        local active = tbl8.EKILock and tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick
-        if active then
-            for player in pairs(tbl7.SelectedPlayers) do
-                if player and player.Parent then
+        local mainActive = tbl8.EKILock and tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick
+        
+        
+        if mainActive then
+            for player in pairs(tbl7.EKILockTargets) do
+                if player and player.Parent and tbl7.SelectedPlayers[player] then
                     local _, hrp = tbl12.Char(player)
-                    if hrp and hrp.Parent and tbl12.IsNetworkOwner(hrp) then
+                    if hrp and hrp.Parent then
                         tbl7.EKILockLocked[player] = true
+                        local char = hrp.Parent
+                        
+                        
+                        if not tbl12.IsNetworkOwner(hrp) and tbl12.SNO then
+                            pcall(tbl12.SNO, hrp, 0.1)
+                        end
+                        
+                        
+                        if char then
+                            for _, c in ipairs(char:GetDescendants()) do
+                                if c:IsA("BodyPosition") or c:IsA("AlignPosition") or c:IsA("BodyVelocity") or c:IsA("LinearVelocity") then
+                                    c:Destroy()
+                                end
+                            end
+                        end
+                        
+                        
+                        local hum = char and char:FindFirstChildWhichIsA("Humanoid")
+                        if hum then
+                            hum.PlatformStand = true
+                            hum.AutoRotate = false
+                            if hum.Sit then hum.Sit = false end
+                        end
+                        
                         
                         pcall(sethiddenproperty, hrp, "PhysicsRepRootPart", hrp)
-                        local char = hrp.Parent
                         if char then
                             for _, d in ipairs(char:GetDescendants()) do
                                 if d:IsA("BasePart") and (d.Name == "RagdollLimbPart" or d.Name == "RagdollTouchedHitbox" or d.Name == "FirePlayerPart") then
@@ -34933,24 +34964,54 @@ Escape Timer: %*]]
                                 end
                             end
                         end
+                        
+                        
                         hrp.AssemblyLinearVelocity = Vector3.zero
                         hrp.AssemblyAngularVelocity = Vector3.zero
+                        
+                        if not tbl12.IsNetworkOwner(hrp) then
+                            local lockPos = hrp:FindFirstChild("EKILockPos")
+                            if lockPos then
+                                hrp.CFrame = lockPos.Value -- 넷오너 뺏겨도 위치 강제 고정
+                            end
+                        else
+                            local lockPos = hrp:FindFirstChild("EKILockPos")
+                            if not lockPos then
+                                lockPos = Instance.new("CFrameValue")
+                                lockPos.Name = "EKILockPos"
+                                lockPos.Parent = hrp
+                            end
+                            lockPos.Value = hrp.CFrame
+                        end
                     end
+                else
+                    tbl7.EKILockTargets[player] = nil -- 유효하지 않은 타겟 제거
                 end
             end
         end
         
         for player in pairs(tbl7.EKILockLocked) do
-            if not active or not tbl7.SelectedPlayers[player] or not player.Parent then
+            local isStillTarget = mainActive and tbl7.EKILockTargets[player] and player.Parent and tbl7.SelectedPlayers[player]
+            
+            if not isStillTarget then
                 local _, hrp = tbl12.Char(player)
                 if hrp and hrp.Parent then
                     pcall(sethiddenproperty, hrp, "PhysicsRepRootPart", nil)
                     local char = hrp.Parent
-                    for _, d in ipairs(char:GetDescendants()) do
-                        if d:IsA("BasePart") and (d.Name == "RagdollLimbPart" or d.Name == "RagdollTouchedHitbox" or d.Name == "FirePlayerPart") then
-                            pcall(sethiddenproperty, d, "PhysicsRepRootPart", nil)
+                    if char then
+                        for _, d in ipairs(char:GetDescendants()) do
+                            if d:IsA("BasePart") and (d.Name == "RagdollLimbPart" or d.Name == "RagdollTouchedHitbox" or d.Name == "FirePlayerPart") then
+                                pcall(sethiddenproperty, d, "PhysicsRepRootPart", nil)
+                            end
+                        end
+                        local hum = char:FindFirstChildWhichIsA("Humanoid")
+                        if hum then
+                            hum.PlatformStand = false
+                            hum.AutoRotate = true
                         end
                     end
+                    local lockPos = hrp:FindFirstChild("EKILockPos")
+                    if lockPos then lockPos:Destroy() end
                 end
                 tbl7.EKILockLocked[player] = nil
             end
@@ -34969,11 +35030,20 @@ Escape Timer: %*]]
                     if hrp and hrp.Parent then
                         pcall(sethiddenproperty, hrp, "PhysicsRepRootPart", nil)
                         local char = hrp.Parent
-                        for _, d in ipairs(char:GetDescendants()) do
-                            if d:IsA("BasePart") and (d.Name == "RagdollLimbPart" or d.Name == "RagdollTouchedHitbox" or d.Name == "FirePlayerPart") then
-                                pcall(sethiddenproperty, d, "PhysicsRepRootPart", nil)
+                        if char then
+                            for _, d in ipairs(char:GetDescendants()) do
+                                if d:IsA("BasePart") and (d.Name == "RagdollLimbPart" or d.Name == "RagdollTouchedHitbox" or d.Name == "FirePlayerPart") then
+                                    pcall(sethiddenproperty, d, "PhysicsRepRootPart", nil)
+                                end
+                            end
+                            local hum = char:FindFirstChildWhichIsA("Humanoid")
+                            if hum then
+                                hum.PlatformStand = false
+                                hum.AutoRotate = true
                             end
                         end
+                        local lockPos = hrp:FindFirstChild("EKILockPos")
+                        if lockPos then lockPos:Destroy() end
                     end
                 end
             end
@@ -35071,22 +35141,29 @@ end
                                          local flag12
 
 										if not (tbl12.GetMagnitude(v23, v27) > 33) then
-                              for i = 1, 6 do
-                                  tbl12.Grab(v27)
-                              end
-                              
-                              flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
-                    	if flag12 then
-	                      	task.delay(0.00000000000000002, tbl12.RNO, v27)
-	                     elseif tbl9.NKDelayMode == "Normal" then
-	                    	task.spawn(function()
-		           	task.wait()
-		             	for i = 1, 6 do
-			       	tbl12.RNO(v27)
-		                 	end
-	                  	end)
-                	end
-
+                                        if not (tbl12.GetMagnitude(v23, v27) > 33) then
+    for i = 1, 6 do
+        tbl12.Grab(v27)
+    end
+    
+    
+    if tbl8.EKILock then
+        tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
+        tbl7.EKILockTargets[v25] = true
+    end
+    
+    
+    flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
+    if flag12 then
+        task.delay(0.00000000000000002, tbl12.RNO, v27)
+    elseif tbl9.NKDelayMode == "Normal" then
+        task.spawn(function()
+            task.wait()
+            for i = 1, 6 do
+                tbl12.RNO(v27)
+            end
+        end)
+    end
 											if tbl8.RagdollInNK then
 												task.spawn(tbl12.Ragdoll, v26)
 											end
@@ -35104,25 +35181,34 @@ end
 												end
 											end)
 										elseif tbl12.SNO(v27) then
-	                                    tbl12.Teleport(v27, v29)
-                                         	for i = 1, 6 do
-	                                      	tbl12.Grab(v27)
-                                        	        end
-	      
-                                         flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
-	                                       if flag12 then
-                                           	task.delay(0.00000000000000002, function()
-	                                             	for i = 1, 7 do
-			                                         tbl12.RNO(v27)
-		                                                  end
-	                                              end)
-                                                  elseif tbl9.NKDelayMode == "Normal" then             task.spawn(function()
-			                                task.wait()
-		                                  	for i = 1, 6 do
-			                              	tbl12.RNO(v27)
-		                                	end
-		                                       end)
-                                                   	end
+                                    tbl1elseif tbl12.SNO(v27) then
+    tbl12.Teleport(v27, v29)
+    for i = 1, 6 do
+        tbl12.Grab(v27)
+    end
+    
+    
+    if tbl8.EKILock then
+        tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
+        tbl7.EKILockTargets[v25] = true
+    end
+    
+
+    flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
+    if flag12 then
+        task.delay(0.00000000000000002, function()
+            for i = 1, 6 do
+                tbl12.RNO(v27)
+            end
+        end)
+    elseif tbl9.NKDelayMode == "Normal" then             
+        task.spawn(function()
+            task.wait()
+            for i = 1, 6 do
+                tbl12.RNO(v27)
+            end
+        end)
+    end
 
 											if tbl8.RagdollInNK then
 												task.spawn(tbl12.Ragdoll, v26)
