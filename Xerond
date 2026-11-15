@@ -40201,12 +40201,147 @@ end
     })
 end
 
-
+do
 Antis:AddDivider("안티 오너쉽 스팸 계열")
 Settings = Settings or {}
 Settings.Anti = Settings.Anti or {}
 Settings.Anti.AntiOwnership2 = false
 
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+local AntiOwn2 = {
+    Enabled = false,
+    Changed = nil,
+    CharacterAdded = nil,
+    Task = nil,
+    SavedCFrame = nil
+}
+
+local function AntiOwn2Alive()
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    return hum and hum.Health > 0
+end
+
+local function AntiOwn2Restore()
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+    if hrp then
+        pcall(function()
+            hrp.Anchored = false
+
+            if AntiOwn2.SavedCFrame then
+                hrp.CFrame = AntiOwn2.SavedCFrame
+            end
+        end)
+    end
+end
+
+local function AntiOwn2Stop()
+    AntiOwn2.Enabled = false
+
+    if AntiOwn2.Changed then
+        AntiOwn2.Changed:Disconnect()
+        AntiOwn2.Changed = nil
+    end
+
+    if AntiOwn2.CharacterAdded then
+        AntiOwn2.CharacterAdded:Disconnect()
+        AntiOwn2.CharacterAdded = nil
+    end
+
+    if AntiOwn2.Task then
+        task.cancel(AntiOwn2.Task)
+        AntiOwn2.Task = nil
+    end
+
+    AntiOwn2Restore()
+end
+
+Antis:AddToggle("AntiOwnership2", {
+    Text = "Anti Ownership [IsHeld형]",
+    Default = false,
+    Tooltip = "IsHeld 상태를 감지합니다.",
+
+    Callback = function(v)
+        AntiOwn2Stop()
+
+        if not v then
+            return
+        end
+
+        AntiOwn2.Enabled = true
+
+        task.spawn(function()
+            local success, err = pcall(function()
+                local isHeld = LocalPlayer:WaitForChild("IsHeld", 10)
+                local event = ReplicatedStorage
+                    :WaitForChild("CharacterEvents", 10)
+                    :WaitForChild("Struggle", 10)
+
+                assert(isHeld, "IsHeld not found")
+                assert(event, "Struggle not found")
+
+                local function StartEscape()
+                    if AntiOwn2.Task then return end
+
+                    local char = LocalPlayer.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+                    if hrp then
+                        AntiOwn2.SavedCFrame = hrp.CFrame
+                        hrp.Anchored = true
+                    end
+
+                    AntiOwn2.Task = task.spawn(function()
+                        while AntiOwn2.Enabled
+                            and isHeld.Parent
+                            and isHeld.Value
+                            and AntiOwn2Alive() do
+
+                            pcall(function()
+                                event:FireServer(LocalPlayer)
+                            end)
+
+                            task.wait(0.1)
+                        end
+
+                        AntiOwn2Restore()
+                        AntiOwn2.Task = nil
+                    end)
+                end
+
+                AntiOwn2.Changed = isHeld.Changed:Connect(function(value)
+                    if not AntiOwn2.Enabled then return end
+
+                    if value then
+                        StartEscape()
+                    else
+                        AntiOwn2Restore()
+                    end
+                end)
+
+                AntiOwn2.CharacterAdded =
+                    LocalPlayer.CharacterAdded:Connect(function()
+                        AntiOwn2.SavedCFrame = nil
+                    end)
+
+                if isHeld.Value then
+                    StartEscape()
+                end
+            end)
+
+            if not success then
+                warn("[AntiOwnership2] " .. tostring(err))
+                AntiOwn2Stop()
+            end
+        end)
+    end
+})
 
 Antis:AddToggle("AntiOwnership", {
     Text = "Anti Ownership spam [PartOwner형]",
@@ -40421,7 +40556,7 @@ Antis:AddToggle("AntiOwnership2", {
         end
     end
 })
-
+end
   do
   Antis:AddDivider("안티 폭탄,불 계열")
 Antis:AddToggle("AntiExplosion", {
