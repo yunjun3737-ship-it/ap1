@@ -34859,7 +34859,7 @@ Escape Timer: %*]]
 			end
 		end)
 --[[에어락]]
-		task.spawn(function()
+		--task.spawn(function()
 			
 
 	local tbl16 = {}
