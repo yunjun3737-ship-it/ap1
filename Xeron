@@ -34877,7 +34877,9 @@ do
                     end
                 end
             end
+
             if not arg or not tbl8.EKI then return end
+
             return sethiddenproperty and pcall(function()
                 sethiddenproperty(arg, "PhysicsRepRootPart", arg2)
             end)
@@ -34886,6 +34888,7 @@ do
         local function fn22(arg)
             if not arg then return end
             local v22, v23, v24 = tbl12.Char(arg)
+
             if v23 then
                 local kickAP = v23:FindFirstChild("KickAP")
                 local kickAO = v23:FindFirstChild("KickAO")
@@ -34899,6 +34902,7 @@ do
                     fn21(v23, nil)
                 end
             end
+
             if v22 then
                 task.spawn(tbl12.ToggleMotor6D, v22, true, true)
                 task.spawn(tbl12.ToggleCollisions, v22, true)
@@ -34915,8 +34919,47 @@ do
             tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
             tbl7.EKILockLocked  = tbl7.EKILockLocked  or setmetatable({}, { __mode = "k" })
 
+            -- PCLD 근접 체크 (매 프레임 X, 0.2초마다)
+            local pclldNear = false
+            local nextPclldCheck = 0
+
             tbl7.EKILockHeartbeat = RunService.Heartbeat:Connect(function()
                 if flag11 then return end
+
+                local now = os.clock()
+                if now >= nextPclldCheck then
+                    nextPclldCheck = now + 0.2
+                    pclldNear = false
+
+                    local myPcld = tbl12.DetectPCLD(localPlayer)
+                    local _, myHrp = tbl12.Char()
+                    if myPcld and myPcld.Parent and myHrp and myHrp.Parent
+                        and not tbl12.IsWaitingPCLD(myPcld) then
+                        if (myPcld.Position - myHrp.Position).Magnitude <= 30 then
+                            pclldNear = true
+                        end
+                    end
+                end
+
+                -- PCLD 근처에 없으면 락 안 검 (땅박힘/디피 방지)
+                if not pclldNear then
+                    for player, hrp in pairs(tbl7.EKILockLocked) do
+                        if hrp and hrp.Parent then
+                            pcall(sethiddenproperty, hrp, "PhysicsRepRootPart", nil)
+                            for _, d in ipairs(hrp.Parent:GetDescendants()) do
+                                if d:IsA("BasePart") and (d.Name == "RagdollLimbPart"
+                                    or d.Name == "RagdollTouchedHitbox"
+                                    or d.Name == "FirePlayerPart") then
+                                    pcall(sethiddenproperty, d, "PhysicsRepRootPart", nil)
+                                end
+                            end
+                        end
+                        tbl7.EKILockLocked[player] = nil
+                    end
+                    return
+                end
+
+                -- PCLD 근처 → 락 검
                 for player in pairs(tbl7.EKILockTargets) do
                     if player and player.Parent and tbl7.SelectedPlayers[player] then
                         local _, hrp = tbl12.Char(player)
@@ -34935,6 +34978,7 @@ do
                         tbl7.EKILockTargets[player] = nil
                     end
                 end
+
                 for player, hrp in pairs(tbl7.EKILockLocked) do
                     if not tbl7.EKILockTargets[player] or not player.Parent
                         or not tbl7.SelectedPlayers[player] then
@@ -35029,24 +35073,19 @@ do
 
                                         kickAP = Instance.new("BodyPosition")
                                         local bodyGyro = Instance.new("BodyGyro")
-
                                         kickAP.D = 200
                                         kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
                                         kickAP.Position = v29
                                         kickAP.Parent = v27
-
                                         bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
                                         bodyGyro.D = 200
                                         bodyGyro.CFrame = CFrame.new()
                                         bodyGyro.Parent = v27
-
                                         kickAP.Name = "KickAP"
                                         bodyGyro.Name = "KickAO"
                                     end
 
-                                    if weldHRP then
-                                        weldHRP.Enabled = false
-                                    end
+                                    if weldHRP then weldHRP.Enabled = false end
 
                                     kickAP.Position = v29
 
@@ -35058,7 +35097,6 @@ do
                                         end
 
                                         flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
-
                                         if flag12 then
                                             task.delay(0.00000000000000002, tbl12.RNO, v27)
                                         elseif tbl9.NKDelayMode == "Normal" then
@@ -35094,7 +35132,6 @@ do
                                         end
 
                                         flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
-
                                         if flag12 then
                                             task.delay(0.00000000000000002, function()
                                                 for j = 1, 7 do
@@ -35142,6 +35179,7 @@ do
         end
     end)
 end
+                                                 
                 
 		lib.ForceCheckbox = true
 
