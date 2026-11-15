@@ -40420,7 +40420,6 @@ Antis:AddToggle("AntiOwnership2", {
     end
 })
 
-end
   do
   Antis:AddDivider("안티 폭탄,불 계열")
 Antis:AddToggle("AntiExplosion", {
