@@ -38870,7 +38870,7 @@ do
         xocuApply(P.Character)
     end
 
-    -- [모드 2] Ragdoll
+    
     local nrd = { conns = {}, proc = false, active = false, walk = false }
 
     local function nrdDisableLimbs(char)
@@ -40202,6 +40202,102 @@ end
 end
 
 do
+function Utility.isLocalAlive()
+    if State.isRespawning then return false end
+
+    local char = LocalPlayer.Character
+    if not char or not char.Parent then return false end
+
+    local inWs = false
+    local ok = pcall(function()
+        inWs = char:IsDescendantOf(Workspace)
+    end)
+
+    if not ok or not inWs then return false end
+
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum or hum.Health <= 0 then return false end
+
+    local dead = false
+    pcall(function()
+        dead = hum:GetState() == Enum.HumanoidStateType.Dead
+    end)
+
+    if dead then return false end
+
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+        or char:FindFirstChild("Torso")
+
+    if not hrp or not hrp.Parent then return false end
+
+    return true
+end
+
+function RemoteDispatcher:_canSend(name)
+    local now = tick()
+    local limit = self._limits[name] or self._limits._default
+    local minInterval = 1 / limit
+    local lastTime = self._lastFireTime[name] or 0
+
+    if now - lastTime < minInterval then
+        self._stats.dropped = self._stats.dropped + 1
+        return false
+    end
+
+    self._lastFireTime[name] = now
+    return true
+end
+
+function RemoteDispatcher:Fire(remote, ...)
+    if State.isRespawning then return end
+
+    if remote and (
+        remote.Name == "SetNetworkOwner"
+        or remote.Name == "CreateGrabLine"
+        or remote.Name == "DestroyGrabLine"
+    ) then
+        local argCount = select("#", ...)
+        local firstPart = argCount > 0 and select(1, ...) or nil
+
+        if typeof(firstPart) == "Instance" then
+            local myChar = LocalPlayer.Character
+
+            if myChar then
+                local ok, isSelf = pcall(function()
+                    return firstPart == myChar
+                        or firstPart:IsDescendantOf(myChar)
+                end)
+
+                if ok and isSelf then return end
+            end
+        end
+    end
+
+    self._stats.totalFires = self._stats.totalFires + 1
+
+    if not self:_canSend(remote.Name) then return end
+
+    local args = {...}
+    self._firing = true
+
+    pcall(function()
+        remote:FireServer(unpack(args))
+    end)
+
+    self._firing = false
+end
+
+function RemoteDispatcher:Flush()
+    self._lastFireTime = {}
+    self._fireCount = {}
+
+    for name, count in pairs(self._pendingInvokes) do
+        self._stats.invokeDropped =
+            self._stats.invokeDropped + count
+    end
+
+    self._pendingInvokes = {}
+end
 Antis:AddDivider("안티 오너쉽 스팸 계열")
 Antis:AddToggle("AntiOwnership", {
     Text = "Anti Ownership spam [PartOwner형]",
