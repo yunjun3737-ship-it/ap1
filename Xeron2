@@ -40202,6 +40202,30 @@ end
 end
 
 do
+local function GetAliveCharacter()
+    local character = LocalPlayer.Character
+    if not character or not character.Parent then return nil end
+
+    local ok, inWorkspace = pcall(function()
+        return character:IsDescendantOf(Workspace)
+    end)
+    if not ok or not inWorkspace then return nil end
+
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid or humanoid.Health <= 0 then return nil end
+
+    local dead = false
+    pcall(function()
+        dead = humanoid:GetState() == Enum.HumanoidStateType.Dead
+    end)
+    if dead then return nil end
+
+    local root = character:FindFirstChild("HumanoidRootPart")
+        or character:FindFirstChild("Torso")
+    if not root or not root.Parent then return nil end
+
+    return character
+end
 function Utility.isLocalAlive()
     if State.isRespawning then return false end
 
