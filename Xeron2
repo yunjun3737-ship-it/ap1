@@ -34859,7 +34859,8 @@ Escape Timer: %*]]
 			end
 		end)
 				 
-  --[[에어락]]
+                  
+--[[에어락]]
 do
     task.spawn(function()
         local tbl16 = {}
@@ -34997,19 +34998,23 @@ do
 
             if not (not loopApplyMethodT or not targetMethods.Kick or inPlot.Value) then
                 local v22, v23, v24 = tbl12.Char()
+
                 if v23 and v24 and v24.Health > 0 then
                     local tbl17 = {}
+
                     for k in pairs(selectedPlayers) do
                         if k and k.Parent and k:IsA("Player") then
                             table.insert(tbl17, k)
                             tbl16[k] = true
                         end
                     end
+
                     if #tbl17 ~= 0 then
                         for i, v25 in ipairs(tbl17) do
                             if v23 and v24 and v24.Health > 0 and not inPlot.Value then
                                 local v26, v27, v28 = tbl12.Char(v25)
                                 local torso = v26 and v26:FindFirstChild("Torso")
+
                                 if not (v27 and v28 and torso and v28.Health > 0) then
                                     fn22(v25)
                                 else
@@ -35017,44 +35022,65 @@ do
                                     local kickAP = v27:FindFirstChild("KickAP")
                                     local kickAO = v27:FindFirstChild("KickAO")
                                     local weldHRP = v27:FindFirstChild("WeldHRP")
+
                                     if not kickAP or not kickAO then
                                         if kickAP then kickAP:Destroy() end
                                         if kickAO then kickAO:Destroy() end
+
                                         kickAP = Instance.new("BodyPosition")
                                         local bodyGyro = Instance.new("BodyGyro")
+
                                         kickAP.D = 200
                                         kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
                                         kickAP.Position = v29
                                         kickAP.Parent = v27
+
                                         bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
                                         bodyGyro.D = 200
                                         bodyGyro.CFrame = CFrame.new()
                                         bodyGyro.Parent = v27
+
                                         kickAP.Name = "KickAP"
                                         bodyGyro.Name = "KickAO"
                                     end
-                                    if weldHRP then weldHRP.Enabled = false end
+
+                                    if weldHRP then
+                                        weldHRP.Enabled = false
+                                    end
+
                                     kickAP.Position = v29
 
                                     local flag12
+
                                     if not (tbl12.GetMagnitude(v23, v27) > 33) then
-                                        for j = 1, 7 do tbl12.Grab(v27) end
-                                        if (tbl8.EKI or tbl8.EKILock) and tbl12.IsNetworkOwner(v27) then
-                                            fn21(v27, v27)
+                                        for j = 1, 7 do
+                                            tbl12.Grab(v27)
                                         end
+
                                         flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
+
                                         if flag12 then
                                             task.delay(0.00000000000000002, tbl12.RNO, v27)
                                         elseif tbl9.NKDelayMode == "Normal" then
                                             task.spawn(function()
                                                 task.wait()
-                                                for j = 1, 7 do tbl12.RNO(v27) end
+                                                for j = 1, 7 do
+                                                    tbl12.RNO(v27)
+                                                end
                                             end)
                                         end
-                                        if tbl8.RagdollInNK then task.spawn(tbl12.Ragdoll, v26) end
-                                        if tbl8.DeleteShurInNK then task.spawn(tbl12.RemoveSticky, v26) end
+
+                                        if tbl8.RagdollInNK then
+                                            task.spawn(tbl12.Ragdoll, v26)
+                                        end
+
+                                        if tbl8.DeleteShurInNK then
+                                            task.spawn(tbl12.RemoveSticky, v26)
+                                        end
+
                                         tbl12.ToggleCollisions(v26, false)
                                         tbl12.RepositionLimbs(v26, true)
+
                                         task.delay(0.6, function()
                                             if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
                                                 fn21(v27, v27)
@@ -35062,25 +35088,39 @@ do
                                         end)
                                     elseif tbl12.SNO(v27) then
                                         tbl12.Teleport(v27, v29)
-                                        for j = 1, 7 do tbl12.Grab(v27) end
-                                        if (tbl8.EKI or tbl8.EKILock) and tbl12.IsNetworkOwner(v27) then
-                                            fn21(v27, v27)
+
+                                        for j = 1, 7 do
+                                            tbl12.Grab(v27)
                                         end
+
                                         flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
+
                                         if flag12 then
                                             task.delay(0.00000000000000002, function()
-                                                for j = 1, 7 do tbl12.RNO(v27) end
+                                                for j = 1, 7 do
+                                                    tbl12.RNO(v27)
+                                                end
                                             end)
                                         elseif tbl9.NKDelayMode == "Normal" then
                                             task.spawn(function()
                                                 task.wait()
-                                                for j = 1, 8 do tbl12.RNO(v27) end
+                                                for j = 1, 8 do
+                                                    tbl12.RNO(v27)
+                                                end
                                             end)
                                         end
-                                        if tbl8.RagdollInNK then task.spawn(tbl12.Ragdoll, v26) end
-                                        if tbl8.DeleteShurInNK then task.spawn(tbl12.RemoveSticky, v26) end
+
+                                        if tbl8.RagdollInNK then
+                                            task.spawn(tbl12.Ragdoll, v26)
+                                        end
+
+                                        if tbl8.DeleteShurInNK then
+                                            task.spawn(tbl12.RemoveSticky, v26)
+                                        end
+
                                         tbl12.ToggleCollisions(v26, false)
                                         tbl12.RepositionLimbs(v26, true)
+
                                         task.delay(0.27, function()
                                             if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
                                                 fn21(v27, v27)
@@ -35092,14 +35132,16 @@ do
                                 end
                             end
                         end
-                        if tbl9.NKDelayMode == "Normal" then task.wait() end
+
+                        if tbl9.NKDelayMode == "Normal" then
+                            task.wait()
+                        end
                     end
                 end
             end
         end
     end)
-end          
-
+end
                 
 		lib.ForceCheckbox = true
 
