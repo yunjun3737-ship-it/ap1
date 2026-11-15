@@ -34863,19 +34863,27 @@ Escape Timer: %*]]
 			local tbl16 = {}
 
 			local function fn21(arg, arg2)
-				if not arg or not tbl8.EKI then
-					return
-				end
+    if not arg then return end
+    
+        if tbl8.EKILock then
+        local player = Players:GetPlayerFromCharacter(arg.Parent)
+        if player then
+            tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
+            if arg2 then
+                tbl7.EKILockTargets[player] = true  -- 락 켜기 (원본이 락을 걸 때)
+            else
+                tbl7.EKILockTargets[player] = nil   -- 락 끄기 (원본이 락을 풀 때)
+            end
+        end
+    end
+    
 
-				return sethiddenproperty and pcall(function()
-					sethiddenproperty(arg, "PhysicsRepRootPart", arg2)
-				end)
-			end
-
-			local function fn22(arg)
-	if not arg then
-		return
-	end
+    
+    if not tbl8.EKI then return end
+    return sethiddenproperty and pcall(function()
+        sethiddenproperty(arg, "PhysicsRepRootPart", arg2)
+    end)
+end
 	local v22, v23, v24 = tbl12.Char(arg)
 
 	if v23 then
@@ -35110,26 +35118,17 @@ end
     tbl12.RepositionLimbs(v26, true)
 
     
-task.delay(0.8, function()
+-- ▼ SNO 실패 경로 (0.6초 딜레이)
+task.delay(0.6, function()
     if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
-        if tbl8.EKILock then
-            tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
-            tbl7.EKILockTargets[v25] = true
-        else
-            fn21(v27, v27)
-        end
+        fn21(v27, v27)
     end
 end)
 
-
-task.delay(0.6, function()
+-- ▼ SNO 성공 경로 (0.27초 딜레이)
+task.delay(0.27, function()
     if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
-        if tbl8.EKILock then
-            tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
-            tbl7.EKILockTargets[v25] = true
-        else
-            fn21(v27, v27)
-        end
+        fn21(v27, v27)
     end
 end)
 elseif tbl12.SNO(v27) then
