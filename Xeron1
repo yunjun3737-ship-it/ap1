@@ -17471,6 +17471,8 @@ do
                             AntiSpawnFood = false,
                             AntiBring = false,
                             AntiBlobKill = false,
+                            BlobmanKickBypass = false,
+                            ASTRAGrabBlob = false,
 							AntiVoid = false,
                             AntiOwner = false,
 							AutoReset = true,
@@ -41893,7 +41895,269 @@ Config2:AddDropdown("AntiInPlotsType", {
 			end,
 		})
 	end
+kickLoopEnabled = false
+loopKickDualActive = false
+targetName = nil
 
+getname = function(str)
+    if type(str) ~= "string" then return nil end
+    return str:match("%(([^)]+)%)") or str
+end
+
+AttackGetPlayerList = function()
+    local list = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= plr then
+            table.insert(list, p.DisplayName.." ("..p.Name..")")
+        end
+    end
+    return list
+end
+
+do
+    local initList = AttackGetPlayerList()
+    if #initList > 0 then
+        targetName = getname(initList[1])
+    end
+end
+
+AttackMethodsGroupbox = Tabs.AttackTab:AddLeftGroupbox("Attack Methods", "swords")
+
+AttackTargetDropdown = AttackMethodsGroupbox:AddDropdown("ASTRAGrabBlobTarget", {
+    Values = AttackGetPlayerList(),
+    Multi = false,
+    Text = "Target Player",
+    Callback = function(v)
+        if v and v ~= "" then
+            targetName = getname(v)
+        end
+    end,
+})
+
+task.spawn(function()
+    local lastHash = ""
+    while task.wait(1) do
+        local list = AttackGetPlayerList()
+        local hash = table.concat(list, "|")
+        if hash ~= lastHash then
+            lastHash = hash
+            pcall(function()
+                if AttackTargetDropdown then
+                    AttackTargetDropdown:SetValues(list)
+                end
+            end)
+            if #list > 0 and (not targetName or targetName == "") then
+                targetName = getname(list[1])
+            end
+        end
+    end
+end)
+
+function getTargetName()
+    if targetName and targetName ~= "" then
+        return targetName
+    end
+    if AttackTargetDropdown and AttackTargetDropdown.Value then
+        local v = getname(AttackTargetDropdown.Value)
+        if v and v ~= "" then
+            return v
+        end
+    end
+    local list = AttackGetPlayerList()
+    if #list > 0 then
+        return getname(list[1])
+    end
+    return nil
+end
+
+do
+    local selectedPlayersBlob = tbl7.SelectedPlayersBlob
+
+    local Target = tbl15.Blobman:AddLeftGroupbox("Target", "circle-user-round")
+
+    tbl12.CreatePlayerDropdown(
+        Target,
+        "Blobman",
+        selectedPlayersBlob
+    )
+
+    Target:AddToggle("ASTRAGrabBlob", {
+        Text = "Blobman kick (Bypass)",
+        Default = false,
+        Callback = function(on)
+            kickLoopEnabled = on
+            loopKickDualActive = on
+
+            if on then
+                local selected = selectedPlayersBlob
+
+                if not selected or #selected == 0 then
+                    kickLoopEnabled = false
+                    loopKickDualActive = false
+                end
+            end
+        end
+    })
+end
+            task.spawn(function()
+                RS = game:GetService("ReplicatedStorage")
+                RunService = game:GetService("RunService")
+                GE = RS:FindFirstChild("GrabEvents")
+                plr = Services.LocalPlayer
+                Players = game:GetService("Players")
+                myChar = plr.Character
+                if not myChar then
+                    kickLoopEnabled = false
+                    loopKickDualActive = false
+                    return 
+                end
+                myHum = myChar:FindFirstChildOfClass("Humanoid")
+                myRoot = myChar:FindFirstChild("HumanoidRootPart")
+                if not myRoot or not myHum then 
+                    kickLoopEnabled = false
+                    loopKickDualActive = false
+                    return 
+                end
+                savedPos = myRoot.CFrame
+                dragging = false
+                grabStartTime = 0
+                target = nil
+                tChar = nil
+                tRoot = nil
+                tHum = nil
+                blobman = nil
+                grab = nil
+                drop = nil
+                L_Det = nil
+                R_Det = nil
+                L_Weld = nil
+                R_Weld = nil
+                lastTargetUserId = nil
+                lastTargetHRP = nil
+                respawnDetected = false
+                tooFarDetected = false
+                while kickLoopEnabled do
+                    target = Players:FindFirstChild(targetName)
+                    if not target or not target.Parent then 
+                        break 
+                    end
+                    tChar = target.Character
+                    if not tChar then
+                        task.wait(0.1)
+                        continue
+                    end
+                    local currentUserId = target.UserId
+                    local currentHRP = tChar:FindFirstChild("HumanoidRootPart")
+                    if lastTargetUserId and lastTargetUserId ~= currentUserId then
+                        respawnDetected = true
+                    end
+                    if lastTargetHRP and currentHRP and lastTargetHRP ~= currentHRP then
+                        respawnDetected = true
+                    end
+                    if respawnDetected then
+                        respawnDetected = false
+                        dragging = false
+                        grabStartTime = 0
+                        task.wait(0.3)
+                    end
+                    lastTargetUserId = currentUserId
+                    lastTargetHRP = currentHRP
+                    tRoot = tChar:FindFirstChild("HumanoidRootPart")
+                    tHum = tChar:FindFirstChildOfClass("Humanoid")
+                    if not tRoot or not tHum then
+                        task.wait(0.1)
+                        continue
+                    end
+                    local health = 0
+                    pcall(function() health = tHum.Health end)
+                    if health <= 0 then
+                        task.wait(0.1)
+                        continue
+                    end
+                    local distance = 0
+                    pcall(function() distance = (myRoot.Position - tRoot.Position).Magnitude end)
+                    if distance >= 500 then
+                        if not tooFarDetected then
+                            tooFarDetected = true
+                            dragging = false
+                            grabStartTime = 0
+                            task.wait(0.2)
+                        end
+                    else
+                        tooFarDetected = false
+                    end
+                    local seat = myHum.SeatPart
+                    if not seat then
+                        break
+                    end
+                    blobman = seat.Parent
+                    if not blobman or blobman.Name ~= "CreatureBlobman" then
+                        break
+                    end
+                    local remoteFolder = blobman:FindFirstChild("BlobmanSeatAndOwnerScript")
+                    grab = remoteFolder and remoteFolder:FindFirstChild("CreatureGrab")
+                    drop = remoteFolder and remoteFolder:FindFirstChild("CreatureDrop")
+                    L_Det = blobman:FindFirstChild("LeftDetector")
+                    R_Det = blobman:FindFirstChild("RightDetector")
+                    L_Weld = L_Det and (L_Det:FindFirstChild("LeftWeld") or L_Det:FindFirstChild("RigidConstraint"))
+                    R_Weld = R_Det and (R_Det:FindFirstChild("RightWeld") or R_Det:FindFirstChild("RigidConstraint"))
+                    pcall(function()
+                        tRoot.AssemblyLinearVelocity = Vector3.zero
+                        tRoot.AssemblyAngularVelocity = Vector3.zero
+                    end)
+                    if grab and drop and L_Weld and R_Weld then
+                        pcall(function()
+                            grab:FireServer(L_Det, tRoot, L_Weld)
+                            grab:FireServer(R_Det, tRoot, R_Weld)
+                            drop:FireServer(L_Weld, tRoot)
+                            drop:FireServer(R_Weld, tRoot)
+                        end)
+                    end
+                    if not dragging then
+                        pcall(function()
+                            myRoot.CFrame = tRoot.CFrame
+                        end)
+                        if GE then
+                            pcall(function()
+                                tHum.PlatformStand = true
+                                GE.SetNetworkOwner:FireServer(tRoot, myRoot.CFrame)
+                            end)
+                        end
+                        if grabStartTime == 0 then grabStartTime = tick() end
+                        if tick() - grabStartTime > 0.3 then
+                            dragging = true
+                            grabStartTime = 0
+                        end
+                    else
+                        local lockPos = savedPos * CFrame.new(0, 23, 0)
+                        pcall(function()
+                            myRoot.CFrame = savedPos
+                            tRoot.CFrame = lockPos
+                            tHum.PlatformStand = true
+                        end)
+                        if GE then
+                            pcall(function()
+                                GE.SetNetworkOwner:FireServer(tRoot, lockPos)
+                                GE.DestroyGrabLine:FireServer(tRoot)
+                            end)
+                        end
+                    end
+                    RunService.Heartbeat:Wait()
+                end
+                pcall(function()
+                    if myRoot and myRoot.Parent then
+                        myRoot.CFrame = savedPos
+                    end
+                end)
+                kickLoopEnabled = false
+                loopKickDualActive = false
+            end)
+        else
+            kickLoopEnabled = false
+            loopKickDualActive = false
+        end
+    end
+})
 	do
 		local selectedPlayersBlob = tbl7.SelectedPlayersBlob
 		tbl12.CreatePlayerDropdown(tbl15.Blobman:AddLeftGroupbox("Target", "circle-user-round"), "Blobman", selectedPlayersBlob)
@@ -41934,36 +42198,55 @@ Config2:AddDropdown("AntiInPlotsType", {
 	end
 
 	do
-		local v20 = tbl15.Blobman:AddRightGroupbox("Method Settings", "apple")
+    local v20 = tbl15.Blobman:AddRightGroupbox("Method Settings", "apple")
 
-		v20:AddDropdown("MethodSettingsBlobs", {
-			Values = { "Kick", "Kill", "Bring", "Lock", "Follow", "Remove Gucci" },
-			Default = 1,
-			Multi = false,
-			Text = "Blobman Method",
-			Callback = function(blobMethod)
-				tbl9.BlobMethod = blobMethod
-			end,
-		})
+    v20:AddDropdown("MethodSettingsBlobs", {
+        Values = {
+            "Kick",
+            "Kill",
+            "Bring",
+            "Lock",
+            "Follow",
+            "Remove Gucci",
+            "Blobman Kick"
+        },
+        Default = 1,
+        Multi = false,
+        Text = "Blobman Method",
+        Callback = function(value)
+            tbl9.BlobMethod = value
+            tbl9.BlobmanKickEnabled = value == "Blobman Kick"
+        end
+    })
 
-		v20:AddDivider()
-		local v21 = v20:AddDependencyBox()
-		v21:SetupDependencies({ { options.MethodSettingsBlobs, "Kick" } })
+    v20:AddDivider()
 
-		v21:AddDropdown("KickSettingBlob", {
-			Values = { "Grab-Drop", "Grab-Release" },
-			Default = 1,
-			Multi = false,
-			Text = "Kick Method",
-			Callback = function(arg)
-				if arg == "Grab-Drop" then
-					tbl9.BKMethod = 1
-				elseif arg == "Grab-Release" then
-					tbl9.BKMethod = 2
-				end
-			end,
-		})
+    v20:AddToggle("BlobmanKickBypass", {
+        Text = "Blobman Kick (Bypass) ",
+        Default = false,
+        Callback = function(enabled)
+            kickLoopEnabled = enabled
+            loopKickDualActive = enabled
+        end
+    })
 
+    v20:AddDivider()
+
+    local v21 = v20:AddDependencyBox()
+    v21:SetupDependencies({
+        {options.MethodSettingsBlobs, "Kick"}
+    })
+
+    v21:AddDropdown("KickSettingBlob", {
+        Values = {"Grab-Drop", "Grab-Release"},
+        Default = 1,
+        Multi = false,
+        Text = "Kick Method",
+        Callback = function(arg)
+            tbl9.BKMethod = arg == "Grab-Drop" and 1 or 2
+        end
+    })
+end
 		v21:AddToggle("ShurikenDeleteBlob", {
 			Text = "Remove Anti-Kick [Sticky]",
 			Default = true,
