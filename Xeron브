@@ -41969,20 +41969,24 @@ local G = v20:AddDependencyBox()
     tbl8.BlobmanKickBypass  = false
     tbl9.BlobKickLoopActive = false
 
-    local function GetSelectedBlobPlayers()
-    local selected = {}
+    local function GetBlobKickTarget()
+    local selected = tbl7.SelectedPlayersBlob
 
-    for player, state in pairs(tbl7.SelectedPlayersBlob or {}) do
-        if typeof(player) == "Instance"
+    if type(selected) ~= "table" then
+        return nil
+    end
+
+    for player, state in pairs(selected) do
+        if state == true
+            and typeof(player) == "Instance"
             and player:IsA("Player")
-            and player.Parent == Players
-            and state == true then
+            and player.Parent == Players then
 
-            table.insert(selected, player)
+            return player
         end
     end
 
-    return selected
+    return nil
 end
 
     local function StartBlobmanKickBypass()
