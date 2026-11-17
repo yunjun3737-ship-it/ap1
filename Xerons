@@ -49014,7 +49014,7 @@ Rejoined: %rejoinedPlayer%, %listCount%]],
 	return {
 		copyright = "",
 	}
-end
+
 
 ]====]
 sources.Bootstrap = [====[
