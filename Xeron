@@ -41935,6 +41935,7 @@ Config2:AddDropdown("AntiInPlotsType", {
 		Settings:AddToggle("FreezeBlob", { Text = "Freeze Blobman", Default = false, Callback = tbl14.SetFrozen })
 	end
         
+
 do
     local v20 = tbl15.Blobman:AddRightGroupbox("Method Settings", "apple")
 
@@ -41967,31 +41968,52 @@ local G = v20:AddDependencyBox()
     tbl12 = tbl12 or {}
 
     tbl8.BlobmanKickBypass  = false
+    tbl8.BlobKickTargetName = nil
     tbl9.BlobKickLoopActive = false
 
-    local function GetSelectedTargetPlayer()
-    local selected = tbl7.SelectedPlayersBlob
-
-    if type(selected) ~= "table" then
-        return nil
-    end
-
-    for player, enabled in pairs(selected) do
-        if enabled == true
-            and typeof(player) == "Instance"
-            and player:IsA("Player")
-            and player.Parent == Players then
-            return player
+    local function GetBlobKickList()
+        local list = {}
+        local myPlayer = game:GetService("Players").LocalPlayer
+        for _, p in ipairs(game:GetService("Players"):GetPlayers()) do
+            if p ~= myPlayer then
+                table.insert(list, p.DisplayName .. " (" .. p.Name .. ")")
+            end
         end
+        table.sort(list)
+        return list
     end
 
-    return nil
-end
+    local initialList = GetBlobKickList()
+    if #initialList > 0 then
+        tbl8.BlobKickTargetName = initialList[1]:match("%(([^)]+)%)") or initialList[1]
+    end
 
-local function GetSelectedTargetName()
-    local player = GetSelectedTargetPlayer()
-    return player and player.Name or nil
-end
+    local BlobKickDropdown = G:CreatePlayerDropdown("BlobKickBypassTarget", {
+        Values  = initialList,
+        Multi   = false,
+        Text    = "바이패스킥 전용 선택",
+        Default = 1,
+        Callback = function(value)
+            if value and value ~= "" then
+                tbl8.BlobKickTargetName = value:match("%(([^)]+)%)") or value
+            end
+        end,
+    })
+
+    task.spawn(function()
+        local last = ""
+        while task.wait(1) do
+            local list = GetBlobKickList()
+            local hash = table.concat(list, "|")
+            if hash ~= last then
+                last = hash
+                pcall(function() BlobKickDropdown:SetValues(list) end)
+                if (not tbl8.BlobKickTargetName or tbl8.BlobKickTargetName == "") and #list > 0 then
+                    tbl8.BlobKickTargetName = list[1]:match("%(([^)]+)%)") or list[1]
+                end
+            end
+        end
+    end)
 
     local function StartBlobmanKickBypass()
         if tbl9.BlobKickLoopActive then return end
@@ -42010,7 +42032,6 @@ end
                 tbl8.BlobmanKickBypass  = false
                 return
             end
-            
             local myHum  = myChar:FindFirstChildOfClass("Humanoid")
             local myRoot = myChar:FindFirstChild("HumanoidRootPart")
             if not myRoot or not myHum then
@@ -42028,9 +42049,8 @@ end
             local tooFarDetected   = false
 
             while tbl8.BlobmanKickBypass do
-                local targetName = GetBlobKickTarget()
+                local targetName = tbl8.BlobKickTargetName
                 local target = targetName and Players:FindFirstChild(targetName) or nil
-                
                 if not target or not target.Parent then
                     break
                 end
@@ -42043,7 +42063,6 @@ end
 
                 local currentUserId = target.UserId
                 local currentHRP    = tChar:FindFirstChild("HumanoidRootPart")
-                
                 if lastTargetUserId and lastTargetUserId ~= currentUserId then
                     respawnDetected = true
                 end
@@ -42056,7 +42075,6 @@ end
                     grabStartTime   = 0
                     task.wait(0.3)
                 end
-                
                 lastTargetUserId = currentUserId
                 lastTargetHRP    = currentHRP
 
@@ -42091,7 +42109,6 @@ end
                 if not seat then
                     break
                 end
-                
                 local blobman = seat.Parent
                 if not blobman or blobman.Name ~= "CreatureBlobman" then
                     break
@@ -42128,7 +42145,7 @@ end
                         end)
                     end
                     if grabStartTime == 0 then grabStartTime = tick() end
-                    if tick() - grabStartTime > 0.3 then
+                    if tick() - grabStartTime > 0.5 then
                         dragging      = true
                         grabStartTime = 0
                     end
@@ -42161,7 +42178,7 @@ end
         end)
     end
 
-    tbl12.GetBlobKickTarget      = GetBlobKickTarget
+    tbl12.GetBlobKickList        = GetBlobKickList
     tbl12.StartBlobmanKickBypass = StartBlobmanKickBypass
 
     G:AddToggle("BlobmanKickBypass", {
@@ -42176,7 +42193,7 @@ end
             end
         end,
     })
-
+end
            
                          
     v20:AddDivider()
