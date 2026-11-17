@@ -17481,6 +17481,7 @@ do
 							CounterAttack = false,
 							DestroyVoid = false,
 							LoopApplyMethod = false,
+                            BlobmanKickBypass = false,
 							LoopApplyMethodServer = false,
 							LoopApplyMethodT = false,
 							LoopApplyMethodTServer = false,
