@@ -41934,6 +41934,7 @@ Config2:AddDropdown("AntiInPlotsType", {
 
 		Settings:AddToggle("FreezeBlob", { Text = "Freeze Blobman", Default = false, Callback = tbl14.SetFrozen })
 	end
+        
 do
     local v20 = tbl15.Blobman:AddRightGroupbox("Method Settings", "apple")
 
@@ -41961,7 +41962,6 @@ local G = v20:AddDependencyBox()
     G:SetupDependencies({
         {options.MethodSettingsBlobs, "Bypass Kick"}
     })
-
     tbl8 = tbl8 or {}
     tbl9 = tbl9 or {}
     tbl12 = tbl12 or {}
@@ -42004,6 +42004,7 @@ local G = v20:AddDependencyBox()
                 tbl8.BlobmanKickBypass  = false
                 return
             end
+            
             local myHum  = myChar:FindFirstChildOfClass("Humanoid")
             local myRoot = myChar:FindFirstChild("HumanoidRootPart")
             if not myRoot or not myHum then
@@ -42023,99 +42024,120 @@ local G = v20:AddDependencyBox()
             while tbl8.BlobmanKickBypass do
                 local targetName = GetBlobKickTarget()
                 local target = targetName and Players:FindFirstChild(targetName) or nil
-
+                
                 if not target or not target.Parent then
-                    task.wait(0.2)
+                    break
+                end
+
+                local tChar = target.Character
+                if not tChar then
+                    task.wait(0.1)
+                    continue
+                end
+
+                local currentUserId = target.UserId
+                local currentHRP    = tChar:FindFirstChild("HumanoidRootPart")
+                
+                if lastTargetUserId and lastTargetUserId ~= currentUserId then
+                    respawnDetected = true
+                end
+                if lastTargetHRP and currentHRP and lastTargetHRP ~= currentHRP then
+                    respawnDetected = true
+                end
+                if respawnDetected then
+                    respawnDetected = false
+                    dragging        = false
+                    grabStartTime   = 0
+                    task.wait(0.3)
+                end
+                
+                lastTargetUserId = currentUserId
+                lastTargetHRP    = currentHRP
+
+                local tRoot = tChar:FindFirstChild("HumanoidRootPart")
+                local tHum  = tChar:FindFirstChildOfClass("Humanoid")
+                if not tRoot or not tHum then
+                    task.wait(0.1)
+                    continue
+                end
+
+                local health = 0
+                pcall(function() health = tHum.Health end)
+                if health <= 0 then
+                    task.wait(0.1)
+                    continue
+                end
+
+                local distance = 0
+                pcall(function() distance = (myRoot.Position - tRoot.Position).Magnitude end)
+                if distance >= 500 then
+                    if not tooFarDetected then
+                        tooFarDetected = true
+                        dragging       = false
+                        grabStartTime  = 0
+                        task.wait(0.2)
+                    end
                 else
-                    local tChar = target.Character
-                    local tRoot = tChar and tChar:FindFirstChild("HumanoidRootPart")
-                    local tHum  = tChar and tChar:FindFirstChildOfClass("Humanoid")
+                    tooFarDetected = false
+                end
 
-                    if tChar and tRoot and tHum and tHum.Health > 0 then
-                        local currentUserId = target.UserId
-                        local currentHRP    = tRoot
+                local seat = myHum.SeatPart
+                if not seat then
+                    break
+                end
+                
+                local blobman = seat.Parent
+                if not blobman or blobman.Name ~= "CreatureBlobman" then
+                    break
+                end
 
-                        if lastTargetUserId and lastTargetUserId ~= currentUserId then
-                            respawnDetected = true
-                        end
-                        if lastTargetHRP and currentHRP and lastTargetHRP ~= currentHRP then
-                            respawnDetected = true
-                        end
-                        if respawnDetected then
-                            respawnDetected = false
-                            dragging        = false
-                            grabStartTime   = 0
-                            task.wait(0.3)
-                        end
+                local remoteFolder = blobman:FindFirstChild("BlobmanSeatAndOwnerScript")
+                local grab   = remoteFolder and remoteFolder:FindFirstChild("CreatureGrab")
+                local drop   = remoteFolder and remoteFolder:FindFirstChild("CreatureDrop")
+                local L_Det  = blobman:FindFirstChild("LeftDetector")
+                local R_Det  = blobman:FindFirstChild("RightDetector")
+                local L_Weld = L_Det and (L_Det:FindFirstChild("LeftWeld") or L_Det:FindFirstChild("RigidConstraint"))
+                local R_Weld = R_Det and (R_Det:FindFirstChild("RightWeld") or R_Det:FindFirstChild("RigidConstraint"))
 
-                        lastTargetUserId = currentUserId
-                        lastTargetHRP    = currentHRP
+                pcall(function()
+                    tRoot.AssemblyLinearVelocity  = Vector3.zero
+                    tRoot.AssemblyAngularVelocity = Vector3.zero
+                end)
 
-                        local distance = (myRoot.Position - tRoot.Position).Magnitude
-                        if distance >= 500 then
-                            if not tooFarDetected then
-                                tooFarDetected = true
-                                dragging       = false
-                                grabStartTime  = 0
-                                task.wait(0.2)
-                            end
-                        else
-                            tooFarDetected = false
-                        end
+                if grab and drop and L_Weld and R_Weld then
+                    pcall(function()
+                        grab:FireServer(L_Det, tRoot, L_Weld)
+                        grab:FireServer(R_Det, tRoot, R_Weld)
+                        drop:FireServer(L_Weld, tRoot)
+                        drop:FireServer(R_Weld, tRoot)
+                    end)
+                end
 
-                        local seat = myHum.SeatPart
-                        local blobman = seat and seat.Parent
-                        if blobman and blobman.Name == "CreatureBlobman" then
-                            local remoteFolder = blobman:FindFirstChild("BlobmanSeatAndOwnerScript")
-                            local grab   = remoteFolder and remoteFolder:FindFirstChild("CreatureGrab")
-                            local drop   = remoteFolder and remoteFolder:FindFirstChild("CreatureDrop")
-                            local L_Det  = blobman:FindFirstChild("LeftDetector")
-                            local R_Det  = blobman:FindFirstChild("RightDetector")
-                            local L_Weld = L_Det and (L_Det:FindFirstChild("LeftWeld") or L_Det:FindFirstChild("RigidConstraint"))
-                            local R_Weld = R_Det and (R_Det:FindFirstChild("RightWeld") or R_Det:FindFirstChild("RigidConstraint"))
-
-                            pcall(function()
-                                tRoot.AssemblyLinearVelocity  = Vector3.zero
-                                tRoot.AssemblyAngularVelocity = Vector3.zero
-                            end)
-
-                            if grab and drop and L_Weld and R_Weld then
-                                pcall(function()
-                                    grab:FireServer(L_Det, tRoot, L_Weld)
-                                    grab:FireServer(R_Det, tRoot, R_Weld)
-                                    drop:FireServer(L_Weld, tRoot)
-                                    drop:FireServer(R_Weld, tRoot)
-                                end)
-                            end
-
-                            if not dragging then
-                                pcall(function() myRoot.CFrame = tRoot.CFrame end)
-                                if GE then
-                                    pcall(function()
-                                        tHum.PlatformStand = true
-                                        GE.SetNetworkOwner:FireServer(tRoot, myRoot.CFrame)
-                                    end)
-                                end
-                                if grabStartTime == 0 then grabStartTime = tick() end
-                                if tick() - grabStartTime > 0.3 then
-                                    dragging      = true
-                                    grabStartTime = 0
-                                end
-                            else
-                                local lockPos = savedPos * CFrame.new(0, 23, 0)
-                                pcall(function()
-                                    myRoot.CFrame      = savedPos
-                                    tRoot.CFrame       = lockPos
-                                    tHum.PlatformStand = true
-                                end)
-                                if GE then
-                                    pcall(function()
-                                        GE.SetNetworkOwner:FireServer(tRoot, lockPos)
-                                        GE.DestroyGrabLine:FireServer(tRoot)
-                                    end)
-                                end
-                            end
-                        end
+                if not dragging then
+                    pcall(function() myRoot.CFrame = tRoot.CFrame end)
+                    if GE then
+                        pcall(function()
+                            tHum.PlatformStand = true
+                            GE.SetNetworkOwner:FireServer(tRoot, myRoot.CFrame)
+                        end)
+                    end
+                    if grabStartTime == 0 then grabStartTime = tick() end
+                    if tick() - grabStartTime > 0.3 then
+                        dragging      = true
+                        grabStartTime = 0
+                    end
+                else
+                    local lockPos = savedPos * CFrame.new(0, 23, 0)
+                    pcall(function()
+                        myRoot.CFrame      = savedPos
+                        tRoot.CFrame       = lockPos
+                        tHum.PlatformStand = true
+                    end)
+                    if GE then
+                        pcall(function()
+                            GE.SetNetworkOwner:FireServer(tRoot, lockPos)
+                            GE.DestroyGrabLine:FireServer(tRoot)
+                        end)
                     end
                 end
 
@@ -42129,6 +42151,7 @@ local G = v20:AddDependencyBox()
             end)
 
             tbl9.BlobKickLoopActive = false
+            tbl8.BlobmanKickBypass  = false
         end)
     end
 
@@ -42148,6 +42171,7 @@ local G = v20:AddDependencyBox()
         end,
     })
 end
+           
                          
     v20:AddDivider()
 
