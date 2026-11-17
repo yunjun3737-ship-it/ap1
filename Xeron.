@@ -42128,7 +42128,7 @@ local G = v20:AddDependencyBox()
                 end)
 
                 if grab and drop and L_Weld and R_Weld then
-    for _ = 1, 3 do
+    for _ = 1, 2 do
         pcall(function()
             grab:FireServer(L_Det, tRoot, L_Weld)
             grab:FireServer(R_Det, tRoot, R_Weld)
@@ -42139,7 +42139,7 @@ local G = v20:AddDependencyBox()
 end
 
                 if not dragging then
-    for _ = 1, 3 do
+    for _ = 1, 2 do
         pcall(function() myRoot.CFrame = tRoot.CFrame end)
         if GE then
             pcall(function()
