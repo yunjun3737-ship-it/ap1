@@ -41988,7 +41988,7 @@ local G = v20:AddDependencyBox()
         tbl8.BlobKickTargetName = initialList[1]:match("%(([^)]+)%)") or initialList[1]
     end
 
-    local BlobKickDropdown = G:CreatePlayerDropdown("BlobKickBypassTarget", {
+    local BlobKickDropdown = G:AddPlayerDropdown("BlobKickBypassTarget", {
         Values  = initialList,
         Multi   = false,
         Text    = "바이패스킥 전용 선택",
