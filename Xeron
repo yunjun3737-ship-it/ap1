@@ -49015,7 +49015,7 @@ Rejoined: %rejoinedPlayer%, %listCount%]],
 		copyright = "",
 	}
 end
-end
+
 ]====]
 sources.Bootstrap = [====[
 local sources = ...
