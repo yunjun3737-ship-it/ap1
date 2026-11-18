@@ -35092,8 +35092,7 @@ local function fn21(arg, arg2)
                                 local v29 = fn23(v23, i, #tbl17)  
                                 local weldHRP = v27:FindFirstChild("WeldHRP")  
 
-                                
-        if tbl8.AngleFixKick then  
+       if tbl8.AngleFixKick then  
     local oldAlign = v27:FindFirstChild("KickAlign")  
     if oldAlign then oldAlign:Destroy() end  
     local oldRot = v27:FindFirstChild("KickRot")  
@@ -35117,18 +35116,59 @@ local function fn21(arg, arg2)
         kickAO.Parent = v27  
     end  
 
-    kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)  
-    kickAP.P = math.huge  
-    kickAP.D = math.huge  
+    kickAP.MaxForce = Vector3.new(100000, 100000, 100000)  
+    kickAP.P = 10000  
+    kickAP.D = 500  
     kickAP.Position = v29  
 
-    kickAO.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)  
-    kickAO.P = math.huge  
-    kickAO.D = math.huge  
+    kickAO.MaxTorque = Vector3.new(100000, 100000, 100000)  
+    kickAO.P = 10000  
+    kickAO.D = 500  
     kickAO.CFrame = CFrame.Angles(0, 0, 0)  
 
     if weldHRP then weldHRP.Enabled = false end  
 else  
+    local oldAlign = v27:FindFirstChild("KickAlign")  
+    if oldAlign then oldAlign:Destroy() end  
+    local oldRot = v27:FindFirstChild("KickRot")  
+    if oldRot then oldRot:Destroy() end  
+    local oldAtt0 = v27:FindFirstChild("KickAtt0")  
+    if oldAtt0 then oldAtt0:Destroy() end  
+    local oldAtt1 = workspace.Terrain:FindFirstChild("KickAtt1_" .. v25.Name)  
+    if oldAtt1 then oldAtt1:Destroy() end  
+
+    local kickAP = v27:FindFirstChild("KickAP")  
+    local kickAO = v27:FindFirstChild("KickAO")  
+
+    if not kickAP or not kickAO then  
+        if kickAP then kickAP:Destroy() end  
+        if kickAO then kickAO:Destroy() end  
+
+        kickAP = Instance.new("BodyPosition")  
+        local bodyGyro = Instance.new("BodyGyro")  
+        kickAP.D = 200  
+        kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)  
+        kickAP.Position = v29  
+        kickAP.Parent = v27  
+        bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)  
+        bodyGyro.D = 200  
+        bodyGyro.CFrame = CFrame.new()  
+        bodyGyro.Parent = v27  
+        kickAP.Name = "KickAP"  
+        bodyGyro.Name = "KickAO"  
+    else
+        kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        kickAP.D = 201
+        if kickAO then
+            kickAO.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            kickAO.D = 201
+        end
+    end  
+
+    if weldHRP then weldHRP.Enabled = false end  
+
+    kickAP.Position = v29  
+end  
                                     local oldAlign = v27:FindFirstChild("KickAlign")  
                                     if oldAlign then oldAlign:Destroy() end  
                                     local oldRot = v27:FindFirstChild("KickRot")  
