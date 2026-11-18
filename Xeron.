@@ -41985,12 +41985,13 @@ v21:AddToggle("OwnershipKickToggle", {
         tbl8.OwnershipKick = own
     end,
 })
+
 if RBox then
     if getgenv().AngleFixKick == nil then
         getgenv().AngleFixKick = false
     end
 
-    V21:AddToggle("AngleFixKick", {
+    v21:AddToggle("AngleFixKick", {
         Text = "안티 앵글",
         Default = false,
         Tooltip = "킥시도시 고정력을 매우 향상시키지만 킥속도는 보장할수없습니다. 또한 불리하게 작용할수도 있습니다.",
