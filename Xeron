@@ -34866,7 +34866,8 @@ Escape Timer: %*]]
 		end)
 				 
                   
---[[에어락]]
+--[[킥루프]]
+
 do
     task.spawn(function()
         local tbl16 = {}
@@ -35107,9 +35108,6 @@ do
                                         local ownBG = v27:FindFirstChild("OwnBG")
 
                                         if not st.dragging then
-                                            v23.CFrame = v27.CFrame * CFrame.new(0, 0, 3)
-                                            v23.AssemblyLinearVelocity = Vector3.zero
-                                            v23.AssemblyAngularVelocity = Vector3.zero
                                             st.checkStartTime = 0
                                             if ownBP then ownBP:Destroy() end
                                             if ownBG then ownBG:Destroy() end
@@ -35138,10 +35136,6 @@ do
                                         else
                                             local lockPos = st.savedPos * CFrame.new(5, 20, 4)
 
-                                            v23.CFrame = st.savedPos
-                                            v23.AssemblyLinearVelocity = Vector3.zero
-                                            v23.AssemblyAngularVelocity = Vector3.zero
-
                                             if not ownBP then
                                                 ownBP = Instance.new("BodyPosition")
                                                 ownBP.Name = "OwnBP"
@@ -35168,7 +35162,6 @@ do
                                                     st.checkStartTime = 0
                                                     if ownBP then ownBP:Destroy() end
                                                     if ownBG then ownBG:Destroy() end
-                                                    v23.CFrame = v27.CFrame * CFrame.new(0, 0, 3)
                                                 else
                                                     st.checkStartTime = tick()
                                                 end
