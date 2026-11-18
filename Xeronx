@@ -34867,7 +34867,7 @@ Escape Timer: %*]]
 				 
                   
 --[[에어락]]
-
+do
     task.spawn(function()
         local tbl16 = {}
 
@@ -35018,21 +35018,9 @@ Escape Timer: %*]]
             end)
         end
 
-        while task.wait() do
+                                                 
+          while task.wait() do
     if flag11 then
-        if tbl8.OwnState then
-            for plr in pairs(tbl8.OwnState) do
-                if plr and plr.Character then
-                    local r = plr.Character:FindFirstChild("HumanoidRootPart")
-                    if r then
-                        for _, v in pairs(r:GetChildren()) do
-                            if v.Name == "OwnBP" or v.Name == "OwnBG" then v:Destroy() end
-                        end
-                    end
-                end
-            end
-            tbl8.OwnState = nil
-        end
         for k in pairs(tbl16) do
             fn22(k)
         end
@@ -35040,38 +35028,11 @@ Escape Timer: %*]]
     end
 
     if not tbl8.LoopApplyMethodT then
-        if tbl8.OwnState then
-            for plr in pairs(tbl8.OwnState) do
-                if plr and plr.Character then
-                    local r = plr.Character:FindFirstChild("HumanoidRootPart")
-                    if r then
-                        for _, v in pairs(r:GetChildren()) do
-                            if v.Name == "OwnBP" or v.Name == "OwnBG" then v:Destroy() end
-                        end
-                    end
-                end
-            end
-            tbl8.OwnState = nil
-        end
         for k in pairs(tbl16) do
             fn22(k)
             tbl16[k] = nil
         end
         if not tbl12.WaitForRuntimeToggle("LoopApplyMethodT") then return end
-    end
-
-    if not tbl8.OwnershipKick and tbl8.OwnState then
-        for plr in pairs(tbl8.OwnState) do
-            if plr and plr.Character then
-                local r = plr.Character:FindFirstChild("HumanoidRootPart")
-                if r then
-                    for _, v in pairs(r:GetChildren()) do
-                        if v.Name == "OwnBP" or v.Name == "OwnBG" then v:Destroy() end
-                    end
-                end
-            end
-        end
-        tbl8.OwnState = nil
     end
 
     local loopApplyMethodT = tbl8.LoopApplyMethodT
@@ -35142,12 +35103,7 @@ Escape Timer: %*]]
 
                                 local st = tbl8.OwnState[v25]
                                 if not st then
-                                    st = {
-                                        dragging = false,
-                                        grabStartTime = 0,
-                                        checkStartTime = 0,
-                                        savedPos = v23.CFrame
-                                    }
+                                    st = {dragging = false, grabStartTime = 0, checkStartTime = 0, savedPos = v23.CFrame}
                                     tbl8.OwnState[v25] = st
                                 end
 
@@ -35176,24 +35132,20 @@ Escape Timer: %*]]
                                         st.grabStartTime = 0
                                         st.checkStartTime = tick()
                                         local lockPos = st.savedPos * CFrame.new(5, 20, 4)
-                                        if not ownBP then
-                                            ownBP = Instance.new("BodyPosition")
-                                            ownBP.Name = "OwnBP"
-                                            ownBP.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-                                            ownBP.D = 500
-                                            ownBP.P = 100000
-                                            ownBP.Parent = v27
-                                        end
-                                        if not ownBG then
-                                            ownBG = Instance.new("BodyGyro")
-                                            ownBG.Name = "OwnBG"
-                                            ownBG.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-                                            ownBG.D = 500
-                                            ownBG.P = 100000
-                                            ownBG.Parent = v27
-                                        end
+                                        ownBP = Instance.new("BodyPosition")
+                                        ownBP.Name = "OwnBP"
+                                        ownBP.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+                                        ownBP.D = 500
+                                        ownBP.P = 100000
                                         ownBP.Position = lockPos.Position
+                                        ownBP.Parent = v27
+                                        ownBG = Instance.new("BodyGyro")
+                                        ownBG.Name = "OwnBG"
+                                        ownBG.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+                                        ownBG.D = 500
+                                        ownBG.P = 100000
                                         ownBG.CFrame = lockPos
+                                        ownBG.Parent = v27
                                     end
                                 else
                                     local lockPos = st.savedPos * CFrame.new(5, 20, 4)
@@ -35248,7 +35200,7 @@ Escape Timer: %*]]
                             local flag12
 
                             if not (tbl12.GetMagnitude(v23, v27) > 33) then
-                                for j = 1, 6 do
+                                for j = 1, 7 do
                                     tbl12.Grab(v27)
                                 end
 
@@ -35258,7 +35210,7 @@ Escape Timer: %*]]
                                 elseif tbl9.NKDelayMode == "Normal" then
                                     task.spawn(function()
                                         task.wait()
-                                        for j = 1, 6 do
+                                        for j = 1, 7 do
                                             tbl12.RNO(v27)
                                         end
                                     end)
@@ -35283,14 +35235,14 @@ Escape Timer: %*]]
                             elseif tbl12.SNO(v27) then
                                 tbl12.Teleport(v27, v29)
 
-                                for j = 1, 6 do
+                                for j = 1, 7 do
                                     tbl12.Grab(v27)
                                 end
 
                                 flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
                                 if flag12 then
                                     task.delay(0.00000000000000002, function()
-                                        for j = 1, 6 do
+                                        for j = 1, 7 do
                                             tbl12.RNO(v27)
                                         end
                                     end)
@@ -35331,12 +35283,11 @@ Escape Timer: %*]]
                 end
             end
         end
-    end
-end         
-                                   
- 
-                                                 
-                
+    end)
+end
+
+
+
 		lib.ForceCheckbox = true
 
 		v19 = lib:CreateWindow({
