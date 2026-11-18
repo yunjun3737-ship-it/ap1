@@ -34869,7 +34869,8 @@ Escape Timer: %*]]
 --[[킥루프]]
 
                
-                                             do
+                                       
+       do
 task.spawn(function()
 local tbl16 = {}
 
@@ -34935,7 +34936,7 @@ local function fn21(arg, arg2)
 
             local now = os.clock()  
             if now >= nextPclldCheck then  
-                nextPclldCheck = now + 0.1  
+                nextPclldCheck = now + 0.2  
                 pclldNear = false  
 
                 local myPcld = tbl12.DetectPCLD(localPlayer)  
@@ -34947,17 +34948,6 @@ local function fn21(arg, arg2)
                     end  
                 end  
             end  
-
-            if tbl8.EKILock then
-                for player in pairs(tbl7.SelectedPlayers) do
-                    if player and player.Parent and not tbl7.EKILockTargets[player] then
-                        local _, hrp = tbl12.Char(player)
-                        if hrp and hrp.Parent and hrp:FindFirstChild("KickAP") and tbl12.IsNetworkOwner(hrp) then
-                            tbl7.EKILockTargets[player] = true
-                        end
-                    end
-                end
-            end
 
             if not pclldNear then  
                 for player, hrp in pairs(tbl7.EKILockLocked) do  
@@ -34976,6 +34966,17 @@ local function fn21(arg, arg2)
                 return  
             end  
 
+            if tbl8.EKILock then  
+                for player in pairs(tbl7.SelectedPlayers) do  
+                    if player and player.Parent and not tbl7.EKILockTargets[player] then  
+                        local _, hrp = tbl12.Char(player)  
+                        if hrp and hrp.Parent and hrp:FindFirstChild("KickAP") and tbl12.IsNetworkOwner(hrp) then  
+                            tbl7.EKILockTargets[player] = true  
+                        end  
+                    end  
+                end  
+            end  
+
             for player in pairs(tbl7.EKILockTargets) do  
                 if player and player.Parent and tbl7.SelectedPlayers[player] then  
                     local _, hrp = tbl12.Char(player)  
@@ -34991,9 +34992,7 @@ local function fn21(arg, arg2)
                         end  
                     end  
                 else  
-                    if not player or not player.Parent then  
-                        tbl7.EKILockTargets[player] = nil  
-                    end  
+                    tbl7.EKILockTargets[player] = nil  
                 end  
             end  
 
@@ -35273,7 +35272,7 @@ local function fn21(arg, arg2)
     end  
 end)
 
-end
+end                             
                            
                                     
                                         
