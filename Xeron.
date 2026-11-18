@@ -34867,7 +34867,6 @@ Escape Timer: %*]]
 				 
                   
 --[[에어락]]
-
 do
     task.spawn(function()
         local tbl16 = {}
@@ -35115,14 +35114,6 @@ do
                                             if ownBP then ownBP:Destroy() end
                                             if ownBG then ownBG:Destroy() end
 
-                                            pcall(function()
-                                                v28.PlatformStand = true
-                                                v28.Sit = true
-                                                SetNetOwner:FireServer(v27, v27.CFrame)
-                                                SetNetOwner:FireServer(v27, v27.CFrame)
-                                                DestroyGrabLine:FireServer(v27)
-                                            end)
-
                                             if st.grabStartTime == 0 then st.grabStartTime = tick() end
                                             if tick() - st.grabStartTime > 0.2 then
                                                 st.dragging = true
@@ -35169,15 +35160,6 @@ do
                                             end
                                             ownBP.Position = lockPos.Position
                                             ownBG.CFrame = lockPos
-
-                                            v28.PlatformStand = true
-
-                                            pcall(function()
-                                                for j = 1, 4 do
-                                                    SetNetOwner:FireServer(v27, lockPos)
-                                                end
-                                                DestroyGrabLine:FireServer(v27)
-                                            end)
 
                                             if st.checkStartTime > 0 and tick() - st.checkStartTime > 0.2 then
                                                 if (v27.Position - lockPos.Position).Magnitude > 15 then
@@ -35284,7 +35266,6 @@ do
         end
     end)
 end
-
 
 
 
