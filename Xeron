@@ -34869,17 +34869,10 @@ Escape Timer: %*]]
                   
 --[[킥루프]]
 
-               
-                                       
-
+          
 do
 task.spawn(function()
 local tbl16 = {}
-
-tbl8.AngleFixKick = getgenv().AngleFixKick or false
-
-
-end
 
 local function fn21(arg, arg2)  
         if tbl8.EKILock and arg and arg.Parent then  
@@ -34892,14 +34885,14 @@ local function fn21(arg, arg2)
                     tbl7.EKILockTargets[player] = nil  
                 end  
             end  
-        end)
+        end  
 
         if not arg or not tbl8.EKI then return end  
 
         return sethiddenproperty and pcall(function()  
             sethiddenproperty(arg, "PhysicsRepRootPart", arg2)  
-        end)
-    end
+        end)  
+    end  
 
     local function fn22(arg)  
         if not arg then return end  
@@ -35045,6 +35038,8 @@ local function fn21(arg, arg2)
     end  
 
     while task.wait() do  
+        tbl8.AngleFixKick = getgenv().AngleFixKick or false
+
         if flag11 then  
             for k in pairs(tbl16) do  
                 fn22(k)  
@@ -35346,7 +35341,6 @@ local function fn21(arg, arg2)
         end  
     end  
 end)
-
 end
                                     
                                         
@@ -41999,7 +41993,7 @@ if RBox then
     V21:AddToggle("AngleFixKick", {
         Text = "안티 앵글",
         Default = false,
-        Tooltip = "킥 고정력을 매우높여주지만 킥속도는 장담할수없습니다. 또한 불리하게 작용할때도 있습니다.",
+        Tooltip = "킥시도시 고정력을 매우 향상시키지만 킥속도는 보장할수없습니다. 또한 불리하게 작용할수도 있습니다.",
         Callback = function(Value)
             getgenv().AngleFixKick = Value
 
