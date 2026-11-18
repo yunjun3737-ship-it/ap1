@@ -41962,9 +41962,9 @@ Config2:AddDropdown("AntiInPlotsType", {
 		})
 
 
-      v21:AddToggle("EKILockToggle", {
+  v21:AddToggle("EKILockToggle", {
     Text = "에어락 [Anti-Grab Bypass]",
-    Risky = false,
+    Risky = ture,
     Default = false,
     Tooltip = "에어락 이지만 안티그랩 을 우회 하며 빠져나오지 못합니다(낮은레벨의 실행기는 사용할수 없습니다.)",
     DisabledTooltip = "Your executor does not support this feature!",
@@ -41988,6 +41988,7 @@ v21:AddToggle("OwnershipKickToggle", {
 
 v21:AddToggle("AngleFixKick", {
     Text = "안티 앵글",
+    Risky = true,
     Default = false,
     Tooltip = "킥시도시 고정력을 매우 향상시키지만 킥속도는 보장할수없습니다. 또한 불리하게 작용할수도 있습니다.",
     Callback = function(Value)
