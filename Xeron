@@ -35341,7 +35341,7 @@ end
 
 		v19 = lib:CreateWindow({
 			Title = "<b>ALPHA(Top)</b>",
-			Footer = ("<b>Alpha%* | FTAP</b>"):format("v7.1"),
+			Footer = ("<b>Alpha%* | FTAP</b>"):format("v7.5"),
 			ToggleKeybind = Enum.KeyCode.RightShift,
 			Center = true,
 			AutoShow = true,
@@ -35423,7 +35423,7 @@ end
 			label.Position = UDim2.fromOffset(viewportSize.X * 0.5, viewportSize.Y * 0.8)
 		end
 
-		Watermark = lib:AddDraggableLabel("Resonance", 77989137998499)
+		Watermark = lib:AddDraggableLabel("ALPHA", 77989137998499)
 		Watermark:SetVisible(true)
 
 		task.spawn(function()
@@ -35437,7 +35437,7 @@ end
 				local floor = math.floor
 				local dataPing = Stats2.Network.ServerStatsItem["Data Ping"]
 				local getValue = dataPing.GetValue
-				setText(v23, ("ALPHA(TOP) %s | %s fps | %s ms"):format("v7.1", math.floor(Stats2.Workspace.Heartbeat:GetValue()), floor(getValue(dataPing))))
+				setText(v23, ("ALPHA(TOP) %s | %s fps | %s ms"):format("v7.5", math.floor(Stats2.Workspace.Heartbeat:GetValue()), floor(getValue(dataPing))))
 				task.wait(1)
 			end
 		end)
@@ -35502,7 +35502,7 @@ end
 		do
 			local Statistics = tbl15.Home:AddRightGroupbox("Statistics", "chart-no-axes-combined")
 			Statistics:AddLabel("CurrentTime", { Text = "Current time: 00:00", DoesWrap = true })
-			Statistics:AddLabel("VerLabel", { Text = ("Current script version: <b>%*</b>"):format("v2.9"), DoesWrap = true })
+			Statistics:AddLabel("VerLabel", { Text = ("Current script version: <b>%*</b>"):format("V7.5"), DoesWrap = true })
 			Statistics:AddLabel("TogglesCurrentlyOn", { Text = "Toggles currently enabled: 0", DoesWrap = true })
 			Statistics:AddDivider("Server Statistics")
 			Statistics:AddLabel("Game name: <b>Fling Things and People</b>")
