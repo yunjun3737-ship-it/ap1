@@ -34892,14 +34892,14 @@ local function fn21(arg, arg2)
                     tbl7.EKILockTargets[player] = nil  
                 end  
             end  
-        end  
+        end)
 
         if not arg or not tbl8.EKI then return end  
 
         return sethiddenproperty and pcall(function()  
             sethiddenproperty(arg, "PhysicsRepRootPart", arg2)  
-        end)  
-    end  
+        end)
+    end
 
     local function fn22(arg)  
         if not arg then return end  
