@@ -35105,18 +35105,31 @@ local function fn21(arg, arg2)
         att0.Parent = v27  
     end  
 
+    local att1Name = "KickAtt1_" .. v25.Name  
+    local att1 = workspace.Terrain:FindFirstChild(att1Name)  
+    if not att1 then  
+        att1 = Instance.new("Attachment")  
+        att1.Name = att1Name  
+        att1.Parent = workspace.Terrain  
+    end  
+
+    att1.WorldPosition = v29  
+
     local kickAlign = v27:FindFirstChild("KickAlign")  
     if not kickAlign then  
         kickAlign = Instance.new("AlignPosition")  
         kickAlign.Name = "KickAlign"  
         kickAlign.Attachment0 = att0  
-        kickAlign.Mode = Enum.PositionAlignmentMode.OneAttachment  
-        kickAlign.MaxForce = math.huge  
+        kickAlign.Attachment1 = att1  
         kickAlign.Responsiveness = 200  
         kickAlign.Parent = v27  
     end  
     
-    kickAlign.Position = v29  
+    if tbl8.EKILock then
+        kickAlign.MaxForce = 0
+    else
+        kickAlign.MaxForce = math.huge
+    end
 
     local kickRot = v27:FindFirstChild("KickRot")  
     if not kickRot then  
@@ -41955,7 +41968,7 @@ Config2:AddDropdown("AntiInPlotsType", {
 
   v21:AddToggle("EKILockToggle", {
     Text = "에어락 [Anti-Grab Bypass]",
-    Risky = ture,
+    Risky = true,
     Default = false,
     Tooltip = "에어락 이지만 안티그랩 을 우회 하며 빠져나오지 못합니다(낮은레벨의 실행기는 사용할수 없습니다.)",
     DisabledTooltip = "Your executor does not support this feature!",
