@@ -17449,6 +17449,7 @@ do
 							AntiExplosion = false,
                             AntiOwnership = false,
                             AntiOwnership2 = false,
+                            AngleFixKick = false,
 							AntiKick = false,
 							AntiKick2 = false,
 							AntiPaint = false,
@@ -34870,9 +34871,15 @@ Escape Timer: %*]]
 
                
                                        
-       do
+
+do
 task.spawn(function()
 local tbl16 = {}
+
+tbl8.AngleFixKick = getgenv().AngleFixKick or false
+
+
+end
 
 local function fn21(arg, arg2)  
         if tbl8.EKILock and arg and arg.Parent then  
@@ -34901,9 +34908,17 @@ local function fn21(arg, arg2)
         if v23 then  
             local kickAP = v23:FindFirstChild("KickAP")  
             local kickAO = v23:FindFirstChild("KickAO")  
+            local kickAlign = v23:FindFirstChild("KickAlign")  
+            local kickRot = v23:FindFirstChild("KickRot")  
+            local kickAtt0 = v23:FindFirstChild("KickAtt0")  
             local weldHRP = v23:FindFirstChild("WeldHRP")  
             if kickAP then kickAP:Destroy() end  
             if kickAO then kickAO:Destroy() end  
+            if kickAlign then kickAlign:Destroy() end  
+            if kickRot then kickRot:Destroy() end  
+            if kickAtt0 then kickAtt0:Destroy() end  
+            local att1 = workspace.Terrain:FindFirstChild("KickAtt1_" .. arg.Name)
+            if att1 then att1:Destroy() end
             if weldHRP and v24:FindFirstChild("Ragdolled") and v24.Ragdolled.Value then  
                 weldHRP.Enabled = true  
             end  
@@ -35080,31 +35095,91 @@ local function fn21(arg, arg2)
                                 fn22(v25)  
                             else  
                                 local v29 = fn23(v23, i, #tbl17)  
-                                local kickAP = v27:FindFirstChild("KickAP")  
-                                local kickAO = v27:FindFirstChild("KickAO")  
                                 local weldHRP = v27:FindFirstChild("WeldHRP")  
 
-                                if not kickAP or not kickAO then  
-                                    if kickAP then kickAP:Destroy() end  
-                                    if kickAO then kickAO:Destroy() end  
+                                if tbl8.AngleFixKick then  
+                                    local oldBp = v27:FindFirstChild("KickAP")  
+                                    if oldBp then oldBp:Destroy() end  
+                                    local oldBg = v27:FindFirstChild("KickAO")  
+                                    if oldBg then oldBg:Destroy() end  
 
-                                    kickAP = Instance.new("BodyPosition")  
-                                    local bodyGyro = Instance.new("BodyGyro")  
-                                    kickAP.D = 200  
-                                    kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)  
+                                    local att0 = v27:FindFirstChild("KickAtt0")  
+                                    if not att0 then  
+                                        att0 = Instance.new("Attachment")  
+                                        att0.Name = "KickAtt0"  
+                                        att0.Parent = v27  
+                                    end  
+
+                                    local att1Name = "KickAtt1_" .. v25.Name  
+                                    local att1 = workspace.Terrain:FindFirstChild(att1Name)  
+                                    if not att1 then  
+                                        att1 = Instance.new("Attachment")  
+                                        att1.Name = att1Name  
+                                        att1.Parent = workspace.Terrain  
+                                    end  
+
+                                    local kickAlign = v27:FindFirstChild("KickAlign")  
+                                    if not kickAlign then  
+                                        kickAlign = Instance.new("AlignPosition")  
+                                        kickAlign.Name = "KickAlign"  
+                                        kickAlign.Attachment0 = att0  
+                                        kickAlign.Attachment1 = att1  
+                                        kickAlign.MaxForce = math.huge  
+                                        kickAlign.Responsiveness = 200  
+                                        kickAlign.Parent = v27  
+                                    end  
+
+                                    local kickRot = v27:FindFirstChild("KickRot")  
+                                    if not kickRot then  
+                                        kickRot = Instance.new("AlignOrientation")  
+                                        kickRot.Name = "KickRot"  
+                                        kickRot.Attachment0 = att0  
+                                        kickRot.Mode = Enum.OrientationAlignmentMode.OneAttachment  
+                                        kickRot.CFrame = CFrame.Angles(0, 0, 0)  
+                                        kickRot.MaxTorque = math.huge  
+                                        kickRot.Responsiveness = 200  
+                                        kickRot.Parent = v27  
+                                    end  
+
+                                    att1.WorldPosition = v29  
+                                    kickRot.CFrame = CFrame.Angles(0, 0, 0)  
+
+                                    if weldHRP then weldHRP.Enabled = false end  
+                                else  
+                                    local oldAlign = v27:FindFirstChild("KickAlign")  
+                                    if oldAlign then oldAlign:Destroy() end  
+                                    local oldRot = v27:FindFirstChild("KickRot")  
+                                    if oldRot then oldRot:Destroy() end  
+                                    local oldAtt0 = v27:FindFirstChild("KickAtt0")  
+                                    if oldAtt0 then oldAtt0:Destroy() end  
+                                    local oldAtt1 = workspace.Terrain:FindFirstChild("KickAtt1_" .. v25.Name)  
+                                    if oldAtt1 then oldAtt1:Destroy() end  
+
+                                    local kickAP = v27:FindFirstChild("KickAP")  
+                                    local kickAO = v27:FindFirstChild("KickAO")  
+
+                                    if not kickAP or not kickAO then  
+                                        if kickAP then kickAP:Destroy() end  
+                                        if kickAO then kickAO:Destroy() end  
+
+                                        kickAP = Instance.new("BodyPosition")  
+                                        local bodyGyro = Instance.new("BodyGyro")  
+                                        kickAP.D = 200  
+                                        kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)  
+                                        kickAP.Position = v29  
+                                        kickAP.Parent = v27  
+                                        bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)  
+                                        bodyGyro.D = 200  
+                                        bodyGyro.CFrame = CFrame.new()  
+                                        bodyGyro.Parent = v27  
+                                        kickAP.Name = "KickAP"  
+                                        bodyGyro.Name = "KickAO"  
+                                    end  
+
+                                    if weldHRP then weldHRP.Enabled = false end  
+
                                     kickAP.Position = v29  
-                                    kickAP.Parent = v27  
-                                    bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)  
-                                    bodyGyro.D = 200  
-                                    bodyGyro.CFrame = CFrame.new()  
-                                    bodyGyro.Parent = v27  
-                                    kickAP.Name = "KickAP"  
-                                    bodyGyro.Name = "KickAO"  
                                 end  
-
-                                if weldHRP then weldHRP.Enabled = false end  
-
-                                kickAP.Position = v29  
 
                                 if tbl8.OwnershipKick then  
                                     if not tbl8.OwnState then  
@@ -35272,8 +35347,7 @@ local function fn21(arg, arg2)
     end  
 end)
 
-end                             
-                           
+end
                                     
                                         
 		lib.ForceCheckbox = true
@@ -41896,7 +41970,7 @@ Config2:AddDropdown("AntiInPlotsType", {
 
       v21:AddToggle("EKILockToggle", {
     Text = "에어락 [Anti-Grab Bypass]",
-    Risky = true,
+    Risky = false,
     Default = false,
     Tooltip = "에어락 이지만 안티그랩 을 우회 하며 빠져나오지 못합니다(낮은레벨의 실행기는 사용할수 없습니다.)",
     DisabledTooltip = "Your executor does not support this feature!",
@@ -41910,14 +41984,44 @@ Config2:AddDropdown("AntiInPlotsType", {
 })
 v21:AddToggle("OwnershipKickToggle", {
     Text = "바디 카운터",
-    Risky = true,
+    Risky = false,
     Default = tbl8.OwnershipKick,
     Tooltip = "BodyPosition/BodyGyro로 타겟을 완전히 고정하여 킥속도를 더개선하지만 일부실행기에선 작동하지않습니다.",
     Callback = function(own)
         tbl8.OwnershipKick = own
     end,
 })
+if RBox then
+    if getgenv().AngleFixKick == nil then
+        getgenv().AngleFixKick = false
+    end
 
+    V21:AddToggle("AngleFixKick", {
+        Text = "안티 앵글",
+        Default = false,
+        Tooltip = "킥 고정력을 매우높여주지만 킥속도는 장담할수없습니다. 또한 불리하게 작용할때도 있습니다.",
+        Callback = function(Value)
+            getgenv().AngleFixKick = Value
+
+            if not Value then
+                for _, plr in ipairs(Players:GetPlayers()) do
+                    if plr.Character then
+                        local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                            for _, obj in ipairs(hrp:GetChildren()) do
+                                if obj.Name == "KickAlign" or obj.Name == "KickRot" or obj.Name == "KickAtt0" then
+                                    obj:Destroy()
+                                end
+                            end
+                        end
+                    end
+                    local att1 = workspace.Terrain:FindFirstChild("KickAtt1_" .. plr.Name)
+                    if att1 then att1:Destroy() end
+                end
+            end
+        end
+    })
+end
 		v21:AddSlider("HeightNK", {
 			Text = "킥 높이",
 			Default = 15,
