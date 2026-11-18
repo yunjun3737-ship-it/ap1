@@ -41986,37 +41986,31 @@ v21:AddToggle("OwnershipKickToggle", {
     end,
 })
 
-if RBox then
-    if getgenv().AngleFixKick == nil then
-        getgenv().AngleFixKick = false
-    end
+v21:AddToggle("AngleFixKick", {
+    Text = "안티 앵글",
+    Default = false,
+    Tooltip = "킥시도시 고정력을 매우 향상시키지만 킥속도는 보장할수없습니다. 또한 불리하게 작용할수도 있습니다.",
+    Callback = function(Value)
+        getgenv().AngleFixKick = Value
 
-    v21:AddToggle("AngleFixKick", {
-        Text = "안티 앵글",
-        Default = false,
-        Tooltip = "킥시도시 고정력을 매우 향상시키지만 킥속도는 보장할수없습니다. 또한 불리하게 작용할수도 있습니다.",
-        Callback = function(Value)
-            getgenv().AngleFixKick = Value
-
-            if not Value then
-                for _, plr in ipairs(Players:GetPlayers()) do
-                    if plr.Character then
-                        local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
-                        if hrp then
-                            for _, obj in ipairs(hrp:GetChildren()) do
-                                if obj.Name == "KickAlign" or obj.Name == "KickRot" or obj.Name == "KickAtt0" then
-                                    obj:Destroy()
-                                end
+        if not Value then
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr.Character then
+                    local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        for _, obj in ipairs(hrp:GetChildren()) do
+                            if obj.Name == "KickAlign" or obj.Name == "KickRot" or obj.Name == "KickAtt0" then
+                                obj:Destroy()
                             end
                         end
                     end
-                    local att1 = workspace.Terrain:FindFirstChild("KickAtt1_" .. plr.Name)
-                    if att1 then att1:Destroy() end
                 end
+                local att1 = workspace.Terrain:FindFirstChild("KickAtt1_" .. plr.Name)
+                if att1 then att1:Destroy() end
             end
         end
-    })
-end
+    end
+})
 		v21:AddSlider("HeightNK", {
 			Text = "킥 높이",
 			Default = 15,
