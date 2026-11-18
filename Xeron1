@@ -34870,7 +34870,7 @@ Escape Timer: %*]]
 --[[킥루프]]
 
           
-do
+ do
 task.spawn(function()
 local tbl16 = {}
 
@@ -35093,7 +35093,7 @@ local function fn21(arg, arg2)
                                 local weldHRP = v27:FindFirstChild("WeldHRP")  
 
                                 if tbl8.AngleFixKick then  
-                                    local oldBp = v27:FindFirstChild("KickAP")  
+                                    local oldBp = v27:FindFirstChild("KickAlign")  
                                     if oldBp then oldBp:Destroy() end  
                                     local oldBg = v27:FindFirstChild("KickAO")  
                                     if oldBg then oldBg:Destroy() end  
@@ -35103,25 +35103,6 @@ local function fn21(arg, arg2)
                                         att0 = Instance.new("Attachment")  
                                         att0.Name = "KickAtt0"  
                                         att0.Parent = v27  
-                                    end  
-
-                                    local att1Name = "KickAtt1_" .. v25.Name  
-                                    local att1 = workspace.Terrain:FindFirstChild(att1Name)  
-                                    if not att1 then  
-                                        att1 = Instance.new("Attachment")  
-                                        att1.Name = att1Name  
-                                        att1.Parent = workspace.Terrain  
-                                    end  
-
-                                    local kickAlign = v27:FindFirstChild("KickAlign")  
-                                    if not kickAlign then  
-                                        kickAlign = Instance.new("AlignPosition")  
-                                        kickAlign.Name = "KickAlign"  
-                                        kickAlign.Attachment0 = att0  
-                                        kickAlign.Attachment1 = att1  
-                                        kickAlign.MaxForce = math.huge  
-                                        kickAlign.Responsiveness = 200  
-                                        kickAlign.Parent = v27  
                                     end  
 
                                     local kickRot = v27:FindFirstChild("KickRot")  
@@ -35136,8 +35117,18 @@ local function fn21(arg, arg2)
                                         kickRot.Parent = v27  
                                     end  
 
-                                    att1.WorldPosition = v29  
                                     kickRot.CFrame = CFrame.Angles(0, 0, 0)  
+
+                                    local kickAP = v27:FindFirstChild("KickAP")  
+                                    if not kickAP then  
+                                        kickAP = Instance.new("BodyPosition")  
+                                        kickAP.Name = "KickAP"  
+                                        kickAP.D = 200  
+                                        kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)  
+                                        kickAP.Parent = v27  
+                                    end  
+
+                                    kickAP.Position = v29  
 
                                     if weldHRP then weldHRP.Enabled = false end  
                                 else  
@@ -35341,8 +35332,7 @@ local function fn21(arg, arg2)
         end  
     end  
 end)
-end
-                                    
+end                       
                                         
 		lib.ForceCheckbox = true
 
