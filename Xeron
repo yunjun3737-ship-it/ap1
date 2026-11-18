@@ -34867,6 +34867,7 @@ Escape Timer: %*]]
 				 
                   
 --[[에어락]]
+
 do
     task.spawn(function()
         local tbl16 = {}
@@ -34925,7 +34926,6 @@ do
             tbl7.EKILockTargets = tbl7.EKILockTargets or setmetatable({}, { __mode = "k" })
             tbl7.EKILockLocked  = tbl7.EKILockLocked  or setmetatable({}, { __mode = "k" })
 
-            
             local pclldNear = false
             local nextPclldCheck = 0
 
@@ -34947,7 +34947,6 @@ do
                     end
                 end
 
-                
                 if not pclldNear then
                     for player, hrp in pairs(tbl7.EKILockLocked) do
                         if hrp and hrp.Parent then
@@ -34965,7 +34964,6 @@ do
                     return
                 end
 
-                
                 for player in pairs(tbl7.EKILockTargets) do
                     if player and player.Parent and tbl7.SelectedPlayers[player] then
                         local _, hrp = tbl12.Char(player)
@@ -35018,273 +35016,275 @@ do
             end)
         end
 
-                                                 
-          while task.wait() do
-    if flag11 then
-        for k in pairs(tbl16) do
-            fn22(k)
-        end
-        return
-    end
+        while task.wait() do
+            if flag11 then
+                for k in pairs(tbl16) do
+                    fn22(k)
+                end
+                return
+            end
 
-    if not tbl8.LoopApplyMethodT then
-        for k in pairs(tbl16) do
-            fn22(k)
-            tbl16[k] = nil
-        end
-        if not tbl12.WaitForRuntimeToggle("LoopApplyMethodT") then return end
-    end
+            if not tbl8.LoopApplyMethodT then
+                for k in pairs(tbl16) do
+                    fn22(k)
+                    tbl16[k] = nil
+                end
+                if not tbl12.WaitForRuntimeToggle("LoopApplyMethodT") then return end
+            end
 
-    local loopApplyMethodT = tbl8.LoopApplyMethodT
-    local selectedPlayers = tbl7.SelectedPlayers
-    local targetMethods = tbl7.TargetMethods
+            local loopApplyMethodT = tbl8.LoopApplyMethodT
+            local selectedPlayers = tbl7.SelectedPlayers
+            local targetMethods = tbl7.TargetMethods
 
-    for k in pairs(tbl16) do
-        if k and (not k.Parent or not targetMethods.Kick or inPlot.Value
-            or not loopApplyMethodT or not selectedPlayers[k]) then
-            fn22(k)
-            tbl16[k] = nil
-        end
-    end
-
-    if not (not loopApplyMethodT or not targetMethods.Kick or inPlot.Value) then
-        local v22, v23, v24 = tbl12.Char()
-
-        if v23 and v24 and v24.Health > 0 then
-            local tbl17 = {}
-
-            for k in pairs(selectedPlayers) do
-                if k and k.Parent and k:IsA("Player") then
-                    table.insert(tbl17, k)
-                    tbl16[k] = true
+            for k in pairs(tbl16) do
+                if k and (not k.Parent or not targetMethods.Kick or inPlot.Value
+                    or not loopApplyMethodT or not selectedPlayers[k]) then
+                    fn22(k)
+                    tbl16[k] = nil
                 end
             end
 
-            if #tbl17 ~= 0 then
-                for i, v25 in ipairs(tbl17) do
-                    if v23 and v24 and v24.Health > 0 and not inPlot.Value then
-                        local v26, v27, v28 = tbl12.Char(v25)
-                        local torso = v26 and v26:FindFirstChild("Torso")
+            if not (not loopApplyMethodT or not targetMethods.Kick or inPlot.Value) then
+                local v22, v23, v24 = tbl12.Char()
 
-                        if not (v27 and v28 and torso and v28.Health > 0) then
-                            fn22(v25)
-                        else
-                            local v29 = fn23(v23, i, #tbl17)
-                            local kickAP = v27:FindFirstChild("KickAP")
-                            local kickAO = v27:FindFirstChild("KickAO")
-                            local weldHRP = v27:FindFirstChild("WeldHRP")
+                if v23 and v24 and v24.Health > 0 then
+                    local tbl17 = {}
 
-                            if not kickAP or not kickAO then
-                                if kickAP then kickAP:Destroy() end
-                                if kickAO then kickAO:Destroy() end
+                    for k in pairs(selectedPlayers) do
+                        if k and k.Parent and k:IsA("Player") then
+                            table.insert(tbl17, k)
+                            tbl16[k] = true
+                        end
+                    end
 
-                                kickAP = Instance.new("BodyPosition")
-                                local bodyGyro = Instance.new("BodyGyro")
-                                kickAP.D = 200
-                                kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                                kickAP.Position = v29
-                                kickAP.Parent = v27
-                                bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-                                bodyGyro.D = 200
-                                bodyGyro.CFrame = CFrame.new()
-                                bodyGyro.Parent = v27
-                                kickAP.Name = "KickAP"
-                                bodyGyro.Name = "KickAO"
-                            end
+                    if #tbl17 ~= 0 then
+                        for i, v25 in ipairs(tbl17) do
+                            if v23 and v24 and v24.Health > 0 and not inPlot.Value then
+                                local v26, v27, v28 = tbl12.Char(v25)
+                                local torso = v26 and v26:FindFirstChild("Torso")
 
-                            if weldHRP then weldHRP.Enabled = false end
-
-                            kickAP.Position = v29
-
-                            if tbl8.OwnershipKick then
-                                if not tbl8.OwnState then
-                                    tbl8.OwnState = setmetatable({}, {__mode = "k"})
-                                end
-
-                                local st = tbl8.OwnState[v25]
-                                if not st then
-                                    st = {dragging = false, grabStartTime = 0, checkStartTime = 0, savedPos = v23.CFrame}
-                                    tbl8.OwnState[v25] = st
-                                end
-
-                                local ownBP = v27:FindFirstChild("OwnBP")
-                                local ownBG = v27:FindFirstChild("OwnBG")
-
-                                if not st.dragging then
-                                    v23.CFrame = v27.CFrame * CFrame.new(0, 0, 3)
-                                    v23.AssemblyLinearVelocity = Vector3.zero
-                                    v23.AssemblyAngularVelocity = Vector3.zero
-                                    st.checkStartTime = 0
-                                    if ownBP then ownBP:Destroy() end
-                                    if ownBG then ownBG:Destroy() end
-
-                                    pcall(function()
-                                        v28.PlatformStand = true
-                                        v28.Sit = true
-                                        SetNetOwner:FireServer(v27, v27.CFrame)
-                                        SetNetOwner:FireServer(v27, v27.CFrame)
-                                        DestroyGrabLine:FireServer(v27)
-                                    end)
-
-                                    if st.grabStartTime == 0 then st.grabStartTime = tick() end
-                                    if tick() - st.grabStartTime > 0.2 then
-                                        st.dragging = true
-                                        st.grabStartTime = 0
-                                        st.checkStartTime = tick()
-                                        local lockPos = st.savedPos * CFrame.new(5, 20, 4)
-                                        ownBP = Instance.new("BodyPosition")
-                                        ownBP.Name = "OwnBP"
-                                        ownBP.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-                                        ownBP.D = 500
-                                        ownBP.P = 100000
-                                        ownBP.Position = lockPos.Position
-                                        ownBP.Parent = v27
-                                        ownBG = Instance.new("BodyGyro")
-                                        ownBG.Name = "OwnBG"
-                                        ownBG.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-                                        ownBG.D = 500
-                                        ownBG.P = 100000
-                                        ownBG.CFrame = lockPos
-                                        ownBG.Parent = v27
-                                    end
+                                if not (v27 and v28 and torso and v28.Health > 0) then
+                                    fn22(v25)
                                 else
-                                    local lockPos = st.savedPos * CFrame.new(5, 20, 4)
+                                    local v29 = fn23(v23, i, #tbl17)
+                                    local kickAP = v27:FindFirstChild("KickAP")
+                                    local kickAO = v27:FindFirstChild("KickAO")
+                                    local weldHRP = v27:FindFirstChild("WeldHRP")
 
-                                    v23.CFrame = st.savedPos
-                                    v23.AssemblyLinearVelocity = Vector3.zero
-                                    v23.AssemblyAngularVelocity = Vector3.zero
+                                    if not kickAP or not kickAO then
+                                        if kickAP then kickAP:Destroy() end
+                                        if kickAO then kickAO:Destroy() end
 
-                                    if not ownBP then
-                                        ownBP = Instance.new("BodyPosition")
-                                        ownBP.Name = "OwnBP"
-                                        ownBP.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-                                        ownBP.D = 500
-                                        ownBP.P = 100000
-                                        ownBP.Parent = v27
+                                        kickAP = Instance.new("BodyPosition")
+                                        local bodyGyro = Instance.new("BodyGyro")
+                                        kickAP.D = 200
+                                        kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                                        kickAP.Position = v29
+                                        kickAP.Parent = v27
+                                        bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                                        bodyGyro.D = 200
+                                        bodyGyro.CFrame = CFrame.new()
+                                        bodyGyro.Parent = v27
+                                        kickAP.Name = "KickAP"
+                                        bodyGyro.Name = "KickAO"
                                     end
-                                    if not ownBG then
-                                        ownBG = Instance.new("BodyGyro")
-                                        ownBG.Name = "OwnBG"
-                                        ownBG.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-                                        ownBG.D = 500
-                                        ownBG.P = 100000
-                                        ownBG.Parent = v27
-                                    end
-                                    ownBP.Position = lockPos.Position
-                                    ownBG.CFrame = lockPos
 
-                                    v28.PlatformStand = true
+                                    if weldHRP then weldHRP.Enabled = false end
 
-                                    pcall(function()
-                                        for j = 1, 4 do
-                                            SetNetOwner:FireServer(v27, lockPos)
+                                    kickAP.Position = v29
+
+                                    if tbl8.OwnershipKick then
+                                        if not tbl8.OwnState then
+                                            tbl8.OwnState = setmetatable({}, {__mode = "k"})
                                         end
-                                        DestroyGrabLine:FireServer(v27)
-                                    end)
 
-                                    if st.checkStartTime > 0 and tick() - st.checkStartTime > 0.2 then
-                                        if (v27.Position - lockPos.Position).Magnitude > 15 then
-                                            st.dragging = false
-                                            st.grabStartTime = 0
+                                        local st = tbl8.OwnState[v25]
+                                        if not st then
+                                            st = {dragging = false, grabStartTime = 0, checkStartTime = 0, savedPos = v23.CFrame}
+                                            tbl8.OwnState[v25] = st
+                                        end
+
+                                        local ownBP = v27:FindFirstChild("OwnBP")
+                                        local ownBG = v27:FindFirstChild("OwnBG")
+
+                                        if not st.dragging then
+                                            v23.CFrame = v27.CFrame * CFrame.new(0, 0, 3)
+                                            v23.AssemblyLinearVelocity = Vector3.zero
+                                            v23.AssemblyAngularVelocity = Vector3.zero
                                             st.checkStartTime = 0
                                             if ownBP then ownBP:Destroy() end
                                             if ownBG then ownBG:Destroy() end
-                                            v23.CFrame = v27.CFrame * CFrame.new(0, 0, 3)
+
+                                            pcall(function()
+                                                v28.PlatformStand = true
+                                                v28.Sit = true
+                                                SetNetOwner:FireServer(v27, v27.CFrame)
+                                                SetNetOwner:FireServer(v27, v27.CFrame)
+                                                DestroyGrabLine:FireServer(v27)
+                                            end)
+
+                                            if st.grabStartTime == 0 then st.grabStartTime = tick() end
+                                            if tick() - st.grabStartTime > 0.2 then
+                                                st.dragging = true
+                                                st.grabStartTime = 0
+                                                st.checkStartTime = tick()
+                                                local lockPos = st.savedPos * CFrame.new(5, 20, 4)
+                                                ownBP = Instance.new("BodyPosition")
+                                                ownBP.Name = "OwnBP"
+                                                ownBP.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+                                                ownBP.D = 500
+                                                ownBP.P = 100000
+                                                ownBP.Position = lockPos.Position
+                                                ownBP.Parent = v27
+                                                ownBG = Instance.new("BodyGyro")
+                                                ownBG.Name = "OwnBG"
+                                                ownBG.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+                                                ownBG.D = 500
+                                                ownBG.P = 100000
+                                                ownBG.CFrame = lockPos
+                                                ownBG.Parent = v27
+                                            end
                                         else
-                                            st.checkStartTime = tick()
+                                            local lockPos = st.savedPos * CFrame.new(5, 20, 4)
+
+                                            v23.CFrame = st.savedPos
+                                            v23.AssemblyLinearVelocity = Vector3.zero
+                                            v23.AssemblyAngularVelocity = Vector3.zero
+
+                                            if not ownBP then
+                                                ownBP = Instance.new("BodyPosition")
+                                                ownBP.Name = "OwnBP"
+                                                ownBP.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+                                                ownBP.D = 500
+                                                ownBP.P = 100000
+                                                ownBP.Parent = v27
+                                            end
+                                            if not ownBG then
+                                                ownBG = Instance.new("BodyGyro")
+                                                ownBG.Name = "OwnBG"
+                                                ownBG.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+                                                ownBG.D = 500
+                                                ownBG.P = 100000
+                                                ownBG.Parent = v27
+                                            end
+                                            ownBP.Position = lockPos.Position
+                                            ownBG.CFrame = lockPos
+
+                                            v28.PlatformStand = true
+
+                                            pcall(function()
+                                                for j = 1, 4 do
+                                                    SetNetOwner:FireServer(v27, lockPos)
+                                                end
+                                                DestroyGrabLine:FireServer(v27)
+                                            end)
+
+                                            if st.checkStartTime > 0 and tick() - st.checkStartTime > 0.2 then
+                                                if (v27.Position - lockPos.Position).Magnitude > 15 then
+                                                    st.dragging = false
+                                                    st.grabStartTime = 0
+                                                    st.checkStartTime = 0
+                                                    if ownBP then ownBP:Destroy() end
+                                                    if ownBG then ownBG:Destroy() end
+                                                    v23.CFrame = v27.CFrame * CFrame.new(0, 0, 3)
+                                                else
+                                                    st.checkStartTime = tick()
+                                                end
+                                            end
                                         end
                                     end
-                                end
-                            end
 
-                            local flag12
+                                    local flag12
 
-                            if not (tbl12.GetMagnitude(v23, v27) > 33) then
-                                for j = 1, 7 do
-                                    tbl12.Grab(v27)
-                                end
-
-                                flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
-                                if flag12 then
-                                    task.delay(0.00000000000000002, tbl12.RNO, v27)
-                                elseif tbl9.NKDelayMode == "Normal" then
-                                    task.spawn(function()
-                                        task.wait()
+                                    if not (tbl12.GetMagnitude(v23, v27) > 33) then
                                         for j = 1, 7 do
-                                            tbl12.RNO(v27)
+                                            tbl12.Grab(v27)
                                         end
-                                    end)
-                                end
 
-                                if tbl8.RagdollInNK then
-                                    task.spawn(tbl12.Ragdoll, v26)
-                                end
+                                        flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
+                                        if flag12 then
+                                            task.delay(0.00000000000000002, tbl12.RNO, v27)
+                                        elseif tbl9.NKDelayMode == "Normal" then
+                                            task.spawn(function()
+                                                task.wait()
+                                                for j = 1, 7 do
+                                                    tbl12.RNO(v27)
+                                                end
+                                            end)
+                                        end
 
-                                if tbl8.DeleteShurInNK then
-                                    task.spawn(tbl12.RemoveSticky, v26)
-                                end
+                                        if tbl8.RagdollInNK then
+                                            task.spawn(tbl12.Ragdoll, v26)
+                                        end
 
-                                tbl12.ToggleCollisions(v26, false)
-                                tbl12.RepositionLimbs(v26, true)
+                                        if tbl8.DeleteShurInNK then
+                                            task.spawn(tbl12.RemoveSticky, v26)
+                                        end
 
-                                task.delay(0.6, function()
-                                    if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
-                                        fn21(v27, v27)
-                                    end
-                                end)
-                            elseif tbl12.SNO(v27) then
-                                tbl12.Teleport(v27, v29)
+                                        tbl12.ToggleCollisions(v26, false)
+                                        tbl12.RepositionLimbs(v26, true)
 
-                                for j = 1, 7 do
-                                    tbl12.Grab(v27)
-                                end
+                                        task.delay(0.6, function()
+                                            if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
+                                                fn21(v27, v27)
+                                            end
+                                        end)
+                                    elseif tbl12.SNO(v27) then
+                                        tbl12.Teleport(v27, v29)
 
-                                flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
-                                if flag12 then
-                                    task.delay(0.00000000000000002, function()
                                         for j = 1, 7 do
-                                            tbl12.RNO(v27)
+                                            tbl12.Grab(v27)
                                         end
-                                    end)
-                                elseif tbl9.NKDelayMode == "Normal" then
-                                    task.spawn(function()
-                                        task.wait()
-                                        for j = 1, 8 do
-                                            tbl12.RNO(v27)
+
+                                        flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode
+                                        if flag12 then
+                                            task.delay(0.00000000000000002, function()
+                                                for j = 1, 7 do
+                                                    tbl12.RNO(v27)
+                                                end
+                                            end)
+                                        elseif tbl9.NKDelayMode == "Normal" then
+                                            task.spawn(function()
+                                                task.wait()
+                                                for j = 1, 8 do
+                                                    tbl12.RNO(v27)
+                                                end
+                                            end)
                                         end
-                                    end)
-                                end
 
-                                if tbl8.RagdollInNK then
-                                    task.spawn(tbl12.Ragdoll, v26)
-                                end
+                                        if tbl8.RagdollInNK then
+                                            task.spawn(tbl12.Ragdoll, v26)
+                                        end
 
-                                if tbl8.DeleteShurInNK then
-                                    task.spawn(tbl12.RemoveSticky, v26)
-                                end
+                                        if tbl8.DeleteShurInNK then
+                                            task.spawn(tbl12.RemoveSticky, v26)
+                                        end
 
-                                tbl12.ToggleCollisions(v26, false)
-                                tbl12.RepositionLimbs(v26, true)
+                                        tbl12.ToggleCollisions(v26, false)
+                                        tbl12.RepositionLimbs(v26, true)
 
-                                task.delay(0.27, function()
-                                    if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
-                                        fn21(v27, v27)
+                                        task.delay(0.27, function()
+                                            if tbl8.LoopApplyMethodT and tbl7.TargetMethods.Kick and tbl7.SelectedPlayers[v25] and tbl12.IsNetworkOwner(v27) then
+                                                fn21(v27, v27)
+                                            end
+                                        end)
+                                    else
+                                        fn21(v27, nil)
                                     end
-                                end)
-                            else
-                                fn21(v27, nil)
+                                end
                             end
                         end
-                    end
-                end
 
-                if tbl9.NKDelayMode == "Normal" then
-                    task.wait()
+                        if tbl9.NKDelayMode == "Normal" then
+                            task.wait()
+                        end
+                    end
                 end
             end
         end
     end)
 end
+
 
 
 
