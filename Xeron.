@@ -35093,10 +35093,10 @@ local function fn21(arg, arg2)
                                 local weldHRP = v27:FindFirstChild("WeldHRP")  
 
                                 if tbl8.AngleFixKick then  
-    local oldBp = v27:FindFirstChild("KickAlign")  
-    if oldBp then oldBp:Destroy() end  
-    local oldBg = v27:FindFirstChild("KickAO")  
-    if oldBg then oldBg:Destroy() end  
+    local oldBP = v27:FindFirstChild("KickAP")  
+    if oldBP then oldBP:Destroy() end  
+    local oldBG = v27:FindFirstChild("KickAO")  
+    if oldBG then oldBG:Destroy() end  
 
     local att0 = v27:FindFirstChild("KickAtt0")  
     if not att0 then  
@@ -35105,32 +35105,31 @@ local function fn21(arg, arg2)
         att0.Parent = v27  
     end  
 
+    local kickAlign = v27:FindFirstChild("KickAlign")  
+    if not kickAlign then  
+        kickAlign = Instance.new("AlignPosition")  
+        kickAlign.Name = "KickAlign"  
+        kickAlign.Attachment0 = att0  
+        kickAlign.Mode = Enum.PositionAlignmentMode.OneAttachment  
+        kickAlign.MaxForce = math.huge  
+        kickAlign.Responsiveness = 200  
+        kickAlign.Parent = v27  
+    end  
+    
+    kickAlign.Position = v29  
+
     local kickRot = v27:FindFirstChild("KickRot")  
     if not kickRot then  
         kickRot = Instance.new("AlignOrientation")  
         kickRot.Name = "KickRot"  
         kickRot.Attachment0 = att0  
         kickRot.Mode = Enum.OrientationAlignmentMode.OneAttachment  
-        kickRot.CFrame = CFrame.Angles(0, 0, 0)  
-        kickRot.MaxTorque = Vector3.new(9e9, 9e9, 9e9)  
+        kickRot.MaxTorque = math.huge  
         kickRot.Responsiveness = 200  
         kickRot.Parent = v27  
     end  
-
-    kickRot.CFrame = CFrame.Angles(0, 0, 0)  
-
-    local kickAP = v27:FindFirstChild("KickAP")  
-    if not kickAP then  
-        kickAP = Instance.new("BodyPosition")  
-        kickAP.Name = "KickAP"  
-        kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)  
-        kickAP.Parent = v27  
-    end  
     
-    kickAP.D = 500
-    kickAP.P = 100000
-
-    kickAP.Position = v29  
+    kickRot.CFrame = CFrame.Angles(0, 0, 0)  
 
     if weldHRP then weldHRP.Enabled = false end  
 else  
