@@ -35735,6 +35735,17 @@ end
 
 	do
 		local Greetings = tbl15.Home:AddLeftGroupbox("Greetings", "chess-queen")
+Greetings:AddWD("MyImage", {
+    Image = "rbxassetid://90416772323272",
+    Size = 132,
+    Color = Color3.new(1, 1, 1),
+    Transparency = 0,
+    BackgroundTransparency = 0,
+    ScaleType = Enum.ScaleType.Fit,
+    Visible = true,
+})
+
+
 		local thumbnail = string.format("rbxthumb://type=AvatarBust&id=%d&w=180&h=180", localPlayer.UserId)
 		local avatar = Greetings:AddImage("MyIcon", {
 			Image = thumbnail,
