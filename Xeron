@@ -273,7 +273,7 @@ local Library = {
         DarkColor = Color3.new(0, 0, 0),
         WhiteColor = Color3.new(1, 1, 1),
 
-        BackgroundImage = 113737893884553
+        BackgroundImage = 106533945258464
     },
 
     Registry = {},
@@ -396,7 +396,7 @@ local Templates = {
 
         CompactWidthActivation = 128,
 
-        BackgroundImage = 113737893884553,
+        BackgroundImage = 106533945258464,
 
         Animations = {
             ToggleWindow = true,
