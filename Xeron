@@ -31346,7 +31346,7 @@ end
 				Description = "Attempting to serverhop..",
 				Persist = true,
 				SoundId = n34,
-				BigIcon = "rbxassetid://77989137998499",
+				BigIcon = "rbxassetid://119072127801604",
 				Volume = n35,
 				IconColor = Color3.new(1, 1, 1),
 			})
