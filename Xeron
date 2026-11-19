@@ -1,10 +1,4 @@
-local sources = {}
---maincheat
-sources.Library = [====[
-local requireModule = ...
-local cloneref = (cloneref or clonereference or function(instance: any)
-    return instance
-end)
+
 local CoreGui: CoreGui = cloneref(game:GetService("CoreGui"))
 local GuiService: GuiService = cloneref(game:GetService("GuiService"))
 local Players: Players = cloneref(game:GetService("Players"))
@@ -208,25 +202,25 @@ local Library = {
     Corners = {},
     SpecificCorners = {},
 
-    TweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    TweenInfo = TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
 
-    TabTransitionInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-    TabSwipeOffset = 26,
-    TabSwipeFrom = "bottom",
+    TabTransitionInfo = TweenInfo.new(0.36, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+    TabSwipeOffset = 34,
+    TabSwipeFrom = "right",
 
-    WindowAnimationInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-    DropdownTransitionInfo = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-    KeyPickerTransitionInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    WindowAnimationInfo = TweenInfo.new(0.42, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+    DropdownTransitionInfo = TweenInfo.new(0.26, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+    KeyPickerTransitionInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
 
-    GroupboxTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-    RotatingChevronTweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+    GroupboxTweenInfo = TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+    RotatingChevronTweenInfo = TweenInfo.new(0.38, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
 
     Animations = {
-        ToggleWindow = false,
-        TabSwitch = false,
-        Groupbox = false,
-        Dropdown = false,
-        KeyPicker = false
+        ToggleWindow = true,
+        TabSwitch = true,
+        Groupbox = true,
+        Dropdown = true,
+        KeyPicker = true
     },
 
     Toggled = false,
@@ -257,14 +251,14 @@ local Library = {
     OriginalMinSize = Vector2.new(480, 360),
     MinSize = Vector2.new(480, 360),
     DPIScale = 1,
-    CornerRadius = 4,
+    CornerRadius = 8,
 
     IsLightTheme = false,
     Scheme = {
-        BackgroundColor = Color3.fromRGB(15, 15, 15),
-        MainColor = Color3.fromRGB(25, 25, 25),
-        AccentColor = Color3.fromRGB(125, 85, 255),
-        OutlineColor = Color3.fromRGB(40, 40, 40),
+        BackgroundColor = Color3.fromRGB(0, 0, 0),
+        MainColor = Color3.fromRGB(0, 0, 0),
+        AccentColor = Color3.fromRGB(0, 255, 120),
+        OutlineColor = Color3.fromRGB(68, 68, 68),
         FontColor = Color3.new(1, 1, 1),
         Font = Font.fromEnum(Enum.Font.Code),
 
@@ -273,7 +267,7 @@ local Library = {
         DarkColor = Color3.new(0, 0, 0),
         WhiteColor = Color3.new(1, 1, 1),
 
-        BackgroundImage = ""
+        BackgroundImage = 113737893884553
     },
 
     Registry = {},
@@ -372,7 +366,7 @@ local Templates = {
         SearchbarSize = UDim2.fromScale(1, 1),
         GlobalSearch = false,
 
-        CornerRadius = 4,
+        CornerRadius = 8,
         NotifySide = "Right",
         ShowCustomCursor = true,
 
@@ -396,19 +390,19 @@ local Templates = {
 
         CompactWidthActivation = 128,
 
-        BackgroundImage = "",
+        BackgroundImage = 113737893884553,
 
         Animations = {
-            ToggleWindow = false,
-            TabSwitch = false,
-            Groupbox = false,
-            Dropdown = false,
-            KeyPicker = false,
+            ToggleWindow = true,
+            TabSwitch = true,
+            Groupbox = true,
+            Dropdown = true,
+            KeyPicker = true,
         },
 
-        TabTransitionTime = 0.22,
-        TabSwipeOffset = 26,
-        TabSwipeFrom = "bottom",
+        TabTransitionTime = 0.36,
+        TabSwipeOffset = 34,
+        TabSwipeFrom = "right",
         TabButtonsStyle = {
             Gap = 0,
             Padding = 0,
@@ -1561,6 +1555,45 @@ local function New(ClassName: string, Properties: { [string]: any }): any
     if Properties["Parent"] and not Properties["ZIndex"] then
         pcall(function()
             Instance.ZIndex = Properties.Parent.ZIndex
+        end)
+    end
+
+    if Instance:IsA("GuiButton") and Instance.Name ~= "Main" then
+        local MotionScale = Instance.new("UIScale")
+        MotionScale.Scale = 1
+        MotionScale.Parent = Instance
+
+        local MotionTween
+        local Hovering = false
+        local function PlayButtonMotion(Scale, Duration, EasingStyle)
+            if MotionTween then
+                MotionTween:Cancel()
+                MotionTween:Destroy()
+                MotionTween = nil
+            end
+
+            MotionTween = TweenService:Create(MotionScale, TweenInfo.new(Duration, EasingStyle, Enum.EasingDirection.Out), {
+                Scale = Scale,
+            })
+            MotionTween:Play()
+        end
+
+        Instance.MouseEnter:Connect(function()
+            Hovering = true
+            PlayButtonMotion(1.035, 0.16, Enum.EasingStyle.Quint)
+        end)
+
+        Instance.MouseLeave:Connect(function()
+            Hovering = false
+            PlayButtonMotion(1, 0.2, Enum.EasingStyle.Quint)
+        end)
+
+        Instance.MouseButton1Down:Connect(function()
+            PlayButtonMotion(0.965, 0.08, Enum.EasingStyle.Quad)
+        end)
+
+        Instance.MouseButton1Up:Connect(function()
+            PlayButtonMotion(Hovering and 1.035 or 1, 0.22, Enum.EasingStyle.Back)
         end)
     end
 
@@ -5355,7 +5388,7 @@ do
 
         local function RefreshFooterInfo()
             FooterInfoLabel.Text = string.format(
-                "#%s • %d, %d, %d",
+                "#%s â€¢ %d, %d, %d",
                 ColorPicker.Value:ToHex(),
                 math.floor(ColorPicker.Value.R * 255),
                 math.floor(ColorPicker.Value.G * 255),
@@ -9729,6 +9762,166 @@ do
         return Image
     end
 
+
+    function Funcs:AddWD(Idx, Info)
+        if self.Destroyed then return nil end
+
+        Info = Library:Validate(Info, {
+            Image = "",
+            Size = 132,
+            Color = Color3.new(1, 1, 1),
+            Transparency = 0,
+            BackgroundTransparency = 0,
+            ScaleType = Enum.ScaleType.Fit,
+            Visible = true,
+        })
+
+        local Groupbox = self
+        local Size = math.max(48, tonumber(Info.Size) or 132)
+        local ImageValue = tostring(Info.Image)
+        local Icon = Library:GetCustomIcon(ImageValue)
+        assert(Icon, "Image must be a valid Roblox asset or a valid URL or a valid lucide icon.")
+
+        local WD = {
+            Connections = {},
+            Destroyed = false,
+            Image = ImageValue,
+            Size = Size,
+            Color = Info.Color,
+            Transparency = Info.Transparency,
+            BackgroundTransparency = Info.BackgroundTransparency,
+            ScaleType = Info.ScaleType,
+            Visible = Info.Visible,
+            Tooltip = Info.Tooltip,
+            Type = "WD",
+        }
+
+        local Holder = New("Frame", {
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, Size + 10),
+            Visible = WD.Visible,
+            Parent = Groupbox.Container,
+        })
+
+        local Box = New("Frame", {
+            AnchorPoint = Vector2.new(0.5, 0),
+            BackgroundColor3 = "MainColor",
+            BackgroundTransparency = WD.BackgroundTransparency,
+            BorderSizePixel = 0,
+            ClipsDescendants = true,
+            Position = UDim2.new(0.5, 0, 0, 2),
+            Size = UDim2.fromOffset(Size, Size),
+            Parent = Holder,
+        })
+
+        New("UICorner", {
+            CornerRadius = UDim.new(0, 9),
+            Parent = Box,
+        })
+
+        New("UIStroke", {
+            Color = "OutlineColor",
+            Thickness = 1.25,
+            Parent = Box,
+        })
+
+        New("UIStroke", {
+            Color = "AccentColor",
+            Thickness = 1,
+            Transparency = 0.72,
+            Parent = Box,
+        })
+
+        local ImageLabel = New("ImageLabel", {
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundTransparency = 1,
+            Image = Icon.Url,
+            ImageColor3 = WD.Color,
+            ImageTransparency = WD.Transparency,
+            ImageRectOffset = Icon.ImageRectOffset,
+            ImageRectSize = Icon.ImageRectSize,
+            Position = UDim2.fromScale(0.5, 0.5),
+            ScaleType = WD.ScaleType,
+            Size = UDim2.new(1, -10, 1, -10),
+            Parent = Box,
+        })
+
+        New("UICorner", {
+            CornerRadius = UDim.new(0, 6),
+            Parent = ImageLabel,
+        })
+
+        if typeof(WD.Tooltip) == "string" then
+            WD.TooltipTable = Library:AddTooltip(WD.Tooltip, nil, Box)
+        end
+
+        function WD:SetImage(NewImage)
+            assert(NewImage ~= nil, "Image is required.")
+            local NewIcon = Library:GetCustomIcon(tostring(NewImage))
+            assert(NewIcon, "Image must be a valid Roblox asset or a valid URL or a valid lucide icon.")
+
+            WD.Image = tostring(NewImage)
+            Library:ApplyLucideIcon(ImageLabel, NewIcon)
+            ImageLabel.ImageColor3 = WD.Color
+            ImageLabel.ImageTransparency = WD.Transparency
+        end
+
+        function WD:SetSize(NewSize: number)
+            assert(typeof(NewSize) == "number" and NewSize >= 48, "Size must be a number greater than or equal to 48.")
+
+            WD.Size = NewSize
+            Holder.Size = UDim2.new(1, 0, 0, NewSize + 10)
+            Box.Size = UDim2.fromOffset(NewSize, NewSize)
+            Groupbox:Resize()
+        end
+
+        function WD:SetColor(Color: Color3)
+            assert(typeof(Color) == "Color3", "Color must be a Color3 value.")
+            WD.Color = Color
+            ImageLabel.ImageColor3 = Color
+        end
+
+        function WD:SetTransparency(Transparency: number)
+            assert(typeof(Transparency) == "number" and Transparency >= 0 and Transparency <= 1, "Transparency must be between 0 and 1.")
+            WD.Transparency = Transparency
+            ImageLabel.ImageTransparency = Transparency
+        end
+
+        function WD:SetVisible(Visible: boolean)
+            WD.Visible = Visible
+            Holder.Visible = Visible
+            Groupbox:Resize()
+        end
+
+        WD.Holder = Holder
+        WD.Container = Box
+        table.insert(Groupbox.Elements, WD)
+        Options[Idx] = WD
+        Groupbox:Resize()
+
+        function WD:Destroy()
+            WD.Destroyed = true
+
+            if WD.TooltipTable then
+                WD.TooltipTable:Destroy()
+            end
+
+            if Holder then
+                Holder:Destroy()
+            end
+
+            local ElemIdx = table.find(Groupbox.Elements, WD)
+            if ElemIdx then
+                table.remove(Groupbox.Elements, ElemIdx)
+            end
+
+            Groupbox:Resize()
+            Options[Idx] = nil
+        end
+
+        return WD
+    end
+
     function Funcs:AddVideo(Idx, Info)
         if self.Destroyed then return nil end
 
@@ -10760,6 +10953,9 @@ end
 
 function Library:CreateWindow(WindowInfo)
     WindowInfo = Library:Validate(WindowInfo, Templates.Window)
+    if WindowInfo.BackgroundImage == "" or WindowInfo.BackgroundImage == nil then
+        WindowInfo.BackgroundImage = Library.Scheme.BackgroundImage
+    end
     local ViewportSize: Vector2 = workspace.CurrentCamera.ViewportSize
     if RunService:IsStudio() and ViewportSize.X <= 5 and ViewportSize.Y <= 5 then
         repeat
