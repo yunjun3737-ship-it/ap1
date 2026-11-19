@@ -273,7 +273,7 @@ local Library = {
         DarkColor = Color3.new(0, 0, 0),
         WhiteColor = Color3.new(1, 1, 1),
 
-        BackgroundImage = 106533945258464
+        BackgroundImage = 90416772323272
     },
 
     Registry = {},
@@ -396,7 +396,7 @@ local Templates = {
 
         CompactWidthActivation = 128,
 
-        BackgroundImage = 106533945258464,
+        BackgroundImage = 90416772323272,
 
         Animations = {
             ToggleWindow = true,
@@ -43816,7 +43816,7 @@ end
 					Description = "Destroyed 0/" .. #tbl16 .. " toys",
 					Persist = true,
 					SoundId = n34,
-					BigIcon = "rbxassetid://119072127801604",
+					BigIcon = "rbxassetid://72561227291927",
 					Volume = n35,
 					IconColor = Color3.new(1, 1, 1),
 				})
@@ -45059,7 +45059,7 @@ end
 			Text = "Texture",
 			Callback = function(arg)
 				if arg == "Xeron" then
-					fn27("Texture", "rbxassetid://119072127801604")
+					fn27("Texture", "rbxassetid://72561227291927")
 				elseif arg == "Snowflakes" then
 					fn27("Texture", "rbxassetid://14443362047")
 				elseif arg == "Circles" then
