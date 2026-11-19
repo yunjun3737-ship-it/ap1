@@ -35616,12 +35616,12 @@ end
 
 		v19 = lib:CreateWindow({
 			Title = "<b>ALPHA(Top)</b>",
-			Footer = ("<b>Alpha%* | FTAP</b>"):format("v7.5"),
+			Footer = ("<b>Alpha%* | FTAP</b>"):format("v8"),
 			ToggleKeybind = Enum.KeyCode.RightShift,
 			Center = true,
 			AutoShow = true,
 			EnableSidebarResize = true,
-			Icon = 77989137998499,
+			Icon = 119072127801604,
 			IconSize = UDim2.fromOffset(32, 32),
 			CornerRadius = 7,
 			Compact = true,
@@ -35698,7 +35698,7 @@ end
 			label.Position = UDim2.fromOffset(viewportSize.X * 0.5, viewportSize.Y * 0.8)
 		end
 
-		Watermark = lib:AddDraggableLabel("ALPHA", 77989137998499)
+		Watermark = lib:AddDraggableLabel("ALPHA", 119072127801604)
 		Watermark:SetVisible(true)
 
 		task.spawn(function()
@@ -35712,7 +35712,7 @@ end
 				local floor = math.floor
 				local dataPing = Stats2.Network.ServerStatsItem["Data Ping"]
 				local getValue = dataPing.GetValue
-				setText(v23, ("ALPHA(TOP) %s | %s fps | %s ms"):format("v7.5", math.floor(Stats2.Workspace.Heartbeat:GetValue()), floor(getValue(dataPing))))
+				setText(v23, ("ALPHA(TOP) %s | %s fps | %s ms"):format("v8", math.floor(Stats2.Workspace.Heartbeat:GetValue()), floor(getValue(dataPing))))
 				task.wait(1)
 			end
 		end)
