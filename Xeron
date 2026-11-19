@@ -17440,7 +17440,7 @@ do
 										Title = arg or "Xeron",
 										Text = arg2 or "Notification",
 										Duration = arg3 or 5,
-										Icon = "rbxassetid://77989137998499",
+										Icon = "rbxassetid://119072127801604",
 									})
 								end
 
@@ -17646,7 +17646,7 @@ do
 								Description = arg,
 								Time = arg4 or 5,
 								SoundId = arg3 or n34,
-								BigIcon = "rbxassetid://77989137998499",
+								BigIcon = "rbxassetid://119072127801604",
 								Volume = n35,
 								IconColor = Color3.new(1, 1, 1),
 							})
