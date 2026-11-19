@@ -17469,7 +17469,7 @@ do
 								do
 									local v24 = string.gsub([[
 
-  - ]], "ver", "v7.5")
+  - ]], "ver", "v8")
 
 									warn(v24)
 								end
