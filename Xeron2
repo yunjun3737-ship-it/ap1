@@ -35737,10 +35737,10 @@ end
 		local WD = tbl15.Home:AddLeftGroupbox("ALPHA", "chess-queen")
 WD:AddWD("MyImage", {
     Image = "rbxassetid://90416772323272",
-    Size = 132,
+    Size = UDim2.fromOffset(300, 169),
     Color = Color3.new(1, 1, 1),
     Transparency = 0,
-    BackgroundTransparency = 1,
+    BackgroundTransparency = 0,
     ScaleType = Enum.ScaleType.Fit,
     Visible = true,
 })
