@@ -48844,13 +48844,17 @@ end
 	do
 		local Notifications = tbl15.Settings:AddRightGroupbox("Notifications", "bell-ring")
 
-		local tbl16 = {
-			Default = 97643101798871,
-			Pop = 124815381429574,
-			["Bubble Pop"] = 106994752352532,
-			Steam = 18317665126,
-			Loaded = 71450094482101,
-		}
+local tbl16 = {
+    Default = 97643101798871,
+    Pop = 124815381429574,
+    ["Bubble Pop"] = 106994752352532,
+    Steam = 18317665126,
+    Loaded = 71450094482101,
+
+    IPhone = 139746569667955,
+    Blump = 129485210015224,
+    Drum = 96628258513206,
+}
 
 		Notifications:AddToggle("NotificationMaster", {
 			Text = "Master Switch",
@@ -48877,17 +48881,26 @@ end
 		Notifications:AddDivider("Appearance")
 
 		Notifications:AddDropdown("NotifDropdown", {
-			Text = "Presets",
-			Values = { "Default", "Pop", "Steam", "Bubble Pop", "Loaded" },
-			Default = "Default",
-			Multi = false,
-			Callback = function(arg)
-				if tbl16[arg] then
-					options.CustomNotificationSound:SetValue(tbl16[arg])
-					fn18("Successfully set sound!")
-				end
-			end,
-		})
+    Text = "Presets",
+    Values = {
+        "Default",
+        "Pop",
+        "Steam",
+        "Bubble Pop",
+        "Loaded",
+        "IPhone",
+        "Blump",
+        "Drum",
+    },
+    Default = "Default",
+    Multi = false,
+    Callback = function(arg)
+        if tbl16[arg] then
+            options.CustomNotificationSound:SetValue(tbl16[arg])
+            fn18("Successfully set sound!")
+        end
+    end,
+})
 
 		Notifications:AddInput("CustomNotificationSound", {
 			Text = "Sound ID/MP3 Link",
