@@ -35698,7 +35698,7 @@ end
 			label.Position = UDim2.fromOffset(viewportSize.X * 0.5, viewportSize.Y * 0.8)
 		end
 
-		Watermark = lib:AddDraggableLabel("ALPHA", 119072127801604)
+		Watermark = lib:AddDraggableLabel("ALPHA", 72561227291927)
 		Watermark:SetVisible(true)
 
 		task.spawn(function()
