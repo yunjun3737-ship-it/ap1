@@ -45052,14 +45052,14 @@ end
 		v22:SetupDependencies({ { toggles.ParticlesT, true } })
 
 		v22:AddDropdown("ParticlesDropdown", {
-			Values = { "Circles", "Snowflakes", "Resonance", "Custom" },
+			Values = { "Circles", "Snowflakes", "Xeron", "Custom" },
 			Multi = false,
 			Default = "Circles",
 			Searchable = true,
 			Text = "Texture",
 			Callback = function(arg)
-				if arg == "Xeron " then
-					fn27("Texture", "rbxassetid://77989137998499")
+				if arg == "Xeron" then
+					fn27("Texture", "rbxassetid://119072127801604")
 				elseif arg == "Snowflakes" then
 					fn27("Texture", "rbxassetid://14443362047")
 				elseif arg == "Circles" then
