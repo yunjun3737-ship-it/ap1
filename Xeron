@@ -35777,7 +35777,7 @@ end
 		do
 			local Statistics = tbl15.Home:AddRightGroupbox("Statistics", "chart-no-axes-combined")
 			Statistics:AddLabel("CurrentTime", { Text = "Current time: 00:00", DoesWrap = true })
-			Statistics:AddLabel("VerLabel", { Text = ("Current script version: <b>%*</b>"):format("V7.5"), DoesWrap = true })
+			Statistics:AddLabel("VerLabel", { Text = ("Current script version: <b>%*</b>"):format("V8"), DoesWrap = true })
 			Statistics:AddLabel("TogglesCurrentlyOn", { Text = "Toggles currently enabled: 0", DoesWrap = true })
 			Statistics:AddDivider("Server Statistics")
 			Statistics:AddLabel("Game name: <b>Fling Things and People</b>")
