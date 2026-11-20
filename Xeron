@@ -43824,11 +43824,11 @@ end
 				end
 
 				local v24 = lib:Notify({
-					Title = "Xeron",
+					Title = "ALPHA",
 					Description = "Destroyed 0/" .. #tbl16 .. " toys",
 					Persist = true,
 					SoundId = n34,
-					BigIcon = "rbxassetid://72561227291927",
+					BigIcon = "rbxassetid://139650862096129",
 					Volume = n35,
 					IconColor = Color3.new(1, 1, 1),
 				})
@@ -45064,14 +45064,14 @@ end
 		v22:SetupDependencies({ { toggles.ParticlesT, true } })
 
 		v22:AddDropdown("ParticlesDropdown", {
-			Values = { "Circles", "Snowflakes", "Xeron", "Custom" },
+			Values = { "Circles", "Snowflakes", "ALPHA", "Custom" },
 			Multi = false,
 			Default = "Circles",
 			Searchable = true,
 			Text = "Texture",
 			Callback = function(arg)
-				if arg == "Xeron" then
-					fn27("Texture", "rbxassetid://72561227291927")
+				if arg == "ALPHA" then
+					fn27("Texture", "rbxassetid://139650862096129")
 				elseif arg == "Snowflakes" then
 					fn27("Texture", "rbxassetid://14443362047")
 				elseif arg == "Circles" then
