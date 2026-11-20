@@ -37293,14 +37293,14 @@ local function updateSyncFileList()
     return files
 end
 
-local SyncFileDropdown = FunGroup:AddDropdown("SyncFileSelect", {
+local SyncFileDropdown = A:AddDropdown("SyncFileSelect", {
     Text = "JSON 파일 선택",
     Values = updateSyncFileList(),
     Default = updateSyncFileList()[1] or "",
     Callback = function(v) SelectedSyncFile = v end
 })
 
-FunGroup:AddButton({
+A:AddButton({
     Text = "파일 새로고침",
     Func = function()
         local newList = updateSyncFileList()
