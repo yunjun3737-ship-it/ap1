@@ -17741,6 +17741,7 @@ do
 							AutoClicker = false,
 							RagdollInAC = true,
 							IndependentACPoses = false,
+                            SyncLoopToggle = false,
 							CustomACPoseCenter = false,
 							PlayerESP = false,
 							PCLDESP = false,
@@ -36954,6 +36955,488 @@ do
     end
 })
 end
+
+local A = tbl15.Player:AddRightGroupbox("자유춤", "audio-lines")
+
+
+local folderName = "Animations"
+if not isfolder(folderName) then makefolder(folderName) end
+
+local currentCachedAnim = nil
+local currentCachedAnimName = ""
+local SyncPlaying = false
+local SyncLoopPlaying = false
+local SyncPlayConnection = nil
+local SelectedSyncFile = ""
+local SyncDancersCount = 1
+local ActiveDancers = {}
+local syncFakeTorso = nil
+local syncCurrentAnimDuration = 1
+local SyncRagdollLoopEnabled = false
+local SyncRagdollConnection = nil
+
+local function getJSONFiles()
+    local files = {}
+    if not isfolder(folderName) then makefolder(folderName) return files end
+    for _, file in ipairs(listfiles(folderName)) do
+        if string.match(file, "%.json$") or string.match(file, "%.txt$") then
+            local splitPath = string.split(file, "\\")
+            local fileName = splitPath[#splitPath]
+            local splitPath2 = string.split(fileName, "/")
+            fileName = splitPath2[#splitPath2]
+            table.insert(files, fileName)
+        end
+    end
+    return files
+end
+
+local function loadJSON(fileName)
+    if not fileName or fileName == "" then return nil end
+    local filePath = folderName .. "/" .. fileName
+    if not isfile(filePath) then return nil end
+    local ok, result = pcall(function() return game:GetService("HttpService"):JSONDecode(readfile(filePath)) end)
+    if not ok then return nil end
+    return result
+end
+
+local function getAnimData(fileName)
+    if currentCachedAnimName == fileName and currentCachedAnim then return currentCachedAnim end
+    currentCachedAnim = loadJSON(fileName)
+    currentCachedAnimName = fileName
+    return currentCachedAnim
+end
+
+local function toCFrame(v)
+    if typeof(v) ~= "table" or #v < 12 then return nil end
+    return CFrame.new(v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12])
+end
+
+local function smootherstep(t) return t * t * t * (t * (t * 6 - 15) + 10) end
+
+local function startSyncRagdollLoop(activeDancers)
+    if SyncRagdollConnection then return end
+    SyncRagdollLoopEnabled = true
+    SyncRagdollConnection = task.spawn(function()
+        while SyncRagdollLoopEnabled do
+            if pp.char then
+                local root = pp.char:FindFirstChild("HumanoidRootPart")
+                if root and rs:FindFirstChild("CharacterEvents") and rs.CharacterEvents:FindFirstChild("RagdollRemote") then
+                    pcall(function() rs.CharacterEvents.RagdollRemote:FireServer(root, 0.15) end)
+                end
+            end
+            task.wait(0.1)
+        end
+    end)
+end
+
+local function stopSyncRagdollLoop()
+    SyncRagdollLoopEnabled = false
+    if SyncRagdollConnection then task.cancel(SyncRagdollConnection) SyncRagdollConnection = nil end
+end
+
+local function setPhysicalProperties(char, value)
+    if not char then return end
+    local parts = {"Torso", "Head", "Right Arm", "Left Arm", "Right Leg", "Left Leg"}
+    for _, pName in ipairs(parts) do
+        local part = char:FindFirstChild(pName)
+        if part and part:IsA("BasePart") then 
+            part.CustomPhysicalProperties = value 
+            part.CanCollide = (value == nil)
+        end
+    end
+end
+
+local function disableSyncRagdoll(activeDancers)
+    stopSyncRagdollLoop()
+    for _, d in ipairs(activeDancers) do
+        if d.Char then
+            local root = d.Char:FindFirstChild("HumanoidRootPart")
+            if root and rs:FindFirstChild("CharacterEvents") and rs.CharacterEvents:FindFirstChild("RagdollRemote") then
+                pcall(function() rs.CharacterEvents.RagdollRemote:FireServer(root, 0) end)
+            end
+            local hum = d.Char:FindFirstChildOfClass("Humanoid")
+            if hum then hum:ChangeState(Enum.HumanoidStateType.GettingUp) end
+            setPhysicalProperties(d.Char, nil)
+            if hum then hum.AutoRotate = true end
+        end
+    end
+end
+
+local function createSyncFakeTorso(root)
+    if syncFakeTorso then syncFakeTorso:Destroy() end
+    syncFakeTorso = Instance.new("Part")
+    syncFakeTorso.Name = "SyncFakeTorsoAnchor"
+    syncFakeTorso.Size = Vector3.new(2, 6, 2)
+    syncFakeTorso.Transparency = 1
+    syncFakeTorso.Anchored = false
+    syncFakeTorso.CanCollide = true
+    syncFakeTorso.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
+    syncFakeTorso.CFrame = root.CFrame
+    syncFakeTorso.Parent = workspace
+    
+    local char = root.Parent
+    if char then
+        for _, p in ipairs(char:GetDescendants()) do
+            if p:IsA("BasePart") then
+                local noCol = Instance.new("NoCollisionConstraint")
+                noCol.Part0 = syncFakeTorso
+                noCol.Part1 = p
+                noCol.Parent = syncFakeTorso
+            end
+        end
+    end
+
+    local ProxyAtt = Instance.new("Attachment", syncFakeTorso)
+    local ProxyMover = Instance.new("LinearVelocity")
+    ProxyMover.Attachment0 = ProxyAtt
+    ProxyMover.ForceLimitMode = Enum.ForceLimitMode.PerAxis
+    ProxyMover.MaxAxesForce = Vector3.new(100000, 0, 100000)
+    ProxyMover.VectorVelocity = Vector3.zero
+    ProxyMover.Parent = syncFakeTorso
+    ProxyMover.Name = "ProxyMover"
+
+    local ProxyGyro = Instance.new("AlignOrientation")
+    ProxyGyro.Attachment0 = ProxyAtt
+    ProxyGyro.Mode = Enum.OrientationAlignmentMode.OneAttachment
+    ProxyGyro.MaxTorque = 1000000
+    ProxyGyro.Responsiveness = 50
+    ProxyGyro.CFrame = CFrame.lookAt(Vector3.zero, root.CFrame.LookVector)
+    ProxyGyro.Parent = syncFakeTorso
+    ProxyGyro.Name = "ProxyGyro"
+    
+    if cam then cam.CameraSubject = syncFakeTorso end
+    return syncFakeTorso
+end
+
+local function getPartCache(char, frames)
+    local cache = {}
+    for partName in pairs(frames[1].parts) do
+        if partName ~= "HumanoidRootPart" then
+            local part = char:FindFirstChild(partName)
+            if part and part:IsA("BasePart") then cache[partName] = part end
+        end
+    end
+    return cache
+end
+
+local function playSyncAnimation(isLooping, isFirstPlay)
+    if SyncPlaying then return end
+    if not SelectedSyncFile or SelectedSyncFile == "" then return end
+    local Animation = getAnimData(SelectedSyncFile)
+    if not Animation or not Animation.frames or #Animation.frames == 0 then return end
+    
+    local Character = plr.Character or plr.CharacterAdded:Wait()
+    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+    local Root = Character:FindFirstChild("HumanoidRootPart")
+    if not Humanoid or not Root then return end
+    
+    ActiveDancers = {}
+    local offsets = { CFrame.new(0, 0, 0), CFrame.new(-6, 0, 0), CFrame.new(6, 0, 0) }
+    
+    table.insert(ActiveDancers, {
+        Char = Character, Root = Root, Hum = Humanoid, Offset = offsets[1],
+        Cache = getPartCache(Character, Animation.frames), Prev = {}
+    })
+    
+        
+    for _, d in ipairs(ActiveDancers) do
+        setPhysicalProperties(d.Char, PhysicalProperties.new(0, 0, 0, 0, 0))
+        d.Hum:ChangeState(Enum.HumanoidStateType.Physics)
+    end
+    
+    SyncPlaying = true
+    local frames = Animation.frames
+    local rootRelative = Animation.rootRelative or false
+    local startTime = tick()
+    local maxTime = frames[#frames].t or 0
+    syncCurrentAnimDuration = maxTime
+    
+    if isFirstPlay then startSyncRagdollLoop(ActiveDancers) end
+    local fake = createSyncFakeTorso(Root)
+    local oldAutoRotate = Humanoid.AutoRotate
+    
+    SyncPlayConnection = game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
+        if not SyncPlaying then
+            if SyncPlayConnection then SyncPlayConnection:Disconnect() SyncPlayConnection = nil end
+            return
+        end
+        
+        local dir = Humanoid.MoveDirection
+        local mover = fake:FindFirstChild("ProxyMover")
+        local gyro = fake:FindFirstChild("ProxyGyro")
+        if mover and gyro then
+            mover.VectorVelocity = dir * 16
+            if dir.Magnitude > 0.1 then
+                local targetLook = Vector3.new(dir.X, 0, dir.Z).Unit
+                local currentLook = gyro.CFrame.LookVector
+                local smoothLook = currentLook:Lerp(targetLook, 15 * deltaTime).Unit
+                gyro.CFrame = CFrame.lookAt(Vector3.zero, smoothLook)
+            end
+        end
+        
+        Root.Velocity = Vector3.zero
+        Root.CFrame = fake.CFrame
+        
+                
+local elapsed = tick() - startTime
+        local loopBlendDuration = 0.25
+
+        if elapsed >= maxTime and not SyncLoopPlaying then
+            if SyncPlayConnection then SyncPlayConnection:Disconnect() SyncPlayConnection = nil end
+            SyncPlaying = false
+            local lastFrame = frames[#frames]
+            for _, d in ipairs(ActiveDancers) do
+                local dancerBase = rootRelative and (fake.CFrame * d.Offset) or fake.CFrame
+                for partName, part in pairs(d.Cache) do
+                    local data = lastFrame.parts[partName]
+                    if data then
+                        local cf = toCFrame(data)
+                        if cf then part.CFrame = rootRelative and (dancerBase * cf) or cf end
+                    end
+                end
+            end
+            if syncFakeTorso then syncFakeTorso:Destroy() syncFakeTorso = nil end
+            if cam then cam.CameraSubject = Humanoid end
+            Humanoid.AutoRotate = oldAutoRotate
+            disableSyncRagdoll(ActiveDancers)
+            Library:Notify({Title = "Sync Dance", Description = "Finished", Duration = 2})
+            return
+        end
+
+        local currentFrame, nextFrame, t1, t2
+        
+        if SyncLoopPlaying and elapsed >= maxTime then
+            if elapsed >= maxTime + loopBlendDuration then
+                startTime = startTime + maxTime + loopBlendDuration
+                elapsed = elapsed - (maxTime + loopBlendDuration)
+                local currentIndex = 1
+                for i = 1, #frames - 1 do
+                    if elapsed >= (frames[i].t or 0) and elapsed < (frames[i+1].t or 0) then currentIndex = i break end
+                end
+                currentFrame = frames[currentIndex]
+                nextFrame = frames[currentIndex + 1]
+                if currentFrame and nextFrame then
+                    t1 = currentFrame.t or 0
+                    t2 = nextFrame.t or 0
+                end
+            else
+                currentFrame = frames[#frames]
+                nextFrame = frames[1]
+                t1 = maxTime
+                t2 = maxTime + loopBlendDuration
+            end
+        else
+            local currentIndex = 1
+            for i = 1, #frames - 1 do
+                if elapsed >= (frames[i].t or 0) and elapsed < (frames[i+1].t or 0) then currentIndex = i break end
+            end
+            currentFrame = frames[currentIndex]
+            nextFrame = frames[currentIndex + 1]
+            if currentFrame and nextFrame then
+                t1 = currentFrame.t or 0
+                t2 = nextFrame.t or 0
+            end
+        end
+
+        if currentFrame and nextFrame then
+            local duration = t2 - t1
+            local alpha = (duration > 0) and ((elapsed - t1) / duration) or 0
+            local smoothAlpha = smootherstep(alpha)
+            
+            for _, d in ipairs(ActiveDancers) do
+                local dancerBase = fake.CFrame
+                for partName, part in pairs(d.Cache) do
+                    local a = currentFrame.parts[partName]
+                    local b = nextFrame.parts[partName]
+                    if a and b then
+                        local cf1 = toCFrame(a)
+                        local cf2 = toCFrame(b)
+                        if cf1 and cf2 then
+                            local target = cf1:Lerp(cf2, smoothAlpha)
+                            target = rootRelative and (dancerBase * d.Offset * target) or target
+                            
+                            local previousTarget = d.Prev[partName]
+                            if previousTarget then
+                                local delta = previousTarget:ToObjectSpace(target)
+                                local _, angle = delta:ToAxisAngle()
+                                if delta.Position.Magnitude < 0.002 and angle < math.rad(0.15) then 
+                                    target = previousTarget 
+                                else 
+                                    target = previousTarget:Lerp(target, 0.50) 
+                                end
+                            end
+                            d.Prev[partName] = target
+                            part.CFrame = target
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
+local function stopSyncAnimation()
+    SyncPlaying = false
+    SyncLoopPlaying = false
+    if SyncPlayConnection then SyncPlayConnection:Disconnect() SyncPlayConnection = nil end
+    if syncFakeTorso then syncFakeTorso:Destroy() syncFakeTorso = nil end
+    local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+    if cam and hum then cam.CameraSubject = hum end
+    if hum then hum.AutoRotate = true end
+    disableSyncRagdoll(ActiveDancers)
+    Library:Notify({Title = "Sync Dance", Description = "Stopped", Duration = 2})
+end
+
+local function updateSyncFileList()
+    local files = getJSONFiles()
+    if #files == 0 then return {"No files found"} end
+    return files
+end
+
+local SyncFileDropdown = FunGroup:AddDropdown("SyncFileSelect", {
+    Text = "JSON 파일 선택",
+    Values = updateSyncFileList(),
+    Default = updateSyncFileList()[1] or "",
+    Callback = function(v) SelectedSyncFile = v end
+})
+
+FunGroup:AddButton({
+    Text = "파일 새로고침",
+    Func = function()
+        local newList = updateSyncFileList()
+        SyncFileDropdown:SetValues(newList)
+        if #newList > 0 then SyncFileDropdown:SetValue(newList[1]) SelectedSyncFile = newList[1] end
+    end
+})
+
+
+
+A:AddButton({
+      Text = "춤 재생 (1회)",
+    Func = function() SyncLoopPlaying = false playSyncAnimation(false, true) end
+})
+
+A:AddToggle("SyncLoopToggle", {
+      Text = "춤 무한 반복",
+    Default = false,
+    Callback = function(Value)
+        SyncLoopPlaying = Value
+        if Value and not SyncPlaying then playSyncAnimation(true, true) end
+    end
+})
+
+A:AddButton({
+      Text = "춤 정지",
+    Func = function() stopSyncAnimation() end
+})
+
+local isSyncRecording = false
+local syncRecordConnection = nil
+local syncCurrentTrack = nil
+local syncRecordedFrames = {}
+local syncRecordStartTime = 0
+
+local function stopSyncRecording(fileName)
+    if syncRecordConnection then syncRecordConnection:Disconnect() syncRecordConnection = nil end
+    isSyncRecording = false
+    if syncCurrentTrack then syncCurrentTrack:Stop() syncCurrentTrack = nil end
+    if #syncRecordedFrames > 0 and fileName and fileName ~= "" then
+        local animData = { rootRelative = true, frames = syncRecordedFrames }
+        local jsonData = game:GetService("HttpService"):JSONEncode(animData)
+        if not isfolder(folderName) then makefolder(folderName) end
+        writefile(folderName .. "/" .. fileName .. ".json", jsonData)
+        Library:Notify({Title="Saved", Description="Saved " .. #syncRecordedFrames .. " frames to " .. fileName .. ".json", Duration=3})
+        local newList = updateSyncFileList()
+        SyncFileDropdown:SetValues(newList)
+        SyncFileDropdown:SetValue(fileName .. ".json")
+    else
+        Library:Notify({Title="Cancelled", Description="Recording discarded", Duration=2})
+    end
+end
+
+local function startSyncRecordingFromId(animId, fileName)
+    if isSyncRecording then return end
+    if not animId or animId == "" or not fileName or fileName == "" then return end
+    local char = plr.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not char or not root or not hum then return end
+    local animator = hum:FindFirstChildOfClass("Animator")
+    if not animator then animator = Instance.new("Animator") animator.Parent = hum end
+    local anim = Instance.new("Animation")
+    anim.AnimationId = (string.find(animId, "rbxassetid://") and animId) or ("rbxassetid://" .. animId)
+    local track = animator:LoadAnimation(anim)
+    track.Looped = false
+    isSyncRecording = true
+    syncRecordedFrames = {}
+    syncRecordStartTime = tick()
+    syncCurrentTrack = track
+    
+    local partsToRecord = {"Torso", "Head", "Right Arm", "Left Arm", "Right Leg", "Left Leg"}
+    syncRecordConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        if not isSyncRecording then return end
+        local rootCf = root.CFrame
+        local frameData = { t = tick() - syncRecordStartTime, parts = {} }
+        for _, pName in ipairs(partsToRecord) do
+            local part = char:FindFirstChild(pName)
+            if part then
+                local relCf = rootCf:ToObjectSpace(part.CFrame)
+                local x,y,z,R00,R01,R02,R10,R11,R12,R20,R21,R22 = relCf:GetComponents()
+                frameData.parts[pName] = {x,y,z,R00,R01,R02,R10,R11,R12,R20,R21,R22}
+            end
+        end
+        table.insert(syncRecordedFrames, frameData)
+    end)
+    track:Play()
+    Library:Notify({Title="Recording", Description="Playing & recording animation...", Duration=2})
+    track.Ended:Connect(function() stopSyncRecording(fileName) end)
+end
+
+local SyncRecordNameInput = ""
+A:AddInput("SyncRecordName", {
+    Default = "MyDance",
+    Numeric = false,
+    Finished = false,
+    Text = "저장할 파일명",
+    Callback = function(Value) SyncRecordNameInput = Value end
+})
+
+A:AddButton({
+    Text = "재생 중인 애니메이션 자동 추출",
+    Func = function()
+        if isSyncRecording then return end
+        if SyncRecordNameInput == "" then
+            Library:Notify({Title="Error", Description="저장할 파일명 required", Duration=2})
+            return
+        end
+        local char = plr.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        local animator = hum and hum:FindFirstChildOfClass("Animator")
+        if not animator then return end
+        
+        local targetAnimId = nil
+        local highestPriority = -1
+        for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+            if track.Animation and track.Animation.AnimationId ~= "" then
+                local prio = track.Priority.Value
+                if prio > highestPriority then
+                    highestPriority = prio
+                    targetAnimId = track.Animation.AnimationId
+                end
+            end
+        end
+        if not targetAnimId then
+            Library:Notify({Title="Error", Description="No playing animation found!", Duration=2})
+            return
+        end
+        
+        for _, track in ipairs(animator:GetPlayingAnimationTracks()) do track:Stop() end
+        Library:Notify({Title="Captured", Description="Detected ID: " .. targetAnimId, Duration=2})
+        startSyncRecordingFromId(targetAnimId, SyncRecordNameInput)
+    end
+})
+
+
 		do
 			local Animations = tbl15.Player:AddRightGroupbox("Animations", "audio-lines")
 
