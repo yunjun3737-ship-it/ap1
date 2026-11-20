@@ -31346,7 +31346,7 @@ end
 				Description = "Attempting to serverhop..",
 				Persist = true,
 				SoundId = n34,
-				BigIcon = "rbxassetid://72561227291927",
+				BigIcon = "rbxassetid://139650862096129",
 				Volume = n35,
 				IconColor = Color3.new(1, 1, 1),
 			})
@@ -35713,7 +35713,7 @@ end
 				local dataPing = Stats2.Network.ServerStatsItem["Data Ping"]
 				local getValue = dataPing.GetValue
 				setText(v23, ("ALPHA(TOP) %s | %s fps | %s ms"):format("v8", math.floor(Stats2.Workspace.Heartbeat:GetValue()), floor(getValue(dataPing))))
-				task.wait(1)
+				task.wait(0.4)
 			end
 		end)
 
