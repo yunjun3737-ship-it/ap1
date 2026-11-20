@@ -35621,8 +35621,8 @@ end
 			Center = true,
 			AutoShow = true,
 			EnableSidebarResize = true,
-			Icon = 72561227291927,
-			IconSize = UDim2.fromOffset(32, 32),
+			Icon = 139650862096129,
+			IconSize = UDim2.fromOffset(64, 64),
 			CornerRadius = 7,
 			Compact = true,
 			Animations = {
