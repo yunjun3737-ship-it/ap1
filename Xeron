@@ -36955,6 +36955,60 @@ do
     end
 })
 end
+do
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+
+local plr = Players.LocalPlayer
+local rs = ReplicatedStorage
+local rs2 = RunService
+local cam = workspace.CurrentCamera
+
+local pp = {}
+
+local PARTS = {
+    {"Humanoid", "hum"},
+    {"HumanoidRootPart", "hrp"},
+    {"Head", "head"},
+    {"Torso", "torso"},
+    {"Left Arm", "la"},
+    {"Right Arm", "ra"},
+    {"Left Leg", "ll"},
+    {"Right Leg", "rl"}
+}
+
+local function fetch(parent, name, key)
+    task.spawn(function()
+        local part = parent:WaitForChild(name)
+        if parent and parent.Parent then
+            pp[key] = part
+        end
+    end)
+end
+
+local function clearChar()
+    table.clear(pp)
+end
+
+local function plrpart(char)
+    if not char then return end
+
+    clearChar()
+    pp.char = char
+
+    for _, v in ipairs(PARTS) do
+        fetch(char, v[1], v[2])
+    end
+end
+
+plr.CharacterAdded:Connect(plrpart)
+plr.CharacterRemoving:Connect(clearChar)
+
+if plr.Character then
+    plrpart(plr.Character)
+end
 
 local A = tbl15.Player:AddRightGroupbox("자유춤", "audio-lines")
 
@@ -37436,7 +37490,7 @@ A:AddButton({
     end
 })
 
-
+end
 		do
 			local Animations = tbl15.Player:AddRightGroupbox("Animations", "audio-lines")
 
