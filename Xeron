@@ -17718,6 +17718,7 @@ do
 							AntiVoid = false,
                             AntiOwner = false,
 							AutoReset = true,
+                            AntiRepRoot = false,
 							AutoLeave = true,
 							LoopTP = false,
 							CounterAttack = false,
