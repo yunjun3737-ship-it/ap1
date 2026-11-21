@@ -1,3 +1,5 @@
+-- [ Decompiler by Alpha ]
+
 local sources = {}
 sources["Library"] = "local requireModule = ...\
 local cloneref = (cloneref or clonereference or function(instance: any)\
