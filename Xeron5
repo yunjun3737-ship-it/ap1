@@ -38105,12 +38105,49 @@ SERVER:AddButton({
 	end
 
 	do
-		local Antis = tbl15.Invincibility:AddLeftGroupbox("Antis", "brick-wall-shield")
+		local Antis = tbl15.Invincibility:AddLeftGroupbox("안티", "brick-wall-shield")
+Antis:AddDivider("안티 에어락")
+
+Antis:AddToggle("AntiRepRoot", {
+    Text = "안티 에어락",
+    Default = false,
+    Tooltip = "PhysicsRepRootPart 에어락 방지 (에어락을 방어하고 당하지않게 함)",
+    Callback = function(arg)
+        tbl12.SetRuntimeToggle("AntiRepRoot", arg)
+
+        if AntiRepThread then
+            task.cancel(AntiRepThread)
+            AntiRepThread = nil
+        end
+
+        if not arg then return end
+        if not sethiddenproperty then
+            return print("sethiddenproperty is not available")
+        end
+
+        AntiRepThread = task.spawn(function()
+            local RunService = game:GetService("RunService")
+            local LocalPlayer = game:GetService("Players").LocalPlayer
+
+            while true do
+                RunService.Heartbeat:Wait()
+
+                local AntiRepRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if AntiRepRoot then
+                    pcall(function()
+                        sethiddenproperty(AntiRepRoot, "PhysicsRepRootPart", AntiRepRoot)
+                        sethiddenproperty(AntiRepRoot, "PhysicsRepRootPart", nil)
+                    end)
+                end
+            end
+        end)
+    end,
+})
        Antis:AddDivider("안티 그랩 계열")
 		Antis:AddToggle("AntiGrab", {
-			Text = "Anti Grab",
+			Text = "안티 그랩",
 			Default = false,
-			Tooltip = "The most default anti-grab",
+			Tooltip = "기본형 안티그랩또한 모드를 고를수있음",
 			Callback = function(antiGrab)
 				tbl8.AntiGrab = antiGrab
 				tbl12.AntiGrab()
@@ -39029,7 +39066,7 @@ task.spawn(function()
 end)
 
 Antis:AddToggle("AntiGrabXeron", {
-	Text = "Anti Grab BETA",
+	Text = "안티그랩 [beta]",
 	Default = false,
 	Tooltip = "안티그랩 베타 근데 존나좋을거로예상",
 	Callback = function(antiGrab)
@@ -39612,7 +39649,7 @@ end)
 if plr.Character then onCharAdded(plr.Character) end
 
 Antis:AddToggle("AntiGrabToggle", {
-    Text = "Anti Grab(앵커형)",
+    Text = "안티 그랩 (앵커형)",
     Default = false,
     Tooltip = "앵커로 이루어짐",
     Callback = function(state)
@@ -39759,7 +39796,6 @@ do
     local function onBlobSeat() return seatKind() == "blob" end
     local function onProtectedSeat() return seatKind() ~= nil end
 
-    -- [모드 1] No Ragdoll
     local xocu = { conns = {}, proc = false, active = false }
 
     local function xocuClean()
@@ -40061,7 +40097,7 @@ do
         cheekyCleanup()
     end
 
-    -- [모드 제어 및 유니버설 쉴드]
+    
     local function stopAll()
         xocuClean()
         nrdClean()
@@ -40170,7 +40206,7 @@ do
         universalShieldFrame = 0
     end
 
-    -- [로드 대기 및 초기화]
+    
     task.spawn(function()
         repeat task.wait(0.1) until _G._EchoDefence and _G._EchoDefence.P
         E = _G._EchoDefence
@@ -40239,9 +40275,9 @@ do
     end
 end
 Antis:AddToggle("AntiGrabMaster2", {
-    Text = "Anti Grab pro",
+    Text = "안티 그랩 [pro]",
     Default = false,
-    Tooltip = "Anti Grab Master",
+    Tooltip = "안티 그랩 마스터(모드설정류)",
     Callback = function(Value)
         if SetAntiGrabEnabled then SetAntiGrabEnabled(Value) end
     end,
@@ -40252,7 +40288,7 @@ do
     local antiGrabV2Task = nil
 
     Antis:AddToggle("AntiGrabSeatless", {
-        Text = "Anti Grab (Seatless)",
+        Text = "안티 그랩 (Seatless)",
         Default = false,
         Tooltip = "안티그랩이지만 오카리나를 소환해 일반적인 방법이아닌 토이형식으로 막습니다.",
         Callback = function(Value)
@@ -40679,7 +40715,7 @@ do
     end)
 
     Antis:AddToggle("AntiKillSetOwnerTractor", {
-        Text = "Anti kill (SetOwner+tractor)",
+        Text = "안티 킬 (셋오너+트랙터)",
         Default = false,
         Tooltip = "셋오너킬(루프킬)을 당하면 트랙터를 타서 차단합니다.(일부는 막히지않을수도 있습니다.",
         Callback = function(Value)
@@ -40690,9 +40726,9 @@ do
 end
 
 		Antis:AddToggle("GucciAntiGrab", {
-			Text = "[GUCCI] Anti Grab",
+			Text = "[구찌] 안티 그랩",
 			Default = false,
-			Tooltip = "Can't be touched.",
+			Tooltip = "셋오너 보내는게 불가능해지며 sit할수없습니다. 또한 일부 장난감은 투명효과를 냅니다.",
 			Callback = function(arg)
 				tbl12.SetGucciAntiGrab(arg)
 			end,
@@ -40705,9 +40741,9 @@ end
 		})
 Antis:AddDivider("안티 블롭&블롭킬 계열")
 		Antis:AddToggle("AntiBlobman", {
-			Text = "Anti Blobman",
+			Text = "안티 블롭맨",
 			Default = false,
-			Tooltip = "People can't grab you using Blobman",
+			Tooltip = "블롭맨이 잡을수없게 해줍니다",
 			Callback = function(arg)
 				tbl12.SetRuntimeToggle("AntiBlobman", arg)
 			end,
@@ -40894,9 +40930,9 @@ local function StartAntiPermGrab()
 end
 
 Antis:AddToggle("AntiBlobKillToggle", {
-    Text = "Anti blob Kill(래그돌형)",
+    Text = "안티 블롭킬 (래그돌형)",
     Default = false,
-    Tooltip = "블롭킬을 감지시 킬을 방지하고 블롭을 탈수있지만 고정형과다르게 고정을 쓰지않고 래그돌을 써서 케릭터가 날라갈수도있습니다.",
+    Tooltip = "블롭킬을 감지시 킬을 방지하고 블롭을 탈수없고 고정형과다르게 고정을 쓰지않고 래그돌을 써서 케릭터가 날라갈수도있습니다.",
     Callback = function(Value)
         if Value then
             local ragdollRemote = rs:WaitForChild("CharacterEvents"):FindFirstChild("RagdollRemote")
@@ -40952,9 +40988,9 @@ do
     end
 
     Antis:AddToggle("AntiBlobKill", {
-        Text = "Anti blob kill(고정형)",
+        Text = "안티 블롭 킬(고정형)",
         Default = false,
-        Tooltip = "화면에 케릭터가고정되고 블롭킬을 당하지 않지만 sit part에 앉을수 없습니다.",
+        Tooltip = "화면에 케릭터가 고정되고 블롭킬을 당하지 않지만 sit part에 앉을수 없습니다.",
         Callback = function(Value)
             blobKillRunning = Value
             if Value then
@@ -40993,7 +41029,7 @@ do
     })
 end
 Antis:AddToggle("AntiBlob", {
-    Text = "Anti blob Grab",
+    Text = "안티 블롭 그랩",
     Default = false,
     Tooltip = "블롭이 그랩할수없게 해줍니다.",
     Callback = function(Value)
@@ -41012,9 +41048,9 @@ Antis:AddToggle("AntiBlob", {
 })
 Antis:AddDivider("안티 오너&네트워크 계열")
 		Antis:AddToggle("AntiInputLag", {
-			Text = "Anti Network Ownership",
+			Text = "안티 네트워크 오너쉽",
 			Default = false,
-			Tooltip = "Anti Blob-kill, etc.",
+			Tooltip = "안티 블롭킬 등을 더 잘당하지않게 도와주고 팔로우할수 없습니다.",
 			Callback = function(arg)
 				tbl12.SetRuntimeToggle("AntiInputLag", arg)
 			end,
@@ -41127,9 +41163,9 @@ end
     local connection = nil
 
     Antis:AddToggle("AntiOwner", {
-        Text = "Anti Owner",
+        Text = "안티 오너",
         Default = false,
-        Tooltip = "Anti Owner (Hamburger)",
+        Tooltip = "안티 오너쉽의 새로운 버전입니다 햄버거를 소환했다가 지웠다가를 반복하며 교란합니다.(햄버거 소환 고정)",
         Callback = function(enabled)
             if connection then
                 connection:Disconnect()
@@ -41189,7 +41225,7 @@ if not Settings.Anti then Settings.Anti = {} end
 local Antis = Antis or library
 
 Antis:AddToggle("AntiOwnership", {
-    Text = "Anti Ownership spam [PartOwner형]",
+    Text = "안티 오너쉽 스팸[PartOwner형]",
     Default = false,
     Tooltip = "오너쉽 스팸을 방지합니다.",
     Callback = function(v)
@@ -41259,7 +41295,7 @@ Antis:AddToggle("AntiOwnership", {
 })
 
 Antis:AddToggle("AntiOwnership2", {
-    Text = "Anti Ownership [IsHeld형]",
+    Text = "안티 오너쉽 [IsHeld형]",
     Default = false,
     Tooltip = "IsHeld 상태를 감지하여 탈출합니다.",
     Callback = function(v)
@@ -41370,7 +41406,7 @@ end
   do
   Antis:AddDivider("안티 폭탄,불 계열")
 Antis:AddToggle("AntiExplosion", {
-			Text = "Anti Explosion",
+			Text = "안티 폭탄",
 			Default = false,
 			Tooltip = "Makes you not able to be exploded",
 			Callback = function(antiExplosion)
@@ -41544,7 +41580,7 @@ Antis:AddToggle("AntiExplosion", {
     end
 
     Antis:AddToggle("AntiSpawnExplode", {
-        Text = "Anti spawn Explode",
+        Text = "안티 폭탄 스폰",
         Default = false,
         Tooltip = "폭탄 스폰을 막고 스폰될시 오븐을 활용해 폭탄을 제거합니다.",
         Callback = function(Value)
@@ -41555,27 +41591,27 @@ Antis:AddToggle("AntiExplosion", {
     })
 end    
 		Antis:AddToggle("AntiBurn", {
-			Text = "Anti Burn",
+			Text = "안티 불",
 			Default = false,
-			Tooltip = "Makes you not able to be burnt",
+			Tooltip = "불데미지를 입지않게 해주며 즉시 불음 꺼줍니다.",
 			Callback = function(antiBurn)
 				tbl8.AntiBurn = antiBurn
 			end,
 		})
 
 		Antis:AddToggle("AntiVoid", {
-			Text = "Anti Void",
+			Text = "안티 보이드",
 			Default = false,
-			Tooltip = "Teleports you up if you go far down into the void",
+			Tooltip = "보이드 파드ㅡ 속으로 들어가면 순간이동시켜 줍니다.",
 			Callback = function(arg)
 				tbl12.SetRuntimeToggle("AntiVoid", arg)
 			end,
 		})
       Antis:AddDivider("안티 킥 계열")
 		Antis:AddToggle("AntiKick", {
-			Text = "Anti Kick",
+			Text = "안티킥",
 			Default = false,
-			Tooltip = "Default shuriken anti-kick",
+			Tooltip = "기본적인 표창 안티킥",
 			Callback = function(arg)
 				tbl12.SetRuntimeToggle("AntiKick", arg)
 				tbl12.WakeRuntimeGate("PCLDTracking")
@@ -41583,26 +41619,26 @@ end
 		})
 
 		Antis:AddToggle("AntiKick2", {
-			Text = "[Break PCLD] Anti Kick",
+			Text = "[PCLD 삭제] 안티 킥",
 			Default = false,
-			Tooltip = "Unable to get kicked at all",
+			Tooltip = "킥 조건을 제거하여 어떤경우에도 킥당할수없지만 핵전중 사용시 애미가 없다는소리를 듣습니다.",
 			Callback = function(arg)
 				tbl12.SetRuntimeToggle("AntiKick2", arg)
 			end,
 		})
         Antis:AddToggle("AutoReset", {
-			Text = "Auto Reset",
+			Text = "오토 리셋",
 			Default = true,
-			Tooltip = "Checks for kick frame and resets when needed",
+			Tooltip = "킥을 감지하면 자동으로 재설정해 막습니다.",
 			Callback = function(autoReset)
 				tbl8.AutoReset = autoReset
 			end,
 		})
 Antis:AddDivider("헬퍼 안티  계열")
 		Antis:AddToggle("AntiSticky", {
-			Text = "Anti Sticky",
+			Text = "안티 스티키",
 			Default = false,
-			Tooltip = "Protects your character from sticky toys",
+			Tooltip = "몸에 붙는 파트를 붙지않게 보호해 줍니다.",
 			Callback = function(antiSticky)
 				tbl8.AntiSticky = antiSticky
 
@@ -41639,9 +41675,9 @@ Antis:AddDivider("헬퍼 안티  계열")
 		})
 
 		Antis:AddToggle("AntiSnowball", {
-			Text = "Anti Snowball",
+			Text = "안티 스노우볼",
 			Default = false,
-			Tooltip = "Prevents you from getting snowballed",
+			Tooltip = "스노우볼의 넉백을 막습니다.",
 			Callback = function(arg)
 				tbl12.SetRuntimeToggle("AntiSnowball", arg)
 
@@ -41656,7 +41692,7 @@ Antis:AddDivider("헬퍼 안티  계열")
 		})
    Antis:AddDivider("안티 바나나 계열")
 		Antis:AddToggle("AntiBanana", {
-			Text = "Anti Banana",
+			Text = "안티 바나나 (다리제거)",
 			Default = false,
 			Tooltip = "Bananas won't touch you",
 			Callback = function(arg)
@@ -41668,7 +41704,7 @@ do
     local v1 = game:GetService("Players").LocalPlayer
 
     Antis:AddToggle("AntiBananaEat", {  
-        Text = 'Anti Banana (EAT)',  
+        Text = '안티 바나나 (EAT)',  
         Default = false,  
         Tooltip = "바나나가 소환될시 바나나를 삭제 시킵니다.",
         Callback = function(value42)  
@@ -41727,9 +41763,9 @@ do
 end
        Antis:AddDivider("안티 페인트,독 계열")
 		Antis:AddToggle("AntiPaint", {
-			Text = "Anti Paint",
+			Text = "안티 페인트",
 			Default = false,
-			Tooltip = "You won't get painted",
+			Tooltip = "페인트에 색칠당하지않게 해줍니다.",
 			Callback = function(antiPaint)
 				tbl8.AntiPaint = antiPaint
 
@@ -41773,9 +41809,9 @@ end
 		})
 
 		Antis:AddToggle("AntiPoison", {
-			Text = "Anti Poison",
+			Text = "안티 독",
 			Default = false,
-			Tooltip = "Poison parts won't kill you",
+			Tooltip = "독파트가 데미지를 주는걸 막습니다.",
 			Callback = function(arg)
 				local hole = map:FindFirstChild("Hole")
 				local poisonBigHole = hole and hole:FindFirstChild("PoisonBigHole")
@@ -41819,7 +41855,7 @@ do
     end
     Antis:AddDivider("안티 마스리스,플롯,브링 계열")
     Antis:AddToggle("AntiMassless", {
-        Text = "Anti Massless",
+        Text = "안티 마스리스",
         Default = false,
         Tooltip = "마스리스(무질량)  상태가 당하는것을 막고 블롭을 이용한 앵커킥을 차단합니다.",
         Callback = function(Value)
@@ -41855,7 +41891,7 @@ do
     
 
     Antis:AddToggle("AntiInPlot", {
-        Text = "Anti in plot",
+        Text = "안티 인 플롯",
         Default = false,
         Tooltip = "플롯내부를 교란시켜 블롭맨이 잡을수있게도와주고 서포트 해줍니다.",
         Callback = function(Value)
@@ -41959,7 +41995,7 @@ do
     end
      
     Antis:AddToggle("AntiBring", {
-        Text = "Anti Bring",
+        Text = "안티 브링",
         Default = false,
         Tooltip = "bring을 감지하며 그자리를 저장하고 탈출시 다시 그자리로 되돌아 갑니다.",
         Callback = function(Value)
@@ -42067,9 +42103,9 @@ do
 end  
 Antis:AddDivider("안티 렉 계열")
 		Antis:AddToggle("AntiLag", {
-			Text = "Anti Lag",
+			Text = "안티 렉",
 			Default = false,
-			Tooltip = "Anti Line-Lag & Sticky-Lag",
+			Tooltip = "안티 라인렉 & 표창 렉",
 			Callback = function(arg)
 				local enabled = not arg
 				if enabled and tbl7.LookFigures.Enabled then
@@ -42103,18 +42139,18 @@ Antis:AddDivider("안티 렉 계열")
 		}):AddKeyPicker("AntiLagK", { Text = "Anti Lag", Default = nil, Mode = "Toggle", NoUI = false, SyncToggleState = true })
 
 		Antis:AddToggle("AutoAntiLag", {
-			Text = "Auto Anti Lag",
+			Text = "오토 안티렉",
 			Default = true,
-			Tooltip = "Enables anti-lag for you if too low fps",
+			Tooltip = "프레임이 낮아져 설정값에 도달하면 자동으로 안티렉을 킵니다.",
 			Callback = function(autoAntiLag)
 				tbl8.AutoAntiLag = autoAntiLag
 			end,
 		})
 Antis:AddDivider("기타")
 		Antis:AddToggle("AntiInvis", {
-			Text = "Anti Invis",
+			Text = "안티 투명",
 			Default = false,
-			Tooltip = "Makes any invisible players visible",
+			Tooltip = "구찌로 투명상태가된 사람을 볼수있게 해줍니다.",
 			Callback = function()
 				task.spawn(function()
 					while toggles.AntiInvis and toggles.AntiInvis.Value do
@@ -42145,9 +42181,9 @@ Antis:AddDivider("기타")
 
 		
 		Antis:AddToggle("LoopTP", {
-			Text = "Loop TP",
+			Text = "루프 TP",
 			Default = false,
-			Tooltip = "Teleports you infinitely so you're unable to be grabbed",
+			Tooltip = "무한히 이동시켜 붙잡히지 않도록 합니다.",
 			Callback = function(loopTP)
 				tbl8.LoopTP = loopTP
 
@@ -42186,9 +42222,9 @@ Antis:AddDivider("기타")
 		local Miscellaneous = tbl15.Invincibility:AddRightGroupbox("Miscellaneous", "bolt")
 
 		Miscellaneous:AddToggle("DisblVoid", {
-			Text = "Disable Void",
+			Text = "보이드 상태 끄기",
 			Default = true,
-			Tooltip = "Makes you not get killed in void",
+			Tooltip = "보이드 파트가 죽일수 없게 해줍니다.",
 			DisabledTooltip = "This function is currently being managed by another function.",
 			Callback = function(destroyVoid)
 				tbl8.DestroyVoid = destroyVoid
@@ -42202,9 +42238,9 @@ Antis:AddDivider("기타")
 		})
 
 		Miscellaneous:AddToggle("WaterWalk", {
-			Text = "Water Walk",
+			Text = "바다 걷기",
 			Default = false,
-			Tooltip = "Walk on water",
+			Tooltip = "바다를 걸을수있게 해줍니다.",
 			Callback = function(arg)
 				for _, child in pairs(alwaysHereTweenedObjects.Ocean.Object.ObjectModel:GetChildren()) do
 					local tbl16 = tbl7.WaterPartStates[child]
@@ -42241,7 +42277,7 @@ Antis:AddDivider("기타")
 		})
 
 		Miscellaneous:AddToggle("DeleteBarriers", {
-			Text = "Noclip Barrier",
+			Text = "노클립 베리어",
 			Default = false,
 			Callback = function(arg)
 				local plots = workspace:FindFirstChild("Plots")
@@ -42264,7 +42300,7 @@ Antis:AddDivider("기타")
 		})
 
 		Miscellaneous:AddToggle("OtherInvCollisions", {
-			Text = "Anti-Fling [Objects Noclip]",
+			Text = "안티 플링 [장난감 노클립]",
 			Default = false,
 			Callback = function(arg)
 				if arg then
@@ -42373,7 +42409,7 @@ do
     end
 
     Miscellaneous:AddToggle("AntiSpawnFood", {
-        Text = "Anti spawn Food",
+        Text = "안티 스폰 음식&악기",
         Default = false,
         Tooltip = "모든 음식소환을 감지하여 음식을 소환하면 삭제 시킵니다.",
         Callback = function(Value)
@@ -42432,9 +42468,9 @@ end
 		})
 
 		v20:AddToggle("CAToggle", {
-			Text = "Counter Attack",
+			Text = "오토 어택",
 			Default = false,
-			Tooltip = "People who touch you will have the selected consequences",
+			Tooltip = "나를  만지를 사람을 모드에있는거로 좆되게 합니다.",
 			Callback = function(counterAttack)
 				tbl8.CounterAttack = counterAttack
 			end,
@@ -42442,7 +42478,7 @@ end
 
 		local v21 = v20:AddDependencyBox()
 		v21:SetupDependencies({ { options.CADropdown, "Delete Limbs" } })
-		v21:AddDivider("Delete Limb Settings")
+		v21:AddDivider("팔다리 삭제 설정")
 
 		v21:AddDropdown("deleteLimbsCounterBoxDropdown", {
 			Values = { "Legs", "Arms", "All" },
@@ -42459,7 +42495,7 @@ end
 
 	do
   local Config2 = tbl15.Invincibility:AddRightGroupbox("Anti grab Type", "settings")
-     Config2:AddDivider("Anti-Grab Beta")
+     Config2:AddDivider("안티 그랩 (BETA)")
 
 	
 
@@ -42467,8 +42503,7 @@ Config2:AddDropdown("AGTDropdown", {
 	Values = { "Normal", "No Ragdoll", "Anti-Kill", "Escapes Anything, but buggy" },
 	Default = 1,
 	Multi = false,
-	Text = "Anti-Grab Type",
-	Tooltip = "Type of default Anti-Grab",
+	Text = "안티 그랩 종류",
 	Callback = function(arg)
 		if arg == "Normal" then
 			tbl9.AGType = "Normal"
@@ -42481,22 +42516,22 @@ Config2:AddDropdown("AGTDropdown", {
 		end
 	end,
 })
-Config2:AddDivider("Anti Grab Pro Type")
+Config2:AddDivider("안티 그랩 (pro)")
 Config2:AddDropdown("AntiGrabMode", {
-    Text = "Anti Grab Mode",
+    Text = "안티 그랩 모드",
     Values = { "No Ragdoll", "Ragdoll", "Escape Everything" },
     Default = "No Ragdoll",
     Multi = false,
-    Tooltip = "Anti Grab Mode",
+    Tooltip = "안티 그랩 모드 pro설정",
     Callback = function(m)
         if SetAntiGrabMode then SetAntiGrabMode(m) end
     end,
 })
-Config2:AddDivider("Anti in plot mode")
+Config2:AddDivider("안티 인 플롯 모드")
 
 
 Config2:AddDropdown("AntiInPlotsType", {
-	Text = "Anti In Plots Type",
+	Text = "안티 인 플롯 모드",
 	Default = {},
 	Values = { "Players & Toy", "Toy Grab", "VehicleSeat" },
 	Multi = true,
@@ -42515,7 +42550,7 @@ Config2:AddDropdown("AntiInPlotsType", {
 		local Config = tbl15.Invincibility:AddRightGroupbox("Config", "settings")
 
 		Config:AddSlider("AntiLagSens", {
-			Text = "Auto Anti-Lag Sensitivity",
+			Text = "오토 안티렉 활성화 프레임",
 			Default = 3,
 			Min = 1,
 			Max = 20,
@@ -42528,9 +42563,9 @@ Config2:AddDropdown("AntiInPlotsType", {
 		Config:AddDivider("Auto Reset")
 
 		Config:AddToggle("AutoLeave", {
-			Text = "Auto Leave",
+			Text = "오토 킥",
 			Default = true,
-			Tooltip = "Leaves after four detected kick flags instead of continuing to reset",
+			Tooltip = "4번의 킥 감지 후 계속 초기화되지 않으면 자기 자신이 직접 킥을해 밴을 방지합니다.",
 			Callback = function(autoLeave)
 				tbl8.AutoLeave = autoLeave
 			end,
@@ -42542,8 +42577,8 @@ Config2:AddDropdown("AntiInPlotsType", {
 			Values = { "Normal", "No Ragdoll", "Anti-Kill", "Escapes Anything, but buggy" },
 			Default = 1,
 			Multi = false,
-			Text = "Anti-Grab Type",
-			Tooltip = "Type of default Anti-Grab",
+			Text = "안티 그랩 타입",
+			Tooltip = "기본적인 안티그랩과 연관",
 			Callback = function(agType)
 				tbl9.AGType = agType
 			end,
@@ -42552,9 +42587,8 @@ Config2:AddDropdown("AntiInPlotsType", {
 		Config:AddDropdown("GTDropdown", {
 			Values = { "Blobman", "Tractor [Invisible]", "Train [Invisible]", "Sleigh [Invisible]" },
 			Default = 1,
-			Multi = false,
-			Text = "GUCCI Type",
-			Tooltip = "What vehicle will you sit on during Gucci Anti Grab",
+			Multi = false, 
+            Tooltip = "구찌 동안 앉을 장난감 선택 (블롭맨을 제외한 다른거는 투명효과가 적용됩니다)",
 			Callback = function(arg)
 				if arg == "Blobman" then
 					tbl9.GucciType = "CreatureBlobman"
@@ -42604,7 +42638,7 @@ Config2:AddDropdown("AntiInPlotsType", {
 			},
 			Default = 1,
 			Multi = false,
-			Text = "Type",
+			Text = "타입",
 			Tooltip = "What interactable item will you use when doing anti-Net Owner",
 			Callback = function(antiInputType)
 				tbl9.AntiInputType = antiInputType
@@ -42612,7 +42646,7 @@ Config2:AddDropdown("AntiInPlotsType", {
 		})
 
 		Config:AddSlider("AntiInpLagDel", {
-			Text = "Grab & Drop Delay",
+			Text = "그랩 & 드롭 딜레이",
 			Default = 0.05,
 			Min = 0,
 			Max = 0.3,
@@ -42623,10 +42657,10 @@ Config2:AddDropdown("AntiInPlotsType", {
 			end,
 		})
 
-		Config:AddLabel("Below 0.05 can cause high ping")
+		Config:AddLabel("0.05이상으로 할시 핑이 오를수도있습니다.")
 
 		Config:AddSlider("ItemTransAK", {
-			Text = "Item Transparency",
+			Text = "아이템 투명",
 			Default = tbl9.AILTransparency,
 			Min = 0,
 			Max = 1,
@@ -42636,11 +42670,11 @@ Config2:AddDropdown("AntiInPlotsType", {
 			end,
 		})
 
-		Config:AddDivider("Anti-Kick")
+		Config:AddDivider("안티 킥")
 		local antiKickSettings = tbl7.AntiKickSettings
 
 		local AntiKickHL = Config:AddToggle("AntiKickHL", {
-			Text = "Highlight",
+			Text = "하이라이트 표시",
 			Default = antiKickSettings.Highlight,
 			Tooltip = "Highlights the shuriken",
 			Callback = function(highlight)
@@ -42664,11 +42698,11 @@ Config2:AddDropdown("AntiInPlotsType", {
 			end,
 		})
 
-		tbl12.AddRainbowToggle(Config, "RGBAKFill", "RGB Fill", "AKFill")
-		tbl12.AddRainbowToggle(Config, "RGBAKOutline", "RGB Outline", "AKOutline")
+		tbl12.AddRainbowToggle(Config, "무지개 내부", "RGB Fill", "AKFill")
+		tbl12.AddRainbowToggle(Config, "무지개 테두리", "RGB Outline", "AKOutline")
 
 		Config:AddSlider("FillTransAK", {
-			Text = "Fill Transparency",
+			Text = "내부 투명성",
 			Default = antiKickSettings.HighlightFT,
 			Min = 0,
 			Max = 1,
@@ -42679,7 +42713,7 @@ Config2:AddDropdown("AntiInPlotsType", {
 		})
 
 		Config:AddSlider("OutlTransAK", {
-			Text = "Outline Transparency",
+			Text = "테두리 투명성",
 			Default = antiKickSettings.HighlightOT,
 			Min = 0,
 			Max = 1,
@@ -42690,7 +42724,7 @@ Config2:AddDropdown("AntiInPlotsType", {
 		})
 
 		Config:AddSlider("ShurTransAK", {
-			Text = "Shuriken Transparency",
+			Text = "표창 투명성",
 			Default = antiKickSettings.Transparency,
 			Min = 0,
 			Max = 1,
