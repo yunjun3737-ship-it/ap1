@@ -17751,6 +17751,7 @@ do
 							BlackholeESP = false,
 							Shaders = false,
 							ChinaHat = false,
+                            AntiGrabB = false,
 							Zoom = false,
 							SmoothClickTP = true,
 							CustomLine = false,
@@ -40391,7 +40392,152 @@ do
         end
     })
 end
+do
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LP = Players.LocalPlayer
 
+local BeingHeld = nil
+local StruggleEvent = nil
+local AntiGrabConn = nil
+local Root = nil
+local Hum = nil
+
+_G.AntiGrab = false
+_G.AntiGrabT_P = false
+
+local function refreshChar()
+	local char = LP.Character
+	if not char then
+		Root = nil
+		Hum = nil
+		return
+	end
+	Root = char:FindFirstChild("HumanoidRootPart")
+	Hum = char:FindFirstChildOfClass("Humanoid")
+end
+
+local function findBeingHeld()
+	local ps = LP:FindFirstChild("PlayerScripts")
+	if not ps then return end
+	local isHeld = ps:FindFirstChild("IsHeld")
+	if isHeld and isHeld:IsA("BoolValue") then
+		BeingHeld = isHeld
+	end
+end
+
+local function findStruggle()
+	if StruggleEvent and StruggleEvent.Parent then return end
+	for _, v in ipairs(game:GetDescendants()) do
+		if v.Name == "StruggleEvent" and (v:IsA("RemoteEvent") or v:IsA("BindableEvent")) then
+			StruggleEvent = v
+			return
+		end
+	end
+end
+
+local function fireStruggle()
+	if not StruggleEvent then return end
+	pcall(function()
+		if StruggleEvent:IsA("RemoteEvent") then
+			StruggleEvent:FireServer()
+		else
+			StruggleEvent:Fire()
+		end
+	end)
+end
+
+local function onHeld()
+	if not Root or not Root.Parent then return end
+	Root.AssemblyLinearVelocity = Vector3.zero
+	Root.Anchored = true
+	if Hum then
+		Hum.Sit = false
+		Hum.AutoRotate = true
+		pcall(function()
+			Hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+		end)
+	end
+	fireStruggle()
+end
+
+local function onNotHeld()
+	if Root and Root.Parent then
+		Root.Anchored = false
+	end
+end
+
+local function startLoop()
+	if AntiGrabConn then
+		AntiGrabConn:Disconnect()
+		AntiGrabConn = nil
+	end
+	refreshChar()
+	findBeingHeld()
+	findStruggle()
+	AntiGrabConn = RunService.Heartbeat:Connect(function()
+		if not _G.AntiGrab then return end
+		if not Root or not Root.Parent then
+			refreshChar()
+			return
+		end
+		if not BeingHeld or not BeingHeld.Parent then
+			findBeingHeld()
+		end
+		local held = BeingHeld and BeingHeld.Value
+		if held then
+			onHeld()
+		else
+			onNotHeld()
+		end
+	end)
+end
+
+local function stopLoop()
+	if AntiGrabConn then
+		AntiGrabConn:Disconnect()
+		AntiGrabConn = nil
+	end
+	if Root and Root.Parent then
+		Root.Anchored = false
+		Root.AssemblyLinearVelocity = Vector3.zero
+	end
+end
+
+function ToggleAntiGrab(state)
+	_G.AntiGrab = state
+	_G.AntiGrabT_P = state
+	if state then
+		startLoop()
+	else
+		stopLoop()
+	end
+end
+
+LP.CharacterAdded:Connect(function()
+	task.wait(0.4)
+	refreshChar()
+	findBeingHeld()
+	if _G.AntiGrab then
+		startLoop()
+	end
+end)
+
+refreshChar()
+findBeingHeld()
+findStruggle()
+
+Antis:AddToggle("AntiGrabB", {
+	Text = "블츠형 안티그랩",
+	Default = false,
+	Tooltip = "블츠에서 뽀려온 안티그랩 이며 어떤경우에도 탈출합니다.",
+	Callback = function(arg)
+		tbl12.SetRuntimeToggle("AntiGrab", arg)
+		ToggleAntiGrab(arg)
+	end,
+})
+
+end
 do
     local Players = game:GetService("Players")
     local LocalPlayer = Players.LocalPlayer
