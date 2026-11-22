@@ -42921,8 +42921,6 @@ Config2:AddDropdown("AntiInPlotsType", {
 		})
 
 
-local DDT = v20:AddDependencyBox()
-		DDT:SetupDependencies({ { options.MethodSettingsTargets, "kill" } })
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -43005,7 +43003,7 @@ local function checkAndKill(plr)
 	local root = getRoot(plr)
 	if not root then return end
 
-	-- 30 studs 이내일 때만 작동
+	
 	if not isInRange(plr) then return end
 
 	if tryNetworkOwner(root) then
@@ -43038,6 +43036,8 @@ function ToggleLoopKillOwnership(state)
 	end)
 end
 
+local DDT = v20:AddDependencyBox()
+DDT:SetupDependencies({ { options.MethodSettingsTargets, "Kill" } })
 
 
 DDT:AddToggle("LoopKillOwnership", {
@@ -43241,8 +43241,7 @@ function ToggleKickableBlobman(state)
 					local hum = seat.Occupant
 					local char = hum and hum.Parent
 					local plr = char and Players:GetPlayerFromCharacter(char)
-					-- 원본: plr and plr ~= LP
-					-- 변형: isSelected(plr) — 선택된 플레이어만, 나(LP)는 자동 제외
+					
 					if isSelected(plr) then
 						pcall(function()
 							seat:Sit(nil)
