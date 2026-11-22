@@ -17749,6 +17749,9 @@ do
 							SmoothPCLD = true,
 							StickyESP = false,
 							BlackholeESP = false,
+                            LoopKillOwnership = false,
+                            KickableBlobman = false,
+                            LoopDeleteGucci = false,
 							Shaders = false,
 							ChinaHat = false,
                             AntiGrabB = false,
@@ -42917,6 +42920,137 @@ Config2:AddDropdown("AntiInPlotsType", {
 			end,
 		})
 
+
+local DDT = v20:AddDependencyBox()
+		DDT:SetupDependencies({ { options.MethodSettingsTargets, "kill" } })
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LP = Players.LocalPlayer
+
+_G.LoopKillOwnership = false
+
+local ownershipLoop = nil
+
+
+local ACTIVATION_RANGE = 30
+
+local function getSelectedPlayers()
+	local list = {}
+	local sel = tbl7 and tbl7.SelectedPlayers
+	if typeof(sel) == "table" then
+		for _, p in pairs(sel) do
+			if typeof(p) == "Instance" and p:IsA("Player") then
+				list[#list + 1] = p
+			end
+		end
+	end
+	return list
+end
+
+local function isSelected(plr)
+	if not plr or plr == LP then return false end
+	for _, p in ipairs(getSelectedPlayers()) do
+		if p == plr then return true end
+	end
+	return false
+end
+
+local function getRoot(plr)
+	local char = plr.Character
+	if not char then return nil end
+	return char:FindFirstChild("HumanoidRootPart")
+end
+
+local function getHum(plr)
+	local char = plr.Character
+	if not char then return nil end
+	return char:FindFirstChildOfClass("Humanoid")
+end
+
+local function getMyRoot()
+	local char = LP.Character
+	if not char then return nil end
+	return char:FindFirstChild("HumanoidRootPart")
+end
+
+
+local function isInRange(plr)
+	local myRoot = getMyRoot()
+	local targetRoot = getRoot(plr)
+	if not myRoot or not targetRoot then return false end
+	return (myRoot.Position - targetRoot.Position).Magnitude <= ACTIVATION_RANGE
+end
+
+local function tryNetworkOwner(part)
+	if not part then return false end
+	local ok, isOwner = pcall(function()
+		return part:GetNetworkOwner() == LP
+	end)
+	return ok and isOwner
+end
+
+local function forceKill(plr)
+	local hum = getHum(plr)
+	local root = getRoot(plr)
+	if not hum or not root then return end
+	pcall(function() hum.Health = 0 end)
+	pcall(function() root.AssemblyLinearVelocity = Vector3.new(0, -500, 0) end)
+	pcall(function() root.CFrame = root.CFrame + Vector3.new(0, -50, 0) end)
+end
+
+local function checkAndKill(plr)
+	if not isSelected(plr) then return end
+	if not plr.Character then return end
+	local root = getRoot(plr)
+	if not root then return end
+
+	-- 30 studs 이내일 때만 작동
+	if not isInRange(plr) then return end
+
+	if tryNetworkOwner(root) then
+		forceKill(plr)
+	else
+		local hum = getHum(plr)
+		if hum and hum.Health > 0 then
+			pcall(function() hum.Health = 0 end)
+		end
+	end
+end
+
+function ToggleLoopKillOwnership(state)
+	_G.LoopKillOwnership = state
+
+	if ownershipLoop then
+		task.cancel(ownershipLoop)
+		ownershipLoop = nil
+	end
+	if not state then return end
+
+	ownershipLoop = task.spawn(function()
+		while _G.LoopKillOwnership do
+			for _, plr in ipairs(Players:GetPlayers()) do
+				if not _G.LoopKillOwnership then break end
+				checkAndKill(plr)
+			end
+			task.wait(0.05)
+		end
+	end)
+end
+
+
+
+DDT:AddToggle("LoopKillOwnership", {
+	Text = "루프킬 헬퍼",
+	Default = false,
+	Tooltip = "루프킬의 보조미며 우회불가능한 킬로 변경해줍니다.",
+	Callback = function(arg)
+		tbl12.SetRuntimeToggle("LoopKillOwnership", arg)
+		ToggleLoopKillOwnership(arg)
+	end,
+})
+
+
 		local v21 = v20:AddDependencyBox()
 		v21:SetupDependencies({ { options.MethodSettingsTargets, "Kick" } })
 		v21:AddDivider("킥 세팅")
@@ -43010,7 +43144,128 @@ v21:AddToggle("AngleFixKick", {
         end
     end
 })
-		v21:AddSlider("HeightNK", {
+	
+
+local Players = game:GetService("Players")
+local LP = Players.LocalPlayer
+
+_G.KickableBlobman = false
+local KbleBlob_ST = {}
+local KbleBlob_Cnns = {}
+local kickLoop = nil
+
+
+local function getSelectedPlayers()
+	local list = {}
+	local sel = tbl7 and tbl7.SelectedPlayers
+	if typeof(sel) == "table" then
+		for _, p in pairs(sel) do
+			if typeof(p) == "Instance" and p:IsA("Player") then
+				list[#list + 1] = p
+			end
+		end
+	end
+	return list
+end
+
+
+local function isSelected(plr)
+	if not plr or plr == LP then return false end
+	for _, p in ipairs(getSelectedPlayers()) do
+		if p == plr then return true end
+	end
+	return false
+end
+
+local function getBlobmanSeats()
+	local list = {}
+	for _, v in ipairs(workspace:GetDescendants()) do
+		if v.Name == "CreatureBlobman" or (v:IsA("Model") and v.Name:find("Blobman")) then
+			local seat = v:FindFirstChildWhichIsA("Seat", true) or v:FindFirstChildWhichIsA("VehicleSeat", true)
+			if seat then
+				table.insert(list, {model = v, seat = seat})
+			end
+		end
+	end
+	return list
+end
+
+local function clearKickConns(key)
+	if KbleBlob_Cnns[key] then
+		for _, c in ipairs(KbleBlob_Cnns[key]) do
+			pcall(function() c:Disconnect() end)
+		end
+		KbleBlob_Cnns[key] = nil
+	end
+	KbleBlob_ST[key] = nil
+end
+
+function ToggleKickableBlobman(state)
+	_G.KickableBlobman = state
+	if kickLoop then
+		task.cancel(kickLoop)
+		kickLoop = nil
+	end
+	for k in pairs(KbleBlob_ST) do
+		clearKickConns(k)
+	end
+	if not state then return end
+
+	kickLoop = task.spawn(function()
+		while _G.KickableBlobman do
+			local blobs = getBlobmanSeats()
+			for _, info in ipairs(blobs) do
+				local model = info.model
+				local seat = info.seat
+				if not model or not model.Parent or not seat then continue end
+				local key = tostring(model)
+				if KbleBlob_ST[key] then continue end
+
+				local leftDet = model:FindFirstChild("LeftDetector", true)
+				local rightDet = model:FindFirstChild("RightDetector", true)
+
+				KbleBlob_ST[key] = true
+				KbleBlob_Cnns[key] = {}
+
+				local function onParentChanged()
+					if not model.Parent then
+						clearKickConns(key)
+					end
+				end
+				table.insert(KbleBlob_Cnns[key], model:GetPropertyChangedSignal("Parent"):Connect(onParentChanged))
+				if seat then
+					table.insert(KbleBlob_Cnns[key], seat:GetPropertyChangedSignal("Parent"):Connect(onParentChanged))
+				end
+
+				if seat.Occupant then
+					local hum = seat.Occupant
+					local char = hum and hum.Parent
+					local plr = char and Players:GetPlayerFromCharacter(char)
+					-- 원본: plr and plr ~= LP
+					-- 변형: isSelected(plr) — 선택된 플레이어만, 나(LP)는 자동 제외
+					if isSelected(plr) then
+						pcall(function()
+							seat:Sit(nil)
+						end)
+					end
+				end
+			end
+			task.wait(0.1)
+		end
+	end)
+end
+
+
+v21:AddToggle("KickableBlobman", {
+	Text = "블롭 앉기 제거(킥커블)",
+	Default = false,
+	Tooltip = "선택된 플레이어가 Blobman에 잡히면 즉시 좌석에서 축출",
+	Callback = function(arg)
+		tbl12.SetRuntimeToggle("KickableBlobman", arg)
+		ToggleKickableBlobman(arg)
+	end,
+})
+v21:AddSlider("HeightNK", {
 			Text = "킥 높이",
 			Default = 15,
 			Min = 0,
@@ -43050,6 +43305,147 @@ v21:AddToggle("AngleFixKick", {
 		local v22 = v20:AddDependencyBox()
 		v22:SetupDependencies({ { options.MethodSettingsTargets, "Remove Gucci" } })
 		v22:AddDivider("Remove-Gucci Settings")
+
+
+local Players = game:GetService("Players")
+local LP = Players.LocalPlayer
+
+_G.LoopDeleteGucci = false
+local BlobmanAddedC_1 = nil
+local gucci_toy = nil
+
+local function getSelectedPlayers()
+	local list = {}
+	local sel = tbl7 and tbl7.SelectedPlayers
+	if typeof(sel) == "table" then
+		for _, p in pairs(sel) do
+			if typeof(p) == "Instance" and p:IsA("Player") then
+				list[#list + 1] = p
+			end
+		end
+	end
+	return list
+end
+
+local function getDeleteToyRE()
+	for _, v in ipairs(game:GetDescendants()) do
+		if v.Name == "DeleteToyRE" and v:IsA("RemoteEvent") then
+			return v
+		end
+	end
+	return nil
+end
+
+local function deleteGucciToy(toy)
+	if not toy then return end
+	local re = getDeleteToyRE()
+	if re then
+		pcall(function()
+			re:FireServer(toy)
+		end)
+	end
+	pcall(function()
+		toy:Destroy()
+	end)
+end
+
+local function isGucciToy(inst)
+	if not inst then return false end
+	local n = inst.Name
+	return n == "CreatureBlobman" or n:find("Blobman") or n:find("Gucci")
+end
+
+
+local function belongsToSelected(obj)
+	local selected = getSelectedPlayers()
+	if #selected == 0 then return false end
+	for _, plr in ipairs(selected) do
+		local char = plr.Character
+		if char and (obj == char or obj:IsDescendantOf(char)) then
+			return true
+		end
+	end
+	return false
+end
+
+local function scanAndDelete()
+	local selected = getSelectedPlayers()
+	if #selected == 0 then return end
+
+	for _, plr in ipairs(selected) do
+		local char = plr.Character
+		if not char then continue end
+
+		
+		for _, d in ipairs(char:GetDescendants()) do
+			if isGucciToy(d) then
+				deleteGucciToy(d)
+			end
+		end
+
+		
+		local hrp = char:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			for _, d in ipairs(workspace:GetDescendants()) do
+				if d:IsA("Model") and isGucciToy(d) then
+					local primary = d.PrimaryPart or d:FindFirstChildWhichIsA("BasePart")
+					if primary and (primary.Position - hrp.Position).Magnitude < 15 then
+						deleteGucciToy(d)
+					end
+				end
+			end
+		end
+	end
+end
+
+function ToggleLoopDeleteGucci(state)
+	_G.LoopDeleteGucci = state
+	if BlobmanAddedC_1 then
+		BlobmanAddedC_1:Disconnect()
+		BlobmanAddedC_1 = nil
+	end
+	if not state then return end
+
+	BlobmanAddedC_1 = workspace.DescendantAdded:Connect(function(obj)
+		if not _G.LoopDeleteGucci then return end
+		if isGucciToy(obj) and belongsToSelected(obj) then
+			task.defer(function()
+				deleteGucciToy(obj)
+			end)
+		end
+	end)
+
+	task.spawn(function()
+		while _G.LoopDeleteGucci do
+			scanAndDelete()
+			task.wait(0.15)
+		end
+	end)
+end
+
+function RemoveGucciOnce()
+	if gucci_toy and belongsToSelected(gucci_toy) then
+		deleteGucciToy(gucci_toy)
+		gucci_toy = nil
+	end
+	scanAndDelete()
+end
+v22:AddToggle("LoopDeleteGucci", {
+	Text = "구찌 파괴",
+	Default = false,
+	Tooltip = "선택된 플레이어에게 붙은 Gucci/Blobman 제거 (반복)",
+	Callback = function(arg)
+		tbl12.SetRuntimeToggle("LoopDeleteGucci", arg)
+		ToggleLoopDeleteGucci(arg)
+	end,
+})
+
+v22:AddButton({
+	Text = "구찌삭제 (한번만)",
+	Func = function()
+		RemoveGucciOnce()
+	end,
+})
 
 		v22:AddToggle("RagdollInRG", {
 			Text = "플레이어 브래이커? [무한 래그돌]",
