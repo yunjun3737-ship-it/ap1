@@ -40396,7 +40396,7 @@ do
     })
 end
 do
-local Players = game:GetService("Players")
+		local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LP = Players.LocalPlayer
 
@@ -40407,30 +40407,39 @@ local Root = nil
 local Hum = nil
 
 _G.AntiGrab = false
-_G.AntiGrabT_P = false
 
 local function refreshChar()
 	local char = LP.Character
-	if not char then
-		Root = nil
-		Hum = nil
-		return
-	end
-	Root = char:FindFirstChild("HumanoidRootPart")
-	Hum = char:FindFirstChildOfClass("Humanoid")
+	Root = char and char:FindFirstChild("HumanoidRootPart") or nil
+	Hum = char and char:FindFirstChildOfClass("Humanoid") or nil
 end
 
+
 local function findBeingHeld()
+	if BeingHeld and BeingHeld.Parent then return end
 	local ps = LP:FindFirstChild("PlayerScripts")
-	if not ps then return end
-	local isHeld = ps:FindFirstChild("IsHeld")
-	if isHeld and isHeld:IsA("BoolValue") then
-		BeingHeld = isHeld
+	if ps then
+		local v = ps:FindFirstChild("IsHeld", true)  -- 재귀
+		if v and v:IsA("BoolValue") then BeingHeld = v; return end
+	end
+	local pg = LP:FindFirstChild("PlayerGui")
+	if pg then
+		local v = pg:FindFirstChild("IsHeld", true)
+		if v and v:IsA("BoolValue") then BeingHeld = v; return end
 	end
 end
 
 local function findStruggle()
 	if StruggleEvent and StruggleEvent.Parent then return end
+	
+	for _, container in ipairs({game:GetService("ReplicatedStorage"), game:GetService("ReplicatedFirst"), workspace}) do
+		local v = container:FindFirstChild("StruggleEvent", true)
+		if v and (v:IsA("RemoteEvent") or v:IsA("BindableEvent")) then
+			StruggleEvent = v
+			return
+		end
+	end
+	
 	for _, v in ipairs(game:GetDescendants()) do
 		if v.Name == "StruggleEvent" and (v:IsA("RemoteEvent") or v:IsA("BindableEvent")) then
 			StruggleEvent = v
@@ -40457,9 +40466,7 @@ local function onHeld()
 	if Hum then
 		Hum.Sit = false
 		Hum.AutoRotate = true
-		pcall(function()
-			Hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
-		end)
+		pcall(function() Hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true) end)
 	end
 	fireStruggle()
 end
@@ -40471,64 +40478,39 @@ local function onNotHeld()
 end
 
 local function startLoop()
-	if AntiGrabConn then
-		AntiGrabConn:Disconnect()
-		AntiGrabConn = nil
-	end
+	if AntiGrabConn then AntiGrabConn:Disconnect() end
 	refreshChar()
 	findBeingHeld()
 	findStruggle()
 	AntiGrabConn = RunService.Heartbeat:Connect(function()
 		if not _G.AntiGrab then return end
-		if not Root or not Root.Parent then
-			refreshChar()
-			return
-		end
-		if not BeingHeld or not BeingHeld.Parent then
-			findBeingHeld()
-		end
-		local held = BeingHeld and BeingHeld.Value
-		if held then
-			onHeld()
-		else
-			onNotHeld()
-		end
+		if not Root or not Root.Parent then refreshChar(); return end
+		if not BeingHeld or not BeingHeld.Parent then findBeingHeld() end
+		if BeingHeld and BeingHeld.Value then onHeld() else onNotHeld() end
 	end)
 end
 
 local function stopLoop()
-	if AntiGrabConn then
-		AntiGrabConn:Disconnect()
-		AntiGrabConn = nil
-	end
-	if Root and Root.Parent then
-		Root.Anchored = false
-		Root.AssemblyLinearVelocity = Vector3.zero
-	end
+	if AntiGrabConn then AntiGrabConn:Disconnect(); AntiGrabConn = nil end
+	if Root and Root.Parent then Root.Anchored = false end
 end
 
 function ToggleAntiGrab(state)
 	_G.AntiGrab = state
-	_G.AntiGrabT_P = state
-	if state then
-		startLoop()
-	else
-		stopLoop()
-	end
+	if state then startLoop() else stopLoop() end
 end
 
 LP.CharacterAdded:Connect(function()
 	task.wait(0.4)
 	refreshChar()
 	findBeingHeld()
-	if _G.AntiGrab then
-		startLoop()
-	end
+	if _G.AntiGrab then startLoop() end
 end)
 
 refreshChar()
 findBeingHeld()
 findStruggle()
+
 
 Antis:AddToggle("AntiGrabB", {
 	Text = "블츠형 안티그랩",
@@ -43146,28 +43128,16 @@ v21:AddToggle("AngleFixKick", {
 })
 	
 
-local Players = game:GetService("Players")
-local LP = Players.LocalPlayer
-
-_G.KickableBlobman = false
-local KbleBlob_ST = {}
-local KbleBlob_Cnns = {}
-local kickLoop = nil
-
-
 local function getSelectedPlayers()
 	local list = {}
 	local sel = tbl7 and tbl7.SelectedPlayers
 	if typeof(sel) == "table" then
 		for _, p in pairs(sel) do
-			if typeof(p) == "Instance" and p:IsA("Player") then
-				list[#list + 1] = p
-			end
+			if typeof(p) == "Instance" and p:IsA("Player") then list[#list + 1] = p end
 		end
 	end
 	return list
 end
-
 
 local function isSelected(plr)
 	if not plr or plr == LP then return false end
@@ -43177,24 +43147,9 @@ local function isSelected(plr)
 	return false
 end
 
-local function getBlobmanSeats()
-	local list = {}
-	for _, v in ipairs(workspace:GetDescendants()) do
-		if v.Name == "CreatureBlobman" or (v:IsA("Model") and v.Name:find("Blobman")) then
-			local seat = v:FindFirstChildWhichIsA("Seat", true) or v:FindFirstChildWhichIsA("VehicleSeat", true)
-			if seat then
-				table.insert(list, {model = v, seat = seat})
-			end
-		end
-	end
-	return list
-end
-
 local function clearKickConns(key)
 	if KbleBlob_Cnns[key] then
-		for _, c in ipairs(KbleBlob_Cnns[key]) do
-			pcall(function() c:Disconnect() end)
-		end
+		for _, c in ipairs(KbleBlob_Cnns[key]) do pcall(function() c:Disconnect() end) end
 		KbleBlob_Cnns[key] = nil
 	end
 	KbleBlob_ST[key] = nil
@@ -43202,50 +43157,35 @@ end
 
 function ToggleKickableBlobman(state)
 	_G.KickableBlobman = state
-	if kickLoop then
-		task.cancel(kickLoop)
-		kickLoop = nil
-	end
-	for k in pairs(KbleBlob_ST) do
-		clearKickConns(k)
-	end
+	if kickLoop then task.cancel(kickLoop); kickLoop = nil end
+	for k in pairs(KbleBlob_ST) do clearKickConns(k) end
 	if not state then return end
 
 	kickLoop = task.spawn(function()
 		while _G.KickableBlobman do
-			local blobs = getBlobmanSeats()
-			for _, info in ipairs(blobs) do
-				local model = info.model
-				local seat = info.seat
+			for _, info in ipairs(getBlobmanSeats()) do
+				local model, seat = info.model, info.seat
 				if not model or not model.Parent or not seat then continue end
 				local key = tostring(model)
-				if KbleBlob_ST[key] then continue end
 
-				local leftDet = model:FindFirstChild("LeftDetector", true)
-				local rightDet = model:FindFirstChild("RightDetector", true)
-
-				KbleBlob_ST[key] = true
-				KbleBlob_Cnns[key] = {}
-
-				local function onParentChanged()
-					if not model.Parent then
-						clearKickConns(key)
+				-- 모델 최초 발견 시에만 연결 세팅
+				if not KbleBlob_ST[key] then
+					KbleBlob_ST[key] = true
+					KbleBlob_Cnns[key] = {}
+					local function onParentChanged()
+						if not model.Parent then clearKickConns(key) end
 					end
-				end
-				table.insert(KbleBlob_Cnns[key], model:GetPropertyChangedSignal("Parent"):Connect(onParentChanged))
-				if seat then
+					table.insert(KbleBlob_Cnns[key], model:GetPropertyChangedSignal("Parent"):Connect(onParentChanged))
 					table.insert(KbleBlob_Cnns[key], seat:GetPropertyChangedSignal("Parent"):Connect(onParentChanged))
 				end
 
+				-- ★ 매 tick마다 Occupant 체크 (핵심 수정)
 				if seat.Occupant then
 					local hum = seat.Occupant
 					local char = hum and hum.Parent
 					local plr = char and Players:GetPlayerFromCharacter(char)
-					
 					if isSelected(plr) then
-						pcall(function()
-							seat:Sit(nil)
-						end)
+						pcall(function() seat:Sit(nil) end)
 					end
 				end
 			end
@@ -43254,11 +43194,10 @@ function ToggleKickableBlobman(state)
 	end)
 end
 
-
-v21:AddToggle("KickableBlobman", {
-	Text = "블롭 앉기 제거(킥커블)",
+Antis:AddToggle("KickableBlobman", {
+	Text = "블롭 앉기파트 제거(킥커블)",
 	Default = false,
-	Tooltip = "선택된 플레이어가 Blobman에 잡히면 즉시 좌석에서 축출",
+	Tooltip = "선택된 플레이어가 Blobman에 앉으면 즉시 일어나게함",
 	Callback = function(arg)
 		tbl12.SetRuntimeToggle("KickableBlobman", arg)
 		ToggleKickableBlobman(arg)
