@@ -40253,7 +40253,7 @@ do
         end
     end)
 
-    -- [전역 함수 선언]
+    
     function SetAntiGrabEnabled(v)
         task.spawn(function()
             repeat task.wait(0.1) until coreReady
@@ -40396,50 +40396,50 @@ do
     })
 end
 do
-		local Players = game:GetService("Players")
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LP = Players.LocalPlayer
+
+_G.AntiGrab = false
+_G.AntiGrabT_P = false
 
 local BeingHeld = nil
 local StruggleEvent = nil
-local AntiGrabConn = nil
-local Root = nil
-local Hum = nil
+local AntiGrabC = nil
+local heldConn = nil
+local Root, Hum
 
-_G.AntiGrab = false
-
-local function refreshChar()
-	local char = LP.Character
-	Root = char and char:FindFirstChild("HumanoidRootPart") or nil
-	Hum = char and char:FindFirstChildOfClass("Humanoid") or nil
+local function refresh()
+	local c = LP.Character
+	Root = c and c:FindFirstChild("HumanoidRootPart")
+	Hum = c and c:FindFirstChildOfClass("Humanoid")
 end
-
 
 local function findBeingHeld()
 	if BeingHeld and BeingHeld.Parent then return end
 	local ps = LP:FindFirstChild("PlayerScripts")
 	if ps then
-		local v = ps:FindFirstChild("IsHeld", true)  -- 재귀
-		if v and v:IsA("BoolValue") then BeingHeld = v; return end
+		local v = ps:FindFirstChild("IsHeld", true)
+		if v and v:IsA("BoolValue") then BeingHeld = v return end
 	end
-	local pg = LP:FindFirstChild("PlayerGui")
-	if pg then
-		local v = pg:FindFirstChild("IsHeld", true)
-		if v and v:IsA("BoolValue") then BeingHeld = v; return end
+	for _, v in ipairs(LP:GetDescendants()) do
+		if v.Name == "IsHeld" and v:IsA("BoolValue") then
+			BeingHeld = v
+			return
+		end
 	end
 end
 
 local function findStruggle()
 	if StruggleEvent and StruggleEvent.Parent then return end
-	
-	for _, container in ipairs({game:GetService("ReplicatedStorage"), game:GetService("ReplicatedFirst"), workspace}) do
+	for _, container in ipairs({ReplicatedStorage, workspace}) do
 		local v = container:FindFirstChild("StruggleEvent", true)
 		if v and (v:IsA("RemoteEvent") or v:IsA("BindableEvent")) then
 			StruggleEvent = v
 			return
 		end
 	end
-	
 	for _, v in ipairs(game:GetDescendants()) do
 		if v.Name == "StruggleEvent" and (v:IsA("RemoteEvent") or v:IsA("BindableEvent")) then
 			StruggleEvent = v
@@ -40459,8 +40459,9 @@ local function fireStruggle()
 	end)
 end
 
-local function onHeld()
-	if not Root or not Root.Parent then return end
+local function onGrabbed()
+	if not Root or not Root.Parent then refresh() end
+	if not Root then return end
 	Root.AssemblyLinearVelocity = Vector3.zero
 	Root.Anchored = true
 	if Hum then
@@ -40471,45 +40472,51 @@ local function onHeld()
 	fireStruggle()
 end
 
-local function onNotHeld()
-	if Root and Root.Parent then
-		Root.Anchored = false
-	end
+local function onReleased()
+	if Root and Root.Parent then Root.Anchored = false end
 end
 
-local function startLoop()
-	if AntiGrabConn then AntiGrabConn:Disconnect() end
-	refreshChar()
+local function bindHeld()
+	if heldConn then heldConn:Disconnect() heldConn = nil end
 	findBeingHeld()
-	findStruggle()
-	AntiGrabConn = RunService.Heartbeat:Connect(function()
+	if not BeingHeld then return end
+	heldConn = BeingHeld:GetPropertyChangedSignal("Value"):Connect(function()
 		if not _G.AntiGrab then return end
-		if not Root or not Root.Parent then refreshChar(); return end
-		if not BeingHeld or not BeingHeld.Parent then findBeingHeld() end
-		if BeingHeld and BeingHeld.Value then onHeld() else onNotHeld() end
+		if BeingHeld.Value then onGrabbed() else onReleased() end
+	end)
+	if BeingHeld.Value and _G.AntiGrab then onGrabbed() end
+end
+
+local function startAntiGrab()
+	if AntiGrabC then AntiGrabC:Disconnect() AntiGrabC = nil end
+	refresh()
+	findStruggle()
+	bindHeld()
+	AntiGrabC = RunService.Heartbeat:Connect(function()
+		if not _G.AntiGrab then return end
+		if not Root or not Root.Parent then refresh() end
+		if not BeingHeld or not BeingHeld.Parent then bindHeld() end
+		if BeingHeld and BeingHeld.Value then onGrabbed() end
 	end)
 end
 
-local function stopLoop()
-	if AntiGrabConn then AntiGrabConn:Disconnect(); AntiGrabConn = nil end
-	if Root and Root.Parent then Root.Anchored = false end
+local function stopAntiGrab()
+	if AntiGrabC then AntiGrabC:Disconnect() AntiGrabC = nil end
+	if heldConn then heldConn:Disconnect() heldConn = nil end
+	onReleased()
 end
 
 function ToggleAntiGrab(state)
 	_G.AntiGrab = state
-	if state then startLoop() else stopLoop() end
+	_G.AntiGrabT_P = state
+	if state then startAntiGrab() else stopAntiGrab() end
 end
 
 LP.CharacterAdded:Connect(function()
-	task.wait(0.4)
-	refreshChar()
-	findBeingHeld()
-	if _G.AntiGrab then startLoop() end
+	task.wait(0.3)
+	refresh()
+	if _G.AntiGrab then startAntiGrab() end
 end)
-
-refreshChar()
-findBeingHeld()
-findStruggle()
 
 
 Antis:AddToggle("AntiGrabB", {
@@ -43127,23 +43134,20 @@ v21:AddToggle("AngleFixKick", {
     end
 })
 	
-
-	local Players = game:GetService("Players")
+local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 
 _G.KickableBlobman = false
-local KbleBlob_ST = KbleBlob_ST or {}
-local KbleBlob_Cnns = KbleBlob_Cnns or {}
-local kickLoop = nil
+local KbleBlob_ST = {}
+local KbleBlob_Cnns = {}
+local kickThread = nil
 
 local function getSelectedPlayers()
 	local list = {}
 	pcall(function()
 		if tbl7 and type(tbl7.SelectedPlayers) == "table" then
 			for _, p in pairs(tbl7.SelectedPlayers) do
-				if type(p) == "Instance" and p:IsA("Player") then
-					table.insert(list, p)
-				end
+				if typeof(p) == "Instance" and p:IsA("Player") then list[#list + 1] = p end
 			end
 		end
 	end)
@@ -43158,83 +43162,66 @@ local function isSelected(plr)
 	return false
 end
 
-local function getBlobmanSeats()
-	local list = {}
-	for _, v in ipairs(workspace:GetDescendants()) do
-		if v.Name == "CreatureBlobman" or (v:IsA("Model") and v.Name:find("Blobman")) then
-			local seat = v:FindFirstChildWhichIsA("Seat", true) or v:FindFirstChildWhichIsA("VehicleSeat", true)
-			if seat then
-				table.insert(list, {model = v, seat = seat})
-			end
-		end
+local function clearKey(key)
+	if KbleBlob_Cnns[key] then
+		for _, c in ipairs(KbleBlob_Cnns[key]) do pcall(function() c:Disconnect() end) end
 	end
-	return list
+	KbleBlob_Cnns[key] = nil
+	KbleBlob_ST[key] = nil
 end
 
-local function clearKickConns(key)
-	if KbleBlob_Cnns[key] then
-		for _, c in ipairs(KbleBlob_Cnns[key]) do
-			pcall(function() c:Disconnect() end)
-		end
-		KbleBlob_Cnns[key] = nil
+local function handleBlob(model)
+	if not model or not model.Parent then return end
+	local key = tostring(model)
+	local seat = model:FindFirstChildWhichIsA("VehicleSeat", true) or model:FindFirstChildWhichIsA("Seat", true)
+	if not seat then return end
+
+	if not KbleBlob_ST[key] then
+		KbleBlob_ST[key] = true
+		KbleBlob_Cnns[key] = {}
+		table.insert(KbleBlob_Cnns[key], model:GetPropertyChangedSignal("Parent"):Connect(function()
+			if not model.Parent then clearKey(key) end
+		end))
+		table.insert(KbleBlob_Cnns[key], seat:GetPropertyChangedSignal("Occupant"):Connect(function()
+			local occ = seat.Occupant
+			if not occ then return end
+			local char = occ.Parent
+			local plr = char and Players:GetPlayerFromCharacter(char)
+			if isSelected(plr) then
+				pcall(function() seat:Sit(nil) end)
+				pcall(function() if occ then occ.Sit = false end end)
+			end
+		end))
 	end
-	KbleBlob_ST[key] = nil
+
+	if seat.Occupant then
+		local occ = seat.Occupant
+		local char = occ and occ.Parent
+		local plr = char and Players:GetPlayerFromCharacter(char)
+		if isSelected(plr) then
+			pcall(function() seat:Sit(nil) end)
+		end
+	end
 end
 
 function ToggleKickableBlobman(state)
 	_G.KickableBlobman = state
-	if kickLoop then
-		task.cancel(kickLoop)
-		kickLoop = nil
-	end
-	
-	if type(KbleBlob_ST) ~= "table" then KbleBlob_ST = {} end
-	for k in pairs(KbleBlob_ST) do
-		clearKickConns(k)
-	end
-	
+	if kickThread then task.cancel(kickThread) kickThread = nil end
+	for k in pairs(KbleBlob_ST) do clearKey(k) end
 	if not state then return end
-
-	kickLoop = task.spawn(function()
+	kickThread = task.spawn(function()
 		while _G.KickableBlobman do
-			pcall(function()
-				for _, info in ipairs(getBlobmanSeats()) do
-					local model = info.model
-					local seat = info.seat
-					if not model or not model.Parent or not seat then continue end
-					local key = tostring(model)
-					
-					if not KbleBlob_ST[key] then
-						KbleBlob_ST[key] = true
-						KbleBlob_Cnns[key] = {}
-
-						local function onParentChanged()
-							if not model.Parent then
-								clearKickConns(key)
-							end
-						end
-						table.insert(KbleBlob_Cnns[key], model:GetPropertyChangedSignal("Parent"):Connect(onParentChanged))
-						if seat then
-							table.insert(KbleBlob_Cnns[key], seat:GetPropertyChangedSignal("Parent"):Connect(onParentChanged))
-						end
-					end
-
-					if seat.Occupant then
-						local hum = seat.Occupant
-						local char = hum and hum.Parent
-						local plr = char and Players:GetPlayerFromCharacter(char)
-						if isSelected(plr) then
-							pcall(function()
-								seat:Sit(nil)
-							end)
-						end
-					end
+			for _, v in ipairs(workspace:GetDescendants()) do
+				if v.Name == "CreatureBlobman" or (v:IsA("Model") and v.Name:find("Blobman")) then
+					handleBlob(v)
 				end
-			end)
-			task.wait(0.1)
+			end
+			task.wait(0.15)
 		end
 	end)
 end
+
+
 
 v21:AddToggle("KickableBlobman", {
 	Text = "블롭 앉기파트 제거(킥커블)",
@@ -43286,93 +43273,58 @@ v21:AddSlider("HeightNK", {
 		v22:SetupDependencies({ { options.MethodSettingsTargets, "Remove Gucci" } })
 		v22:AddDivider("Remove-Gucci Settings")
 
-
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LP = Players.LocalPlayer
 
 _G.LoopDeleteGucci = false
 local BlobmanAddedC_1 = nil
-local gucci_toy = nil
+local gucciScanThread = nil
+local _cachedDelToyRE = nil
 
 local function getSelectedPlayers()
 	local list = {}
-	local sel = tbl7 and tbl7.SelectedPlayers
-	if typeof(sel) == "table" then
-		for _, p in pairs(sel) do
-			if typeof(p) == "Instance" and p:IsA("Player") then
-				list[#list + 1] = p
+	pcall(function()
+		if tbl7 and type(tbl7.SelectedPlayers) == "table" then
+			for _, p in pairs(tbl7.SelectedPlayers) do
+				if typeof(p) == "Instance" and p:IsA("Player") then list[#list + 1] = p end
 			end
 		end
-	end
+	end)
 	return list
 end
 
 local function getDeleteToyRE()
-	for _, v in ipairs(game:GetDescendants()) do
-		if v.Name == "DeleteToyRE" and v:IsA("RemoteEvent") then
+	if _cachedDelToyRE and _cachedDelToyRE.Parent then return _cachedDelToyRE end
+	local menu = ReplicatedStorage:FindFirstChild("MenuToys")
+	if menu then
+		local v = menu:FindFirstChild("DestroyToy")
+		if v and v:IsA("RemoteEvent") then
+			_cachedDelToyRE = v
 			return v
 		end
 	end
 	return nil
 end
 
-local function deleteGucciToy(toy)
-	if not toy then return end
+local function isGucci(obj)
+	if not obj then return false end
+	local n = obj.Name
+	return n == "CreatureBlobman" or n:find("Blobman") ~= nil or n:find("Gucci") ~= nil
+end
+
+local function deleteToy(obj)
 	local re = getDeleteToyRE()
-	if re then
-		pcall(function()
-			re:FireServer(toy)
-		end)
-	end
-	pcall(function()
-		toy:Destroy()
-	end)
+	if re then pcall(function() re:FireServer(obj) end) end
+	pcall(function() if obj and obj.Parent then obj:Destroy() end end)
 end
 
-local function isGucciToy(inst)
-	if not inst then return false end
-	local n = inst.Name
-	return n == "CreatureBlobman" or n:find("Blobman") or n:find("Gucci")
-end
-
-
-local function belongsToSelected(obj)
-	local selected = getSelectedPlayers()
-	if #selected == 0 then return false end
-	for _, plr in ipairs(selected) do
+local function scanAll()
+	for _, plr in ipairs(getSelectedPlayers()) do
 		local char = plr.Character
-		if char and (obj == char or obj:IsDescendantOf(char)) then
-			return true
-		end
-	end
-	return false
-end
-
-local function scanAndDelete()
-	local selected = getSelectedPlayers()
-	if #selected == 0 then return end
-
-	for _, plr in ipairs(selected) do
-		local char = plr.Character
-		if not char then continue end
-
-		
-		for _, d in ipairs(char:GetDescendants()) do
-			if isGucciToy(d) then
-				deleteGucciToy(d)
-			end
-		end
-
-		
-		local hrp = char:FindFirstChild("HumanoidRootPart")
-		if hrp then
-			for _, d in ipairs(workspace:GetDescendants()) do
-				if d:IsA("Model") and isGucciToy(d) then
-					local primary = d.PrimaryPart or d:FindFirstChildWhichIsA("BasePart")
-					if primary and (primary.Position - hrp.Position).Magnitude < 15 then
-						deleteGucciToy(d)
-					end
-				end
+		if char then
+			for _, d in ipairs(char:GetDescendants()) do
+				if isGucci(d) then deleteToy(d) end
 			end
 		end
 	end
@@ -43380,36 +43332,24 @@ end
 
 function ToggleLoopDeleteGucci(state)
 	_G.LoopDeleteGucci = state
-	if BlobmanAddedC_1 then
-		BlobmanAddedC_1:Disconnect()
-		BlobmanAddedC_1 = nil
-	end
+	if BlobmanAddedC_1 then BlobmanAddedC_1:Disconnect() BlobmanAddedC_1 = nil end
+	if gucciScanThread then task.cancel(gucciScanThread) gucciScanThread = nil end
 	if not state then return end
-
 	BlobmanAddedC_1 = workspace.DescendantAdded:Connect(function(obj)
 		if not _G.LoopDeleteGucci then return end
-		if isGucciToy(obj) and belongsToSelected(obj) then
-			task.defer(function()
-				deleteGucciToy(obj)
-			end)
+		if isGucci(obj) then
+			task.defer(function() deleteToy(obj) end)
 		end
 	end)
-
-	task.spawn(function()
+	gucciScanThread = task.spawn(function()
 		while _G.LoopDeleteGucci do
-			scanAndDelete()
-			task.wait(0.15)
+			scanAll()
+			task.wait(0.12)
 		end
 	end)
 end
 
-function RemoveGucciOnce()
-	if gucci_toy and belongsToSelected(gucci_toy) then
-		deleteGucciToy(gucci_toy)
-		gucci_toy = nil
-	end
-	scanAndDelete()
-end
+
 v22:AddToggle("LoopDeleteGucci", {
 	Text = "구찌 파괴",
 	Default = false,
