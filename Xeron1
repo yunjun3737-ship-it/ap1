@@ -43129,14 +43129,21 @@ v21:AddToggle("AngleFixKick", {
 	
 
 local function getSelectedPlayers()
-	local list = {}
-	local sel = tbl7 and tbl7.SelectedPlayers
-	if typeof(sel) == "table" then
-		for _, p in pairs(sel) do
-			if typeof(p) == "Instance" and p:IsA("Player") then list[#list + 1] = p end
-		end
-	end
-	return list
+    local list = {}
+
+    if not tbl7 then return list end
+
+    
+    local sel = tbl7.SelectedPlayers
+    if not sel or typeof(sel) ~= "table" then return list end
+
+    for _, p in pairs(sel) do
+        if typeof(p) == "Instance" and p:IsA("Player") then
+            list[#list + 1] = p
+        end
+    end
+
+    return list
 end
 
 local function isSelected(plr)
