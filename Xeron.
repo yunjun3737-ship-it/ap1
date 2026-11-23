@@ -43168,7 +43168,7 @@ function ToggleKickableBlobman(state)
 				if not model or not model.Parent or not seat then continue end
 				local key = tostring(model)
 
-				-- 모델 최초 발견 시에만 연결 세팅
+				
 				if not KbleBlob_ST[key] then
 					KbleBlob_ST[key] = true
 					KbleBlob_Cnns[key] = {}
@@ -43179,7 +43179,7 @@ function ToggleKickableBlobman(state)
 					table.insert(KbleBlob_Cnns[key], seat:GetPropertyChangedSignal("Parent"):Connect(onParentChanged))
 				end
 
-				-- ★ 매 tick마다 Occupant 체크 (핵심 수정)
+				
 				if seat.Occupant then
 					local hum = seat.Occupant
 					local char = hum and hum.Parent
@@ -43194,7 +43194,7 @@ function ToggleKickableBlobman(state)
 	end)
 end
 
-Antis:AddToggle("KickableBlobman", {
+v21:AddToggle("KickableBlobman", {
 	Text = "블롭 앉기파트 제거(킥커블)",
 	Default = false,
 	Tooltip = "선택된 플레이어가 Blobman에 앉으면 즉시 일어나게함",
