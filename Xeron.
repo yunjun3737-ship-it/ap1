@@ -29623,7 +29623,6 @@ end
 							end)
 						end
 					end
-
 pcall(function()
     local GE = _OK_RS:WaitForChild("GrabEvents", 5)
     if GE then _OK_Event = GE:WaitForChild("SetNetworkOwner", 5) end
@@ -29634,16 +29633,21 @@ local function _OK_getCharModel(arg)
         if arg:IsA("Player") then return arg.Character end
         if arg:IsA("Model") then return arg end
         return nil
+    elseif typeof(arg) == "string" then
+        local m = workspace:FindFirstChild(arg)
+        if m then return m end
+        local plr = _OK_Players:FindFirstChild(arg)
+        return plr and plr.Character or nil
     end
-    local m = workspace:FindFirstChild(arg)
-    if m then return m end
-    local plr = _OK_Players:FindFirstChild(arg)
-    return plr and plr.Character or nil
+    return nil
 end
 
 local function _OK_getMyHRP()
     local c = _OK_LP.Character
-    return c and c:FindFirstChild("HumanoidRootPart")
+    if c then
+        return c:FindFirstChild("HumanoidRootPart")
+    end
+    return nil
 end
 
 local function _OK_CheckOwnerPart(part)
@@ -29665,7 +29669,7 @@ end
 
 local function _OK_sendRemote(targetPart, myHrp)
     if not _OK_Event or not targetPart or not targetPart:IsA("BasePart") or not myHrp then return end
-    for i = 1, 5 do
+    for i = 1, 6 do
         pcall(function()
             _OK_Event:FireServer(targetPart, CFrame.lookAt(myHrp.Position, targetPart.Position))
         end)
@@ -29677,6 +29681,35 @@ local function _OK_ownershipKill(root)
     pcall(function() root.CFrame = CFrame.new(0, -49900, 0) end)
     task.wait(0.1)
     pcall(function() root.AssemblyLinearVelocity = Vector3.new(0, -1000000, 0) end)
+end
+
+local function _OK_helperKill(targetModel)
+    if not targetModel or not targetModel.Parent then return end
+
+    local hum = targetModel:FindFirstChildOfClass("Humanoid")
+    if hum then
+        pcall(function() hum.RequiresNeck = false end)
+    end
+
+    for _, v in ipairs(targetModel:GetDescendants()) do
+        pcall(function()
+            if v:IsA("ForceField") then
+                v:Destroy()
+            elseif v:IsA("BasePart") then
+                v.Anchored = false
+                v.CanCollide = false
+                if v.Name == "Head" or v.Name == "Torso" or v.Name == "UpperTorso" then
+                    v:BreakJoints()
+                end
+            elseif v:IsA("BodyVelocity") or v:IsA("BodyForce") or v:IsA("BodyPosition") or v:IsA("BodyGyro") then
+                v:Destroy()
+            end
+        end)
+    end
+
+    if hum then
+        pcall(function() hum.Health = 0 end)
+    end
 end
 
 function tbl12.OwnershipKill(arg)
@@ -29692,6 +29725,7 @@ function tbl12.OwnershipKill(arg)
     local targetHrp = model:FindFirstChild("HumanoidRootPart")
     if not targetHrp then return end
 
+    _OK_helperKill(model)
     _OK_sendRemote(targetHrp, myHrp)
 
     if _OK_CheckOwnerPlayer(arg) or _OK_CheckOwnerPart(targetHrp) then
@@ -29705,6 +29739,7 @@ local _OK_origKill = tbl12.Kill
 
 tbl12.Kill = function(arg)
     if tbl14 and tbl14.UseOwnershipKill == true then
+        print("[OK] Ownership Kill Active")
         pcall(tbl12.OwnershipKill, arg)
     end
     return _OK_origKill(arg)
