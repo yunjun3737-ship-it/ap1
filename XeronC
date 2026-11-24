@@ -29718,8 +29718,8 @@ function tbl12.OwnershipKill(arg)
     if not model then return end
     
     local hum = model:FindFirstChildOfClass("Humanoid")
-    if not hum or hum.Health <= 0 then return end
-    
+    if not hum then return end
+
     local myHrp = _OK_getMyHRP()
     if not myHrp then return end
 
@@ -29737,15 +29737,14 @@ function tbl12.OwnershipKill(arg)
 end
 
 local _OK_origKill = tbl12.Kill
-
 tbl12.Kill = function(arg)
+    local result = _OK_origKill(arg)   
     if tbl14 and tbl14.UseOwnershipKill == true then
-        
         task.spawn(function()
-            pcall(tbl12.OwnershipKill, arg)
+            pcall(tbl12.OwnershipKill, arg)   
         end)
     end
-    return _OK_origKill(arg)
+    return result
 end
          end
 			end
