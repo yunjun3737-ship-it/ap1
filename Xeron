@@ -29623,8 +29623,7 @@ end
 							end)
 						end
 					end
-
-
+ 
 pcall(function()
     local GE = _OK_RS:WaitForChild("GrabEvents", 5)
     if GE then _OK_Event = GE:WaitForChild("SetNetworkOwner", 5) end
@@ -29700,7 +29699,6 @@ function tbl12.OwnershipKill(arg)
     local targetHrp = model:FindFirstChild("HumanoidRootPart")
     if not targetHrp then return end
 
-    
     _OK_snowSpam10(model, myHrp)
     task.wait(0.05)
 
@@ -29718,18 +29716,17 @@ local _OK_origKill = tbl12.Kill
 
 tbl12.Kill = function(arg)
     
-    local useOwnership = false
-    pcall(function()
-        useOwnership = tbl14 and tbl14.UseOwnershipKill == true
-    end)
-    
-    if useOwnership then
-        pcall(tbl12.OwnershipKill, arg)
+    if tbl14 and tbl14.UseOwnershipKill == true then
+        task.spawn(function()
+            pcall(tbl12.OwnershipKill, arg)
+        end)
     end
 
     
     return _OK_origKill(arg)
-end 
+end
+
+
 				end
 			end
 
