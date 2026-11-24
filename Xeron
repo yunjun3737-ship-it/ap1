@@ -29708,7 +29708,8 @@ local function _OK_helperKill(targetModel)
     end
 
     if hum then
-        pcall(function() hum.Health = 0 end)
+        pcall(function() 
+         end)
     end
 end
 
