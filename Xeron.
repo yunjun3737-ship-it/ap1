@@ -17678,6 +17678,7 @@ do
                             ForestSoundBackground       = true,
                             ForestSoundRiver            = true,
 							LoopTpLocation = false,
+                            OwnershipKillOption = false,
                             MusicToggle = false,
 							AutoSeatBlobman = false,
 							FreezeBlobman = false,
@@ -29603,7 +29604,11 @@ end
 
 				do
 					local tbl16 = {}
-
+                 local _OK_Players = game:GetService("Players")
+                 local _OK_RS      = game:GetService("ReplicatedStorage")
+                 local _OK_LP      = _OK_Players.LocalPlayer
+   
+                 local _OK_Event = nil
 					tbl12.Kill = function(arg)
 						local v22, v23, v24 = tbl12.Char(arg)
 
@@ -29618,6 +29623,105 @@ end
 							end)
 						end
 					end
+pcall(function()
+    local GE = _OK_RS:WaitForChild("GrabEvents", 5)
+    if GE then _OK_Event = GE:WaitForChild("SetNetworkOwner", 5) end
+end)
+
+local function _OK_getCharModel(name)
+    local m = workspace:FindFirstChild(name)
+    if m then return m end
+    local plr = _OK_Players:FindFirstChild(name)
+    return plr and plr.Character or nil
+end
+
+local function _OK_getMyHRP()
+    local c = _OK_LP.Character
+    return c and c:FindFirstChild("HumanoidRootPart")
+end
+
+local function _OK_CheckOwnerPart(part)
+    if typeof(part) ~= "Instance" then return false end
+    local po = part:FindFirstChild("PartOwner")
+    if not po then return false end
+    return po.Value == _OK_LP.Name
+end
+
+local function _OK_CheckOwnerPlayer(name)
+    local model = _OK_getCharModel(name)
+    if not model then return false end
+    local head = model:FindFirstChild("Head")
+    if not head then return false end
+    local po = head:FindFirstChild("PartOwner")
+    if not po then return false end
+    return po.Value == _OK_LP.Name
+end
+
+local function _OK_snowOnce(part, myHrp)
+    if not _OK_Event or not part or not part:IsA("BasePart") or not myHrp then return end
+    if (myHrp.Position - part.Position).Magnitude > 30 then return end
+    _OK_Event:FireServer(part, CFrame.lookAt(myHrp.Position, part.Position))
+end
+
+local function _OK_snowSpam10(model, myHrp)
+    local list = {}
+    for _, n in ipairs({"Right Arm","Left Arm","Head","Torso","HumanoidRootPart","Right Leg","Left Leg"}) do
+        local p = model:FindFirstChild(n)
+        if p then table.insert(list, p) end
+    end
+    for _, p in ipairs(model:GetDescendants()) do
+        if p:IsA("BasePart") then table.insert(list, p) end
+    end
+    for _ = 1, 10 do
+        for _, p in ipairs(list) do _OK_snowOnce(p, myHrp) end
+    end
+end
+
+local function _OK_ownershipKill(root)
+    pcall(function() workspace.FallenPartsDestroyHeight = -50000 end)
+    pcall(function() root.CFrame = CFrame.new(0, -49900, 0) end)
+    task.wait(0.1)
+    pcall(function() root.AssemblyLinearVelocity = Vector3.new(0, -1000000, 0) end)
+end
+
+function tbl12.OwnershipKill(name)
+    local model = _OK_getCharModel(name)
+    if not model then return end
+    local myHrp = _OK_getMyHRP()
+    if not myHrp then return end
+
+    local saved = myHrp.CFrame
+    local targetHrp = model:FindFirstChild("HumanoidRootPart")
+    if not targetHrp then return end
+
+    myHrp.CFrame = CFrame.new(targetHrp.Position + Vector3.new(0, 3, 0))
+    _OK_snowSpam10(model, myHrp)
+    task.wait(0.05)
+
+    if _OK_CheckOwnerPlayer(name) or _OK_CheckOwnerPart(targetHrp) then
+        _OK_ownershipKill(targetHrp)
+    else
+        _OK_snowSpam10(model, myHrp)
+        _OK_ownershipKill(targetHrp)
+    end
+
+    myHrp.CFrame = saved
+end
+
+local _OK_origKill = tbl12.Kill
+
+tbl12.Kill = function(arg)
+    local useOwnership = false
+    pcall(function()
+        useOwnership = tbl14 and tbl14.UseOwnershipKill == true
+    end)
+
+    if useOwnership then
+        return tbl12.OwnershipKill(arg)
+    end
+    return _OK_origKill(arg)
+end
+
 				end
 			end
 
@@ -43032,13 +43136,21 @@ DDT:SetupDependencies({ { options.MethodSettingsTargets, "Kill" } })
 DDT:AddToggle("LoopKillOwnership", {
 	Text = "루프킬 헬퍼",
 	Default = false,
-	Tooltip = "루프킬의 보조미며 우회불가능한 킬로 변경해줍니다.",
+	Tooltip = "루프킬의 보조입니다.",
 	Callback = function(arg)
 		tbl12.SetRuntimeToggle("LoopKillOwnership", arg)
 		ToggleLoopKillOwnership(arg)
 	end,
 })
 
+DDT:AddToggle("OwnershipKillOption", {
+    Text = "루프킬 헬퍼2",
+    Default = false,
+    Tooltip = "이또한 루프킬의 보조이지만 우회불가능한 킬로 변경시킵니다.",
+    Callback = function(state)
+        tbl14.UseOwnershipKill = state
+    end,
+})
 
 		local v21 = v20:AddDependencyBox()
 		v21:SetupDependencies({ { options.MethodSettingsTargets, "Kick" } })
