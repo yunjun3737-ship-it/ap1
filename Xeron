@@ -29682,6 +29682,10 @@ end
 function tbl12.OwnershipKill(arg)
     local model = _OK_getCharModel(arg)
     if not model then return end
+    
+    local hum = model:FindFirstChildOfClass("Humanoid")
+    if not hum or hum.Health <= 0 then return end
+    
     local myHrp = _OK_getMyHRP()
     if not myHrp then return end
 
@@ -29704,7 +29708,7 @@ tbl12.Kill = function(arg)
         pcall(tbl12.OwnershipKill, arg)
     end
     return _OK_origKill(arg)
-end 
+end
          end
 			end
 
