@@ -29623,7 +29623,7 @@ end
 							end)
 						end
 					end
- 
+
 pcall(function()
     local GE = _OK_RS:WaitForChild("GrabEvents", 5)
     if GE then _OK_Event = GE:WaitForChild("SetNetworkOwner", 5) end
@@ -29663,13 +29663,21 @@ local function _OK_CheckOwnerPlayer(arg)
     return po.Value == _OK_LP.Name
 end
 
+local function _OK_sendRemote(targetPart, myHrp)
+    if not _OK_Event or not targetPart or not targetPart:IsA("BasePart") or not myHrp then return end
+    for i = 1, 5 do
+        pcall(function()
+            _OK_Event:FireServer(targetPart, CFrame.lookAt(myHrp.Position, targetPart.Position))
+        end)
+    end
+end
+
 local function _OK_ownershipKill(root)
     pcall(function() workspace.FallenPartsDestroyHeight = -50000 end)
     pcall(function() root.CFrame = CFrame.new(0, -49900, 0) end)
     task.wait(0.1)
     pcall(function() root.AssemblyLinearVelocity = Vector3.new(0, -1000000, 0) end)
 end
-
 
 function tbl12.OwnershipKill(arg)
     local model = _OK_getCharModel(arg)
@@ -29680,14 +29688,8 @@ function tbl12.OwnershipKill(arg)
     local targetHrp = model:FindFirstChild("HumanoidRootPart")
     if not targetHrp then return end
 
-    
-    if _OK_Event then
-        pcall(function()
-            _OK_Event:FireServer(targetHrp, CFrame.lookAt(myHrp.Position, targetHrp.Position))
-        end)
-    end
+    _OK_sendRemote(targetHrp, myHrp)
 
-    
     if _OK_CheckOwnerPlayer(arg) or _OK_CheckOwnerPart(targetHrp) then
         _OK_ownershipKill(targetHrp)
     else
@@ -29695,23 +29697,15 @@ function tbl12.OwnershipKill(arg)
     end
 end
 
-
 local _OK_origKill = tbl12.Kill
 
-
 tbl12.Kill = function(arg)
-    
     if tbl14 and tbl14.UseOwnershipKill == true then
-        task.spawn(function()
-            pcall(tbl12.OwnershipKill, arg)
-        end)
+        pcall(tbl12.OwnershipKill, arg)
     end
-
-    
     return _OK_origKill(arg)
-end
-
-				end
+end 
+         end
 			end
 
 			tbl12.Void = function(arg)
