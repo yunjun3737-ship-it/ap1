@@ -29663,32 +29663,13 @@ local function _OK_CheckOwnerPlayer(arg)
     return po.Value == _OK_LP.Name
 end
 
-
-local function _OK_snowOnce(part, myHrp)
-    if not _OK_Event or not part or not part:IsA("BasePart") or not myHrp then return end
-    _OK_Event:FireServer(part, CFrame.lookAt(myHrp.Position, part.Position))
-end
-
-local function _OK_snowSpam10(model, myHrp)
-    local list = {}
-    for _, n in ipairs({"Right Arm","Left Arm","Head","Torso","HumanoidRootPart","Right Leg","Left Leg"}) do
-        local p = model:FindFirstChild(n)
-        if p then table.insert(list, p) end
-    end
-    for _, p in ipairs(model:GetDescendants()) do
-        if p:IsA("BasePart") then table.insert(list, p) end
-    end
-    for _ = 1, 10 do
-        for _, p in ipairs(list) do _OK_snowOnce(p, myHrp) end
-    end
-end
-
 local function _OK_ownershipKill(root)
     pcall(function() workspace.FallenPartsDestroyHeight = -50000 end)
     pcall(function() root.CFrame = CFrame.new(0, -49900, 0) end)
     task.wait(0.1)
     pcall(function() root.AssemblyLinearVelocity = Vector3.new(0, -1000000, 0) end)
 end
+
 
 function tbl12.OwnershipKill(arg)
     local model = _OK_getCharModel(arg)
@@ -29699,13 +29680,17 @@ function tbl12.OwnershipKill(arg)
     local targetHrp = model:FindFirstChild("HumanoidRootPart")
     if not targetHrp then return end
 
-    _OK_snowSpam10(model, myHrp)
-    task.wait(0.05)
+    
+    if _OK_Event then
+        pcall(function()
+            _OK_Event:FireServer(targetHrp, CFrame.lookAt(myHrp.Position, targetHrp.Position))
+        end)
+    end
 
+    
     if _OK_CheckOwnerPlayer(arg) or _OK_CheckOwnerPart(targetHrp) then
         _OK_ownershipKill(targetHrp)
     else
-        _OK_snowSpam10(model, myHrp)
         _OK_ownershipKill(targetHrp)
     end
 end
@@ -29725,7 +29710,6 @@ tbl12.Kill = function(arg)
     
     return _OK_origKill(arg)
 end
-
 
 				end
 			end
