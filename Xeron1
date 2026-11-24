@@ -29740,8 +29740,10 @@ local _OK_origKill = tbl12.Kill
 
 tbl12.Kill = function(arg)
     if tbl14 and tbl14.UseOwnershipKill == true then
-        print("[OK] Ownership Kill Active")
-        pcall(tbl12.OwnershipKill, arg)
+        
+        task.spawn(function()
+            pcall(tbl12.OwnershipKill, arg)
+        end)
     end
     return _OK_origKill(arg)
 end
