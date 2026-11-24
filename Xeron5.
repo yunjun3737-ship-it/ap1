@@ -29624,11 +29624,11 @@ end
 						end
 					end
 
+
 pcall(function()
     local GE = _OK_RS:WaitForChild("GrabEvents", 5)
     if GE then _OK_Event = GE:WaitForChild("SetNetworkOwner", 5) end
 end)
-
 
 local function _OK_getCharModel(arg)
     if typeof(arg) == "Instance" then
@@ -29636,7 +29636,6 @@ local function _OK_getCharModel(arg)
         if arg:IsA("Model") then return arg end
         return nil
     end
-    
     local m = workspace:FindFirstChild(arg)
     if m then return m end
     local plr = _OK_Players:FindFirstChild(arg)
@@ -29665,9 +29664,9 @@ local function _OK_CheckOwnerPlayer(arg)
     return po.Value == _OK_LP.Name
 end
 
+
 local function _OK_snowOnce(part, myHrp)
     if not _OK_Event or not part or not part:IsA("BasePart") or not myHrp then return end
-    if (myHrp.Position - part.Position).Magnitude > 30 then return end
     _OK_Event:FireServer(part, CFrame.lookAt(myHrp.Position, part.Position))
 end
 
@@ -29698,11 +29697,10 @@ function tbl12.OwnershipKill(arg)
     local myHrp = _OK_getMyHRP()
     if not myHrp then return end
 
-    local saved = myHrp.CFrame
     local targetHrp = model:FindFirstChild("HumanoidRootPart")
     if not targetHrp then return end
 
-    myHrp.CFrame = CFrame.new(targetHrp.Position + Vector3.new(0, 3, 0))
+    
     _OK_snowSpam10(model, myHrp)
     task.wait(0.05)
 
@@ -29712,23 +29710,26 @@ function tbl12.OwnershipKill(arg)
         _OK_snowSpam10(model, myHrp)
         _OK_ownershipKill(targetHrp)
     end
-
-    myHrp.CFrame = saved
 end
+
 
 local _OK_origKill = tbl12.Kill
 
+
 tbl12.Kill = function(arg)
+    
     local useOwnership = false
     pcall(function()
         useOwnership = tbl14 and tbl14.UseOwnershipKill == true
     end)
-
+    
     if useOwnership then
-        return tbl12.OwnershipKill(arg)
+        pcall(tbl12.OwnershipKill, arg)
     end
+
+    
     return _OK_origKill(arg)
-end
+end 
 				end
 			end
 
