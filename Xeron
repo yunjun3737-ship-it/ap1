@@ -41074,7 +41074,401 @@ do
         end
     })
 end
+do
+local function GetAllBaseParts(character)
+    local parts = {}
+    for _, obj in ipairs(character:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            table.insert(parts, obj)
+        end
+    end
+    return parts
+end
 
+GetCharacter = a.GetCharacter
+
+
+Antis:AddToggle("AntiKIll", {
+    Text = "안티 킬",
+    Default = false,
+	Tooltip = "블롭의 루프킬 공격을 차단합니다.",
+    Callback = function(Value)
+        Config.AntiGraboTT = Value
+        if Value then
+            Config.antiGrabTask = task.spawn(function()
+                while Config.AntiGraboTT do
+                    pcall(function()
+                        local plr = localPlayer
+                        local character = plr.Character
+                        if not character then return end
+                        local grabbed = false
+                        local grabbedPart = nil
+                        for _, part in pairs(character:GetChildren()) do
+                            if part:FindFirstChild("PartOwner") and part.PartOwner.Value ~= "" then
+                                grabbed = true
+                                grabbedPart = part
+                                break
+                            end
+                        end
+                        local ragdolled = false
+                        local humForState = character:FindFirstChildOfClass("Humanoid")
+                        if humForState then
+                            local state = humForState:GetState()
+                            if state == Enum.HumanoidStateType.Ragdoll
+                                or state == Enum.HumanoidStateType.Physics
+                                or state == Enum.HumanoidStateType.FallingDown then
+                                ragdolled = true
+                            end
+                        end
+                        if grabbed or ragdolled then
+                            if character and not Config.antiGrabstomp and tick() >= (Config.sex2 or 0) then
+                                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                                local root = character:FindFirstChild("HumanoidRootPart")
+                                if humanoid and root then
+                                    Config.antiGrabstomp = true
+                                    Config.sex1 = tick() + Config.antiGrabduration
+
+                                    Config.blobkillBurstEndTime = tick() + Config.blobkillduration
+                                    if not Config.blobkillBurstActive then
+                                        Config.blobkillBurstActive = true
+                                        Config.blobkillBurstTask = task.spawn(function()
+                                            while Config.blobkillBurstActive do
+                                                pcall(function()
+                                                    local char = localPlayer.Character
+                                                    if char then
+                                                        local hum = char:FindFirstChild("Humanoid")
+                                                        local hrp = char:FindFirstChild("HumanoidRootPart")
+                                                        if hum and hrp and hum.Health > 0 then
+                                                            hum.Sit = true
+                                                            hum:ChangeState(Enum.HumanoidStateType.Running)
+                                                            local camera = service.Workspace.CurrentCamera
+                                                            if camera then
+                                                                local lookVec = camera.CFrame.LookVector
+                                                                hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + Vector3.new(lookVec.X, 0, lookVec.Z))
+                                                            end
+                                                        end
+                                                    end
+                                                end)
+                                                if tick() >= Config.blobkillBurstEndTime then
+                                                    Config.blobkillBurstActive = false
+                                                    break
+                                                end
+                                                task.wait()
+                                            end
+                                            Config.blobkillBurstTask = nil
+                                        end)
+                                    end
+
+                                    Config.ragdollBurstEndTime = tick() + Config.RAGDOLL_DURATION
+                                    if not Config.ragdollBurstActive then
+                                        Config.ragdollBurstActive = true
+                                        Config.ragdollBurstTask = task.spawn(function()
+                                            while Config.ragdollBurstActive do
+                                                pcall(function()
+                                                    local char = localPlayer.Character
+                                                    if char then
+                                                        local hum = char:FindFirstChildOfClass("Humanoid")
+                                                        local rp = char:FindFirstChild("HumanoidRootPart")
+                                                        if hum and rp and hum.Health > 0 then
+                                                            hum:ChangeState(Enum.HumanoidStateType.Ragdoll)
+                                                            hum.PlatformStand = true
+                                                            rp.AssemblyLinearVelocity  = Vector3.zero
+                                                            rp.AssemblyAngularVelocity = Vector3.zero
+                                                        end
+                                                    end
+                                                end)
+                                                if tick() >= Config.ragdollBurstEndTime then
+                                                    Config.ragdollBurstActive = false
+                                                    break
+                                                end
+                                                task.wait()
+                                            end
+                                            local char = localPlayer.Character
+                                            local hum = char and char:FindFirstChildOfClass("Humanoid")
+                                            if hum then
+                                                hum.PlatformStand = false
+                                                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+                                            end
+                                            Config.ragdollBurstTask = nil
+                                        end)
+                                    end
+
+                                    Config.sex5 = {
+                                        WalkSpeed     = humanoid.WalkSpeed,
+                                        JumpPower     = humanoid.JumpPower,
+                                        JumpHeight    = humanoid.JumpHeight,
+                                        AutoRotate    = humanoid.AutoRotate,
+                                        PlatformStand = humanoid.PlatformStand,
+                                    }
+
+                                    Config.sex6 = {}
+                                    local allParts = GetAllBaseParts(character)
+                                    for _, p in ipairs(allParts) do
+                                        Config.sex6[p] = {
+                                            Anchored = p.Anchored,
+                                            CFrame   = p.CFrame,
+                                        }
+                                        p.Anchored = true
+                                        p.AssemblyLinearVelocity  = Vector3.zero
+                                        p.AssemblyAngularVelocity = Vector3.zero
+                                        pcall(function()
+                                            p.Velocity    = Vector3.zero
+                                            p.RotVelocity = Vector3.zero
+                                        end)
+                                    end
+
+                                    Config.sex7 = {}
+                                    local rootJoint = character:FindFirstChild("RootJoint")
+                                    if rootJoint then
+                                        Config.sex7[rootJoint] = {
+                                            C0 = rootJoint.C0,
+                                            C1 = rootJoint.C1,
+                                        }
+                                    end
+
+                                    Config.sex8 = root.CFrame
+                                    humanoid.WalkSpeed     = 0
+                                    humanoid.JumpPower     = 0
+                                    humanoid.JumpHeight    = 0
+                                    humanoid.AutoRotate    = false
+                                    humanoid.PlatformStand = true
+                                    root.Anchored = true
+                                    root.AssemblyLinearVelocity  = Vector3.zero
+                                    root.AssemblyAngularVelocity = Vector3.zero
+
+                                    if Config.sex3 then Config.sex3:Disconnect() Config.sex3 = nil end
+                                    if Config.sex4 then Config.sex4:Disconnect() Config.sex4 = nil end
+
+                                    local function ApplyStompFrameLocal()
+                                        if not Config.antiGrabstomp then return end
+                                        local char = localPlayer.Character
+                                        if not char then return end
+                                        local hum = char:FindFirstChildOfClass("Humanoid")
+                                        local rp  = char:FindFirstChild("HumanoidRootPart")
+                                        if not hum or not rp then return end
+
+                                        local parts = GetAllBaseParts(char)
+                                        for _, p in ipairs(parts) do
+                                            p.Anchored = true
+                                            p.AssemblyLinearVelocity  = Vector3.zero
+                                            p.AssemblyAngularVelocity = Vector3.zero
+                                            pcall(function()
+                                                p.Velocity    = Vector3.zero
+                                                p.RotVelocity = Vector3.zero
+                                            end)
+                                            local saved = Config.sex6[p]
+                                            if saved then
+                                                pcall(function()
+                                                    p.CFrame = saved.CFrame
+                                                end)
+                                            end
+                                        end
+
+                                        if Config.sex8 then
+                                            rp.CFrame = Config.sex8
+                                        end
+
+                                        rp.AssemblyLinearVelocity  = Vector3.zero
+                                        rp.AssemblyAngularVelocity = Vector3.zero
+                                        pcall(function()
+                                            rp.Velocity    = Vector3.zero
+                                            rp.RotVelocity = Vector3.zero
+                                        end)
+
+                                        local rj = char:FindFirstChild("RootJoint")
+                                        if rj and Config.sex7[rj] then
+                                            local saved = Config.sex7[rj]
+                                            pcall(function()
+                                                rj.C0 = saved.C0
+                                                rj.C1 = saved.C1
+                                            end)
+                                        end
+
+                                        hum.PlatformStand = true
+                                    end
+
+                                    local function EndStompLocal()
+                                        if not Config.antiGrabstomp then return end
+                                        Config.antiGrabstomp = false
+                                        if Config.sex3 then Config.sex3:Disconnect() Config.sex3 = nil end
+                                        if Config.sex4 then Config.sex4:Disconnect() Config.sex4 = nil end
+
+                                        local char = localPlayer.Character
+                                        local hum  = char and char:FindFirstChildOfClass("Humanoid")
+                                        local rp   = char and char:FindFirstChild("HumanoidRootPart")
+
+                                        if hum then
+                                            hum.WalkSpeed     = Config.sex5.WalkSpeed or 16
+                                            hum.JumpPower     = Config.sex5.JumpPower or 50
+                                            hum.JumpHeight    = Config.sex5.JumpHeight or 7.2
+                                            hum.AutoRotate    = Config.sex5.AutoRotate ~= false
+                                            hum.PlatformStand = Config.sex5.PlatformStand or false
+                                        end
+
+                                        if char then
+                                            local parts = GetAllBaseParts(char)
+                                            for _, p in ipairs(parts) do
+                                                local saved = Config.sex6[p]
+                                                if saved then
+                                                    p.Anchored = saved.Anchored
+                                                    pcall(function()
+                                                        p.CFrame = saved.CFrame
+                                                    end)
+                                                else
+                                                    p.Anchored = false
+                                                end
+                                                p.AssemblyLinearVelocity  = Vector3.zero
+                                                p.AssemblyAngularVelocity = Vector3.zero
+                                                pcall(function()
+                                                    p.Velocity    = Vector3.zero
+                                                    p.RotVelocity = Vector3.zero
+                                                end)
+                                            end
+
+                                            local rj = char:FindFirstChild("RootJoint")
+                                            if rj and Config.sex7[rj] then
+                                                local s = Config.sex7[rj]
+                                                pcall(function()
+                                                    rj.C0 = s.C0
+                                                    rj.C1 = s.C1
+                                                end)
+                                            end
+                                        end
+
+                                        if rp then
+                                            rp.AssemblyLinearVelocity  = Vector3.zero
+                                            rp.AssemblyAngularVelocity = Vector3.zero
+                                            pcall(function()
+                                                rp.Velocity    = Vector3.zero
+                                                rp.RotVelocity = Vector3.zero
+                                            end)
+                                        end
+
+                                        Config.sex6 = {}
+                                        Config.sex7 = {}
+                                        Config.sex8 = nil
+                                        Config.sex2 = tick() + 0.15
+                                    end
+
+                                    Config.sex3 = service.RunService.Stepped:Connect(function()
+                                        if not Config.antiGrabstomp then return end
+                                        ApplyStompFrameLocal()
+
+                                        if tick() >= Config.sex1 then
+                                            EndStompLocal()
+                                        end
+                                    end)
+
+                                    Config.sex4 = service.RunService.Heartbeat:Connect(function()
+                                        if not Config.antiGrabstomp then return end
+                                        ApplyStompFrameLocal()
+                                    end)
+                                end
+                            end
+                        end
+
+                        if grabbed then
+                            service.ReplicatedStorage.CharacterEvents.Struggle:FireServer(plr)
+
+                            local humanoid = character:FindFirstChild("Humanoid")
+                            local rootPart = character:FindFirstChild("HumanoidRootPart")
+                            if humanoid and rootPart then
+                                RagdollRemote:FireServer(rootPart, 0.00000000001)
+                            end
+
+                            if humanoid then
+                                for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+                                    if track.Animation and track.Animation.AnimationId == Config.antiGrabid then
+                                        track:Stop()
+                                    end
+                                end
+                            end
+
+                            if grabbedPart and grabbedPart:FindFirstChild("PartOwner") then
+                                grabbedPart.PartOwner.Value = ""
+                            end
+
+                            if humanoid and not Config.antiGrabstomp then
+                                humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+                                humanoid.AutoRotate = true
+                                if humanoid.Sit then humanoid.Sit = false end
+                            end
+                        end
+
+                        local humForAnim = character:FindFirstChild("Humanoid")
+                        if humForAnim then
+                            for _, track in ipairs(humForAnim:GetPlayingAnimationTracks()) do
+                                if track.Animation and track.Animation.AnimationId == Config.antiGrabid then
+                                    track:Stop()
+                                end
+                            end
+                        end
+                    end)
+
+                    task.wait()
+                end
+            end)
+        else
+            if Config.antiGrabTask then
+                task.cancel(Config.antiGrabTask)
+                Config.antiGrabTask = nil
+            end
+            if Config.antiGrabstomp then
+                Config.antiGrabstomp = false
+                Config.sex8 = nil
+                if Config.sex3 then Config.sex3:Disconnect() Config.sex3 = nil end
+                if Config.sex4 then Config.sex4:Disconnect() Config.sex4 = nil end
+                local char = localPlayer.Character
+                local hum  = char and char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    hum.WalkSpeed     = Config.sex5.WalkSpeed or 16
+                    hum.JumpPower     = Config.sex5.JumpPower or 50
+                    hum.JumpHeight    = Config.sex5.JumpHeight or 7.2
+                    hum.AutoRotate    = Config.sex5.AutoRotate ~= false
+                    hum.PlatformStand = Config.sex5.PlatformStand or false
+                end
+                if char then
+                    local parts = GetAllBaseParts(char)
+                    for _, p in ipairs(parts) do
+                        local saved = Config.sex6[p]
+                        if saved then
+                            p.Anchored = saved.Anchored
+                        else
+                            p.Anchored = false
+                        end
+                    end
+                    local rj = char:FindFirstChild("RootJoint")
+                    if rj and Config.sex7[rj] then
+                        local s = Config.sex7[rj]
+                        pcall(function()
+                            rj.C0 = s.C0
+                            rj.C1 = s.C1
+                        end)
+                    end
+                end
+                Config.sex6 = {}
+                Config.sex7 = {}
+                Config.sex2 = tick() + 0.15
+            end
+            Config.blobkillBurstActive = false
+            if Config.blobkillBurstTask then
+                task.cancel(Config.blobkillBurstTask)
+                Config.blobkillBurstTask = nil
+            end
+            Config.ragdollBurstActive = false
+            if Config.ragdollBurstTask then
+                task.cancel(Config.ragdollBurstTask)
+                Config.ragdollBurstTask = nil
+            end
+            local char = localPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum.PlatformStand = false
+            end
+        end
+    end
+})
+end
 		Antis:AddToggle("GucciAntiGrab", {
 			Text = "[구찌] 안티 그랩",
 			Default = false,
@@ -41393,6 +41787,43 @@ Antis:AddToggle("AntiBlob", {
                 antiBlobGrabConnection = nil
             end
             --Library:Notify({Title = "Anti Blob", Description = "OFF", Time = 1})
+        end
+    end,
+})
+
+Antis:AddToggle("AntiBLobAura", {
+    Text = "Anti-Blob (Aura)",
+    Default = false,
+	Tooltip = "If someone nearby is riding a Blobman, it automatically knocks them off.",
+    Callback = function(enabled)
+        if enabled then
+            if Config.AntiblobauraCon then Config.AntiblobauraCon:Disconnect() end
+            Config.AntiblobauraCon = service.RunService.Heartbeat:Connect(function()
+                local myCharacter = GetCharacter()
+                local myRootPart = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
+                if not myRootPart then return end
+                for _, player in pairs(service.Players:GetPlayers()) do
+                    if player ~= localPlayer then
+                        local playerCharacter = player.Character
+                        local playerRootPart = playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart")
+                        local playerHumanoid = playerCharacter and playerCharacter:FindFirstChild("Humanoid")
+                        if playerRootPart and playerHumanoid and playerHumanoid.SeatPart then
+                            local seatParent = playerHumanoid.SeatPart.Parent
+                            if seatParent and seatParent.Name == "CreatureBlobman" then
+                                local distance = (playerRootPart.Position - myRootPart.Position).Magnitude
+                                if distance <= 25 then
+                                    SetNetworkOwner:FireServer(playerRootPart, playerRootPart.CFrame)
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        else
+            if Config.AntiblobauraCon then
+                Config.AntiblobauraCon:Disconnect()
+                Config.AntiblobauraCon = nil
+            end
         end
     end,
 })
@@ -41939,7 +42370,22 @@ Antis:AddToggle("AntiExplosion", {
             if Value then InitAntiBomb() else AntiBombGeneration += 1 end
         end
     })
+
+Antis:AddToggle("AntiexeV", {
+    Text = "안티 폭탄(비주얼 제거)",
+    Default = false,
+	Tooltip = "폭발 이펙트을 가리고, 실제 손상을 막지는 못하며, 화면 효과만 가립니다.",
+    Callback = function(state)
+        if PlayerScripts then
+            local handler = PlayerScripts:FindFirstChild("ClientExoplosionHandler")
+            if handler then
+                handler.Enabled = not state
+            end
+        end
+    end
+})
 end    
+
 		Antis:AddToggle("AntiBurn", {
 			Text = "안티 불",
 			Default = false,
@@ -42040,6 +42486,335 @@ Antis:AddDivider("헬퍼 안티  계열")
 				end
 			end,
 		})
+
+ function GetAllBaseParts(character)
+    local parts = {}
+    for _, obj in ipairs(character:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            table.insert(parts, obj)
+        end
+    end
+    return parts
+end
+
+GetCharacter = a.GetCharacter
+
+Antis:AddToggle("Antiragd", {
+    Text = "안티 래그돌",
+    Default = false,
+	Tooltip = "래그돌과 래그돌 킬을 막습니다. 하지만때때로 안티그랩을 방해합니다.",
+    Callback = function(Value)
+        Config.AntiragdollToggle = Value
+        if not Config.connections then Config.connections = {} end
+
+        if Config.AntiragdollToggle then
+            Config.onCharacter = function(char)
+                local humanoid = char:WaitForChild("Humanoid", 5)
+                if humanoid and Config.AntiragdollToggle then
+                    humanoid.BreakJointsOnDeath = false
+                    humanoid.AutoRotate = true
+                    humanoid.PlatformStand = false
+
+                    table.insert(Config.connections, humanoid:GetPropertyChangedSignal("AutoRotate"):Connect(function()
+                        if Config.AntiragdollToggle and humanoid.AutoRotate == false then
+                            humanoid.AutoRotate = true
+                        end
+                    end))
+
+                    table.insert(Config.connections, humanoid:GetPropertyChangedSignal("PlatformStand"):Connect(function()
+                        if Config.AntiragdollToggle and humanoid.PlatformStand == true then
+                            humanoid.PlatformStand = false
+                        end
+                    end))
+
+                    table.insert(Config.connections, service.RunService.RenderStepped:Connect(function()
+                        if Config.AntiragdollToggle then
+                            if humanoid.Sit and humanoid.SeatPart == nil then
+                                humanoid.Sit = false
+                            end
+                        end
+                    end))
+                end
+            end
+
+            if localPlayer.Character then
+                Config.onCharacter(localPlayer.Character)
+            end
+            Config.charAddedConn = localPlayer.CharacterAdded:Connect(Config.onCharacter)
+        else
+            for _, conn in ipairs(Config.connections) do
+                if conn then conn:Disconnect() end
+            end
+            Config.connections = {}
+
+            if Config.charAddedConn then
+                Config.charAddedConn:Disconnect()
+                Config.charAddedConn = nil
+            end
+        end
+    end
+})
+
+Antis:AddToggle("pakraganti", {
+    Text = "안티 패킷렉",
+    Default = false,
+	Tooltip = "패킷 렉을 줄여주지만, 서버 전체의 패킷 렉까지 줄이고 있을 가능성이 있습니다.",
+    Callback = function(Value)
+        Config.Enabled = Value
+        if Value then
+            for _, conn in ipairs(Config.Connections) do
+                pcall(function() conn:Disconnect() end)
+            end
+                Config.Connections = {}
+            local GrabEvents = service.ReplicatedStorage:FindFirstChild("GrabEvents")
+            local remotes = {}
+            if GrabEvents then
+                for _, remote in ipairs(GrabEvents:GetChildren()) do
+                    if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
+                        table.insert(remotes, remote)
+                    end
+                end
+            end
+            for _, remote in ipairs(remotes) do
+                if remote:IsA("RemoteEvent") then
+                    local conn = remote.OnClientEvent:Connect(function(...)
+                        if not Config.Enabled then return end
+                        local args = {...}
+                        local totalBytes = 0
+                        local suspicious = false
+                        local biggest = 0
+                        for _, v in ipairs(args) do
+                            if type(v) == "string" then
+                                local len = #v
+                                totalBytes = totalBytes + len
+                                if len > biggest then biggest = len end
+                                if len > Config.MaxStringLength then suspicious = true end
+                            elseif type(v) == "table" then
+                                local stack = {{t = v, depth = 0}}
+                                local tSize = 0
+                                while #stack > 0 do
+                                    local current = table.remove(stack)
+                                    if current.depth <= 3 then
+                                        for k, val in pairs(current.t) do
+                                            if type(val) == "string" then
+                                                tSize = tSize + #val
+                                            elseif type(val) == "table" then
+                                                table.insert(stack, {t = val, depth = current.depth + 1})
+                                            end
+                                            if type(k) == "string" then
+                                                tSize = tSize + #k
+                                            end
+                                        end
+                                    end
+                                end
+                                totalBytes = totalBytes + tSize
+                                if tSize > biggest then biggest = tSize end
+                                if tSize > Config.MaxStringLength then suspicious = true end
+                            end
+                        end
+                        if totalBytes > Config.MaxTotalBytes then suspicious = true end
+                        if suspicious then
+                            Config.Blocked = Config.Blocked + 1
+                            local entry = {
+                                time = os.date("%H:%M:%S"),
+                                remote = remote.Name,
+                                totalBytes = totalBytes,
+                                biggest = biggest,
+                                blocked = true,
+                            }
+                            table.insert(Config.Log, 1, entry)
+                            while #Config.Log > Config.MaxLogEntries do
+                                table.remove(Config.Log)
+                            end
+                            if Config.LogDetections then
+                                warn(string.format(
+                                    "[AntiPacketLag] %s | Remote: %s | Total: %.2f KB | Biggest: %.2f KB | BLOCKED",
+                                    entry.time, remote.Name, totalBytes / 1024, biggest / 1024
+                                ))
+                            end
+                            if Config.PlaySound then
+                                task.spawn(function()
+                                    local s = Instance.new("Sound")
+                                    s.SoundId = "rbxassetid://9114297725"
+                                    s.Volume = 2
+                                    s.Parent = service.SoundService
+                                    s:Play()
+                                    game:GetService("Debris"):AddItem(s, 3)
+                                end)
+                            end
+                            return
+                        else
+                            Config.Allowed = Config.Allowed + 1
+                        end
+                    end)
+                    table.insert(Config.Connections, conn)
+                elseif remote:IsA("RemoteFunction") then
+                    remote.OnClientInvoke = function(...)
+                        if not Config.Enabled then return nil end
+                        local args = {...}
+                        local totalBytes = 0
+                        local suspicious = false
+                        local biggest = 0
+                        for _, v in ipairs(args) do
+                            if type(v) == "string" then
+                                local len = #v
+                                totalBytes = totalBytes + len
+                                if len > biggest then biggest = len end
+                                if len > Config.MaxStringLength then suspicious = true end
+                            elseif type(v) == "table" then
+                                local stack = {{t = v, depth = 0}}
+                                local tSize = 0
+                                while #stack > 0 do
+                                    local current = table.remove(stack)
+                                    if current.depth <= 3 then
+                                        for k, val in pairs(current.t) do
+                                            if type(val) == "string" then
+                                                tSize = tSize + #val
+                                            elseif type(val) == "table" then
+                                                table.insert(stack, {t = val, depth = current.depth + 1})
+                                            end
+                                            if type(k) == "string" then
+                                                tSize = tSize + #k
+                                            end
+                                        end
+                                    end
+                                end
+                                totalBytes = totalBytes + tSize
+                                if tSize > biggest then biggest = tSize end
+                                if tSize > Config.MaxStringLength then suspicious = true end
+                            end
+                        end
+                        if totalBytes > Config.MaxTotalBytes then suspicious = true end
+                        if suspicious then
+                            Config.Blocked = Config.Blocked + 1
+                            local entry = {
+                                time = os.date("%H:%M:%S"),
+                                remote = remote.Name,
+                                totalBytes = totalBytes,
+                                biggest = biggest,
+                                blocked = true,
+                            }
+                            table.insert(Config.Log, 1, entry)
+                            while #Config.Log > Config.MaxLogEntries do
+                                table.remove(Config.Log)
+                            end
+                            if Config.LogDetections then
+                                warn(string.format(
+                                    "[AntiPacketLag] %s | Remote: %s | Total: %.2f KB | Biggest: %.2f KB | BLOCKED",
+                                    entry.time, remote.Name, totalBytes / 1024, biggest / 1024
+                                ))
+                            end
+                            if Config.PlaySound then
+                                task.spawn(function()
+                                    local s = Instance.new("Sound")
+                                    s.SoundId = "rbxassetid://9114297725"
+                                    s.Volume = 2
+                                    s.Parent = service.SoundService
+                                    s:Play()
+                                    game:GetService("Debris"):AddItem(s, 3)
+                                end)
+                            end
+                            return nil
+                        else
+                            Config.Allowed = Config.Allowed + 1
+                        end
+                        return nil
+                    end
+                    table.insert(Config.Connections, {
+                        Disconnect = function()
+                            remote.OnClientInvoke = nil
+                        end,
+                    })
+                end
+            end
+            if GrabEvents then
+                local ExtendGrabLine = GrabEvents:FindFirstChild("ExtendGrabLine")
+                if ExtendGrabLine then
+                    local mt = getrawmetatable and getrawmetatable(ExtendGrabLine)
+                    if mt then
+                        local oldNamecall = mt.__namecall
+                        setreadonly(mt, false)
+
+                        if oldNamecall then
+                            mt.__namecall = function(self, ...)
+                                local method = getnamecallmethod()
+                                if self == ExtendGrabLine and method == "FireServer" then
+                                    local args = {...}
+                                    local totalBytes = 0
+                                    local suspicious = false
+                                    local biggest = 0
+
+                                    for _, v in ipairs(args) do
+                                        if type(v) == "string" then
+                                            local len = #v
+                                            totalBytes = totalBytes + len
+                                            if len > biggest then biggest = len end
+                                            if len > Config.MaxStringLength then suspicious = true end
+                                        elseif type(v) == "table" then
+                                            local stack = {{t = v, depth = 0}}
+                                            local tSize = 0
+
+                                            while #stack > 0 do
+                                                local current = table.remove(stack)
+                                                if current.depth <= 3 then
+                                                    for k, val in pairs(current.t) do
+                                                        if type(val) == "string" then
+                                                            tSize = tSize + #val
+                                                        elseif type(val) == "table" then
+                                                            table.insert(stack, {t = val, depth = current.depth + 1})
+                                                        end
+                                                        if type(k) == "string" then
+                                                            tSize = tSize + #k
+                                                        end
+                                                    end
+                                                end
+                                            end
+
+                                            totalBytes = totalBytes + tSize
+                                            if tSize > biggest then biggest = tSize end
+                                            if tSize > Config.MaxStringLength then suspicious = true end
+                                        end
+                                    end
+
+                                    if totalBytes > Config.MaxTotalBytes then suspicious = true end
+
+                                    if suspicious then
+                                        if Config.LogDetections then
+                                            warn("[AntiPacketLag] Blocked OUTGOING FireServer on ExtendGrabLine | Size: " .. string.format("%.2f KB", totalBytes / 1024))
+                                        end
+                                        return
+                                    end
+                                end
+                                return oldNamecall(self, ...)
+                            end
+                        end
+                        setreadonly(mt, true)
+                        table.insert(Config.Connections, {
+                            Disconnect = function()
+                                if getrawmetatable then
+                                    local m = getrawmetatable(ExtendGrabLine)
+                                    if m then
+                                        setreadonly(m, false)
+                                        m.__namecall = oldNamecall
+                                        setreadonly(m, true)
+                                    end
+                                end
+                            end,
+                        })
+                    end
+                end
+            end
+            print(" Watching " .. #remotes .. " remotes.")
+        else
+            for _, conn in ipairs(Config.Connections) do
+                pcall(function() conn:Disconnect() end)
+            end
+            Config.Connections = {}
+            
+        end
+    end    
+})
+
    Antis:AddDivider("안티 바나나 계열")
 		Antis:AddToggle("AntiBanana", {
 			Text = "안티 바나나 (다리제거)",
