@@ -29603,26 +29603,27 @@ end
 				end
 
 				do
-					local tbl16 = {}
-                 local _OK_Players = game:GetService("Players")
-                 local _OK_RS      = game:GetService("ReplicatedStorage")
-                 local _OK_LP      = _OK_Players.LocalPlayer
-   
-                 local _OK_Event = nil
-					tbl12.Kill = function(arg)
-						local v22, v23, v24 = tbl12.Char(arg)
+				local tbl16 = {}
+local _OK_Players = game:GetService("Players")
+local _OK_RS      = game:GetService("ReplicatedStorage")
+local _OK_LP      = _OK_Players.LocalPlayer
 
-						if v24 and v24.Health ~= 0 and v23 and tbl12.GetMagnitude(workspace.SpawnLocation, v23) < 15000 and not tbl16[v22] then
-							v24.BreakJointsOnDeath = false
-							v24:ChangeState(Enum.HumanoidStateType.Dead)
-							tbl12.DestroyObject(v22, v23)
-							tbl16[v22] = true
+local _OK_Event = nil
+tbl12.Kill = function(arg)
+    local v22, v23, v24 = tbl12.Char(arg)
 
-							task.delay(1, function()
-								tbl16[v22] = nil
-							end)
-						end
-					end
+    if v24 and v24.Health ~= 0 and v23 and tbl12.GetMagnitude(workspace.SpawnLocation, v23) < 15000 and not tbl16[v22] then
+        v24.BreakJointsOnDeath = false
+        v24:ChangeState(Enum.HumanoidStateType.Dead)
+        tbl12.DestroyObject(v22, v23)
+        tbl16[v22] = true
+
+        task.delay(1, function()
+            tbl16[v22] = nil
+        end)
+    end
+end
+
 pcall(function()
     local GE = _OK_RS:WaitForChild("GrabEvents", 5)
     if GE then _OK_Event = GE:WaitForChild("SetNetworkOwner", 5) end
@@ -29718,8 +29719,8 @@ function tbl12.OwnershipKill(arg)
     if not model then return end
     
     local hum = model:FindFirstChildOfClass("Humanoid")
-    if not hum then return end
-
+    if not hum or hum.Health <= 0 then return end
+    
     local myHrp = _OK_getMyHRP()
     if not myHrp then return end
 
@@ -29737,12 +29738,42 @@ function tbl12.OwnershipKill(arg)
 end
 
 local _OK_origKill = tbl12.Kill
+local _OK_respawnState = {}
 tbl12.Kill = function(arg)
-    local result = _OK_origKill(arg)   
+    local result = _OK_origKill(arg)
     if tbl14 and tbl14.UseOwnershipKill == true then
         task.spawn(function()
-            pcall(tbl12.OwnershipKill, arg)   
+            pcall(tbl12.OwnershipKill, arg)
         end)
+        if not _OK_respawnState[arg] then
+            _OK_respawnState[arg] = true
+            task.spawn(function()
+                while _OK_respawnState[arg] do
+                    if not (tbl14 and tbl14.UseOwnershipKill == true) then break end
+                    if typeof(arg) == "Instance" then
+                        if arg:IsA("Player") and not arg.Parent then break end
+                    elseif typeof(arg) == "string" then
+                        local p = _OK_Players:FindFirstChild(arg)
+                        local m0 = workspace:FindFirstChild(arg)
+                        if not p and not m0 then break end
+                    end
+                    local m = _OK_getCharModel(arg)
+                    if m and m.Parent then
+                        local h = m:FindFirstChildOfClass("Humanoid")
+                        if h and h.Health > 0 then
+                            pcall(_OK_origKill, arg)
+                            pcall(tbl12.OwnershipKill, arg)
+                            task.wait()
+                        else
+                            task.wait()
+                        end
+                    else
+                        task.wait()
+                    end
+                end
+                _OK_respawnState[arg] = nil
+            end)
+        end
     end
     return result
 end
