@@ -17810,6 +17810,66 @@ do
                         Antiragd = false,
                         AntiKIll = false,
                         }
+
+
+
+
+Config.Connections = Config.Connections or {}
+Config.Log = Config.Log or {}
+Config.Blocked = Config.Blocked or 0
+Config.Allowed = Config.Allowed or 0
+Config.MaxStringLength = Config.MaxStringLength or 4096
+Config.MaxTotalBytes = Config.MaxTotalBytes or 16384
+Config.MaxLogEntries = Config.MaxLogEntries or 100
+Config.LogDetections = Config.LogDetections == true
+Config.PlaySound = Config.PlaySound == true
+
+Config.connections = Config.connections or {}
+Config.AntiblobauraCon = nil
+Config.AntiGrabTask = nil
+Config.charAddedConn = nil
+
+local function GetCharacter()
+    local character = localPlayer.Character
+    if not character then
+        character = localPlayer.CharacterAdded:Wait()
+    end
+    return character
+end
+
+local function GetAllBaseParts(character)
+    local parts = {}
+    if not character then
+        return parts
+    end
+
+    for _, obj in ipairs(character:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            table.insert(parts, obj)
+        end
+    end
+
+    return parts
+end
+
+local function GetHumanoid(character)
+    return character and character:FindFirstChildOfClass("Humanoid")
+end
+
+local function GetRootPart(character)
+    return character and character:FindFirstChild("HumanoidRootPart")
+end
+
+local function DisconnectAll(connections)
+    for _, connection in ipairs(connections) do
+        if connection then
+            pcall(function()
+                connection:Disconnect()
+            end)
+        end
+    end
+    table.clear(connections)
+end
 						tbl9 = {
 							WalkSpeed = 16,
 							JumpPower = 24,
