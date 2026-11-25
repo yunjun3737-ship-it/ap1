@@ -35290,14 +35290,11 @@ Escape Timer: %*]]
           
  do
 
-                                               
- task.spawn(function()
+task.spawn(function()
     local tbl16 = {}
 
-    
     tbl8.MasslessApplied = tbl8.MasslessApplied or setmetatable({}, {__mode = "k"})
 
-    
     local function fn24(arg, arg2)
         if not arg then return end
         local v22, v23 = tbl12.Char(arg)
@@ -35509,7 +35506,7 @@ Escape Timer: %*]]
 
     while task.wait() do  
         tbl8.AngleFixKick = getgenv().AngleFixKick or false
-        
+
         if flag11 then  
             for k in pairs(tbl16) do  
                 fn22(k)  
@@ -35733,26 +35730,29 @@ Escape Timer: %*]]
                                     end  
                                 end  
 
-                                if not (tbl12.GetMagnitude(v23, v27) > 33) then  
-    for j = 1, 7 do  
-        tbl12.Grab(v27)  
-    end  
+                                local flag12  
 
-    flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
-    if flag12 then  
-        
-            task.delay(0.001 * j, function()
-                tbl12.RNO(v27)
-            end)
-        end
-    elseif tbl9.NKDelayMode == "Normal" then  
-        task.spawn(function()  
-            task.wait()  
-            for j = 1, 5 do  
-                tbl12.RNO(v27)  
-            end  
-        end)  
-    end  
+                                if not (tbl12.GetMagnitude(v23, v27) > 33) then  
+                                    for j = 1, 6 do  
+                                        tbl12.Grab(v27)  
+                                    end  
+
+                                    flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
+                                    if flag12 then  
+                                        
+                                        for j = 1, 6 do
+                                            task.delay(0.001 * j, function()
+                                                tbl12.RNO(v27)
+                                            end)
+                                        end
+                                    elseif tbl9.NKDelayMode == "Normal" then  
+                                        task.spawn(function()  
+                                            task.wait()  
+                                            for j = 1, 5 do  
+                                                tbl12.RNO(v27)  
+                                            end  
+                                        end)  
+                                    end  
 
                                     if tbl8.RagdollInNK then  
                                         task.spawn(tbl12.Ragdoll, v26)  
@@ -35771,28 +35771,29 @@ Escape Timer: %*]]
                                         end  
                                     end)  
                                 elseif tbl12.SNO(v27) then  
-    tbl12.Teleport(v27, v29)  
+                                    tbl12.Teleport(v27, v29)  
 
-    for j = 1, 7 do  
-        tbl12.Grab(v27)  
-    end  
+                                    for j = 1, 6 do  
+                                        tbl12.Grab(v27)  
+                                    end  
 
-    flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
-    if flag12 then  
-    
-        for j = 1, 6 do
-            task.delay(0.001 * j, function()
-                tbl12.RNO(v27)
-            end)
-        end
-    elseif tbl9.NKDelayMode == "Normal" then  
-        task.spawn(function()  
-            task.wait()  
-            for j = 1, 5 do  
-                tbl12.RNO(v27)  
-            end  
-        end)  
-    end  
+                                    flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
+                                    if flag12 then  
+                                        
+                                        for j = 1, 6 do
+                                            task.delay(0.0001 * j, function()
+                                                tbl12.RNO(v27)
+                                            end)
+                                        end
+                                    elseif tbl9.NKDelayMode == "Normal" then  
+                                        task.spawn(function()  
+                                            task.wait()  
+                                            for j = 1, 5 do  
+                                                tbl12.RNO(v27)  
+                                            end  
+                                        end)  
+                                    end  
+
                                     if tbl8.RagdollInNK then  
                                         task.spawn(tbl12.Ragdoll, v26)  
                                     end  
@@ -35823,7 +35824,7 @@ Escape Timer: %*]]
             end  
         end  
     end  
-end)                 
+end)
                                                      
                     
 end                       
