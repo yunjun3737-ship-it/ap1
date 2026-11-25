@@ -35509,8 +35509,7 @@ Escape Timer: %*]]
 
     while task.wait() do  
         tbl8.AngleFixKick = getgenv().AngleFixKick or false
-        -- (getgenv 우회 없이 오직 tbl8.MasslessTarget 변수로만 제어)
-
+        
         if flag11 then  
             for k in pairs(tbl16) do  
                 fn22(k)  
@@ -35735,23 +35734,25 @@ Escape Timer: %*]]
                                 end  
 
                                 if not (tbl12.GetMagnitude(v23, v27) > 33) then  
-                                    for j = 1, 10 do  
-                                        tbl12.Grab(v27)  
-                                    end  
+    for j = 1, 7 do  
+        tbl12.Grab(v27)  
+    end  
 
-                                    local flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
-                                    if flag12 then  
-                                        for j = 1, 20 do
-                                            task.defer(tbl12.RNO, v27)
-                                        end
-                                    elseif tbl9.NKDelayMode == "Normal" then  
-                                        task.spawn(function()  
-                                            task.wait()  
-                                            for j = 1, 20 do  
-                                                tbl12.RNO(v27)  
-                                            end  
-                                        end)  
-                                    end  
+    flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
+    if flag12 then  
+        
+            task.delay(0.001 * j, function()
+                tbl12.RNO(v27)
+            end)
+        end
+    elseif tbl9.NKDelayMode == "Normal" then  
+        task.spawn(function()  
+            task.wait()  
+            for j = 1, 5 do  
+                tbl12.RNO(v27)  
+            end  
+        end)  
+    end  
 
                                     if tbl8.RagdollInNK then  
                                         task.spawn(tbl12.Ragdoll, v26)  
@@ -35770,28 +35771,28 @@ Escape Timer: %*]]
                                         end  
                                     end)  
                                 elseif tbl12.SNO(v27) then  
-                                    tbl12.Teleport(v27, v29)  
+    tbl12.Teleport(v27, v29)  
 
-                                    for j = 1, 10 do  
-                                        tbl12.Grab(v27)  
-                                    end  
+    for j = 1, 7 do  
+        tbl12.Grab(v27)  
+    end  
 
-                                    local flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
-                                    if flag12 then  
-                                        task.defer(function()  
-                                            for j = 1, 20 do  
-                                                tbl12.RNO(v27)  
-                                            end  
-                                        end)  
-                                    elseif tbl9.NKDelayMode == "Normal" then  
-                                        task.spawn(function()  
-                                            task.wait()  
-                                            for j = 1, 20 do  
-                                                tbl12.RNO(v27)  
-                                            end  
-                                        end)  
-                                    end  
-
+    flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
+    if flag12 then  
+    
+        for j = 1, 6 do
+            task.delay(0.001 * j, function()
+                tbl12.RNO(v27)
+            end)
+        end
+    elseif tbl9.NKDelayMode == "Normal" then  
+        task.spawn(function()  
+            task.wait()  
+            for j = 1, 5 do  
+                tbl12.RNO(v27)  
+            end  
+        end)  
+    end  
                                     if tbl8.RagdollInNK then  
                                         task.spawn(tbl12.Ragdoll, v26)  
                                     end  
@@ -43351,23 +43352,14 @@ v21:AddToggle("AngleFixKick", {
     end
 })
 v21:AddToggle("MasslessTargetToggle", {
-    Text = "마스리스타겟",
-    Risky = true,
-    Default = getgenv().MasslessTarget or false,
+    Text = "마스리스 타겟",
+    Risky = false,
+    Default = tbl8.MasslessTarget or false,
     Tooltip = "당하는 대상(타겟)의 모든 바디파츠를 무질량(Massless)으로 만들어 킥 반응성을 개선합니다.",
     Callback = function(state)
-        getgenv().MasslessTarget = state
         tbl8.MasslessTarget = state
-        if not state and tbl8.MasslessApplied then
-            for k in pairs(tbl8.MasslessApplied) do
-                if k and k.Parent and getgenv().SetTargetMassless then
-                    getgenv().SetTargetMassless(k, false)
-                end
-                tbl8.MasslessApplied[k] = nil
-            end
-        end
     end,
-})	
+})
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 
