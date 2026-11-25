@@ -41090,8 +41090,14 @@ local function GetAllBaseParts(character)
     end
     return parts
 end
+local Utils = {}
 
-GetCharacter = a.GetCharacter
+function Utils.GetCharacter()
+    return game.Players.LocalPlayer.Character
+        or game.Players.LocalPlayer.CharacterAdded:Wait()
+end
+
+GetCharacter = Utils.GetCharacter
 
 
 Antis:AddToggle("AntiKIll", {
@@ -42503,7 +42509,14 @@ Antis:AddDivider("헬퍼 안티  계열")
     return parts
 end
 
-GetCharacter = a.GetCharacter
+local Utils = {}
+
+function Utils.GetCharacter()
+    return game.Players.LocalPlayer.Character
+        or game.Players.LocalPlayer.CharacterAdded:Wait()
+end
+
+GetCharacter = Utils.GetCharacter
 
 Antis:AddToggle("Antiragd", {
     Text = "안티 래그돌",
