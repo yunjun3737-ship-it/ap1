@@ -35291,13 +35291,13 @@ Escape Timer: %*]]
  do
 
                                                
-task.spawn(function()
+ task.spawn(function()
     local tbl16 = {}
 
-    -- 무질량 상태 추적용 테이블
+    
     tbl8.MasslessApplied = tbl8.MasslessApplied or setmetatable({}, {__mode = "k"})
 
-    -- 대상의 질량을 무질량으로 변경/복구하는 함수 (옵션용)
+    
     local function fn24(arg, arg2)
         if not arg then return end
         local v22, v23 = tbl12.Char(arg)
@@ -35327,10 +35327,6 @@ task.spawn(function()
                 end
             end)
         end
-    end
-
-    function getgenv().SetTargetMassless(target, state)
-        fn24(target, state)
     end
 
     local function fn21(arg, arg2)  
@@ -35448,7 +35444,6 @@ task.spawn(function()
                     end  
                 end  
             else
-                -- 일반 EKI 토글 시 하위 락 대상 해제
                 for player in pairs(tbl7.EKILockTargets) do
                     tbl7.EKILockTargets[player] = nil
                 end
@@ -35514,7 +35509,7 @@ task.spawn(function()
 
     while task.wait() do  
         tbl8.AngleFixKick = getgenv().AngleFixKick or false
-        tbl8.MasslessTarget = getgenv().MasslessTarget or false
+        -- (getgenv 우회 없이 오직 tbl8.MasslessTarget 변수로만 제어)
 
         if flag11 then  
             for k in pairs(tbl16) do  
@@ -35827,7 +35822,9 @@ task.spawn(function()
             end  
         end  
     end  
-end)
+end)                 
+                                                     
+                    
 end                       
                                         
 		lib.ForceCheckbox = true
