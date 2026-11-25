@@ -29603,7 +29603,10 @@ end
 				end
 
 				do
-				local tbl16 = {}
+				
+
+
+local tbl16 = {}
 local _OK_Players = game:GetService("Players")
 local _OK_RS      = game:GetService("ReplicatedStorage")
 local _OK_LP      = _OK_Players.LocalPlayer
@@ -29740,7 +29743,7 @@ end
 local _OK_origKill = tbl12.Kill
 tbl12.Kill = function(arg)
     local result = _OK_origKill(arg)   
-    if tbl14 and tbl14.UseOwnershipKill == true then
+    if tbl14 and tbl14.UseOwnershipKill == true and (tbl14.LoopApplyMethodTSel == true or tbl14.LoopApplyMethodTServer == true) then
         task.spawn(function()
             pcall(tbl12.OwnershipKill, arg)   
         end)
@@ -29752,12 +29755,13 @@ local _OK_respawnWrapPrev = tbl12.Kill
 local _OK_respawnTrack = {}
 tbl12.Kill = function(arg)
     local rr = _OK_respawnWrapPrev(arg)
-    if tbl14 and tbl14.UseOwnershipKill == true and arg and not _OK_respawnTrack[arg] then
+    if tbl14 and tbl14.UseOwnershipKill == true and (tbl14.LoopApplyMethodTSel == true or tbl14.LoopApplyMethodTServer == true) and arg and not _OK_respawnTrack[arg] then
         _OK_respawnTrack[arg] = true
         task.spawn(function()
             local dead = false
             while _OK_respawnTrack[arg] do
                 if not (tbl14 and tbl14.UseOwnershipKill == true) then break end
+                if not (tbl14.LoopApplyMethodTSel == true or tbl14.LoopApplyMethodTServer == true) then break end
                 if typeof(arg) == "Instance" then
                     if arg:IsA("Player") and not arg.Parent then break end
                 elseif typeof(arg) == "string" then
@@ -29784,6 +29788,7 @@ tbl12.Kill = function(arg)
 end
          end
 			end
+
          
 
 			tbl12.Void = function(arg)
