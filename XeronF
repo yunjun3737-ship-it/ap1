@@ -35289,6 +35289,7 @@ Escape Timer: %*]]
 
           
  do
+
 task.spawn(function()
 local tbl16 = {}
 
@@ -35397,35 +35398,9 @@ local function fn21(arg, arg2)
 
         local pclldNear = false  
         local nextPclldCheck = 0  
-        local lastEKILockState = tbl8.EKILock
 
         tbl7.EKILockHeartbeat = RunService.Heartbeat:Connect(function()  
             if flag11 then return end  
-
-            if lastEKILockState ~= tbl8.EKILock then
-                lastEKILockState = tbl8.EKILock
-                if tbl8.EKILock then
-                    for player in pairs(tbl7.SelectedPlayers) do
-                        if player and player.Parent then
-                            local _, hrp = tbl12.Char(player)
-                            if hrp and hrp.Parent and hrp:FindFirstChild("KickAP") and tbl12.IsNetworkOwner(hrp) then
-                                tbl7.EKILockTargets[player] = true
-                                tbl7.EKILockLocked[player] = hrp
-                                pcall(sethiddenproperty, hrp, "PhysicsRepRootPart", hrp)
-                                for _, d in ipairs(hrp.Parent:GetDescendants()) do
-                                    if d:IsA("BasePart") and (d.Name == "RagdollLimbPart" or d.Name == "RagdollTouchedHitbox" or d.Name == "FirePlayerPart") then
-                                        pcall(sethiddenproperty, d, "PhysicsRepRootPart", d)
-                                    end
-                                end
-                            end
-                        end
-                    end
-                else
-                    for player in pairs(tbl7.EKILockTargets) do
-                        tbl7.EKILockTargets[player] = nil
-                    end
-                end
-            end
 
             local now = os.clock()  
             if now >= nextPclldCheck then  
@@ -35468,6 +35443,10 @@ local function fn21(arg, arg2)
                         end  
                     end  
                 end  
+            else
+                for player in pairs(tbl7.EKILockTargets) do
+                    tbl7.EKILockTargets[player] = nil
+                end
             end  
 
             for player in pairs(tbl7.EKILockTargets) do  
@@ -35881,7 +35860,6 @@ else
         end  
     end  
 end)
-                   
 end                       
                                         
 		lib.ForceCheckbox = true
