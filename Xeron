@@ -29738,45 +29738,52 @@ function tbl12.OwnershipKill(arg)
 end
 
 local _OK_origKill = tbl12.Kill
-local _OK_respawnState = {}
 tbl12.Kill = function(arg)
-    local result = _OK_origKill(arg)
+    local result = _OK_origKill(arg)   
     if tbl14 and tbl14.UseOwnershipKill == true then
         task.spawn(function()
-            pcall(tbl12.OwnershipKill, arg)
+            pcall(tbl12.OwnershipKill, arg)   
         end)
-        if not _OK_respawnState[arg] then
-            _OK_respawnState[arg] = true
-            task.spawn(function()
-                while _OK_respawnState[arg] do
-                    if not (tbl14 and tbl14.UseOwnershipKill == true) then break end
-                    if typeof(arg) == "Instance" then
-                        if arg:IsA("Player") and not arg.Parent then break end
-                    elseif typeof(arg) == "string" then
-                        local p = _OK_Players:FindFirstChild(arg)
-                        local m0 = workspace:FindFirstChild(arg)
-                        if not p and not m0 then break end
-                    end
-                    local m = _OK_getCharModel(arg)
-                    if m and m.Parent then
-                        local h = m:FindFirstChildOfClass("Humanoid")
-                        if h and h.Health > 0 then
-                            pcall(_OK_origKill, arg)
-                            pcall(tbl12.OwnershipKill, arg)
-                            task.wait()
-                        else
-                            task.wait()
-                        end
-                    else
-                        task.wait()
-                    end
-                end
-                _OK_respawnState[arg] = nil
-            end)
-        end
     end
     return result
 end
+
+local _OK_respawnWrapPrev = tbl12.Kill
+local _OK_respawnTrack = {}
+tbl12.Kill = function(arg)
+    local rr = _OK_respawnWrapPrev(arg)
+    if tbl14 and tbl14.UseOwnershipKill == true and arg and not _OK_respawnTrack[arg] then
+        _OK_respawnTrack[arg] = true
+        task.spawn(function()
+            local dead = false
+            while _OK_respawnTrack[arg] do
+                if not (tbl14 and tbl14.UseOwnershipKill == true) then break end
+                if typeof(arg) == "Instance" then
+                    if arg:IsA("Player") and not arg.Parent then break end
+                elseif typeof(arg) == "string" then
+                    if not _OK_Players:FindFirstChild(arg) and not workspace:FindFirstChild(arg) then break end
+                end
+                local m = _OK_getCharModel(arg)
+                local h = m and m.Parent and m:FindFirstChildOfClass("Humanoid")
+                if h then
+                    if h.Health <= 0 then
+                        dead = true
+                    elseif dead then
+                        dead = false
+                        pcall(_OK_respawnWrapPrev, arg)
+                    end
+                else
+                    dead = true
+                end
+                task.wait()
+            end
+            _OK_respawnTrack[arg] = nil
+        end)
+    end
+    return rr
+end
+         end
+			end
          end
 			end
 
