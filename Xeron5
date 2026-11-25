@@ -17803,7 +17803,13 @@ do
 							ImmunityAntiKick = false,
 							ImmunityAntiExplosion = false,
 						}
-
+                        local Config = {
+                        AntiexeV = false,
+                        AntiBLobAura = false,
+                        pakraganti = false,
+                        Antiragd = false,
+                        AntiKIll = false,
+                        }
 						tbl9 = {
 							WalkSpeed = 16,
 							JumpPower = 24,
