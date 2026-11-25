@@ -17703,6 +17703,7 @@ do
                             AntiSpawnExplode = false,
                             AntiBananaEat = false,
                             AntiGrabSeatless =  false,
+                            MasslessTargetToggle = false,
                             AntiKillSetOwnerTractor = false,
 							AutoAntiLag = true,
 							AntiInputLag = false,
@@ -35291,6 +35292,42 @@ Escape Timer: %*]]
 task.spawn(function()
 local tbl16 = {}
 
+tbl8.MasslessApplied = tbl8.MasslessApplied or setmetatable({}, {__mode = "k"})
+
+local function fn24(arg, arg2)
+    if not arg then return end
+    local c, h = tbl12.Char(arg)
+    if not h or not h.Parent then return end
+    for _, part in ipairs(h.Parent:GetDescendants()) do
+        if part:IsA("BasePart") then
+            pcall(function()
+                if arg2 then
+                    part.Massless = true
+                    part.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0.3, 0.5)
+                else
+                    part.Massless = false
+                    part.CustomPhysicalProperties = nil
+                end
+            end)
+        end
+    end
+    if h:IsA("BasePart") then
+        pcall(function()
+            if arg2 then
+                h.Massless = true
+                h.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0.3, 0.5)
+            else
+                h.Massless = false
+                h.CustomPhysicalProperties = nil
+            end
+        end)
+    end
+end
+
+function getgenv().SetTargetMassless(target, state)
+    fn24(target, state)
+end
+
 local function fn21(arg, arg2)  
         if tbl8.EKILock and arg and arg.Parent then  
             local player = Players:GetPlayerFromCharacter(arg.Parent)  
@@ -35341,6 +35378,11 @@ local function fn21(arg, arg2)
             task.spawn(tbl12.ToggleMotor6D, v22, true, true)  
             task.spawn(tbl12.ToggleCollisions, v22, true)  
         end  
+
+        if tbl8.MasslessApplied and tbl8.MasslessApplied[arg] then
+            fn24(arg, false)
+            tbl8.MasslessApplied[arg] = nil
+        end
     end  
 
     local function fn23(arg, arg2, arg3)  
@@ -35355,9 +35397,35 @@ local function fn21(arg, arg2)
 
         local pclldNear = false  
         local nextPclldCheck = 0  
+        local lastEKILockState = tbl8.EKILock
 
         tbl7.EKILockHeartbeat = RunService.Heartbeat:Connect(function()  
             if flag11 then return end  
+
+            if lastEKILockState ~= tbl8.EKILock then
+                lastEKILockState = tbl8.EKILock
+                if tbl8.EKILock then
+                    for player in pairs(tbl7.SelectedPlayers) do
+                        if player and player.Parent then
+                            local _, hrp = tbl12.Char(player)
+                            if hrp and hrp.Parent and hrp:FindFirstChild("KickAP") and tbl12.IsNetworkOwner(hrp) then
+                                tbl7.EKILockTargets[player] = true
+                                tbl7.EKILockLocked[player] = hrp
+                                pcall(sethiddenproperty, hrp, "PhysicsRepRootPart", hrp)
+                                for _, d in ipairs(hrp.Parent:GetDescendants()) do
+                                    if d:IsA("BasePart") and (d.Name == "RagdollLimbPart" or d.Name == "RagdollTouchedHitbox" or d.Name == "FirePlayerPart") then
+                                        pcall(sethiddenproperty, d, "PhysicsRepRootPart", d)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                else
+                    for player in pairs(tbl7.EKILockTargets) do
+                        tbl7.EKILockTargets[player] = nil
+                    end
+                end
+            end
 
             local now = os.clock()  
             if now >= nextPclldCheck then  
@@ -35451,16 +35519,29 @@ local function fn21(arg, arg2)
             end  
             if tbl7.EKILockTargets then table.clear(tbl7.EKILockTargets) end  
             if tbl7.EKILockLocked  then table.clear(tbl7.EKILockLocked)  end  
+            if tbl8.MasslessApplied then
+                for k in pairs(tbl8.MasslessApplied) do
+                    if k and k.Parent then fn24(k, false) end
+                end
+                table.clear(tbl8.MasslessApplied)
+            end
         end)  
     end  
 
     while task.wait() do  
         tbl8.AngleFixKick = getgenv().AngleFixKick or false
+        tbl8.MasslessTarget = getgenv().MasslessTarget or false
 
         if flag11 then  
             for k in pairs(tbl16) do  
                 fn22(k)  
-            end  
+            end
+            if tbl8.MasslessApplied then
+                for k in pairs(tbl8.MasslessApplied) do
+                    if k and k.Parent then fn24(k, false) end
+                end
+                table.clear(tbl8.MasslessApplied)
+            end
             return  
         end  
 
@@ -35506,6 +35587,18 @@ local function fn21(arg, arg2)
                             if not (v27 and v28 and torso and v28.Health > 0) then  
                                 fn22(v25)  
                             else  
+                                if tbl8.MasslessTarget then
+                                    if not tbl8.MasslessApplied[v25] then
+                                        fn24(v25, true)
+                                        tbl8.MasslessApplied[v25] = true
+                                    end
+                                else
+                                    if tbl8.MasslessApplied[v25] then
+                                        fn24(v25, false)
+                                        tbl8.MasslessApplied[v25] = nil
+                                    end
+                                end
+
                                 local v29 = fn23(v23, i, #tbl17)  
                                 local weldHRP = v27:FindFirstChild("WeldHRP")  
 
@@ -35700,17 +35793,19 @@ else
                                 local flag12  
 
                                 if not (tbl12.GetMagnitude(v23, v27) > 33) then  
-                                    for j = 1, 5 do  
+                                    for j = 1, 10 do  
                                         tbl12.Grab(v27)  
                                     end  
 
                                     flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
                                     if flag12 then  
-                                        task.delay(0.0002, tbl12.RNO, v27)  
+                                        for j = 1, 20 do
+                                            task.defer(tbl12.RNO, v27)
+                                        end
                                     elseif tbl9.NKDelayMode == "Normal" then  
                                         task.spawn(function()  
                                             task.wait()  
-                                            for j = 1, 5 do  
+                                            for j = 1, 20 do  
                                                 tbl12.RNO(v27)  
                                             end  
                                         end)  
@@ -35735,21 +35830,21 @@ else
                                 elseif tbl12.SNO(v27) then  
                                     tbl12.Teleport(v27, v29)  
 
-                                    for j = 1, 5 do  
+                                    for j = 1, 10 do  
                                         tbl12.Grab(v27)  
                                     end  
 
                                     flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
                                     if flag12 then  
-                                        task.delay(0.0002, function()  
-                                            for j = 1, 5 do  
+                                        task.defer(function()  
+                                            for j = 1, 20 do  
                                                 tbl12.RNO(v27)  
                                             end  
                                         end)  
                                     elseif tbl9.NKDelayMode == "Normal" then  
                                         task.spawn(function()  
                                             task.wait()  
-                                            for j = 1, 5 do  
+                                            for j = 1, 20 do  
                                                 tbl12.RNO(v27)  
                                             end  
                                         end)  
@@ -35786,6 +35881,7 @@ else
         end  
     end  
 end)
+                   
 end                       
                                         
 		lib.ForceCheckbox = true
@@ -43287,7 +43383,7 @@ v21:AddToggle("OwnershipKickToggle", {
 
 v21:AddToggle("AngleFixKick", {
     Text = "안티 앵글",
-    Risky = true,
+    Risky = false,
     Default = false,
     Tooltip = "킥시도시 고정력을 매우 향상시키지만 킥속도는 보장할수없습니다. 또한 불리하게 작용할수도 있습니다.",
     Callback = function(Value)
@@ -43311,7 +43407,24 @@ v21:AddToggle("AngleFixKick", {
         end
     end
 })
-	
+v21:AddToggle("MasslessTargetToggle", {
+    Text = "마스리스타겟",
+    Risky = true,
+    Default = getgenv().MasslessTarget or false,
+    Tooltip = "당하는 대상(타겟)의 모든 바디파츠를 무질량(Massless)으로 만들어 킥 반응성을 개선합니다.",
+    Callback = function(state)
+        getgenv().MasslessTarget = state
+        tbl8.MasslessTarget = state
+        if not state and tbl8.MasslessApplied then
+            for k in pairs(tbl8.MasslessApplied) do
+                if k and k.Parent and getgenv().SetTargetMassless then
+                    getgenv().SetTargetMassless(k, false)
+                end
+                tbl8.MasslessApplied[k] = nil
+            end
+        end
+    end,
+})	
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 
