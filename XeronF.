@@ -35290,46 +35290,50 @@ Escape Timer: %*]]
           
  do
 
+                                               
 task.spawn(function()
-local tbl16 = {}
+    local tbl16 = {}
 
-tbl8.MasslessApplied = tbl8.MasslessApplied or setmetatable({}, {__mode = "k"})
+    -- 무질량 상태 추적용 테이블
+    tbl8.MasslessApplied = tbl8.MasslessApplied or setmetatable({}, {__mode = "k"})
 
-local function fn24(arg, arg2)
-    if not arg then return end
-    local c, h = tbl12.Char(arg)
-    if not h or not h.Parent then return end
-    for _, part in ipairs(h.Parent:GetDescendants()) do
-        if part:IsA("BasePart") then
+    -- 대상의 질량을 무질량으로 변경/복구하는 함수 (옵션용)
+    local function fn24(arg, arg2)
+        if not arg then return end
+        local v22, v23 = tbl12.Char(arg)
+        if not v23 or not v23.Parent then return end
+        
+        for _, part in ipairs(v23.Parent:GetDescendants()) do
+            if part:IsA("BasePart") then
+                pcall(function()
+                    if arg2 then
+                        part.Massless = true
+                        part.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0.3, 0.5)
+                    else
+                        part.Massless = false
+                        part.CustomPhysicalProperties = nil
+                    end
+                end)
+            end
+        end
+        if v23:IsA("BasePart") then
             pcall(function()
                 if arg2 then
-                    part.Massless = true
-                    part.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0.3, 0.5)
+                    v23.Massless = true
+                    v23.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0.3, 0.5)
                 else
-                    part.Massless = false
-                    part.CustomPhysicalProperties = nil
+                    v23.Massless = false
+                    v23.CustomPhysicalProperties = nil
                 end
             end)
         end
     end
-    if h:IsA("BasePart") then
-        pcall(function()
-            if arg2 then
-                h.Massless = true
-                h.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0.3, 0.5)
-            else
-                h.Massless = false
-                h.CustomPhysicalProperties = nil
-            end
-        end)
+
+    function getgenv().SetTargetMassless(target, state)
+        fn24(target, state)
     end
-end
 
-function getgenv().SetTargetMassless(target, state)
-    fn24(target, state)
-end
-
-local function fn21(arg, arg2)  
+    local function fn21(arg, arg2)  
         if tbl8.EKILock and arg and arg.Parent then  
             local player = Players:GetPlayerFromCharacter(arg.Parent)  
             if player then  
@@ -35444,6 +35448,7 @@ local function fn21(arg, arg2)
                     end  
                 end  
             else
+                -- 일반 EKI 토글 시 하위 락 대상 해제
                 for player in pairs(tbl7.EKILockTargets) do
                     tbl7.EKILockTargets[player] = nil
                 end
@@ -35581,83 +35586,42 @@ local function fn21(arg, arg2)
                                 local v29 = fn23(v23, i, #tbl17)  
                                 local weldHRP = v27:FindFirstChild("WeldHRP")  
 
-       if tbl8.AngleFixKick then  
-    local oldAlign = v27:FindFirstChild("KickAlign")  
-    if oldAlign then oldAlign:Destroy() end  
-    local oldRot = v27:FindFirstChild("KickRot")  
-    if oldRot then oldRot:Destroy() end  
-    local oldAtt0 = v27:FindFirstChild("KickAtt0")  
-    if oldAtt0 then oldAtt0:Destroy() end  
-    local oldAtt1 = workspace.Terrain:FindFirstChild("KickAtt1_" .. v25.Name)  
-    if oldAtt1 then oldAtt1:Destroy() end  
+                                if tbl8.AngleFixKick then  
+                                    local oldAlign = v27:FindFirstChild("KickAlign")  
+                                    if oldAlign then oldAlign:Destroy() end  
+                                    local oldRot = v27:FindFirstChild("KickRot")  
+                                    if oldRot then oldRot:Destroy() end  
+                                    local oldAtt0 = v27:FindFirstChild("KickAtt0")  
+                                    if oldAtt0 then oldAtt0:Destroy() end  
+                                    local oldAtt1 = workspace.Terrain:FindFirstChild("KickAtt1_" .. v25.Name)  
+                                    if oldAtt1 then oldAtt1:Destroy() end  
 
-    local kickAP = v27:FindFirstChild("KickAP")  
-    if not kickAP then  
-        kickAP = Instance.new("BodyPosition")  
-        kickAP.Name = "KickAP"  
-        kickAP.Parent = v27  
-    end  
-    
-    local kickAO = v27:FindFirstChild("KickAO")  
-    if not kickAO then  
-        kickAO = Instance.new("BodyGyro")  
-        kickAO.Name = "KickAO"  
-        kickAO.Parent = v27  
-    end  
+                                    local kickAP = v27:FindFirstChild("KickAP")  
+                                    if not kickAP then  
+                                        kickAP = Instance.new("BodyPosition")  
+                                        kickAP.Name = "KickAP"  
+                                        kickAP.Parent = v27  
+                                    end  
+                                    
+                                    local kickAO = v27:FindFirstChild("KickAO")  
+                                    if not kickAO then  
+                                        kickAO = Instance.new("BodyGyro")  
+                                        kickAO.Name = "KickAO"  
+                                        kickAO.Parent = v27  
+                                    end  
 
-    kickAP.MaxForce = Vector3.new(100000, 100000, 100000)  
-    kickAP.P = 10000  
-    kickAP.D = 500  
-    kickAP.Position = v29  
+                                    kickAP.MaxForce = Vector3.new(100000, 100000, 100000)  
+                                    kickAP.P = 10000  
+                                    kickAP.D = 500  
+                                    kickAP.Position = v29  
 
-    kickAO.MaxTorque = Vector3.new(100000, 100000, 100000)  
-    kickAO.P = 10000  
-    kickAO.D = 500  
-    kickAO.CFrame = CFrame.Angles(0, 0, 0)  
+                                    kickAO.MaxTorque = Vector3.new(100000, 100000, 100000)  
+                                    kickAO.P = 10000  
+                                    kickAO.D = 500  
+                                    kickAO.CFrame = CFrame.Angles(0, 0, 0)  
 
-    if weldHRP then weldHRP.Enabled = false end  
-else  
-    local oldAlign = v27:FindFirstChild("KickAlign")  
-    if oldAlign then oldAlign:Destroy() end  
-    local oldRot = v27:FindFirstChild("KickRot")  
-    if oldRot then oldRot:Destroy() end  
-    local oldAtt0 = v27:FindFirstChild("KickAtt0")  
-    if oldAtt0 then oldAtt0:Destroy() end  
-    local oldAtt1 = workspace.Terrain:FindFirstChild("KickAtt1_" .. v25.Name)  
-    if oldAtt1 then oldAtt1:Destroy() end  
-
-    local kickAP = v27:FindFirstChild("KickAP")  
-    local kickAO = v27:FindFirstChild("KickAO")  
-
-    if not kickAP or not kickAO then  
-        if kickAP then kickAP:Destroy() end  
-        if kickAO then kickAO:Destroy() end  
-
-        kickAP = Instance.new("BodyPosition")  
-        local bodyGyro = Instance.new("BodyGyro")  
-        kickAP.D = 200  
-        kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)  
-        kickAP.Position = v29  
-        kickAP.Parent = v27  
-        bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)  
-        bodyGyro.D = 200  
-        bodyGyro.CFrame = CFrame.new()  
-        bodyGyro.Parent = v27  
-        kickAP.Name = "KickAP"  
-        bodyGyro.Name = "KickAO"  
-    else
-        kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-        kickAP.D = 201
-        if kickAO then
-            kickAO.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-            kickAO.D = 201
-        end
-    end  
-
-    if weldHRP then weldHRP.Enabled = false end  
-
-    kickAP.Position = v29  
---end  
+                                    if weldHRP then weldHRP.Enabled = false end  
+                                else  
                                     local oldAlign = v27:FindFirstChild("KickAlign")  
                                     if oldAlign then oldAlign:Destroy() end  
                                     local oldRot = v27:FindFirstChild("KickRot")  
@@ -35686,10 +35650,16 @@ else
                                         bodyGyro.Parent = v27  
                                         kickAP.Name = "KickAP"  
                                         bodyGyro.Name = "KickAO"  
+                                    else
+                                        kickAP.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                                        kickAP.D = 201
+                                        if kickAO then
+                                            kickAO.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                                            kickAO.D = 201
+                                        end
                                     end  
 
                                     if weldHRP then weldHRP.Enabled = false end  
-
                                     kickAP.Position = v29  
                                 end  
 
@@ -35769,14 +35739,12 @@ else
                                     end  
                                 end  
 
-                                local flag12  
-
                                 if not (tbl12.GetMagnitude(v23, v27) > 33) then  
                                     for j = 1, 10 do  
                                         tbl12.Grab(v27)  
                                     end  
 
-                                    flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
+                                    local flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
                                     if flag12 then  
                                         for j = 1, 20 do
                                             task.defer(tbl12.RNO, v27)
@@ -35813,7 +35781,7 @@ else
                                         tbl12.Grab(v27)  
                                     end  
 
-                                    flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
+                                    local flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
                                     if flag12 then  
                                         task.defer(function()  
                                             for j = 1, 20 do  
