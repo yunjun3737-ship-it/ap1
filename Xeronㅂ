@@ -35706,7 +35706,7 @@ else
 
                                     flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
                                     if flag12 then  
-                                        task.delay(0.00000000000000002, tbl12.RNO, v27)  
+                                        task.delay(0.0002, tbl12.RNO, v27)  
                                     elseif tbl9.NKDelayMode == "Normal" then  
                                         task.spawn(function()  
                                             task.wait()  
@@ -35741,7 +35741,7 @@ else
 
                                     flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
                                     if flag12 then  
-                                        task.delay(0.00000000000000002, function()  
+                                        task.delay(0.0002, function()  
                                             for j = 1, 5 do  
                                                 tbl12.RNO(v27)  
                                             end  
@@ -35803,7 +35803,7 @@ end
 			Compact = true,
 			Animations = {
 				ToggleWindow = false,
-				TabSwitch = true,
+				TabSwitch = false,
 				Dropdown = true,
 				Groupbox = true,
 				KeyPicker = true,
