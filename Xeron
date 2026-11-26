@@ -42499,7 +42499,7 @@ Antis:AddToggle("AntiExplosion", {
     local Players = game:GetService("Players")
     local localPlayer = Players.LocalPlayer
 
-    Atis:AddToggle("AntiexeV", {
+    Antis:AddToggle("AntiexeV", {
         Text = "안티 폭탄 (비주얼)",
         Default = false,
         Tooltip = "폭발의 효과밑 이펙트를 비활성화 하지만 영향은 그대로 받습니다.",
