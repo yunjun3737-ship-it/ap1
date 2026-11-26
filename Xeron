@@ -41159,387 +41159,423 @@ end
 
 GetCharacter = Utils.GetCharacter
 
+do
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local localPlayer = Players.LocalPlayer
 
-Antis:AddToggle("AntiKIll", {
-    Text = "안티 킬",
-    Default = false,
-	Tooltip = "블롭의 루프킬 공격을 차단합니다.",
-    Callback = function(Value)
-        Config.AntiGraboTT = Value
-        if Value then
-            Config.antiGrabTask = task.spawn(function()
-                while Config.AntiGraboTT do
-                    pcall(function()
-                        local plr = localPlayer
-                        local character = plr.Character
-                        if not character then return end
-                        local grabbed = false
-                        local grabbedPart = nil
-                        for _, part in pairs(character:GetChildren()) do
-                            if part:FindFirstChild("PartOwner") and part.PartOwner.Value ~= "" then
-                                grabbed = true
-                                grabbedPart = part
-                                break
-                            end
-                        end
-                        local ragdolled = false
-                        local humForState = character:FindFirstChildOfClass("Humanoid")
-                        if humForState then
-                            local state = humForState:GetState()
-                            if state == Enum.HumanoidStateType.Ragdoll
-                                or state == Enum.HumanoidStateType.Physics
-                                or state == Enum.HumanoidStateType.FallingDown then
-                                ragdolled = true
-                            end
-                        end
-                        if grabbed or ragdolled then
-                            if character and not Config.antiGrabstomp and tick() >= (Config.sex2 or 0) then
-                                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                                local root = character:FindFirstChild("HumanoidRootPart")
-                                if humanoid and root then
-                                    Config.antiGrabstomp = true
-                                    Config.sex1 = tick() + Config.antiGrabduration
-
-                                    Config.blobkillBurstEndTime = tick() + Config.blobkillduration
-                                    if not Config.blobkillBurstActive then
-                                        Config.blobkillBurstActive = true
-                                        Config.blobkillBurstTask = task.spawn(function()
-                                            while Config.blobkillBurstActive do
-                                                pcall(function()
-                                                    local char = localPlayer.Character
-                                                    if char then
-                                                        local hum = char:FindFirstChild("Humanoid")
-                                                        local hrp = char:FindFirstChild("HumanoidRootPart")
-                                                        if hum and hrp and hum.Health > 0 then
-                                                            hum.Sit = true
-                                                            hum:ChangeState(Enum.HumanoidStateType.Running)
-                                                            local camera = service.Workspace.CurrentCamera
-                                                            if camera then
-                                                                local lookVec = camera.CFrame.LookVector
-                                                                hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + Vector3.new(lookVec.X, 0, lookVec.Z))
-                                                            end
-                                                        end
-                                                    end
-                                                end)
-                                                if tick() >= Config.blobkillBurstEndTime then
-                                                    Config.blobkillBurstActive = false
-                                                    break
-                                                end
-                                                task.wait()
-                                            end
-                                            Config.blobkillBurstTask = nil
-                                        end)
-                                    end
-
-                                    Config.ragdollBurstEndTime = tick() + Config.RAGDOLL_DURATION
-                                    if not Config.ragdollBurstActive then
-                                        Config.ragdollBurstActive = true
-                                        Config.ragdollBurstTask = task.spawn(function()
-                                            while Config.ragdollBurstActive do
-                                                pcall(function()
-                                                    local char = localPlayer.Character
-                                                    if char then
-                                                        local hum = char:FindFirstChildOfClass("Humanoid")
-                                                        local rp = char:FindFirstChild("HumanoidRootPart")
-                                                        if hum and rp and hum.Health > 0 then
-                                                            hum:ChangeState(Enum.HumanoidStateType.Ragdoll)
-                                                            hum.PlatformStand = true
-                                                            rp.AssemblyLinearVelocity  = Vector3.zero
-                                                            rp.AssemblyAngularVelocity = Vector3.zero
-                                                        end
-                                                    end
-                                                end)
-                                                if tick() >= Config.ragdollBurstEndTime then
-                                                    Config.ragdollBurstActive = false
-                                                    break
-                                                end
-                                                task.wait()
-                                            end
-                                            local char = localPlayer.Character
-                                            local hum = char and char:FindFirstChildOfClass("Humanoid")
-                                            if hum then
-                                                hum.PlatformStand = false
-                                                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
-                                            end
-                                            Config.ragdollBurstTask = nil
-                                        end)
-                                    end
-
-                                    Config.sex5 = {
-                                        WalkSpeed     = humanoid.WalkSpeed,
-                                        JumpPower     = humanoid.JumpPower,
-                                        JumpHeight    = humanoid.JumpHeight,
-                                        AutoRotate    = humanoid.AutoRotate,
-                                        PlatformStand = humanoid.PlatformStand,
-                                    }
-
-                                    Config.sex6 = {}
-                                    local allParts = GetAllBaseParts(character)
-                                    for _, p in ipairs(allParts) do
-                                        Config.sex6[p] = {
-                                            Anchored = p.Anchored,
-                                            CFrame   = p.CFrame,
-                                        }
-                                        p.Anchored = true
-                                        p.AssemblyLinearVelocity  = Vector3.zero
-                                        p.AssemblyAngularVelocity = Vector3.zero
-                                        pcall(function()
-                                            p.Velocity    = Vector3.zero
-                                            p.RotVelocity = Vector3.zero
-                                        end)
-                                    end
-
-                                    Config.sex7 = {}
-                                    local rootJoint = character:FindFirstChild("RootJoint")
-                                    if rootJoint then
-                                        Config.sex7[rootJoint] = {
-                                            C0 = rootJoint.C0,
-                                            C1 = rootJoint.C1,
-                                        }
-                                    end
-
-                                    Config.sex8 = root.CFrame
-                                    humanoid.WalkSpeed     = 0
-                                    humanoid.JumpPower     = 0
-                                    humanoid.JumpHeight    = 0
-                                    humanoid.AutoRotate    = false
-                                    humanoid.PlatformStand = true
-                                    root.Anchored = true
-                                    root.AssemblyLinearVelocity  = Vector3.zero
-                                    root.AssemblyAngularVelocity = Vector3.zero
-
-                                    if Config.sex3 then Config.sex3:Disconnect() Config.sex3 = nil end
-                                    if Config.sex4 then Config.sex4:Disconnect() Config.sex4 = nil end
-
-                                    local function ApplyStompFrameLocal()
-                                        if not Config.antiGrabstomp then return end
-                                        local char = localPlayer.Character
-                                        if not char then return end
-                                        local hum = char:FindFirstChildOfClass("Humanoid")
-                                        local rp  = char:FindFirstChild("HumanoidRootPart")
-                                        if not hum or not rp then return end
-
-                                        local parts = GetAllBaseParts(char)
-                                        for _, p in ipairs(parts) do
-                                            p.Anchored = true
-                                            p.AssemblyLinearVelocity  = Vector3.zero
-                                            p.AssemblyAngularVelocity = Vector3.zero
-                                            pcall(function()
-                                                p.Velocity    = Vector3.zero
-                                                p.RotVelocity = Vector3.zero
-                                            end)
-                                            local saved = Config.sex6[p]
-                                            if saved then
-                                                pcall(function()
-                                                    p.CFrame = saved.CFrame
-                                                end)
-                                            end
-                                        end
-
-                                        if Config.sex8 then
-                                            rp.CFrame = Config.sex8
-                                        end
-
-                                        rp.AssemblyLinearVelocity  = Vector3.zero
-                                        rp.AssemblyAngularVelocity = Vector3.zero
-                                        pcall(function()
-                                            rp.Velocity    = Vector3.zero
-                                            rp.RotVelocity = Vector3.zero
-                                        end)
-
-                                        local rj = char:FindFirstChild("RootJoint")
-                                        if rj and Config.sex7[rj] then
-                                            local saved = Config.sex7[rj]
-                                            pcall(function()
-                                                rj.C0 = saved.C0
-                                                rj.C1 = saved.C1
-                                            end)
-                                        end
-
-                                        hum.PlatformStand = true
-                                    end
-
-                                    local function EndStompLocal()
-                                        if not Config.antiGrabstomp then return end
-                                        Config.antiGrabstomp = false
-                                        if Config.sex3 then Config.sex3:Disconnect() Config.sex3 = nil end
-                                        if Config.sex4 then Config.sex4:Disconnect() Config.sex4 = nil end
-
-                                        local char = localPlayer.Character
-                                        local hum  = char and char:FindFirstChildOfClass("Humanoid")
-                                        local rp   = char and char:FindFirstChild("HumanoidRootPart")
-
-                                        if hum then
-                                            hum.WalkSpeed     = Config.sex5.WalkSpeed or 16
-                                            hum.JumpPower     = Config.sex5.JumpPower or 50
-                                            hum.JumpHeight    = Config.sex5.JumpHeight or 7.2
-                                            hum.AutoRotate    = Config.sex5.AutoRotate ~= false
-                                            hum.PlatformStand = Config.sex5.PlatformStand or false
-                                        end
-
-                                        if char then
-                                            local parts = GetAllBaseParts(char)
-                                            for _, p in ipairs(parts) do
-                                                local saved = Config.sex6[p]
-                                                if saved then
-                                                    p.Anchored = saved.Anchored
-                                                    pcall(function()
-                                                        p.CFrame = saved.CFrame
-                                                    end)
-                                                else
-                                                    p.Anchored = false
-                                                end
-                                                p.AssemblyLinearVelocity  = Vector3.zero
-                                                p.AssemblyAngularVelocity = Vector3.zero
-                                                pcall(function()
-                                                    p.Velocity    = Vector3.zero
-                                                    p.RotVelocity = Vector3.zero
-                                                end)
-                                            end
-
-                                            local rj = char:FindFirstChild("RootJoint")
-                                            if rj and Config.sex7[rj] then
-                                                local s = Config.sex7[rj]
-                                                pcall(function()
-                                                    rj.C0 = s.C0
-                                                    rj.C1 = s.C1
-                                                end)
-                                            end
-                                        end
-
-                                        if rp then
-                                            rp.AssemblyLinearVelocity  = Vector3.zero
-                                            rp.AssemblyAngularVelocity = Vector3.zero
-                                            pcall(function()
-                                                rp.Velocity    = Vector3.zero
-                                                rp.RotVelocity = Vector3.zero
-                                            end)
-                                        end
-
-                                        Config.sex6 = {}
-                                        Config.sex7 = {}
-                                        Config.sex8 = nil
-                                        Config.sex2 = tick() + 0.15
-                                    end
-
-                                    Config.sex3 = service.RunService.Stepped:Connect(function()
-                                        if not Config.antiGrabstomp then return end
-                                        ApplyStompFrameLocal()
-
-                                        if tick() >= Config.sex1 then
-                                            EndStompLocal()
-                                        end
-                                    end)
-
-                                    Config.sex4 = service.RunService.Heartbeat:Connect(function()
-                                        if not Config.antiGrabstomp then return end
-                                        ApplyStompFrameLocal()
-                                    end)
-                                end
-                            end
-                        end
-
-                        if grabbed then
-                            service.ReplicatedStorage.CharacterEvents.Struggle:FireServer(plr)
-
-                            local humanoid = character:FindFirstChild("Humanoid")
-                            local rootPart = character:FindFirstChild("HumanoidRootPart")
-                            if humanoid and rootPart then
-                                RagdollRemote:FireServer(rootPart, 0.00000000001)
-                            end
-
-                            if humanoid then
-                                for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
-                                    if track.Animation and track.Animation.AnimationId == Config.antiGrabid then
-                                        track:Stop()
-                                    end
-                                end
-                            end
-
-                            if grabbedPart and grabbedPart:FindFirstChild("PartOwner") then
-                                grabbedPart.PartOwner.Value = ""
-                            end
-
-                            if humanoid and not Config.antiGrabstomp then
-                                humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
-                                humanoid.AutoRotate = true
-                                if humanoid.Sit then humanoid.Sit = false end
-                            end
-                        end
-
-                        local humForAnim = character:FindFirstChild("Humanoid")
-                        if humForAnim then
-                            for _, track in ipairs(humForAnim:GetPlayingAnimationTracks()) do
-                                if track.Animation and track.Animation.AnimationId == Config.antiGrabid then
-                                    track:Stop()
-                                end
-                            end
-                        end
-                    end)
-
-                    task.wait()
-                end
-            end)
-        else
-            if Config.antiGrabTask then
-                task.cancel(Config.antiGrabTask)
-                Config.antiGrabTask = nil
-            end
-            if Config.antiGrabstomp then
-                Config.antiGrabstomp = false
-                Config.sex8 = nil
-                if Config.sex3 then Config.sex3:Disconnect() Config.sex3 = nil end
-                if Config.sex4 then Config.sex4:Disconnect() Config.sex4 = nil end
-                local char = localPlayer.Character
-                local hum  = char and char:FindFirstChildOfClass("Humanoid")
-                if hum then
-                    hum.WalkSpeed     = Config.sex5.WalkSpeed or 16
-                    hum.JumpPower     = Config.sex5.JumpPower or 50
-                    hum.JumpHeight    = Config.sex5.JumpHeight or 7.2
-                    hum.AutoRotate    = Config.sex5.AutoRotate ~= false
-                    hum.PlatformStand = Config.sex5.PlatformStand or false
-                end
-                if char then
-                    local parts = GetAllBaseParts(char)
-                    for _, p in ipairs(parts) do
-                        local saved = Config.sex6[p]
-                        if saved then
-                            p.Anchored = saved.Anchored
-                        else
-                            p.Anchored = false
-                        end
-                    end
-                    local rj = char:FindFirstChild("RootJoint")
-                    if rj and Config.sex7[rj] then
-                        local s = Config.sex7[rj]
-                        pcall(function()
-                            rj.C0 = s.C0
-                            rj.C1 = s.C1
-                        end)
-                    end
-                end
-                Config.sex6 = {}
-                Config.sex7 = {}
-                Config.sex2 = tick() + 0.15
-            end
-            Config.blobkillBurstActive = false
-            if Config.blobkillBurstTask then
-                task.cancel(Config.blobkillBurstTask)
-                Config.blobkillBurstTask = nil
-            end
-            Config.ragdollBurstActive = false
-            if Config.ragdollBurstTask then
-                task.cancel(Config.ragdollBurstTask)
-                Config.ragdollBurstTask = nil
-            end
-            local char = localPlayer.Character
-            local hum = char and char:FindFirstChildOfClass("Humanoid")
-            if hum then
-                hum.PlatformStand = false
+    local function GetAllBaseParts(character)
+        local parts = {}
+        if not character then return parts end
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                table.insert(parts, part)
             end
         end
+        return parts
     end
-})
+
+    local RagdollRemote = ReplicatedStorage:FindFirstChild("RagdollRemote")
+    if not RagdollRemote then
+        pcall(function() RagdollRemote = ReplicatedStorage:WaitForChild("RagdollRemote", 5) end)
+    end
+
+    local state = {
+        active = false,
+        task = nil,
+        stomping = false,
+        stompEndTime = 0,
+        nextAllowedTime = 0,
+        steppedConn = nil,
+        heartbeatConn = nil,
+        savedHumanoid = nil,
+        savedParts = {},
+        savedJoints = {},
+        savedRootCFrame = nil,
+        stompDuration = 0.5,
+        burstDuration = 0.3,
+        ragdollDuration = 0.2,
+        antiGrabId = "",
+        burstActive = false,
+        burstTask = nil,
+        burstEndTime = 0,
+        ragdollActive = false,
+        ragdollTask = nil,
+        ragdollEndTime = 0,
+    }
+
+    local function EndStomp()
+        if not state.stomping then return end
+        state.stomping = false
+        if state.steppedConn then pcall(function() state.steppedConn:Disconnect() end) state.steppedConn = nil end
+        if state.heartbeatConn then pcall(function() state.heartbeatConn:Disconnect() end) state.heartbeatConn = nil end
+
+        local char = localPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        local rp = char and char:FindFirstChild("HumanoidRootPart")
+
+        if hum and state.savedHumanoid then
+            pcall(function()
+                hum.WalkSpeed = state.savedHumanoid.WalkSpeed or 16
+                hum.JumpPower = state.savedHumanoid.JumpPower or 50
+                hum.JumpHeight = state.savedHumanoid.JumpHeight or 7.2
+                hum.AutoRotate = state.savedHumanoid.AutoRotate ~= false
+                hum.PlatformStand = state.savedHumanoid.PlatformStand or false
+            end)
+        end
+
+        if char then
+            local parts = GetAllBaseParts(char)
+            for _, p in ipairs(parts) do
+                local saved = state.savedParts[p]
+                if saved then
+                    pcall(function()
+                        p.Anchored = saved.Anchored
+                        p.CFrame = saved.CFrame
+                    end)
+                else
+                    pcall(function() p.Anchored = false end)
+                end
+                pcall(function()
+                    p.AssemblyLinearVelocity = Vector3.zero
+                    p.AssemblyAngularVelocity = Vector3.zero
+                    p.Velocity = Vector3.zero
+                    p.RotVelocity = Vector3.zero
+                end)
+            end
+
+            local rj = char:FindFirstChild("RootJoint")
+            if rj and state.savedJoints[rj] then
+                local s = state.savedJoints[rj]
+                pcall(function()
+                    rj.C0 = s.C0
+                    rj.C1 = s.C1
+                end)
+            end
+        end
+
+        if rp then
+            pcall(function()
+                rp.AssemblyLinearVelocity = Vector3.zero
+                rp.AssemblyAngularVelocity = Vector3.zero
+                rp.Velocity = Vector3.zero
+                rp.RotVelocity = Vector3.zero
+            end)
+        end
+
+        state.savedParts = {}
+        state.savedJoints = {}
+        state.savedRootCFrame = nil
+        state.nextAllowedTime = tick() + 0.15
+    end
+
+    local function ApplyStomp()
+        if not state.stomping then return end
+        local char = localPlayer.Character
+        if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        local rp = char:FindFirstChild("HumanoidRootPart")
+        if not (hum and rp) then return end
+
+        local parts = GetAllBaseParts(char)
+        for _, p in ipairs(parts) do
+            pcall(function()
+                p.Anchored = true
+                p.AssemblyLinearVelocity = Vector3.zero
+                p.AssemblyAngularVelocity = Vector3.zero
+                p.Velocity = Vector3.zero
+                p.RotVelocity = Vector3.zero
+            end)
+            local saved = state.savedParts[p]
+            if saved then
+                pcall(function() p.CFrame = saved.CFrame end)
+            end
+        end
+
+        if state.savedRootCFrame then
+            pcall(function() rp.CFrame = state.savedRootCFrame end)
+        end
+
+        pcall(function()
+            rp.AssemblyLinearVelocity = Vector3.zero
+            rp.AssemblyAngularVelocity = Vector3.zero
+            rp.Velocity = Vector3.zero
+            rp.RotVelocity = Vector3.zero
+        end)
+
+        local rj = char:FindFirstChild("RootJoint")
+        if rj and state.savedJoints[rj] then
+            local saved = state.savedJoints[rj]
+            pcall(function()
+                rj.C0 = saved.C0
+                rj.C1 = saved.C1
+            end)
+        end
+
+        pcall(function() hum.PlatformStand = true end)
+    end
+
+    Antis:AddToggle("AntiKIll", {
+        Text = "안티킬(바이패스)",
+        Default = false,
+        Tooltip = "루프킬(셋오너) 공격을 막고 어태커를 우회합니다..",
+        Callback = function(Value)
+            state.active = Value
+            if Value then
+                state.task = task.spawn(function()
+                    while state.active do
+                        pcall(function()
+                            local plr = localPlayer
+                            local character = plr.Character
+                            if not character then return end
+
+                            local grabbed = false
+                            local grabbedPart = nil
+                            for _, part in pairs(character:GetChildren()) do
+                                local owner = part:FindFirstChild("PartOwner")
+                                if owner and owner.Value ~= "" then
+                                    grabbed = true
+                                    grabbedPart = part
+                                    break
+                                end
+                            end
+
+                            local ragdolled = false
+                            local humForState = character:FindFirstChildOfClass("Humanoid")
+                            if humForState then
+                                local okState, st = pcall(function() return humForState:GetState() end)
+                                if okState and st then
+                                    if st == Enum.HumanoidStateType.Ragdoll
+                                    or st == Enum.HumanoidStateType.Physics
+                                    or st == Enum.HumanoidStateType.FallingDown then
+                                        ragdolled = true
+                                    end
+                                end
+                            end
+
+                            if grabbed or ragdolled then
+                                if character and not state.stomping and tick() >= state.nextAllowedTime then
+                                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                                    local root = character:FindFirstChild("HumanoidRootPart")
+                                    if humanoid and root then
+                                        state.stomping = true
+                                        state.stompEndTime = tick() + state.stompDuration
+
+                                        state.burstEndTime = tick() + state.burstDuration
+                                        if not state.burstActive then
+                                            state.burstActive = true
+                                            state.burstTask = task.spawn(function()
+                                                while state.burstActive do
+                                                    pcall(function()
+                                                        local char = localPlayer.Character
+                                                        if char then
+                                                            local hum = char:FindFirstChild("Humanoid")
+                                                            local hrp = char:FindFirstChild("HumanoidRootPart")
+                                                            if hum and hrp and hum.Health > 0 then
+                                                                hum.Sit = true
+                                                                hum:ChangeState(Enum.HumanoidStateType.Running)
+                                                                local camera = workspace.CurrentCamera
+                                                                if camera then
+                                                                    local lookVec = camera.CFrame.LookVector
+                                                                    hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + Vector3.new(lookVec.X, 0, lookVec.Z))
+                                                                end
+                                                            end
+                                                        end
+                                                    end)
+                                                    if tick() >= state.burstEndTime then
+                                                        state.burstActive = false
+                                                        break
+                                                    end
+                                                    task.wait()
+                                                end
+                                                state.burstTask = nil
+                                            end)
+                                        end
+
+                                        state.ragdollEndTime = tick() + state.ragdollDuration
+                                        if not state.ragdollActive then
+                                            state.ragdollActive = true
+                                            state.ragdollTask = task.spawn(function()
+                                                while state.ragdollActive do
+                                                    pcall(function()
+                                                        local char = localPlayer.Character
+                                                        if char then
+                                                            local hum = char:FindFirstChildOfClass("Humanoid")
+                                                            local rp = char:FindFirstChild("HumanoidRootPart")
+                                                            if hum and rp and hum.Health > 0 then
+                                                                hum:ChangeState(Enum.HumanoidStateType.Ragdoll)
+                                                                hum.PlatformStand = true
+                                                                rp.AssemblyLinearVelocity = Vector3.zero
+                                                                rp.AssemblyAngularVelocity = Vector3.zero
+                                                            end
+                                                        end
+                                                    end)
+                                                    if tick() >= state.ragdollEndTime then
+                                                        state.ragdollActive = false
+                                                        break
+                                                    end
+                                                    task.wait()
+                                                end
+                                                local char = localPlayer.Character
+                                                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                                                if hum then
+                                                    pcall(function()
+                                                        hum.PlatformStand = false
+                                                        hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+                                                    end)
+                                                end
+                                                state.ragdollTask = nil
+                                            end)
+                                        end
+
+                                        state.savedHumanoid = {
+                                            WalkSpeed = humanoid.WalkSpeed,
+                                            JumpPower = humanoid.JumpPower,
+                                            JumpHeight = humanoid.JumpHeight,
+                                            AutoRotate = humanoid.AutoRotate,
+                                            PlatformStand = humanoid.PlatformStand,
+                                        }
+
+                                        state.savedParts = {}
+                                        local allParts = GetAllBaseParts(character)
+                                        for _, p in ipairs(allParts) do
+                                            state.savedParts[p] = {
+                                                Anchored = p.Anchored,
+                                                CFrame = p.CFrame,
+                                            }
+                                            pcall(function()
+                                                p.Anchored = true
+                                                p.AssemblyLinearVelocity = Vector3.zero
+                                                p.AssemblyAngularVelocity = Vector3.zero
+                                                p.Velocity = Vector3.zero
+                                                p.RotVelocity = Vector3.zero
+                                            end)
+                                        end
+
+                                        state.savedJoints = {}
+                                        local rootJoint = character:FindFirstChild("RootJoint")
+                                        if rootJoint then
+                                            state.savedJoints[rootJoint] = {
+                                                C0 = rootJoint.C0,
+                                                C1 = rootJoint.C1,
+                                            }
+                                        end
+
+                                        state.savedRootCFrame = root.CFrame
+
+                                        pcall(function()
+                                            humanoid.WalkSpeed = 0
+                                            humanoid.JumpPower = 0
+                                            humanoid.JumpHeight = 0
+                                            humanoid.AutoRotate = false
+                                            humanoid.PlatformStand = true
+                                            root.Anchored = true
+                                            root.AssemblyLinearVelocity = Vector3.zero
+                                            root.AssemblyAngularVelocity = Vector3.zero
+                                        end)
+
+                                        if state.steppedConn then pcall(function() state.steppedConn:Disconnect() end) state.steppedConn = nil end
+                                        if state.heartbeatConn then pcall(function() state.heartbeatConn:Disconnect() end) state.heartbeatConn = nil end
+
+                                        state.steppedConn = RunService.Stepped:Connect(function()
+                                            if not state.stomping then return end
+                                            ApplyStomp()
+                                            if tick() >= state.stompEndTime then
+                                                EndStomp()
+                                            end
+                                        end)
+
+                                        state.heartbeatConn = RunService.Heartbeat:Connect(function()
+                                            if not state.stomping then return end
+                                            ApplyStomp()
+                                        end)
+                                    end
+                                end
+                            end
+
+                            if grabbed then
+                                pcall(function()
+                                    local ce = ReplicatedStorage:FindFirstChild("CharacterEvents")
+                                    if ce then
+                                        local struggle = ce:FindFirstChild("Struggle")
+                                        if struggle then struggle:FireServer(plr) end
+                                    end
+                                end)
+
+                                local humanoid = character:FindFirstChild("Humanoid")
+                                local rootPart = character:FindFirstChild("HumanoidRootPart")
+                                if humanoid and rootPart and RagdollRemote then
+                                    pcall(function() RagdollRemote:FireServer(rootPart, 0.00000000001) end)
+                                end
+
+                                if humanoid and state.antiGrabId ~= "" then
+                                    for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+                                        if track.Animation and track.Animation.AnimationId == state.antiGrabId then
+                                            pcall(function() track:Stop() end)
+                                        end
+                                    end
+                                end
+
+                                if grabbedPart then
+                                    local owner = grabbedPart:FindFirstChild("PartOwner")
+                                    if owner then
+                                        pcall(function() owner.Value = "" end)
+                                    end
+                                end
+
+                                if humanoid and not state.stomping then
+                                    pcall(function()
+                                        humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+                                        humanoid.AutoRotate = true
+                                        if humanoid.Sit then humanoid.Sit = false end
+                                    end)
+                                end
+                            end
+
+                            if state.antiGrabId ~= "" then
+                                local humForAnim = character:FindFirstChild("Humanoid")
+                                if humForAnim then
+                                    for _, track in ipairs(humForAnim:GetPlayingAnimationTracks()) do
+                                        if track.Animation and track.Animation.AnimationId == state.antiGrabId then
+                                            pcall(function() track:Stop() end)
+                                        end
+                                    end
+                                end
+                            end
+                        end)
+                        task.wait()
+                    end
+                end)
+            else
+                if state.task then
+                    pcall(function() task.cancel(state.task) end)
+                    state.task = nil
+                end
+                if state.stomping then
+                    EndStomp()
+                end
+                state.burstActive = false
+                if state.burstTask then
+                    pcall(function() task.cancel(state.burstTask) end)
+                    state.burstTask = nil
+                end
+                state.ragdollActive = false
+                if state.ragdollTask then
+                    pcall(function() task.cancel(state.ragdollTask) end)
+                    state.ragdollTask = nil
+                end
+                local char = localPlayer.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    pcall(function() hum.PlatformStand = false end)
+                end
+            end
+        end,
+    })
+
+                                                           Config.sex2 = tick() + 0.15
+        
 end
 		Antis:AddToggle("GucciAntiGrab", {
 			Text = "[구찌] 안티 그랩",
@@ -41863,42 +41899,58 @@ Antis:AddToggle("AntiBlob", {
     end,
 })
 
-Antis:AddToggle("AntiBLobAura", {
-    Text = "Anti-Blob (Aura)",
-    Default = false,
-	Tooltip = "If someone nearby is riding a Blobman, it automatically knocks them off.",
-    Callback = function(enabled)
-        if enabled then
-            if Config.AntiblobauraCon then Config.AntiblobauraCon:Disconnect() end
-            Config.AntiblobauraCon = service.RunService.Heartbeat:Connect(function()
-                local myCharacter = GetCharacter()
-                local myRootPart = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local localPlayer = Players.LocalPlayer
+
+    local SetNetworkOwner = ReplicatedStorage:FindFirstChild("SetNetworkOwner")
+    if not SetNetworkOwner then
+        pcall(function() SetNetworkOwner = ReplicatedStorage:WaitForChild("SetNetworkOwner", 5) end)
+    end
+
+    local connection = nil
+
+    Antis:AddToggle("AntiBLobAura", {
+        Text = "안티블롭 아우라",
+        Default = false,
+        Tooltip = "근처에 있는 누군가가 블롭맨을 타고 있으면 자동으로 그들을 넘어뜨립니다.",
+        Callback = function(enabled)
+            if connection then
+                pcall(function() connection:Disconnect() end)
+                connection = nil
+            end
+            if not enabled then return end
+            if not SetNetworkOwner then return end
+            connection = RunService.Heartbeat:Connect(function()
+                local myCharacter = localPlayer.Character
+                if not myCharacter then return end
+                local myRootPart = myCharacter:FindFirstChild("HumanoidRootPart")
                 if not myRootPart then return end
-                for _, player in pairs(service.Players:GetPlayers()) do
+                for _, player in pairs(Players:GetPlayers()) do
                     if player ~= localPlayer then
-                        local playerCharacter = player.Character
-                        local playerRootPart = playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart")
-                        local playerHumanoid = playerCharacter and playerCharacter:FindFirstChild("Humanoid")
-                        if playerRootPart and playerHumanoid and playerHumanoid.SeatPart then
+                        pcall(function()
+                            local playerCharacter = player.Character
+                            if not playerCharacter then return end
+                            local playerRootPart = playerCharacter:FindFirstChild("HumanoidRootPart")
+                            local playerHumanoid = playerCharacter:FindFirstChild("Humanoid")
+                            if not (playerRootPart and playerHumanoid) then return end
+                            if not playerHumanoid.SeatPart then return end
                             local seatParent = playerHumanoid.SeatPart.Parent
-                            if seatParent and seatParent.Name == "CreatureBlobman" then
-                                local distance = (playerRootPart.Position - myRootPart.Position).Magnitude
-                                if distance <= 25 then
-                                    SetNetworkOwner:FireServer(playerRootPart, playerRootPart.CFrame)
-                                end
+                            if not seatParent then return end
+                            if seatParent.Name ~= "CreatureBlobman" then return end
+                            local distance = (playerRootPart.Position - myRootPart.Position).Magnitude
+                            if distance <= 25 then
+                                SetNetworkOwner:FireServer(playerRootPart, playerRootPart.CFrame)
                             end
-                        end
+                        end)
                     end
                 end
             end)
-        else
-            if Config.AntiblobauraCon then
-                Config.AntiblobauraCon:Disconnect()
-                Config.AntiblobauraCon = nil
-            end
-        end
-    end,
-})
+        end,
+    })
+
+            
 Antis:AddDivider("안티 오너&네트워크 계열")
 		Antis:AddToggle("AntiInputLag", {
 			Text = "안티 네트워크 오너쉽",
@@ -42443,19 +42495,30 @@ Antis:AddToggle("AntiExplosion", {
         end
     })
 
-Antis:AddToggle("AntiexeV", {
-    Text = "안티 폭탄(비주얼 제거)",
-    Default = false,
-	Tooltip = "폭발 이펙트을 가리고, 실제 손상을 막지는 못하며, 화면 효과만 가립니다.",
-    Callback = function(state)
-        if PlayerScripts then
-            local handler = PlayerScripts:FindFirstChild("ClientExoplosionHandler")
-            if handler then
-                handler.Enabled = not state
+do
+    local Players = game:GetService("Players")
+    local localPlayer = Players.LocalPlayer
+
+    Defbbbb:AddToggle("AntiexeV", {
+        Text = "안티 폭탄 (비주얼)",
+        Default = false,
+        Tooltip = "폭발의 효과밑 이펙트를 비활성화 하지만 영향은 그대로 받습니다.",
+        Callback = function(Value)
+            local PlayerScripts = localPlayer:FindFirstChild("PlayerScripts")
+            if not PlayerScripts then
+                pcall(function() PlayerScripts = localPlayer:WaitForChild("PlayerScripts", 5) end)
             end
-        end
-    end
-})
+            if not PlayerScripts then return end
+            local handler = PlayerScripts:FindFirstChild("ClientExoplosionHandler")
+            if not handler then
+                pcall(function() handler = PlayerScripts:WaitForChild("ClientExoplosionHandler", 3) end)
+            end
+            if handler then
+                pcall(function() handler.Enabled = not Value end)
+            end
+        end,
+    })
+end
 end    
 
 		Antis:AddToggle("AntiBurn", {
@@ -42578,322 +42641,271 @@ end
 
 GetCharacter = Utils.GetCharacter
 
-Antis:AddToggle("Antiragd", {
-    Text = "안티 래그돌",
-    Default = false,
-	Tooltip = "래그돌과 래그돌 킬을 막습니다. 하지만때때로 안티그랩을 방해합니다.",
-    Callback = function(Value)
-        Config.AntiragdollToggle = Value
-        if not Config.connections then Config.connections = {} end
 
-        if Config.AntiragdollToggle then
-            Config.onCharacter = function(char)
-                local humanoid = char:WaitForChild("Humanoid", 5)
-                if humanoid and Config.AntiragdollToggle then
-                    humanoid.BreakJointsOnDeath = false
-                    humanoid.AutoRotate = true
-                    humanoid.PlatformStand = false
+        
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local localPlayer = Players.LocalPlayer
 
-                    table.insert(Config.connections, humanoid:GetPropertyChangedSignal("AutoRotate"):Connect(function()
-                        if Config.AntiragdollToggle and humanoid.AutoRotate == false then
-                            humanoid.AutoRotate = true
-                        end
-                    end))
+    local state = {
+        enabled = false,
+        connections = {},
+        charAddedConn = nil,
+    }
 
-                    table.insert(Config.connections, humanoid:GetPropertyChangedSignal("PlatformStand"):Connect(function()
-                        if Config.AntiragdollToggle and humanoid.PlatformStand == true then
-                            humanoid.PlatformStand = false
-                        end
-                    end))
+    local function onCharacter(char)
+        if not char then return end
+        local humanoid
+        pcall(function()
+            humanoid = char:WaitForChild("Humanoid", 5)
+        end)
+        if not humanoid or not state.enabled then return end
 
-                    table.insert(Config.connections, service.RunService.RenderStepped:Connect(function()
-                        if Config.AntiragdollToggle then
-                            if humanoid.Sit and humanoid.SeatPart == nil then
-                                humanoid.Sit = false
-                            end
-                        end
-                    end))
+        pcall(function()
+            humanoid.BreakJointsOnDeath = false
+            humanoid.AutoRotate = true
+            humanoid.PlatformStand = false
+        end)
+
+        table.insert(state.connections, humanoid:GetPropertyChangedSignal("AutoRotate"):Connect(function()
+            if state.enabled and humanoid.AutoRotate == false then
+                pcall(function() humanoid.AutoRotate = true end)
+            end
+        end))
+
+        table.insert(state.connections, humanoid:GetPropertyChangedSignal("PlatformStand"):Connect(function()
+            if state.enabled and humanoid.PlatformStand == true then
+                pcall(function() humanoid.PlatformStand = false end)
+            end
+        end))
+
+        table.insert(state.connections, RunService.RenderStepped:Connect(function()
+            if state.enabled then
+                pcall(function()
+                    if humanoid.Sit and humanoid.SeatPart == nil then
+                        humanoid.Sit = false
+                    end
+                end)
+            end
+        end))
+    end
+
+    Antis:AddToggle("Antiragd", {
+        Text = "안티 래그돌",
+        Default = false,
+        Tooltip = "래그돌을 걸리는것을 막고 래그돌킬 또한 막지만 때때로 안티그랩을 방해합니다.",
+        Callback = function(Value)
+            state.enabled = Value
+            if Value then
+                if localPlayer.Character then
+                    onCharacter(localPlayer.Character)
+                end
+                state.charAddedConn = localPlayer.CharacterAdded:Connect(onCharacter)
+            else
+                for _, conn in ipairs(state.connections) do
+                    pcall(function() conn:Disconnect() end)
+                end
+                state.connections = {}
+                if state.charAddedConn then
+                    pcall(function() state.charAddedConn:Disconnect() end)
+                    state.charAddedConn = nil
                 end
             end
+        end,
+    })
 
-            if localPlayer.Character then
-                Config.onCharacter(localPlayer.Character)
-            end
-            Config.charAddedConn = localPlayer.CharacterAdded:Connect(Config.onCharacter)
-        else
-            for _, conn in ipairs(Config.connections) do
-                if conn then conn:Disconnect() end
-            end
-            Config.connections = {}
+do
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local SoundService = game:GetService("SoundService")
+    local Debris = game:GetService("Debris")
 
-            if Config.charAddedConn then
-                Config.charAddedConn:Disconnect()
-                Config.charAddedConn = nil
+    local state = {
+        enabled = false,
+        connections = {},
+        blocked = 0,
+        allowed = 0,
+        log = {},
+        maxStringLength = 4096,
+        maxTotalBytes = 8192,
+        maxLogEntries = 50,
+        logDetections = true,
+        playSound = false,
+    }
+
+    local function computeSize(v)
+        if type(v) == "string" then
+            return #v
+        elseif type(v) == "table" then
+            local stack = {{t = v, depth = 0}}
+            local total = 0
+            while #stack > 0 do
+                local current = table.remove(stack)
+                if current.depth <= 3 then
+                    for k, val in pairs(current.t) do
+                        if type(val) == "string" then
+                            total = total + #val
+                        elseif type(val) == "table" then
+                            table.insert(stack, {t = val, depth = current.depth + 1})
+                        end
+                        if type(k) == "string" then
+                            total = total + #k
+                        end
+                    end
+                end
             end
+            return total
+        end
+        return 0
+    end
+
+    local function analyze(args)
+        local totalBytes = 0
+        local suspicious = false
+        local biggest = 0
+        for _, v in ipairs(args) do
+            local size = computeSize(v)
+            totalBytes = totalBytes + size
+            if size > biggest then biggest = size end
+            if size > state.maxStringLength then suspicious = true end
+        end
+        if totalBytes > state.maxTotalBytes then suspicious = true end
+        return suspicious, totalBytes, biggest
+    end
+
+    local function logBlock(remoteName, totalBytes, biggest)
+        state.blocked = state.blocked + 1
+        local entry = {
+            time = os.date("%H:%M:%S"),
+            remote = remoteName,
+            totalBytes = totalBytes,
+            biggest = biggest,
+            blocked = true,
+        }
+        table.insert(state.log, 1, entry)
+        while #state.log > state.maxLogEntries do
+            table.remove(state.log)
+        end
+        if state.logDetections then
+            pcall(function()
+                warn(string.format("[AntiPacketLag] %s | Remote: %s | Total: %.2f KB | Biggest: %.2f KB | BLOCKED",
+                    entry.time, remoteName, totalBytes / 1024, biggest / 1024))
+            end)
+        end
+        if state.playSound then
+            task.spawn(function()
+                pcall(function()
+                    local s = Instance.new("Sound")
+                    s.SoundId = "rbxassetid://9114297725"
+                    s.Volume = 2
+                    s.Parent = SoundService
+                    s:Play()
+                    Debris:AddItem(s, 3)
+                end)
+            end)
         end
     end
-})
 
-Antis:AddToggle("pakraganti", {
-    Text = "안티 패킷렉",
-    Default = false,
-	Tooltip = "패킷 렉을 줄여주지만, 서버 전체의 패킷 렉까지 줄이고 있을 가능성이 있습니다.",
-    Callback = function(Value)
-        Config.Enabled = Value
-        if Value then
-            for _, conn in ipairs(Config.Connections) do
-                pcall(function() conn:Disconnect() end)
-            end
-                Config.Connections = {}
-            local GrabEvents = service.ReplicatedStorage:FindFirstChild("GrabEvents")
-            local remotes = {}
-            if GrabEvents then
-                for _, remote in ipairs(GrabEvents:GetChildren()) do
-                    if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
-                        table.insert(remotes, remote)
-                    end
+    Antis:AddToggle("pakraganti", {
+        Text = "안티 패킷렉",
+        Default = false,
+        Tooltip = "서버의 패킷렉을줄어주며 서버사이드 형식 입니다.",
+        Callback = function(Value)
+            state.enabled = Value
+            if Value then
+                for _, conn in ipairs(state.connections) do
+                    pcall(function() conn:Disconnect() end)
                 end
-            end
-            for _, remote in ipairs(remotes) do
-                if remote:IsA("RemoteEvent") then
-                    local conn = remote.OnClientEvent:Connect(function(...)
-                        if not Config.Enabled then return end
-                        local args = {...}
-                        local totalBytes = 0
-                        local suspicious = false
-                        local biggest = 0
-                        for _, v in ipairs(args) do
-                            if type(v) == "string" then
-                                local len = #v
-                                totalBytes = totalBytes + len
-                                if len > biggest then biggest = len end
-                                if len > Config.MaxStringLength then suspicious = true end
-                            elseif type(v) == "table" then
-                                local stack = {{t = v, depth = 0}}
-                                local tSize = 0
-                                while #stack > 0 do
-                                    local current = table.remove(stack)
-                                    if current.depth <= 3 then
-                                        for k, val in pairs(current.t) do
-                                            if type(val) == "string" then
-                                                tSize = tSize + #val
-                                            elseif type(val) == "table" then
-                                                table.insert(stack, {t = val, depth = current.depth + 1})
-                                            end
-                                            if type(k) == "string" then
-                                                tSize = tSize + #k
-                                            end
-                                        end
-                                    end
-                                end
-                                totalBytes = totalBytes + tSize
-                                if tSize > biggest then biggest = tSize end
-                                if tSize > Config.MaxStringLength then suspicious = true end
+                state.connections = {}
+
+                local GrabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
+                if not GrabEvents then return end
+
+                for _, remote in ipairs(GrabEvents:GetChildren()) do
+                    if remote:IsA("RemoteEvent") then
+                        local conn = remote.OnClientEvent:Connect(function(...)
+                            if not state.enabled then return end
+                            local args = {...}
+                            local suspicious, totalBytes, biggest = analyze(args)
+                            if suspicious then
+                                logBlock(remote.Name, totalBytes, biggest)
+                                return
+                            else
+                                state.allowed = state.allowed + 1
                             end
-                        end
-                        if totalBytes > Config.MaxTotalBytes then suspicious = true end
-                        if suspicious then
-                            Config.Blocked = Config.Blocked + 1
-                            local entry = {
-                                time = os.date("%H:%M:%S"),
-                                remote = remote.Name,
-                                totalBytes = totalBytes,
-                                biggest = biggest,
-                                blocked = true,
-                            }
-                            table.insert(Config.Log, 1, entry)
-                            while #Config.Log > Config.MaxLogEntries do
-                                table.remove(Config.Log)
-                            end
-                            if Config.LogDetections then
-                                warn(string.format(
-                                    "[AntiPacketLag] %s | Remote: %s | Total: %.2f KB | Biggest: %.2f KB | BLOCKED",
-                                    entry.time, remote.Name, totalBytes / 1024, biggest / 1024
-                                ))
-                            end
-                            if Config.PlaySound then
-                                task.spawn(function()
-                                    local s = Instance.new("Sound")
-                                    s.SoundId = "rbxassetid://9114297725"
-                                    s.Volume = 2
-                                    s.Parent = service.SoundService
-                                    s:Play()
-                                    game:GetService("Debris"):AddItem(s, 3)
-                                end)
-                            end
-                            return
-                        else
-                            Config.Allowed = Config.Allowed + 1
-                        end
-                    end)
-                    table.insert(Config.Connections, conn)
-                elseif remote:IsA("RemoteFunction") then
-                    remote.OnClientInvoke = function(...)
-                        if not Config.Enabled then return nil end
-                        local args = {...}
-                        local totalBytes = 0
-                        local suspicious = false
-                        local biggest = 0
-                        for _, v in ipairs(args) do
-                            if type(v) == "string" then
-                                local len = #v
-                                totalBytes = totalBytes + len
-                                if len > biggest then biggest = len end
-                                if len > Config.MaxStringLength then suspicious = true end
-                            elseif type(v) == "table" then
-                                local stack = {{t = v, depth = 0}}
-                                local tSize = 0
-                                while #stack > 0 do
-                                    local current = table.remove(stack)
-                                    if current.depth <= 3 then
-                                        for k, val in pairs(current.t) do
-                                            if type(val) == "string" then
-                                                tSize = tSize + #val
-                                            elseif type(val) == "table" then
-                                                table.insert(stack, {t = val, depth = current.depth + 1})
-                                            end
-                                            if type(k) == "string" then
-                                                tSize = tSize + #k
-                                            end
-                                        end
-                                    end
-                                end
-                                totalBytes = totalBytes + tSize
-                                if tSize > biggest then biggest = tSize end
-                                if tSize > Config.MaxStringLength then suspicious = true end
-                            end
-                        end
-                        if totalBytes > Config.MaxTotalBytes then suspicious = true end
-                        if suspicious then
-                            Config.Blocked = Config.Blocked + 1
-                            local entry = {
-                                time = os.date("%H:%M:%S"),
-                                remote = remote.Name,
-                                totalBytes = totalBytes,
-                                biggest = biggest,
-                                blocked = true,
-                            }
-                            table.insert(Config.Log, 1, entry)
-                            while #Config.Log > Config.MaxLogEntries do
-                                table.remove(Config.Log)
-                            end
-                            if Config.LogDetections then
-                                warn(string.format(
-                                    "[AntiPacketLag] %s | Remote: %s | Total: %.2f KB | Biggest: %.2f KB | BLOCKED",
-                                    entry.time, remote.Name, totalBytes / 1024, biggest / 1024
-                                ))
-                            end
-                            if Config.PlaySound then
-                                task.spawn(function()
-                                    local s = Instance.new("Sound")
-                                    s.SoundId = "rbxassetid://9114297725"
-                                    s.Volume = 2
-                                    s.Parent = service.SoundService
-                                    s:Play()
-                                    game:GetService("Debris"):AddItem(s, 3)
-                                end)
+                        end)
+                        table.insert(state.connections, conn)
+                    elseif remote:IsA("RemoteFunction") then
+                        remote.OnClientInvoke = function(...)
+                            if not state.enabled then return nil end
+                            local args = {...}
+                            local suspicious, totalBytes, biggest = analyze(args)
+                            if suspicious then
+                                logBlock(remote.Name, totalBytes, biggest)
+                            else
+                                state.allowed = state.allowed + 1
                             end
                             return nil
-                        else
-                            Config.Allowed = Config.Allowed + 1
                         end
-                        return nil
+                        table.insert(state.connections, {
+                            Disconnect = function()
+                                pcall(function() remote.OnClientInvoke = nil end)
+                            end,
+                        })
                     end
-                    table.insert(Config.Connections, {
-                        Disconnect = function()
-                            remote.OnClientInvoke = nil
-                        end,
-                    })
                 end
-            end
-            if GrabEvents then
+
                 local ExtendGrabLine = GrabEvents:FindFirstChild("ExtendGrabLine")
                 if ExtendGrabLine then
-                    local mt = getrawmetatable and getrawmetatable(ExtendGrabLine)
-                    if mt then
+                    local ok, mt = pcall(function()
+                        if getrawmetatable then return getrawmetatable(ExtendGrabLine) end
+                    end)
+                    if ok and mt then
                         local oldNamecall = mt.__namecall
-                        setreadonly(mt, false)
-
-                        if oldNamecall then
+                        pcall(function()
+                            setreadonly(mt, false)
                             mt.__namecall = function(self, ...)
-                                local method = getnamecallmethod()
-                                if self == ExtendGrabLine and method == "FireServer" then
+                                if self == ExtendGrabLine and getnamecallmethod() == "FireServer" then
                                     local args = {...}
-                                    local totalBytes = 0
-                                    local suspicious = false
-                                    local biggest = 0
-
-                                    for _, v in ipairs(args) do
-                                        if type(v) == "string" then
-                                            local len = #v
-                                            totalBytes = totalBytes + len
-                                            if len > biggest then biggest = len end
-                                            if len > Config.MaxStringLength then suspicious = true end
-                                        elseif type(v) == "table" then
-                                            local stack = {{t = v, depth = 0}}
-                                            local tSize = 0
-
-                                            while #stack > 0 do
-                                                local current = table.remove(stack)
-                                                if current.depth <= 3 then
-                                                    for k, val in pairs(current.t) do
-                                                        if type(val) == "string" then
-                                                            tSize = tSize + #val
-                                                        elseif type(val) == "table" then
-                                                            table.insert(stack, {t = val, depth = current.depth + 1})
-                                                        end
-                                                        if type(k) == "string" then
-                                                            tSize = tSize + #k
-                                                        end
-                                                    end
-                                                end
-                                            end
-
-                                            totalBytes = totalBytes + tSize
-                                            if tSize > biggest then biggest = tSize end
-                                            if tSize > Config.MaxStringLength then suspicious = true end
-                                        end
-                                    end
-
-                                    if totalBytes > Config.MaxTotalBytes then suspicious = true end
-
+                                    local suspicious, totalBytes = analyze(args)
                                     if suspicious then
-                                        if Config.LogDetections then
-                                            warn("[AntiPacketLag] Blocked OUTGOING FireServer on ExtendGrabLine | Size: " .. string.format("%.2f KB", totalBytes / 1024))
+                                        if state.logDetections then
+                                            pcall(function()
+                                                warn("[AntiPacketLag] Blocked OUTGOING FireServer on ExtendGrabLine | Size: " .. string.format("%.2f KB", totalBytes / 1024))
+                                            end)
                                         end
                                         return
                                     end
                                 end
                                 return oldNamecall(self, ...)
                             end
-                        end
-                        setreadonly(mt, true)
-                        table.insert(Config.Connections, {
+                            setreadonly(mt, true)
+                        end)
+                        table.insert(state.connections, {
                             Disconnect = function()
                                 if getrawmetatable then
                                     local m = getrawmetatable(ExtendGrabLine)
                                     if m then
-                                        setreadonly(m, false)
-                                        m.__namecall = oldNamecall
-                                        setreadonly(m, true)
+                                        pcall(function()
+                                            setreadonly(m, false)
+                                            m.__namecall = oldNamecall
+                                            setreadonly(m, true)
+                                        end)
                                     end
                                 end
                             end,
                         })
                     end
                 end
+            else
+                for _, conn in ipairs(state.connections) do
+                    pcall(function() conn:Disconnect() end)
+                end
+                state.connections = {}
             end
-            print(" Watching " .. #remotes .. " remotes.")
-        else
-            for _, conn in ipairs(Config.Connections) do
-                pcall(function() conn:Disconnect() end)
-            end
-            Config.Connections = {}
-            
-        end
-    end    
-})
-
+        end,
+    })
+end
+                                                 
    Antis:AddDivider("안티 바나나 계열")
 		Antis:AddToggle("AntiBanana", {
 			Text = "안티 바나나 (다리제거)",
