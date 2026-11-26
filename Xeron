@@ -35815,14 +35815,14 @@ task.spawn(function()
                                 local flag12  
 
                                 if not (tbl12.GetMagnitude(v23, v27) > 33) then  
-                                    for j = 1, 6 do  
+                                    for j = 1, 4 do  
                                         tbl12.Grab(v27)  
                                     end  
 
                                     flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
                                     if flag12 then  
                                         
-                                        for j = 1, 6 do
+                                        for j = 1, 4 do
                                             task.delay(0.001 * j, function()
                                                 tbl12.RNO(v27)
                                             end)
@@ -35830,7 +35830,7 @@ task.spawn(function()
                                     elseif tbl9.NKDelayMode == "Normal" then  
                                         task.spawn(function()  
                                             task.wait()  
-                                            for j = 1, 5 do  
+                                            for j = 1, 4 do  
                                                 tbl12.RNO(v27)  
                                             end  
                                         end)  
@@ -35855,14 +35855,14 @@ task.spawn(function()
                                 elseif tbl12.SNO(v27) then  
                                     tbl12.Teleport(v27, v29)  
 
-                                    for j = 1, 6 do  
+                                    for j = 1, 4 do  
                                         tbl12.Grab(v27)  
                                     end  
 
                                     flag12 = tbl9.NKDelayMode == "Faster" or not tbl9.NKDelayMode  
                                     if flag12 then  
                                         
-                                        for j = 1, 6 do
+                                        for j = 1, 5 do
                                             task.delay(0.0001 * j, function()
                                                 tbl12.RNO(v27)
                                             end)
@@ -41914,7 +41914,7 @@ Antis:AddToggle("AntiBlob", {
         end
     end,
 })
-
+do
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -41965,7 +41965,7 @@ Antis:AddToggle("AntiBlob", {
             end)
         end,
     })
-
+end
             
 Antis:AddDivider("안티 오너&네트워크 계열")
 		Antis:AddToggle("AntiInputLag", {
