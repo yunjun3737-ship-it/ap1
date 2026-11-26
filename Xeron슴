@@ -41159,7 +41159,7 @@ end
 
 GetCharacter = Utils.GetCharacter
 
-do
+
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -43433,7 +43433,7 @@ Antis:AddDivider("기타")
 			end,
 		})
 	end
-end
+
 
 	do
 		local Miscellaneous = tbl15.Invincibility:AddRightGroupbox("Miscellaneous", "bolt")
