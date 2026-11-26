@@ -41574,7 +41574,7 @@ do
         end,
     })
 
-                                                           Config.sex2 = tick() + 0.15
+                                                           
         
 end
 		Antis:AddToggle("GucciAntiGrab", {
