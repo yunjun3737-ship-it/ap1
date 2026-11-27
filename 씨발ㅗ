@@ -383,7 +383,6 @@ local alphaOk = false
 
 	alphaOk = #failures == 0
 end
-
+end
 if alphaOk then
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/qwerqwerg1u/RRTS/main/판자격파"))()
-end
