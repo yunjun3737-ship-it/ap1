@@ -1,3 +1,4 @@
+local ALPHA = (function()
 local SYS = {
 	type = type,
 	pcall = pcall,
@@ -2585,3 +2586,7 @@ function ALPHA.selfTest()
 end
 
 return ALPHA
+end)()
+if type(_G) == "table" then
+	_G.ALPHA = ALPHA
+end
