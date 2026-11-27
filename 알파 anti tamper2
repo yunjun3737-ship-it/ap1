@@ -49,15 +49,6 @@ local function getEnvRoot()
 end
 
 local ROOT_ENV = getEnvRoot()
-local LOAD_SNAPSHOT = {
-	pcall = ROOT_ENV.pcall,
-	error = ROOT_ENV.error,
-	type = ROOT_ENV.type,
-	rawget = ROOT_ENV.rawget,
-	rawset = ROOT_ENV.rawset,
-	setmetatable = ROOT_ENV.setmetatable,
-	getmetatable = ROOT_ENV.getmetatable,
-}
 
 local BIT = {}
 do
@@ -65,108 +56,131 @@ do
 		or (SYS.type(ROOT_ENV.bit32) == "table" and ROOT_ENV.bit32)
 		or nil
 
-	if native and SYS.type(native.band) == "function" and SYS.type(native.bxor) == "function" and SYS.type(native.bor) == "function" then
-		BIT.band = function(a, b)
+	local function pureBand(a, b)
+		a = a % 4294967296
+		b = b % 4294967296
+		local r, p = 0, 1
+		for _ = 1, 32 do
+			local ab, bb = a % 2, b % 2
+			if ab == 1 and bb == 1 then
+				r = r + p
+			end
+			a = (a - ab) / 2
+			b = (b - bb) / 2
+			p = p * 2
+		end
+		return r
+	end
+
+	local function pureBor(a, b)
+		a = a % 4294967296
+		b = b % 4294967296
+		local r, p = 0, 1
+		for _ = 1, 32 do
+			local ab, bb = a % 2, b % 2
+			if ab == 1 or bb == 1 then
+				r = r + p
+			end
+			a = (a - ab) / 2
+			b = (b - bb) / 2
+			p = p * 2
+		end
+		return r
+	end
+
+	local function pureBxor(a, b)
+		a = a % 4294967296
+		b = b % 4294967296
+		local r, p = 0, 1
+		for _ = 1, 32 do
+			local ab, bb = a % 2, b % 2
+			if ab ~= bb then
+				r = r + p
+			end
+			a = (a - ab) / 2
+			b = (b - bb) / 2
+			p = p * 2
+		end
+		return r
+	end
+
+	local function pureBnot(a)
+		return 4294967295 - (a % 4294967296)
+	end
+
+	local function pureLshift(a, n)
+		n = n % 32
+		return SYS.mathFloor((a % 4294967296) * (2 ^ n)) % 4294967296
+	end
+
+	local function pureRshift(a, n)
+		n = n % 32
+		return SYS.mathFloor((a % 4294967296) / (2 ^ n)) % 4294967296
+	end
+
+	BIT.band = (native and SYS.type(native.band) == "function")
+		and function(a, b)
 			return native.band(a % 4294967296, b % 4294967296)
 		end
-		BIT.bor = function(a, b)
+		or pureBand
+
+	BIT.bor = (native and SYS.type(native.bor) == "function")
+		and function(a, b)
 			return native.bor(a % 4294967296, b % 4294967296)
 		end
-		BIT.bxor = function(a, b)
+		or pureBor
+
+	BIT.bxor = (native and SYS.type(native.bxor) == "function")
+		and function(a, b)
 			return native.bxor(a % 4294967296, b % 4294967296)
 		end
-		BIT.lshift = function(a, n)
+		or pureBxor
+
+	BIT.bnot = (native and SYS.type(native.bnot) == "function")
+		and function(a)
+			return native.bnot(a % 4294967296)
+		end
+		or pureBnot
+
+	BIT.lshift = (native and SYS.type(native.lshift) == "function")
+		and function(a, n)
 			return native.lshift(a % 4294967296, n)
 		end
-		BIT.rshift = function(a, n)
+		or pureLshift
+
+	BIT.rshift = (native and SYS.type(native.rshift) == "function")
+		and function(a, n)
 			return native.rshift(a % 4294967296, n)
 		end
-		BIT.lrotate = function(a, n)
-			if SYS.type(native.lrotate) == "function" then
-				return native.lrotate(a % 4294967296, n)
-			end
+		or pureRshift
+
+	BIT.lrotate = (native and SYS.type(native.lrotate) == "function")
+		and function(a, n)
+			return native.lrotate(a % 4294967296, n)
+		end
+		or function(a, n)
 			n = n % 32
 			return BIT.bor(BIT.lshift(a, n), BIT.rshift(a, 32 - n))
 		end
-		BIT.rrotate = function(a, n)
-			if SYS.type(native.rrotate) == "function" then
-				return native.rrotate(a % 4294967296, n)
-			end
+
+	BIT.rrotate = (native and SYS.type(native.rrotate) == "function")
+		and function(a, n)
+			return native.rrotate(a % 4294967296, n)
+		end
+		or function(a, n)
 			n = n % 32
 			return BIT.bor(BIT.rshift(a, n), BIT.lshift(a, 32 - n))
 		end
-	else
-		BIT.band = function(a, b)
-			a = a % 4294967296
-			b = b % 4294967296
-			local r, p = 0, 1
-			for _ = 1, 32 do
-				local ab, bb = a % 2, b % 2
-				if ab == 1 and bb == 1 then
-					r = r + p
-				end
-				a = (a - ab) / 2
-				b = (b - bb) / 2
-				p = p * 2
-			end
-			return r
-		end
-		BIT.bor = function(a, b)
-			a = a % 4294967296
-			b = b % 4294967296
-			local r, p = 0, 1
-			for _ = 1, 32 do
-				local ab, bb = a % 2, b % 2
-				if ab == 1 or bb == 1 then
-					r = r + p
-				end
-				a = (a - ab) / 2
-				b = (b - bb) / 2
-				p = p * 2
-			end
-			return r
-		end
-		BIT.bxor = function(a, b)
-			a = a % 4294967296
-			b = b % 4294967296
-			local r, p = 0, 1
-			for _ = 1, 32 do
-				local ab, bb = a % 2, b % 2
-				if ab ~= bb then
-					r = r + p
-				end
-				a = (a - ab) / 2
-				b = (b - bb) / 2
-				p = p * 2
-			end
-			return r
-		end
-		BIT.lshift = function(a, n)
-			n = n % 32
-			return SYS.mathFloor((a % 4294967296) * (2 ^ n)) % 4294967296
-		end
-		BIT.rshift = function(a, n)
-			n = n % 32
-			return SYS.mathFloor((a % 4294967296) / (2 ^ n)) % 4294967296
-		end
-		BIT.lrotate = function(a, n)
-			n = n % 32
-			return BIT.bor(BIT.lshift(a, n), BIT.rshift(a, 32 - n))
-		end
-		BIT.rrotate = function(a, n)
-			n = n % 32
-			return BIT.bor(BIT.rshift(a, n), BIT.lshift(a, 32 - n))
-		end
-	end
 end
 
 local CFG = {
 	WATERMARK = "ALPHA",
-	BRAND_TAG = "ALPHA_AT_CORE",
-	SIG_SEAL = "ALPHA_SEAL_V1",
+	BRAND_TAG = "ALPHA_AT_V2",
+	SIG_SEAL = "ALPHA_SEAL_V2",
 	SIG_GATE = "ALPHA_GATE_04xcgf",
 	SIG_CNS = "ALPHA_CNS_ENDIDek",
 	ALPHA_SEED = 1095520328,
+	ALPHA_CFI_INIT = 1095520321,
 	PRIME_2P31 = 2147483647,
 	STRIKE_BUDGET = 64,
 	ENV_FRAME_LIMIT = 1002,
@@ -228,6 +242,11 @@ local CFG = {
 	NONFUNC_HASH = 408,
 	S_BASE = 2346,
 	PROTO_MAGIC = 1607585654,
+	OP_CORE_NOP = 10001,
+	OP_CORE_HALT = 10002,
+	OP_CORE_MOVE = 10003,
+	OP_CORE_DYNAMIC = 10004,
+	OP_CORE_GUARD = 10005,
 	PROGRAM_CHARSET = "0<TdsVS+4JO[:3qa(9/XA;]v8R~MGwhHxp\"YZ5t.*2%{DKNnuyC_F=!oUW1$>QBb#L^}i?cjmP|,l@z6k7fergEI&)`",
 	RING_ALPHABET = "O7F40kNuxTIsSW6n-QipHBw3EtzPjr51MKLlZyCGd82VYeUmqXabJcvogAhf_DR9",
 	SANDBOX_LIBS = {
@@ -241,11 +260,69 @@ local CFG = {
 		"rawget", "rawset", "rawequal", "select", "setfenv", "setmetatable",
 		"tonumber", "tostring", "type", "unpack", "xpcall", "_G",
 	},
+	TRAP_KEYS = {
+		__ALPHA_DUMP = true,
+		__ALPHA_KEY = true,
+		__ALPHA_BYPASS = true,
+		__DECOMPILE_HOOK = true,
+	},
 }
 
 local B91_MAP = {}
 for i = 1, #CFG.PROGRAM_CHARSET do
 	B91_MAP[SYS.strByte(CFG.PROGRAM_CHARSET, i)] = i - 1
+end
+
+local BASELINE = {
+	envFuncs = {
+		pcall = ROOT_ENV.pcall,
+		xpcall = ROOT_ENV.xpcall,
+		error = ROOT_ENV.error,
+		type = ROOT_ENV.type,
+		rawget = ROOT_ENV.rawget,
+		rawset = ROOT_ENV.rawset,
+		rawequal = ROOT_ENV.rawequal,
+		setmetatable = ROOT_ENV.setmetatable,
+		getmetatable = ROOT_ENV.getmetatable,
+	},
+	debugFingerprints = {},
+	stringMetaOk = false,
+	stringMetaType = nil,
+	stringMetaIndex = nil,
+}
+
+do
+	if SYS.debugLib and SYS.type(SYS.debugLib.info) == "function" then
+		local watch = { "pcall", "xpcall", "error", "rawget", "rawset", "setmetatable", "getmetatable" }
+		for i = 1, #watch do
+			local name = watch[i]
+			local fn = BASELINE.envFuncs[name]
+			if SYS.type(fn) == "function" then
+				local ok, src, line = SYS.pcall(SYS.debugLib.info, fn, "sl")
+				if ok then
+					BASELINE.debugFingerprints[name] = { src = src, line = line }
+				end
+			end
+		end
+	end
+	if SYS.type(SYS.getmetatable) == "function" then
+		local ok, mt = SYS.pcall(SYS.getmetatable, "")
+		if ok then
+			BASELINE.stringMetaOk = true
+			BASELINE.stringMetaType = SYS.type(mt)
+			if SYS.type(mt) == "table" then
+				BASELINE.stringMetaIndex = SYS.rawget(mt, "__index")
+			end
+		end
+	end
+end
+
+local PRIVATE_CLOSURE_TOKEN = {}
+local function sealedClosureProbe(token)
+	if SYS.rawequal(token, PRIVATE_CLOSURE_TOKEN) then
+		return CFG.WATERMARK, 163
+	end
+	return nil, 58
 end
 
 local ALPHA = {
@@ -254,6 +331,7 @@ local ALPHA = {
 	bit = BIT,
 	probes = {},
 	response = {},
+	cfi = {},
 	crypto = {},
 	seal = {},
 	integrity = {},
@@ -302,22 +380,23 @@ function ALPHA.probes.watermark()
 	if SYS.type(w) ~= "string" or #w ~= 5 then
 		return 42
 	end
-	local s, wt = 0, 0
+	local s, wt, x = 0, 0, 0
 	for i = 1, 5 do
 		local b = SYS.strByte(w, i) or 0
 		s = s + b
 		wt = wt + b * i
+		x = BIT.bxor(x, b)
 	end
-	if s == 358 and wt == 1070 and ALPHA.identity == "ALPHA" then
+	if s == 358 and wt == 1070 and x == 84 and ALPHA.identity == "ALPHA" then
 		return 107
 	end
 	return 42
 end
 
 function ALPHA.probes.semantics(env)
-	local targetEnv = env or ROOT_ENV
-	local setmeta = (SYS.type(targetEnv) == "table" and targetEnv.setmetatable) or SYS.setmetatable
-	local getmeta = (SYS.type(targetEnv) == "table" and targetEnv.getmetatable) or SYS.getmetatable
+	local targetEnv = SYS.type(env) == "table" and env or ROOT_ENV
+	local setmeta = targetEnv.setmetatable or SYS.setmetatable
+	local getmeta = targetEnv.getmetatable or SYS.getmetatable
 	local probeTable, sentinel, hookCalls = {}, {}, 0
 	local withMt = setmeta and setmeta(probeTable, {
 		__index = function(_, key)
@@ -347,24 +426,33 @@ end
 
 function ALPHA.probes.builtins()
 	local xorProbe = BIT.bxor(26864, 13230)
+	local rotProbe = BIT.rrotate(BIT.lrotate(1095520328, 7), 7)
 	local roundtrip = SYS.strByte(SYS.strChar(65), 1, 1)
 	local arity = SYS.select("#", CFG.WATERMARK, 23390, 65)
 	local joined = SYS.tblConcat({ "A", "L", "P", "H", "A" })
-	if xorProbe == 23390 and roundtrip == 65 and arity == 3 and joined == CFG.WATERMARK then
+	if xorProbe == 23390 and rotProbe == 1095520328 and roundtrip == 65 and arity == 3 and joined == CFG.WATERMARK then
 		return 63
 	end
-	return BIT.bxor(63, 103)
+	return 104
 end
 
 function ALPHA.probes.stringMeta()
-	if not SYS.getmetatable then
+	if not BASELINE.stringMetaOk or SYS.type(SYS.getmetatable) ~= "function" then
 		return 197
 	end
 	local ok, mt = SYS.pcall(SYS.getmetatable, "")
 	if not ok then
-		return 197
+		return 112
 	end
-	if SYS.type(mt) == "table" then
+	if SYS.type(mt) ~= BASELINE.stringMetaType then
+		return 112
+	end
+	if SYS.type(mt) == "table" and BASELINE.stringMetaIndex ~= nil then
+		if not SYS.rawequal(SYS.rawget(mt, "__index"), BASELINE.stringMetaIndex) then
+			return 112
+		end
+	end
+	if SYS.strByte(SYS.strSub(CFG.WATERMARK, 1, 1), 1) ~= 65 then
 		return 112
 	end
 	return 197
@@ -373,30 +461,38 @@ end
 function ALPHA.probes.hookIntegrity()
 	local curEnv = getEnvRoot()
 	if SYS.type(curEnv) == "table" then
-		if LOAD_SNAPSHOT.pcall ~= nil and not SYS.rawequal(curEnv.pcall, LOAD_SNAPSHOT.pcall) then
-			return 24
-		end
-		if LOAD_SNAPSHOT.error ~= nil and not SYS.rawequal(curEnv.error, LOAD_SNAPSHOT.error) then
-			return 24
-		end
-		if LOAD_SNAPSHOT.rawget ~= nil and not SYS.rawequal(curEnv.rawget, LOAD_SNAPSHOT.rawget) then
-			return 24
-		end
-		if LOAD_SNAPSHOT.setmetatable ~= nil and not SYS.rawequal(curEnv.setmetatable, LOAD_SNAPSHOT.setmetatable) then
-			return 24
+		for name, origFn in SYS.pairs(BASELINE.envFuncs) do
+			if origFn ~= nil and not SYS.rawequal(curEnv[name], origFn) then
+				return 24
+			end
 		end
 	end
 	if SYS.debugLib and SYS.type(SYS.debugLib.info) == "function" then
-		local targets = { SYS.pcall, SYS.error, SYS.rawget, SYS.setmetatable }
-		for i = 1, #targets do
-			local fn = targets[i]
-			if SYS.type(fn) == "function" then
-				local ok, src = SYS.pcall(SYS.debugLib.info, fn, "s")
-				if ok and SYS.type(src) == "string" and src ~= "" and src ~= "[C]" then
+		for name, fp in SYS.pairs(BASELINE.debugFingerprints) do
+			local curFn = SYS.type(curEnv) == "table" and curEnv[name] or BASELINE.envFuncs[name]
+			if SYS.type(curFn) == "function" then
+				local ok, src, line = SYS.pcall(SYS.debugLib.info, curFn, "sl")
+				if not ok or src ~= fp.src or line ~= fp.line then
 					return 24
 				end
 			end
 		end
+	end
+	local tA = SYS.setmetatable({}, {
+		__eq = function()
+			return true
+		end,
+		__index = function()
+			return 999
+		end,
+	})
+	local tB = SYS.setmetatable({}, {
+		__eq = function()
+			return true
+		end,
+	})
+	if SYS.rawequal(tA, tB) or SYS.rawget(tA, 1) ~= nil then
+		return 24
 	end
 	return 89
 end
@@ -436,10 +532,19 @@ function ALPHA.probes.timingDrift()
 	if not ok1 or SYS.type(t1) ~= "number" then
 		return 211
 	end
-	if x == 0 or (t1 - t0) > 1.5 then
+	if x == 0 or (t1 - t0) > 2.0 then
 		return 77
 	end
 	return 211
+end
+
+function ALPHA.probes.upvalueClosureGuard()
+	local tag, code = sealedClosureProbe(PRIVATE_CLOSURE_TOKEN)
+	local badTag, badCode = sealedClosureProbe({})
+	if tag == CFG.WATERMARK and code == 163 and badTag == nil and badCode == 58 then
+		return 163
+	end
+	return 58
 end
 
 function ALPHA.probes.runAll(env)
@@ -450,10 +555,11 @@ function ALPHA.probes.runAll(env)
 	local p5 = ALPHA.probes.executionFlow()
 	local p6 = ALPHA.probes.timingDrift()
 	local p7 = ALPHA.probes.watermark()
-	return p1, p2, p3, p4, p5, p6, p7
+	local p8 = ALPHA.probes.upvalueClosureGuard()
+	return p1, p2, p3, p4, p5, p6, p7, p8
 end
 
-function ALPHA.probes.deriveSessionKey(p1, p2, p3, p4, p5, p6, p7)
+function ALPHA.probes.deriveSessionKey(p1, p2, p3, p4, p5, p6, p7, p8)
 	local verdict = BIT.band(
 		BIT.bor(
 			BIT.bxor(SYS.tonumber(p1) or 0, 171),
@@ -467,7 +573,10 @@ function ALPHA.probes.deriveSessionKey(p1, p2, p3, p4, p5, p6, p7)
 							BIT.bxor(SYS.tonumber(p5) or 0, 143),
 							BIT.bor(
 								BIT.bxor(SYS.tonumber(p6) or 0, 211),
-								BIT.bxor(SYS.tonumber(p7) or 0, 107)
+								BIT.bor(
+									BIT.bxor(SYS.tonumber(p7) or 0, 107),
+									BIT.bxor(SYS.tonumber(p8) or 0, 163)
+								)
 							)
 						)
 					)
@@ -476,9 +585,9 @@ function ALPHA.probes.deriveSessionKey(p1, p2, p3, p4, p5, p6, p7)
 		),
 		255
 	)
-	local h1 = ALPHA.crypto.mix2((p1 * 45 + p2 * 95 + p3 * 121 + 71) % 65536, p7)
-	local h2 = ALPHA.crypto.mix2((p4 * 73 + p5 * 37 + p6 * 19 + 193) % 65536, BIT.bxor(p1, p5))
-	local sessionKey = ALPHA.crypto.xorshift32(BIT.bxor(BIT.bxor(h1, h2), CFG.ALPHA_SEED + verdict))
+	local h1 = ALPHA.crypto.mix2((p1 * 45 + p2 * 95 + p3 * 121 + 71) % 65536, BIT.bxor(p7, p8))
+	local h2 = ALPHA.crypto.mix2((p4 * 73 + p5 * 37 + p6 * 19 + p8 * 13 + 193) % 65536, BIT.bxor(p1, p5))
+	local sessionKey = ALPHA.crypto.xorshift32(BIT.bxor(BIT.bxor(h1, h2), CFG.ALPHA_SEED + verdict * 257))
 	return sessionKey, verdict
 end
 
@@ -528,7 +637,10 @@ function ALPHA.response.sabotageState(vmTable, reasonCode)
 	vmTable.polymorphicHook = nil
 	vmTable.seal = nil
 	vmTable.bootKey = nil
+	vmTable.sessionKey = BIT.bxor(vmTable.sessionKey or CFG.ALPHA_SEED, poison)
 	vmTable.stateHash = poison
+	vmTable.cfiState = poison
+	vmTable.poisoned = true
 	return poison
 end
 
@@ -548,16 +660,54 @@ function ALPHA.response.tamperError(referenceHolder, reasonCode)
 	return SYS.error(msg, 0)
 end
 
-function ALPHA.response.onTamperDetected(vmTable, referenceHolder, reasonCode, aggressive)
+function ALPHA.response.onTamperDetected(vmTable, referenceHolder, reasonCode, mode)
+	local resolvedMode = mode
+	if resolvedMode == true or resolvedMode == nil then
+		resolvedMode = "hybrid"
+	elseif resolvedMode == false then
+		resolvedMode = "error"
+	end
 	ALPHA.response.sabotageState(vmTable, reasonCode)
+	if resolvedMode == "silent" then
+		return false
+	end
 	ALPHA.response.wipeState(vmTable)
+	if resolvedMode == "hang" then
+		ALPHA.response.hangForever()
+		return false
+	end
 	ALPHA.response.tamperError(referenceHolder or ALPHA.response.makeReferenceHolder(), reasonCode)
-	if aggressive ~= false then
+	if resolvedMode == "hybrid" then
 		ALPHA.response.hangForever()
 	end
+	return false
+end
+
+function ALPHA.cfi.init(vmTable, seed)
+	local s = BIT.bxor(seed or CFG.ALPHA_CFI_INIT, CFG.ALPHA_SEED)
+	vmTable.cfiState = ALPHA.crypto.xorshift32(s)
+	vmTable.cfiDepth = 0
+	return vmTable.cfiState
+end
+
+function ALPHA.cfi.step(vmTable, fromBlock, toBlock)
+	local cur = vmTable.cfiState or CFG.ALPHA_CFI_INIT
+	local edge = BIT.band((fromBlock or 0) * 65521 + (toBlock or 0) * 251 + 358, 4294967295)
+	cur = ALPHA.crypto.xorshift32(BIT.bxor(cur, edge))
+	vmTable.cfiState = cur
+	vmTable.cfiDepth = (vmTable.cfiDepth or 0) + 1
+	vmTable.stateHash = ((vmTable.stateHash or 18028) * 31 + BIT.band(cur, 65535) + 1070) % 65536
+	return cur
+end
+
+function ALPHA.cfi.verify(vmTable, expectedState)
+	return vmTable.cfiState == expectedState
 end
 
 function ALPHA.crypto.readVarint(data, pos)
+	if SYS.type(data) ~= "string" then
+		return nil, pos
+	end
 	local mul, val = 1, 0
 	while true do
 		if pos == nil or pos > #data then
@@ -578,15 +728,21 @@ function ALPHA.crypto.readVarint(data, pos)
 end
 
 function ALPHA.crypto.readChunk(data, pos)
+	if SYS.type(data) ~= "string" then
+		return nil, pos
+	end
 	local n
 	n, pos = ALPHA.crypto.readVarint(data, pos)
-	if n == nil then
+	if n == nil or pos + n - 1 > #data then
 		return nil, pos
 	end
 	return SYS.strSub(data, pos, pos + n - 1), pos + n
 end
 
 function ALPHA.crypto.qjCrypt(data, key)
+	if SYS.type(data) ~= "string" or SYS.type(key) ~= "string" then
+		return ""
+	end
 	local klen = #key
 	if klen == 0 then
 		return ""
@@ -609,6 +765,9 @@ function ALPHA.crypto.qjCrypt(data, key)
 end
 
 function ALPHA.crypto.b91Decode(s)
+	if SYS.type(s) ~= "string" then
+		return ""
+	end
 	local out, nBytes = {}, 0
 	local b, nbits, v = 0, 0, nil
 	for i = 1, #s do
@@ -635,6 +794,37 @@ function ALPHA.crypto.b91Decode(s)
 		out[nBytes] = SYS.strChar((b + v * (2 ^ nbits)) % 256)
 	end
 	return SYS.tblConcat(out)
+end
+
+function ALPHA.crypto.decodeBase85(chunk, alphabet)
+	if SYS.type(chunk) ~= "string" or SYS.type(alphabet) ~= "string" or #alphabet < 85 then
+		return nil, 0
+	end
+	local map = {}
+	for i = 1, #alphabet do
+		map[SYS.strSub(alphabet, i, i)] = i - 1
+	end
+	local groups = SYS.mathFloor(#chunk / 5)
+	local out = {}
+	local idx = 0
+	for g = 0, groups - 1 do
+		local d = {}
+		for j = 0, 4 do
+			local ch = SYS.strSub(chunk, 5 * g + j + 1, 5 * g + j + 1)
+			local val = map[ch]
+			if val == nil then
+				return nil, 0
+			end
+			d[j] = (val - ((5 * g + j) * 41) % 85) % 85
+		end
+		local n = ((((d[1] * 85 + d[3]) * 85 + d[4]) * 85 + d[2]) * 85 + d[0]) % 4294967296
+		out[idx + 1] = BIT.band(n, 255)
+		out[idx + 2] = BIT.band(BIT.rshift(n, 8), 255)
+		out[idx + 3] = BIT.band(BIT.rshift(n, 16), 255)
+		out[idx + 4] = BIT.band(BIT.rshift(n, 24), 255)
+		idx = idx + 4
+	end
+	return out, idx
 end
 
 function ALPHA.crypto.tncDecompress(data, expected)
@@ -714,8 +904,11 @@ function ALPHA.crypto.gateCipher(s)
 end
 
 function ALPHA.crypto.descrambleBytes(bytes, sessionKey, seedTable)
+	if SYS.type(bytes) ~= "table" then
+		return nil, 0
+	end
 	local len = #bytes
-	local state = ALPHA.crypto.xorshift32(BIT.bxor(sessionKey, 3476488477))
+	local state = ALPHA.crypto.xorshift32(BIT.bxor(sessionKey or CFG.ALPHA_SEED, 3476488477))
 	local i = 1
 	while i + 1 <= len do
 		local a = BIT.bxor(bytes[i], (state + 1919273834 + i * 31035) % 256)
@@ -726,7 +919,7 @@ function ALPHA.crypto.descrambleBytes(bytes, sessionKey, seedTable)
 	end
 	state = ALPHA.crypto.xorshift32(state + 1792123458)
 	if SYS.type(seedTable) == "table" and #seedTable > 0 then
-		local kh = BIT.band(sessionKey, 255)
+		local kh = BIT.band(sessionKey or 0, 255)
 		local nQ = BIT.band(kh * 17 + 1, 255)
 		local eB = BIT.band(kh * 31 + 1, 255)
 		local le = {}
@@ -754,10 +947,11 @@ function ALPHA.crypto.descrambleBytes(bytes, sessionKey, seedTable)
 end
 
 function ALPHA.crypto.makeStreamReader(payloadStr, sessionKey)
+	local safeData = SYS.type(payloadStr) == "string" and payloadStr or ""
 	local frame = {
-		data = payloadStr,
+		data = safeData,
 		pos = 1,
-		state = BIT.bxor(4279123548, BIT.band(sessionKey, 4294967295)),
+		state = BIT.bxor(4279123548, BIT.band(sessionKey or CFG.ALPHA_SEED, 4294967295)),
 	}
 	return function()
 		local om = frame.pos
@@ -780,12 +974,12 @@ function ALPHA.crypto.makeStreamReader(payloadStr, sessionKey)
 end
 
 function ALPHA.seal.install(vmTable, envArg)
-	if vmTable.seal ~= nil then
-		return
+	if SYS.type(vmTable) ~= "table" or vmTable.seal ~= nil then
+		return false
 	end
 	local blob = vmTable.programBlob
 	if SYS.type(blob) ~= "string" or blob == "" then
-		return
+		return false
 	end
 	vmTable.programBlob = nil
 	vmTable.sandbox = envArg or vmTable.sandbox or ROOT_ENV
@@ -794,8 +988,8 @@ function ALPHA.seal.install(vmTable, envArg)
 	else
 		blob = ALPHA.crypto.gateAlpha(blob)
 	end
-	if #blob < 18 then
-		return
+	if SYS.type(blob) ~= "string" or #blob < 18 then
+		return false
 	end
 	local cursor = 1
 	local function readNibblePair()
@@ -808,7 +1002,7 @@ function ALPHA.seal.install(vmTable, envArg)
 	end
 	local headerMagic = readNibblePair()
 	if headerMagic == nil then
-		return
+		return false
 	end
 	local function readLengthField(idx)
 		local pow, value, roll = 1, 0, (112 + idx * 104) % 256
@@ -827,16 +1021,16 @@ function ALPHA.seal.install(vmTable, envArg)
 	end
 	local mainLen, bootLen = readLengthField(1), readLengthField(2)
 	if not mainLen or not bootLen then
-		return
+		return false
 	end
 	if headerMagic ~= BIT.bxor(212, (mainLen + bootLen + 112) % 256) then
-		return
+		return false
 	end
 	local bodyStart = cursor
 	local mainStart = bodyStart + mainLen
 	local bodyEnd = mainStart + bootLen - 1
 	if bodyEnd ~= #blob then
-		return
+		return false
 	end
 	local mainStr = SYS.strSub(blob, bodyStart, mainStart - 1)
 	local bootstrapStr = SYS.strSub(blob, mainStart, bodyEnd)
@@ -851,16 +1045,19 @@ function ALPHA.seal.install(vmTable, envArg)
 	vmTable.mainProgram = mainStr
 	vmTable.bootstrapString = bootstrapStr
 	vmTable.seal = { CFG.PHASE_SEALED, vmTable.sandbox, programKey, payloadHash, identityHash }
+	return true
 end
 
 function ALPHA.seal.verify(vmTable, program, env)
-	local seal = vmTable.seal
+	local seal = SYS.type(vmTable) == "table" and vmTable.seal or nil
 	if SYS.type(seal) ~= "table" or seal[1] ~= CFG.PHASE_SEALED or not SYS.rawequal(seal[2], env) then
-		ALPHA.response.onTamperDetected(vmTable, nil, 1001, true)
+		ALPHA.response.onTamperDetected(vmTable, nil, 1001, vmTable and vmTable.responseMode)
+		return false
 	end
 	local bootstrapStr = vmTable.bootstrapString
 	if SYS.type(program) ~= "string" or SYS.type(bootstrapStr) ~= "string" then
-		ALPHA.response.onTamperDetected(vmTable, nil, 1002, true)
+		ALPHA.response.onTamperDetected(vmTable, nil, 1002, vmTable.responseMode)
+		return false
 	end
 	local identityStr = CFG.SIG_SEAL .. SYS.tostring(vmTable) .. SYS.tostring(env)
 	local identityHash = ALPHA.crypto.sampledHash(identityStr, 31946)
@@ -871,7 +1068,8 @@ function ALPHA.seal.verify(vmTable, program, env)
 		programKey = 43796
 	end
 	if seal[3] ~= programKey or seal[4] ~= payloadHash or seal[5] ~= identityHash then
-		ALPHA.response.onTamperDetected(vmTable, nil, 1003, true)
+		ALPHA.response.onTamperDetected(vmTable, nil, 1003, vmTable.responseMode)
+		return false
 	end
 	seal[1] = CFG.PHASE_VERIFIED
 	vmTable.bootKey = programKey
@@ -881,9 +1079,10 @@ end
 function ALPHA.seal.makePhaseTransition(vmTable)
 	local fired = false
 	return function(a, b, c, d)
-		local seal = vmTable.seal
+		local seal = SYS.type(vmTable) == "table" and vmTable.seal or nil
 		if fired or SYS.type(seal) ~= "table" or seal[1] ~= CFG.PHASE_VERIFIED then
-			ALPHA.response.onTamperDetected(vmTable, nil, 1004, true)
+			ALPHA.response.onTamperDetected(vmTable, nil, 1004, vmTable and vmTable.responseMode)
+			return false
 		end
 		fired = true
 		seal[1] = CFG.PHASE_RUNNING
@@ -892,7 +1091,32 @@ function ALPHA.seal.makePhaseTransition(vmTable)
 			hook(false, a, b, c, ((d or 0) + (seal[3] or 0) + (seal[4] or 0)) % CFG.PRIME_2P31)
 		end
 		vmTable.sessionToken = nil
+		return true
 	end
+end
+
+function ALPHA.seal.runValidated(vmTable, bootFn)
+	if SYS.type(bootFn) ~= "function" then
+		ALPHA.response.onTamperDetected(vmTable, nil, 1005, vmTable and vmTable.responseMode)
+		return nil
+	end
+	local ok, result = SYS.pcall(bootFn)
+	if SYS.type(vmTable) == "table" then
+		vmTable.sessionToken = nil
+	end
+	local phaseAdvanced = SYS.type(vmTable) == "table" and SYS.type(vmTable.seal) == "table" and vmTable.seal[1] == CFG.PHASE_RUNNING
+	if phaseAdvanced then
+		vmTable.seal[1] = CFG.PHASE_DONE
+	end
+	if not ok or SYS.type(result) ~= "table" or result[1] ~= true or not phaseAdvanced then
+		ALPHA.response.onTamperDetected(vmTable, nil, 1006, vmTable and vmTable.responseMode)
+		return nil
+	end
+	local values = result[2]
+	if SYS.type(values) ~= "table" then
+		return nil
+	end
+	return SYS.tblUnpack(values, 1, values.n or #values)
 end
 
 function ALPHA.integrity.encodeInstruction(opcode, operandA, operandB, flags, extra, nonce)
@@ -919,6 +1143,9 @@ function ALPHA.integrity.verifyInstruction(instruction)
 	if not rec then
 		return instruction[1] ~= nil or instruction[104] ~= nil
 	end
+	if SYS.type(rec) ~= "table" or rec[11] == nil or rec[1] == nil or rec[9] == nil then
+		return false
+	end
 	local nonce = BIT.bxor(rec[11], 28050)
 	local opcode = rec[1] - nonce - 53427
 	local operandA = rec[9] - nonce - 16563
@@ -931,6 +1158,9 @@ function ALPHA.integrity.verifyInstruction(instruction)
 end
 
 function ALPHA.integrity.decodeAndVerifyInstruction(instruction)
+	if SYS.type(instruction) ~= "table" then
+		return nil
+	end
 	local rec = instruction[32]
 	if not rec then
 		return instruction
@@ -955,18 +1185,65 @@ function ALPHA.integrity.decodeAndVerifyInstruction(instruction)
 	return instruction
 end
 
-function ALPHA.integrity.checksumModule(module, keyA, keyB)
-	local instructions = module[1]
+function ALPHA.integrity.reencodeFunctionOpcodes(fn)
+	if SYS.type(fn) ~= "table" or fn[7] then
+		return fn
+	end
+	local instructions = fn[1]
 	if SYS.type(instructions) ~= "table" then
+		return fn
+	end
+	fn[7] = true
+	local seed = (#instructions * 36 + (fn[3] or 0) * 46 + #fn * 31) % 256
+	fn[8] = seed
+	for index = 1, #instructions do
+		local ins = instructions[index]
+		local opcode = ins[1] or 0
+		local parity = (index * 46 + opcode * 31 + (#instructions + 1) * 24253) % 2
+		local ps = (index * 96 + opcode * 36 + (#instructions + 1) * 65036) % 256
+		local rt = ((opcode * 31 + index * 46 + #instructions + seed) % 255) + 1
+		local pg = (ps + rt) % 256
+		ins[5] = ps
+		ins[7] = rt
+		if parity == 0 then
+			ins[1] = 66773
+			ins[6] = BIT.bxor(opcode, pg)
+		else
+			ins[1] = 71040
+			ins[6] = (opcode + pg) % 256
+		end
+	end
+	return fn
+end
+
+function ALPHA.integrity.decodeSyntheticOpcode(ins)
+	if SYS.type(ins) ~= "table" then
 		return nil
 	end
-	local acc = 1403030849 + keyA * 26291 + keyB * 25363 + (#instructions + 1) * 9123
+	if ins[1] == 66773 then
+		return BIT.bxor(ins[6] or 0, ((ins[5] or 0) + (ins[7] or 0)) % 256)
+	elseif ins[1] == 71040 then
+		return ((ins[6] or 0) - ((ins[5] or 0) + (ins[7] or 0)) % 256) % 256
+	end
+	return ins[1]
+end
+
+function ALPHA.integrity.checksumModule(module, keyA, keyB)
+	if SYS.type(module) ~= "table" then
+		return nil
+	end
+	local instructions = module[1]
+	if SYS.type(instructions) ~= "table" or #instructions == 0 then
+		return nil
+	end
+	local acc = 1403030849 + keyA * 26291 + keyB * 25363 + (#instructions + 1) * 9123 + 358
 	for i = 1, #instructions do
-		local rec = instructions[i][32]
-		if not rec then
+		local ins = instructions[i]
+		local rec = SYS.type(ins) == "table" and ins[32] or nil
+		if SYS.type(rec) ~= "table" then
 			return nil
 		end
-		acc = BIT.bxor(acc, rec[3] or 0) + (rec[11] or 0) * 21449 + i * 56509 + (rec[2] or 1744) * 64671
+		acc = BIT.band(BIT.bxor(acc, rec[3] or 0) + (rec[11] or 0) * 21449 + i * 56509 + (rec[2] or 1744) * 64671, 4294967295)
 	end
 	return BIT.band(BIT.bxor(acc, (module[5] or 0) * 52127) + (module[3] or 0) * 14173, 4294967295)
 end
@@ -987,7 +1264,11 @@ function ALPHA.integrity.commitModule(module, keyA, keyB, handle, token)
 		return nil
 	end
 	MODULE_PENDING[handle] = nil
-	MODULE_REGISTRY[module] = { BIT.bxor(module[354], 2269905765), module[5] or 0 }
+	MODULE_REGISTRY[module] = {
+		BIT.bxor(module[354], 2269905765),
+		module[5] or 0,
+		#module[1],
+	}
 	return module
 end
 
@@ -1006,10 +1287,20 @@ function ALPHA.integrity.verifyModule(module)
 		return false
 	end
 	local entry = MODULE_REGISTRY[module]
-	if entry == nil or entry[1] ~= BIT.bxor(stored, 2269905765) or entry[2] ~= (module[5] or 0) then
+	if entry == nil or entry[1] ~= BIT.bxor(stored, 2269905765) or entry[2] ~= (module[5] or 0) or entry[3] ~= #instructions then
 		return false
 	end
-	return ALPHA.integrity.verifyInstruction(instructions[1]) and ALPHA.integrity.verifyInstruction(instructions[#instructions])
+	for i = 1, #instructions do
+		if not ALPHA.integrity.verifyInstruction(instructions[i]) then
+			return false
+		end
+	end
+	local recomputed = ALPHA.integrity.checksumModule(module, keyA, keyB)
+	if recomputed == nil then
+		return false
+	end
+	local expectedStored = BIT.bxor(recomputed, BIT.band(1747677602 + keyA * 62773 + keyB * 11659, 4294967295))
+	return expectedStored == stored
 end
 
 function ALPHA.integrity.mintChallengeToken(constantBytes, context, ydValue)
@@ -1020,9 +1311,10 @@ function ALPHA.integrity.mintChallengeToken(constantBytes, context, ydValue)
 	local first = b3 * 256 + b4
 	local second = b5 * 256 + b6
 	if first == (b1 * 169 + b2 + 40143) % 65536 and second == (b2 * 47 + b1 + 20997) % 65536 then
-		local bc = BIT.band(context, 255)
-		local rk = (bc * 243 + ydValue + 237) % 256
-		local token = SYS.strChar(BIT.bxor(b1, bc), BIT.bxor(b2, rk), bc, ydValue % 256, rk)
+		local bc = BIT.band(context or 0, 255)
+		local yd = (ydValue or 0) % 256
+		local rk = (bc * 243 + yd + 237) % 256
+		local token = SYS.strChar(BIT.bxor(b1, bc), BIT.bxor(b2, rk), bc, yd, rk)
 		CHALLENGE_LEDGER[token] = true
 		CHALLENGE_LEDGER[1226908804] = (CHALLENGE_LEDGER[1226908804] or 0) + 1
 		return token
@@ -1049,7 +1341,7 @@ function ALPHA.integrity.makeChallengeVerifier(secret)
 end
 
 function ALPHA.vm.buildSandbox(vmTable, env)
-	local baseEnv = env or ROOT_ENV
+	local baseEnv = SYS.type(env) == "table" and env or ROOT_ENV
 	local function copyLib(libName, fieldList)
 		local orig = baseEnv[libName]
 		if SYS.type(orig) ~= "table" then
@@ -1081,10 +1373,11 @@ function ALPHA.vm.buildSandbox(vmTable, env)
 end
 
 function ALPHA.vm.initState(vmTable, env)
-	local baseEnv = env or ROOT_ENV
+	local baseEnv = SYS.type(env) == "table" and env or ROOT_ENV
 	vmTable.mainProgram = nil
 	vmTable.nilSentinel = {}
 	vmTable.fakeG = {}
+	vmTable.trapHits = 0
 	vmTable.closureEnvCache = SYS.setmetatable({}, { __mode = "k" })
 	vmTable.closureEnvs = {}
 	local hiddenFrames = {}
@@ -1104,15 +1397,26 @@ function ALPHA.vm.initState(vmTable, env)
 	vmTable.stateHash = 18028
 	vmTable.bitlib = BIT
 	vmTable.brand = CFG.WATERMARK
+	ALPHA.cfi.init(vmTable, vmTable.sessionKey or CFG.ALPHA_CFI_INIT)
 	local fakeG = vmTable.fakeG
 	fakeG._G = fakeG
 	fakeG._ALPHA = CFG.WATERMARK
-	SYS.setmetatable(fakeG, { __index = baseEnv, __metatable = {} })
+	SYS.setmetatable(fakeG, {
+		__index = function(_, k)
+			if CFG.TRAP_KEYS[k] then
+				vmTable.trapHits = (vmTable.trapHits or 0) + 1
+				vmTable.stateHash = BIT.bxor(vmTable.stateHash or 18028, 43981)
+				return nil
+			end
+			return baseEnv[k]
+		end,
+		__metatable = {},
+	})
 	return vmTable
 end
 
 function ALPHA.vm.installEnvEmulation(vmTable, env)
-	local baseEnv = env or ROOT_ENV
+	local baseEnv = SYS.type(env) == "table" and env or ROOT_ENV
 	local realGetfenv = baseEnv.getfenv or SYS.getfenv
 	local realSetfenv = baseEnv.setfenv or SYS.setfenv
 	local function frameAt(level)
@@ -1209,14 +1513,18 @@ end
 
 function ALPHA.vm.setConstMAC(vmTable, key, dstOperand)
 	local sessionMix = BIT.band(vmTable.sessionKey or CFG.ALPHA_SEED, 65535)
+	local cfiMix = BIT.band(vmTable.cfiState or CFG.ALPHA_CFI_INIT, 65535)
 	vmTable.constMAC = BIT.bxor(
-		((key + CFG.MAC_ADD) * CFG.MAC_MUL + (vmTable.depthWitness or 0) + (vmTable.bootKey or 0) + sessionMix + ((vmTable.stateHash or 18028) * CFG.MAC_RLM_MUL)) % 65536,
+		((key + CFG.MAC_ADD) * CFG.MAC_MUL + (vmTable.depthWitness or 0) + (vmTable.bootKey or 0) + sessionMix + cfiMix + ((vmTable.stateHash or 18028) * CFG.MAC_RLM_MUL)) % 65536,
 		CFG.MAC_XOR
 	)
 	vmTable.decryptVariant = (key + (dstOperand or 0) + (vmTable.depthWitness or 0)) % 4
 end
 
 function ALPHA.vm.collectConstSchedule(instr)
+	if SYS.type(instr) ~= "table" then
+		return nil
+	end
 	local ids, count = nil, 0
 	local function scanOperand(cell)
 		if SYS.type(cell) == "table" then
@@ -1266,7 +1574,7 @@ function ALPHA.vm.issueConstTicket(vmTable, frame, instr, constTable)
 	if schedule == nil then
 		return
 	end
-	if constTable == nil and frame ~= nil then
+	if constTable == nil and SYS.type(frame) == "table" then
 		constTable = frame[CFG.FRAME_GLOBALS]
 	end
 	if constTable == nil then
@@ -1286,7 +1594,7 @@ function ALPHA.vm.issueConstTicket(vmTable, frame, instr, constTable)
 end
 
 function ALPHA.vm.advanceStateMAC(vmTable, frame, instr, idx)
-	local registers = frame[CFG.FRAME_REGISTERS] or {}
+	local registers = (SYS.type(frame) == "table" and frame[CFG.FRAME_REGISTERS]) or {}
 	local stateHash = vmTable.stateHash or 18028
 	local function mix(x)
 		stateHash = (stateHash * 899 + x + 5061) % 65536
@@ -1344,7 +1652,7 @@ function ALPHA.vm.advanceStateMAC(vmTable, frame, instr, idx)
 			hashValue(value, salt + tag)
 		end
 	end
-	mix((idx * 28679 + (frame[CFG.FRAME_PARAM_SPLIT] or -1) + 358) % 65536)
+	mix((idx * 28679 + ((SYS.type(frame) == "table" and frame[CFG.FRAME_PARAM_SPLIT]) or -1) + 358) % 65536)
 	mix(instr[CFG.INSTR_OPCODE] or 0)
 	local ops = instr[CFG.INSTR_OPERANDS]
 	if SYS.type(ops) == "table" then
@@ -1365,6 +1673,9 @@ function ALPHA.vm.advanceStateMAC(vmTable, frame, instr, idx)
 end
 
 function ALPHA.vm.scanConstRecords(u)
+	if SYS.type(u) ~= "string" or #u == 0 then
+		return {}
+	end
 	local starts = {}
 	local p, n = 1, #u
 	while p <= n do
@@ -1393,6 +1704,9 @@ function ALPHA.vm.scanConstRecords(u)
 end
 
 function ALPHA.vm.decryptConst(ctx)
+	if SYS.type(ctx) ~= "table" then
+		return nil
+	end
 	local u, key = ctx.stream, ctx.key
 	if SYS.type(u) ~= "string" or SYS.type(ctx.recPos) ~= "number" or SYS.type(key) ~= "string" or #key == 0 then
 		return nil
@@ -1433,6 +1747,9 @@ function ALPHA.vm.decryptConst(ctx)
 		keu, qec = mm, mm + swn + jc
 	else
 		keu, qec = mm + sjn + od9, mm
+	end
+	if keu < 1 or keu + swn - 1 > #u or (sjn > 0 and (qec < 1 or qec + sjn - 1 > #u)) then
+		return nil
 	end
 	local pig = (gb6 % 4) >= 2 and rr > 0
 	local usG = 0
@@ -1519,10 +1836,28 @@ function ALPHA.vm.decryptConst(ctx)
 end
 
 function ALPHA.vm.buildConstVault(vmTable, blobStr, seedStr)
+	if SYS.type(vmTable) ~= "table" or SYS.type(blobStr) ~= "string" or #blobStr == 0 or SYS.type(seedStr) ~= "string" or #seedStr == 0 then
+		return SYS.setmetatable({}, {
+			__metatable = {},
+			__index = function()
+				return nil
+			end,
+		}), false
+	end
 	local nameMapStr, cursor = ALPHA.crypto.readChunk(blobStr, 1)
 	local constStream
-	constStream, cursor = ALPHA.crypto.readChunk(blobStr, cursor)
-	local recordStarts = ALPHA.vm.scanConstRecords(constStream or "")
+	if cursor ~= nil then
+		constStream, cursor = ALPHA.crypto.readChunk(blobStr, cursor)
+	end
+	if SYS.type(constStream) ~= "string" then
+		return SYS.setmetatable({}, {
+			__metatable = {},
+			__index = function()
+				return nil
+			end,
+		}), false
+	end
+	local recordStarts = ALPHA.vm.scanConstRecords(constStream)
 	local dirMapping = nil
 	if SYS.type(nameMapStr) == "string" and #nameMapStr > 0 then
 		dirMapping = {}
@@ -1579,7 +1914,7 @@ function ALPHA.vm.buildConstVault(vmTable, blobStr, seedStr)
 	return SYS.setmetatable({}, {
 		__metatable = {},
 		__index = function(_, key)
-			if poisonLatch then
+			if poisonLatch or vmTable.poisoned then
 				return nil
 			end
 			if key == CFG.KNOCK_KEY then
@@ -1596,8 +1931,9 @@ function ALPHA.vm.buildConstVault(vmTable, blobStr, seedStr)
 				return nil
 			end
 			local sessionMix = BIT.band(vmTable.sessionKey or CFG.ALPHA_SEED, 65535)
+			local cfiMix = BIT.band(vmTable.cfiState or CFG.ALPHA_CFI_INIT, 65535)
 			local expected = BIT.bxor(
-				((key + CFG.MAC_ADD) * CFG.MAC_MUL + (vmTable.depthWitness or 0) + (vmTable.bootKey or 0) + sessionMix + ((vmTable.stateHash or 18028) * CFG.MAC_RLM_MUL)) % 65536,
+				((key + CFG.MAC_ADD) * CFG.MAC_MUL + (vmTable.depthWitness or 0) + (vmTable.bootKey or 0) + sessionMix + cfiMix + ((vmTable.stateHash or 18028) * CFG.MAC_RLM_MUL)) % 65536,
 				CFG.MAC_XOR
 			)
 			if vmTable.constMAC ~= expected then
@@ -1652,7 +1988,135 @@ function ALPHA.vm.buildConstVault(vmTable, blobStr, seedStr)
 			end
 			return value
 		end,
+	}), true
+end
+
+function ALPHA.vm.buildLazyInstrArray(vmTable, blob, seedStr)
+	if SYS.type(blob) ~= "string" or SYS.type(seedStr) ~= "string" or #seedStr == 0 then
+		return {}
+	end
+	local segOffset, segLen, decoded, pristine = {}, {}, {}, {}
+	local segCount, cursor = 1, 1
+	while cursor <= #blob do
+		local len
+		len, cursor = ALPHA.crypto.readVarint(blob, cursor)
+		if len == nil or len < 0 or cursor + len - 1 > #blob then
+			break
+		end
+		segOffset[segCount], segLen[segCount] = cursor, len
+		cursor = cursor + len
+		segCount = segCount + 1
+	end
+	local function clonePristine(orig)
+		return {
+			[CFG.INSTR_OPCODE] = orig[CFG.INSTR_OPCODE],
+			[CFG.INSTR_DST] = orig[CFG.INSTR_DST],
+			[CFG.INSTR_OPERANDS] = orig[CFG.INSTR_OPERANDS],
+			[CFG.INSTR_PAYLOAD] = orig[CFG.INSTR_PAYLOAD],
+			[CFG.INSTR_SUBINSTRS] = orig[CFG.INSTR_SUBINSTRS],
+			[CFG.INSTR_PROTECTED] = orig[CFG.INSTR_PROTECTED],
+			[CFG.INSTR_HANDLER] = orig[CFG.INSTR_HANDLER],
+			[CFG.INSTR_POLY_CELL] = orig[CFG.INSTR_POLY_CELL],
+			[CFG.INSTR_CLONE_FLAG] = 1,
+		}
+	end
+	return SYS.setmetatable({}, {
+		__metatable = {},
+		__index = function(arr, m)
+			if decoded[m] then
+				return decoded[m]
+			end
+			local pristineOrig = pristine[m]
+			if pristineOrig then
+				local copy = clonePristine(pristineOrig)
+				decoded[m] = copy
+				return copy
+			end
+			local offset, length = segOffset[m], segLen[m]
+			if not offset or not length then
+				return nil
+			end
+			local out = {}
+			local stride = ((m + 50) % 4) * 2 + 17
+			local start = offset - 1
+			local roll0 = (m * 469 + 24471) % 256
+			local seedIdx = m - 2 + ((m * 589 + 29490) % #seedStr)
+			local base = m * 29 + 2465 + roll0
+			for j = 1, length do
+				local cipherByte = SYS.strByte(blob, start + j)
+				local seedByte = SYS.strByte(seedStr, ((seedIdx + j) % #seedStr) + 1)
+				local variantSel = ((m + 6043) * 273 + j) % 3
+				local key
+				if variantSel == 0 then
+					key = (base + j * stride + (j % 3) * roll0) % 256
+				elseif variantSel == 1 then
+					key = (base + j * (stride + 2) + (j % 5) * roll0 + (j * j + m) % 251) % 256
+				else
+					key = (base + j * (stride + 4) + BIT.bxor((j * roll0) % 256, (m + j) % 256)) % 256
+				end
+				out[j] = SYS.strChar(BIT.bxor(BIT.bxor(cipherByte, key), seedByte))
+			end
+			local instr = SYS.type(vmTable.decodeInstruction) == "function" and vmTable.decodeInstruction(vmTable, SYS.tblConcat(out), m) or nil
+			if SYS.type(instr) == "table" and instr[CFG.INSTR_CLONE_FLAG] ~= nil then
+				pristine[m] = instr
+				local copy = clonePristine(instr)
+				decoded[m] = copy
+				return copy
+			end
+			SYS.rawset(arr, m, instr)
+			segOffset[m], segLen[m] = nil, nil
+			return instr
+		end,
 	})
+end
+
+function ALPHA.vm.executeDynamicInstruction(vmTable, frame, instr)
+	local image = SYS.type(instr) == "table" and instr[CFG.INSTR_PAYLOAD] or nil
+	if SYS.type(image) ~= "string" or image == "" then
+		return
+	end
+	local bias = (frame[CFG.FRAME_IP_BIAS_HI] or CFG.IP_BIAS_HI_DEFAULT) - (frame[CFG.FRAME_IP_BIAS_LO] or CFG.IP_BIAS_LO_DEFAULT)
+	local pos = (frame[CFG.FRAME_IP] or 1) - bias - 1
+	if pos < 1 then
+		return
+	end
+	local state = ((pos + 28959) * 737 + 48880 + #image * 17) % 65536
+	local aux = pos * 41 + #image * 7
+	local out = {}
+	for j = 1, #image do
+		local cipherByte = SYS.strByte(image, j)
+		local hi = SYS.mathFloor(state / 128)
+		out[j] = SYS.strChar(BIT.bxor(cipherByte, (state + j * 53 + aux + hi) % 256))
+		state = (state + cipherByte * 31 + j * 17 + pos * 3 + hi) % 65536
+	end
+	local decoded = SYS.type(vmTable.decodeInstruction) == "function" and vmTable.decodeInstruction(vmTable, SYS.tblConcat(out), pos) or nil
+	if SYS.type(decoded) ~= "table" then
+		return
+	end
+	instr[CFG.INSTR_OPCODE] = decoded[CFG.INSTR_OPCODE]
+	instr[CFG.INSTR_DST] = decoded[CFG.INSTR_DST]
+	instr[CFG.INSTR_OPERANDS] = decoded[CFG.INSTR_OPERANDS]
+	instr[CFG.INSTR_PAYLOAD] = decoded[CFG.INSTR_PAYLOAD]
+	instr[CFG.INSTR_SUBINSTRS] = decoded[CFG.INSTR_SUBINSTRS]
+	instr[CFG.INSTR_PROTECTED] = decoded[CFG.INSTR_PROTECTED]
+	if instr[CFG.INSTR_PROTECTED] then
+		ALPHA.vm.advanceStateMAC(vmTable, frame, instr, pos)
+		ALPHA.vm.issueConstTicket(vmTable, frame, instr)
+	end
+	instr[CFG.INSTR_HANDLER] = nil
+	local gf3 = ((pos + 17811) * 1441 + 7677) % 131071
+	local eco = ((pos + 12147) * 835 + 1301) % 65535
+	local eff = BIT.bxor(instr[CFG.INSTR_OPCODE] or 0, 7677) - gf3 - eco
+	local key = ((BIT.bxor(eff, 12903) * 1605) + 77046) % 131071
+	key = ((key * 60345) + 972322) % 119189
+	local handler = vmTable.handlerTable and vmTable.handlerTable[key]
+	if handler then
+		if vmTable.polymorphicHook then
+			handler = vmTable.polymorphicHook(instr, pos, key, handler) or handler
+		end
+		instr[CFG.INSTR_HANDLER] = handler
+		return handler(vmTable, frame, instr)
+	end
 end
 
 function ALPHA.vm.buildDispatchSystem(vmTable)
@@ -1677,13 +2141,20 @@ function ALPHA.vm.buildDispatchSystem(vmTable)
 		end
 		return SYS.mathFloor(w)
 	end
+	local function registerDirect(slot, handler)
+		if dispatchLocked or SYS.type(handler) ~= "function" then
+			return false
+		end
+		hidden[slot] = handler
+		return true
+	end
 	local function registerRing(handler, blob, trampolineFirst, isAlwaysWrap)
-		if dispatchLocked or SYS.type(blob) ~= "string" or #blob < 12 or #blob % 6 ~= 0 then
-			return
+		if dispatchLocked or SYS.type(handler) ~= "function" or SYS.type(blob) ~= "string" or #blob < 12 or #blob % 6 ~= 0 then
+			return false
 		end
 		local w0 = word36(blob, 1)
 		if w0 == nil then
-			return
+			return false
 		end
 		local rolling = (w0 - 1584111740) % 4294967296
 		local trampoline = function(a, b, c)
@@ -1696,14 +2167,14 @@ function ALPHA.vm.buildDispatchSystem(vmTable)
 			rolling = (rolling + 522 + i * 3527) % 4294967296
 			local w = word36(blob, pos)
 			if w == nil then
-				return
+				return false
 			end
 			local packed = (w - rolling) % 4294967296
 			rolling = (rolling + w + 5617) % 4294967296
 			local salt = SYS.mathFloor(packed / 131071)
 			local slot = packed - salt * 131071
 			if slot < 0 or slot >= 131071 or (salt ~= 0 and (salt < 64 or salt >= 32767)) then
-				return
+				return false
 			end
 			hidden[slot] = useTrampoline and trampoline or handler
 			ringSalt[slot] = salt
@@ -1722,6 +2193,33 @@ function ALPHA.vm.buildDispatchSystem(vmTable)
 		if prev then
 			ringNext[prev] = first
 			ringPrev[first] = prev
+		end
+		return true
+	end
+
+	hidden[CFG.OP_CORE_NOP] = function(vm2, _, instr)
+		ALPHA.cfi.step(vm2, CFG.OP_CORE_NOP, instr[CFG.INSTR_DST] or 0)
+	end
+	hidden[CFG.OP_CORE_HALT] = function(_, frame, instr)
+		local regs = frame[CFG.FRAME_REGISTERS] or {}
+		local dst = instr[CFG.INSTR_DST]
+		frame[CFG.FRAME_RETURNS] = dst ~= nil and SYS.tblPack(regs[dst]) or { n = 0 }
+	end
+	hidden[CFG.OP_CORE_MOVE] = function(_, frame, instr)
+		local regs = frame[CFG.FRAME_REGISTERS]
+		local ops = instr[CFG.INSTR_OPERANDS]
+		if SYS.type(regs) == "table" and SYS.type(ops) == "table" and instr[CFG.INSTR_DST] ~= nil then
+			regs[instr[CFG.INSTR_DST]] = regs[ops[2]]
+		end
+	end
+	hidden[CFG.OP_CORE_DYNAMIC] = function(vm2, frame, instr)
+		return ALPHA.vm.executeDynamicInstruction(vm2, frame, instr)
+	end
+	hidden[CFG.OP_CORE_GUARD] = function(vm2)
+		local p1, p2, p3, p4, p5, p6, p7, p8 = ALPHA.probes.runAll(vm2.sandbox)
+		local _, verdict = ALPHA.probes.deriveSessionKey(p1, p2, p3, p4, p5, p6, p7, p8)
+		if verdict ~= 0 then
+			ALPHA.response.onTamperDetected(vm2, nil, verdict, vm2.responseMode)
 		end
 	end
 
@@ -1800,10 +2298,14 @@ function ALPHA.vm.buildDispatchSystem(vmTable)
 
 	return {
 		proxy = proxy,
+		registerDirect = registerDirect,
 		registerRing = registerRing,
 		hook = hook,
 		lock = function()
 			dispatchLocked = true
+		end,
+		isLocked = function()
+			return dispatchLocked
 		end,
 	}
 end
@@ -1824,6 +2326,9 @@ function ALPHA.vm.scrubFrame(f)
 end
 
 function ALPHA.vm.postBootScrub(vmTable)
+	if SYS.type(vmTable) ~= "table" then
+		return
+	end
 	local stack = vmTable.frameStack
 	if stack then
 		for i = 1, #stack do
@@ -1843,10 +2348,12 @@ function ALPHA.vm.interpreterLoop(vmTable, frame, instrArray)
 	local phase = SYS.type(seal) == "table" and seal[1] or 0
 	if phase ~= CFG.PHASE_VERIFIED and phase ~= CFG.PHASE_RUNNING
 		and not (phase == CFG.PHASE_DONE and SYS.type(frame) == "table" and frame[CFG.FRAME_IDENTITY] ~= nil) then
-		ALPHA.response.onTamperDetected(vmTable, nil, 2001, true)
+		ALPHA.response.onTamperDetected(vmTable, nil, 2001, vmTable.responseMode)
+		return nil
 	end
 	if vmTable.dispatchSnapshot ~= nil and not SYS.rawequal(vmTable.handlerTable, vmTable.dispatchSnapshot) then
-		ALPHA.response.onTamperDetected(vmTable, nil, 2002, true)
+		ALPHA.response.onTamperDetected(vmTable, nil, 2002, vmTable.responseMode)
+		return nil
 	end
 	local stack = vmTable.frameStack
 	local depth = #stack + 1
@@ -1869,9 +2376,15 @@ function ALPHA.vm.interpreterLoop(vmTable, frame, instrArray)
 	local reentries, ipBias = 0, normalizeBias(frame)
 
 	local function deriveHandler(instr, idx)
+		local directOp = instr[CFG.INSTR_OPCODE]
+		if vmTable.handlerTable and directOp ~= nil and vmTable.handlerTable[directOp] ~= nil then
+			local directHandler = vmTable.handlerTable[directOp]
+			instr[CFG.INSTR_HANDLER] = directHandler
+			return directHandler
+		end
 		local gf3 = ((idx + 17811) * 1441 + 7677) % 131071
 		local eco = ((idx + 12147) * 835 + 1301) % 65535
-		local effectiveOp = BIT.bxor(instr[CFG.INSTR_OPCODE] or 0, 7677) - gf3 - eco
+		local effectiveOp = BIT.bxor(directOp or 0, 7677) - gf3 - eco
 		local key = ((BIT.bxor(effectiveOp, 12903) * 1605) + 77046) % 131071
 		key = ((key * 60345) + 972322) % 119189
 		local handler = vmTable.handlerTable and vmTable.handlerTable[key]
@@ -1885,6 +2398,7 @@ function ALPHA.vm.interpreterLoop(vmTable, frame, instrArray)
 	end
 
 	local function runFrame()
+		local prevIdx = 0
 		while true do
 			local biasedIP = frame[CFG.FRAME_IP]
 			local idx = biasedIP - ipBias
@@ -1893,8 +2407,11 @@ function ALPHA.vm.interpreterLoop(vmTable, frame, instrArray)
 				return
 			end
 			if instr[32] and not ALPHA.integrity.verifyInstruction(instr) then
-				ALPHA.response.onTamperDetected(vmTable, nil, 2003, true)
+				ALPHA.response.onTamperDetected(vmTable, nil, 2003, vmTable.responseMode)
+				return
 			end
+			ALPHA.cfi.step(vmTable, prevIdx, idx)
+			prevIdx = idx
 			frame[CFG.FRAME_IP] = biasedIP + 1
 			if instr[CFG.INSTR_PROTECTED] then
 				ALPHA.vm.advanceStateMAC(vmTable, frame, instr, idx)
@@ -1946,15 +2463,19 @@ end
 
 function ALPHA.mount(config)
 	local opts = SYS.type(config) == "table" and config or {}
-	local targetEnv = opts.env or ROOT_ENV
-	local vmTable = opts.vmTable or {}
-	local aggressive = opts.aggressive ~= false
+	local targetEnv = SYS.type(opts.env) == "table" and opts.env or ROOT_ENV
+	local vmTable = SYS.type(opts.vmTable) == "table" and opts.vmTable or {}
+	local mode = opts.mode
+	if mode == nil then
+		mode = opts.aggressive == false and "error" or "hybrid"
+	end
+	vmTable.responseMode = mode
 	local refHolder = ALPHA.response.makeReferenceHolder()
 
-	local p1, p2, p3, p4, p5, p6, p7 = ALPHA.probes.runAll(targetEnv)
-	local sessionKey, verdict = ALPHA.probes.deriveSessionKey(p1, p2, p3, p4, p5, p6, p7)
+	local p1, p2, p3, p4, p5, p6, p7, p8 = ALPHA.probes.runAll(targetEnv)
+	local sessionKey, verdict = ALPHA.probes.deriveSessionKey(p1, p2, p3, p4, p5, p6, p7, p8)
 	if verdict ~= 0 then
-		ALPHA.response.onTamperDetected(vmTable, refHolder, verdict, aggressive)
+		ALPHA.response.onTamperDetected(vmTable, refHolder, verdict, mode)
 		return nil
 	end
 
@@ -1964,6 +2485,9 @@ function ALPHA.mount(config)
 	ALPHA.vm.installEnvEmulation(vmTable, targetEnv)
 
 	local dispatch = ALPHA.vm.buildDispatchSystem(vmTable)
+	if opts.autoLock == true then
+		dispatch.lock()
+	end
 	vmTable.dispatchSnapshot = dispatch.proxy
 
 	if SYS.type(opts.programBlob) == "string" and #opts.programBlob > 0 then
@@ -1972,10 +2496,14 @@ function ALPHA.mount(config)
 	end
 
 	local function verifyRuntime()
-		local c1, c2, c3, c4, c5, c6, c7 = ALPHA.probes.runAll(targetEnv)
-		local _, v = ALPHA.probes.deriveSessionKey(c1, c2, c3, c4, c5, c6, c7)
+		if vmTable.poisoned or (vmTable.trapHits or 0) > 0 then
+			ALPHA.response.onTamperDetected(vmTable, refHolder, 3001, mode)
+			return false
+		end
+		local c1, c2, c3, c4, c5, c6, c7, c8 = ALPHA.probes.runAll(targetEnv)
+		local _, v = ALPHA.probes.deriveSessionKey(c1, c2, c3, c4, c5, c6, c7, c8)
 		if v ~= 0 then
-			ALPHA.response.onTamperDetected(vmTable, refHolder, v, aggressive)
+			ALPHA.response.onTamperDetected(vmTable, refHolder, v, mode)
 			return false
 		end
 		return true
@@ -1983,6 +2511,7 @@ function ALPHA.mount(config)
 
 	return {
 		name = CFG.WATERMARK,
+		version = CFG.BRAND_TAG,
 		sessionKey = sessionKey,
 		vm = vmTable,
 		sandbox = vmTable.sandbox,
@@ -1997,6 +2526,9 @@ function ALPHA.mount(config)
 		buildConstVault = function(blobStr, seedStr)
 			return ALPHA.vm.buildConstVault(vmTable, blobStr, seedStr)
 		end,
+		buildLazyInstrArray = function(blob, seedStr)
+			return ALPHA.vm.buildLazyInstrArray(vmTable, blob, seedStr)
+		end,
 		makeStreamReader = function(payloadStr)
 			return ALPHA.crypto.makeStreamReader(payloadStr, sessionKey)
 		end,
@@ -2007,6 +2539,49 @@ function ALPHA.mount(config)
 			ALPHA.vm.postBootScrub(vmTable)
 		end,
 	}
+end
+
+function ALPHA.selfTest()
+	local guard = ALPHA.mount({ mode = "error" })
+	if guard == nil or not guard.verifyRuntime() then
+		return false, "mount_or_runtime_failed"
+	end
+	local ins1 = { [32] = ALPHA.integrity.encodeInstruction(12, 3, 4, 1, 9, 4321) }
+	local ins2 = { [32] = ALPHA.integrity.encodeInstruction(18, 5, 6, 2, 7, 8765) }
+	local ins3 = { [32] = ALPHA.integrity.encodeInstruction(24, 1, 2, 0, 3, 1357) }
+	local mod = { { ins1, ins2, ins3 }, [3] = 7, [5] = 11 }
+	ALPHA.integrity.registerPending("alpha_test", 9991)
+	if ALPHA.integrity.commitModule(mod, 1234, 5678, "alpha_test", 9991) == nil then
+		return false, "module_commit_failed"
+	end
+	if not ALPHA.integrity.verifyModule(mod) then
+		return false, "module_verify_failed"
+	end
+	ins2[32][1] = ins2[32][1] + 1
+	if ALPHA.integrity.verifyModule(mod) then
+		return false, "middle_tamper_missed"
+	end
+	local vault, okVault = guard.buildConstVault(nil, nil)
+	if okVault or vault[1] ~= nil then
+		return false, "vault_guard_failed"
+	end
+	guard.vm.seal = { CFG.PHASE_RUNNING, guard.sandbox, 1, 1, 1 }
+	local frame = {
+		[CFG.FRAME_REGISTERS] = { [1] = CFG.WATERMARK },
+		[CFG.FRAME_IP] = 1,
+		[CFG.FRAME_ENV] = guard.vm.fakeG,
+	}
+	local ret = guard.runFrame(frame, {
+		{ [CFG.INSTR_OPCODE] = CFG.OP_CORE_NOP, [CFG.INSTR_DST] = 1 },
+		{ [CFG.INSTR_OPCODE] = CFG.OP_CORE_MOVE, [CFG.INSTR_DST] = 2, [CFG.INSTR_OPERANDS] = { nil, 1 } },
+		{ [CFG.INSTR_OPCODE] = CFG.OP_CORE_GUARD },
+		{ [CFG.INSTR_OPCODE] = CFG.OP_CORE_HALT, [CFG.INSTR_DST] = 2 },
+	})
+	if ret ~= CFG.WATERMARK then
+		return false, "vm_exec_failed"
+	end
+	guard.scrub()
+	return true, CFG.BRAND_TAG .. "_OK"
 end
 
 return ALPHA
