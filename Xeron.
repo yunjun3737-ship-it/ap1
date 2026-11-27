@@ -41914,6 +41914,8 @@ Antis:AddToggle("AntiBlob", {
         end
     end,
 })
+
+--[[
 do
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
@@ -41966,7 +41968,7 @@ do
         end,
     })
 end
-            
+   ]]         
 Antis:AddDivider("안티 오너&네트워크 계열")
 		Antis:AddToggle("AntiInputLag", {
 			Text = "안티 네트워크 오너쉽",
