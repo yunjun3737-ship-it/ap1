@@ -41156,6 +41156,8 @@ do
         end
     })
 end
+
+do
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -41533,7 +41535,7 @@ Antis:AddToggle("AntiKIll", {
     end,
 })
                                                     if struggle then struggle:FireServer(plr) end
-                                     
+  end                                   
 
 		Antis:AddToggle("GucciAntiGrab", {
 			Text = "[구찌] 안티 그랩",
@@ -41856,7 +41858,7 @@ Antis:AddToggle("AntiBlob", {
         end
     end,
 })
-
+do
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -41904,6 +41906,8 @@ Antis:AddToggle("AntiBLobAura", {
         end)
     end,
 })  
+
+end
 Antis:AddDivider("안티 오너&네트워크 계열")
 		Antis:AddToggle("AntiInputLag", {
 			Text = "안티 네트워크 오너쉽",
@@ -42493,7 +42497,7 @@ end
 		})
       Antis:AddDivider("안티 킥 계열")
 		Antis:AddToggle("AntiKick", {
-			Text = "안티킥",
+			Text = "안티킥 [표창]",
 			Default = false,
 			Tooltip = "기본적인 표창 안티킥",
 			Callback = function(arg)
@@ -42501,6 +42505,466 @@ end
 				tbl12.WakeRuntimeGate("PCLDTracking")
 			end,
 		})
+do
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+local GrabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
+local SetNetworkOwner = GrabEvents and GrabEvents:FindFirstChild("SetNetworkOwner")
+local DestroyToy = ReplicatedStorage:FindFirstChild("MenuToys") and ReplicatedStorage.MenuToys:FindFirstChild("DestroyToy")
+local StickyPartEvent = ReplicatedStorage:FindFirstChild("PlayerEvents") and ReplicatedStorage.PlayerEvents:FindFirstChild("StickyPartEvent")
+local SpawnToyRemoteFunction = ReplicatedStorage:FindFirstChild("MenuToys") and ReplicatedStorage.MenuToys:FindFirstChild("SpawnToyRemoteFunction")
+
+local state = {
+    enabled = false,
+    task = nil
+}
+
+local function spawnToy(name, cframe, vector3)
+    if not SpawnToyRemoteFunction then return nil end
+    local inv = Workspace:FindFirstChild(localPlayer.Name .. "SpawnedInToys")
+    if not inv then return nil end
+    
+    local before = {}
+    for _, c in pairs(inv:GetChildren()) do before[c] = true end
+    
+    SpawnToyRemoteFunction:InvokeServer(name, cframe, vector3 or Vector3.zero)
+    
+    local spawned = nil
+    local start = tick()
+    repeat
+        for _, c in pairs(inv:GetChildren()) do
+            if not before[c] and c.Name == name then
+                spawned = c
+                break
+            end
+        end
+        task.wait(0.05)
+    until spawned or (tick() - start) > 2 or not state.enabled
+    
+    return spawned
+end
+
+Antis:AddToggle("AntikickPenc", {
+    Text = "안티 킥(연필 ✏)",
+    Default = false,
+    Tooltip = "킥을 막아주면서 덤으로 꼬추를 만들어줘 이쁜케릭터를 임신 시킬수있습니다.",
+    Callback = function(Value)
+        state.enabled = Value
+        if state.enabled then
+            if state.task then task.cancel(state.task) end
+            state.task = task.spawn(function()
+                while state.enabled do
+                    local spawnedFolder = Workspace:FindFirstChild(localPlayer.Name .. "SpawnedInToys")
+                    if spawnedFolder and not spawnedFolder:FindFirstChild("PencilDDD") then
+                        local char = localPlayer.Character
+                        if char and char:FindFirstChild("HumanoidRootPart") then
+                            local pencil = spawnToy("ToolPencil", CFrame.new(char.HumanoidRootPart.CFrame.Position) + Vector3.new(0, 0, 15), Vector3.zero)
+                            if pencil then
+                                pencil.Name = "PencilDDD"
+                            end
+                        end
+                    end
+                    
+                    local char = localPlayer.Character
+                    if char and spawnedFolder then
+                        local torso = char:FindFirstChild("Torso")
+                        local hrp = char:FindFirstChild("HumanoidRootPart")
+                        local pencil = spawnedFolder:FindFirstChild("PencilDDD")
+                        
+                        if torso and hrp and pencil and pencil:FindFirstChild("StickyPart") then
+                            local stickyPart = pencil.StickyPart
+                            if stickyPart:FindFirstChild("StickyWeld") and stickyPart.StickyWeld.Part1 ~= torso then
+                                local a = pencil:FindFirstChild("SoundPart") and pencil.SoundPart.CFrame.Position or pencil.StickyPart.CFrame.Position
+                                local b = hrp.CFrame.Position
+                                local distance = Vector3.new((a.X - b.X) ^ 2, (a.Y - b.Y) ^ 2, (a.Z - b.Z) ^ 2)
+                                
+                                if math.sqrt(distance.X + distance.Y + distance.Z) > 20 then
+                                    if DestroyToy then DestroyToy:FireServer(pencil) end
+                                else
+                                    if StickyPartEvent then
+                                        StickyPartEvent:FireServer(stickyPart, torso, CFrame.new(0, -1, 0) * CFrame.Angles(0, math.pi, 0))
+                                    end
+                                    for _, prt in pairs(pencil:GetChildren()) do
+                                        if prt.ClassName == "Part" then
+                                            prt.CanQuery = false
+                                        end
+                                    end
+                                    task.wait(0.2)
+                                    if stickyPart:FindFirstChild("StickyWeld") and stickyPart.StickyWeld.Part1 ~= torso then
+                                        local sPart = pencil:FindFirstChild("SoundPart")
+                                        if sPart and SetNetworkOwner then
+                                            SetNetworkOwner:FireServer(sPart, sPart.CFrame)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait()
+                end
+            end)
+        else
+            if state.task then
+                task.cancel(state.task)
+                state.task = nil
+            end
+            local spawnedFolder = Workspace:FindFirstChild(localPlayer.Name .. "SpawnedInToys")
+            if spawnedFolder then
+                local dddPencil = spawnedFolder:FindFirstChild("PencilDDD")
+                if dddPencil and DestroyToy then
+                    DestroyToy:FireServer(dddPencil)
+                end
+            end
+        end
+    end,
+})
+
+_G.KatanaState = _G.KatanaState or {
+    enabled = false,
+    task = nil,
+    heldKatana = {},
+    armMode = "Right",
+    waitTime = 0.35
+}
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+local MenuToys = ReplicatedStorage:FindFirstChild("MenuToys")
+local SpawnToyRemoteFunction = MenuToys and MenuToys:FindFirstChild("SpawnToyRemoteFunction")
+local DestroyToy = MenuToys and MenuToys:FindFirstChild("DestroyToy")
+local PlayerEvents = ReplicatedStorage:FindFirstChild("PlayerEvents")
+local StickyPartEvent = PlayerEvents and PlayerEvents:FindFirstChild("StickyPartEvent")
+
+local function getHRP()
+    local char = localPlayer.Character
+    return char and char:FindFirstChild("HumanoidRootPart")
+end
+
+local function getFolder()
+    return Workspace:FindFirstChild(localPlayer.Name .. "SpawnedInToys")
+end
+
+Antis:AddToggle("AutoNinjaKatana", {
+    Text = "카타나 홀드 안티 킥",
+    Default = false,
+    Tooltip = "카타나를 왼손,오른손,양손등 들어서 킥을 방지 합니다.",
+    Callback = function(v)
+        _G.KatanaState.enabled = v
+        if v then
+            if _G.KatanaState.task then task.cancel(_G.KatanaState.task) end
+            _G.KatanaState.task = task.spawn(function()
+                while _G.KatanaState.enabled do
+                    local need = (_G.KatanaState.armMode == "Both") and 2 or 1
+                    local valid = 0
+                    for _, k in ipairs(_G.KatanaState.heldKatana) do
+                        if k and k.Parent then valid = valid + 1 end
+                    end
+                    
+                    if valid < need then
+                        local folder = getFolder()
+                        if folder and DestroyToy then
+                            for _, child in pairs(folder:GetChildren()) do
+                                if child.Name == "NinjaKatana" then
+                                    DestroyToy:FireServer(child)
+                                end
+                            end
+                        end
+                        _G.KatanaState.heldKatana = {}
+                        task.wait(0.15)
+                        
+                        local targets = {}
+                        if _G.KatanaState.armMode == "Right" then 
+                            targets = { "Right" }
+                        elseif _G.KatanaState.armMode == "Left" then 
+                            targets = { "Left" }
+                        elseif _G.KatanaState.armMode == "Both" then 
+                            targets = { "Right", "Left" } 
+                        end
+                        
+                        for _, side in ipairs(targets) do
+                            if not _G.KatanaState.enabled then break end
+                            local char = localPlayer.Character
+                            local arm = nil
+                            if char then
+                                if side == "Right" then
+                                    arm = char:FindFirstChild("Right Arm") or char:FindFirstChild("RightUpperArm") or char:FindFirstChild("RightHand")
+                                elseif side == "Left" then
+                                    arm = char:FindFirstChild("Left Arm") or char:FindFirstChild("LeftUpperArm") or char:FindFirstChild("LeftHand")
+                                end
+                            end
+                            
+                            if arm then
+                                local hrp = getHRP()
+                                local currentFolder = getFolder()
+                                local spawned = nil
+                                
+                                if hrp and currentFolder and SpawnToyRemoteFunction then
+                                    local spawnPos = hrp.CFrame * CFrame.new(0, 14, 20)
+                                    local before = {}
+                                    for _, c in pairs(currentFolder:GetChildren()) do
+                                        if c.Name == "NinjaKatana" then before[c] = true end
+                                    end
+                                    
+                                    local conn
+                                    conn = currentFolder.ChildAdded:Connect(function(child)
+                                        if child.Name == "NinjaKatana" and not before[child] then
+                                            spawned = child
+                                            conn:Disconnect()
+                                        end
+                                    end)
+                                    
+                                    task.spawn(function()
+                                        SpawnToyRemoteFunction:InvokeServer("NinjaKatana", spawnPos, Vector3.zero)
+                                    end)
+                                    
+                                    local start = tick()
+                                    repeat task.wait(0.1) until spawned or (tick() - start) > 3 or not _G.KatanaState.enabled
+                                    if conn then conn:Disconnect() end
+                                end
+                                
+                                if spawned and StickyPartEvent then
+                                    task.wait(0.15)
+                                    local stickyPart = spawned:FindFirstChild("StickyPart")
+                                    if stickyPart then
+                                        local attachCFrame = CFrame.new(0, -1, -3.5) * CFrame.Angles(math.rad(-90), math.rad(180), math.rad(-90))
+                                        StickyPartEvent:FireServer(stickyPart, arm, attachCFrame)
+                                        StickyPartEvent:FireServer(stickyPart, arm, attachCFrame)
+                                        table.insert(_G.KatanaState.heldKatana, spawned)
+                                    end
+                                    task.wait(_G.KatanaState.waitTime)
+                                end
+                            end
+                        end
+                    end
+                    task.wait(1)
+                end
+            end)
+        else
+            if _G.KatanaState.task then 
+                task.cancel(_G.KatanaState.task)
+                _G.KatanaState.task = nil 
+            end
+            local folder = getFolder()
+            if folder and DestroyToy then
+                for _, child in pairs(folder:GetChildren()) do
+                    if child.Name == "NinjaKatana" then
+                        DestroyToy:FireServer(child)
+                    end
+                end
+            end
+            _G.KatanaState.heldKatana = {}
+        end
+    end
+})
+_G.AntiKickItemState = _G.AntiKickItemState or {
+    enabled = false,
+    task = nil,
+    detector = nil,
+    detectorConn = nil,
+    selectedToy = "Spooky Candle"
+}
+
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+local GrabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
+local SetNetworkOwner = GrabEvents and GrabEvents:FindFirstChild("SetNetworkOwner")
+local MenuToys = ReplicatedStorage:FindFirstChild("MenuToys")
+local DestroyToy = MenuToys and MenuToys:FindFirstChild("DestroyToy")
+local SpawnToyRemoteFunction = MenuToys and MenuToys:FindFirstChild("SpawnToyRemoteFunction")
+
+local function FWD(parent, partName, timeout)
+    if not parent then return nil end
+    return parent:FindFirstChild(partName) or parent:WaitForChild(partName, timeout or 3)
+end
+
+Antis:AddToggle("Antikickitem", {
+    Text = "안티 킥 [아이텡]",
+    Default = false,
+    Tooltip = "붙는 파트가아닌 아이템을 이용한 안티킥이지만 생각보다 좋진않습니다.",
+    Callback = function(Val)
+        _G.AntiKickItemState.enabled = Val 
+        if Val then
+            if _G.AntiKickItemState.task then task.cancel(_G.AntiKickItemState.task) end
+            _G.AntiKickItemState.task = task.spawn(function()
+                while _G.AntiKickItemState.enabled do
+                    task.wait()
+                    local char = localPlayer.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                    local hum = char and char:FindFirstChild("Humanoid")
+                    local inPlot = localPlayer:FindFirstChild("InPlot")
+                    local inv = Workspace:FindFirstChild(localPlayer.Name .. "SpawnedInToys")
+                    
+                    if not hrp or not hum or hum.Health <= 0 or not inv then 
+                        continue 
+                    end  
+                    if inPlot and inPlot.Value then 
+                        continue 
+                    end 
+                    
+                    if not _G.AntiKickItemState.detector and not _G.AntiKickItemState.detectorConn then
+                        _G.AntiKickItemState.detectorConn = RunService.Heartbeat:Connect(function()
+                            if _G.AntiKickItemState.detector or not hrp or not hrp.Parent then 
+                                if _G.AntiKickItemState.detectorConn then _G.AntiKickItemState.detectorConn:Disconnect() _G.AntiKickItemState.detectorConn = nil end
+                                return
+                            end
+                            for _, v in pairs(Workspace:GetChildren()) do 
+                                if v.Name == "PlayerCharacterLocationDetector" and v:IsA("BasePart") then
+                                    if (v.Position - hrp.Position).Magnitude <= 2 then 
+                                        _G.AntiKickItemState.detector = v
+                                        break
+                                    end
+                                end
+                            end
+                        end)
+                    end
+                    
+                    local Item = inv:FindFirstChild("AntiKickItem") 
+                    local SoundPart = Item and Item:FindFirstChild("Hitbox")
+                    
+                    if not Item or not SoundPart then
+                        for _, v in pairs(inv:GetChildren()) do 
+                            if v.Name == "AntiKickItem" and DestroyToy then 
+                                DestroyToy:FireServer(v)
+                            end
+                        end
+                        
+                        local toyInv = Workspace:FindFirstChild(localPlayer.Name .. "SpawnedInToys")
+                        local inPlotCheck = localPlayer:FindFirstChild("InPlot")
+                        local inOwnedPlot = localPlayer:FindFirstChild("InOwnedPlot")
+                        local canSpawnToy = localPlayer:FindFirstChild("CanSpawnToy")
+                        
+                        if inPlotCheck and inPlotCheck.Value and inOwnedPlot and not inOwnedPlot.Value then 
+                            inPlotCheck:GetPropertyChangedSignal("Value"):Wait()
+                        end 
+                        if canSpawnToy and not canSpawnToy.Value then 
+                            canSpawnToy:GetPropertyChangedSignal("Value"):Wait()
+                        end
+                        
+                        local currentHrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if not currentHrp then 
+                            Item = nil 
+                        else
+                            local SpawnCF = (_G.AntiKickItemState.detector or currentHrp).CFrame * CFrame.new(0, 14, 20)
+                            local homeContainer = nil
+                            local plotItems = Workspace:FindFirstChild("PlotItems")
+                            local plots = Workspace:FindFirstChild("Plots")
+                            
+                            if plots and plotItems then
+                                for i = 1, 5 do 
+                                    local Plot = plots:FindFirstChild("Plot" .. i)
+                                    if Plot then
+                                        local sign = Plot:FindFirstChild("PlotSign")
+                                        local owners = sign and sign:FindFirstChild("ThisPlotsOwners")
+                                        if owners then
+                                            for _, v in pairs(owners:GetChildren()) do 
+                                                if v.Value == localPlayer.Name then 
+                                                    homeContainer = plotItems:FindFirstChild("Plot" .. i)
+                                                    break
+                                                end
+                                            end
+                                        end
+                                    end
+                                    if homeContainer then break end
+                                end
+                            end
+                            
+                            local Container = (inOwnedPlot and inOwnedPlot.Value) and homeContainer or toyInv
+                            if not Container then 
+                                Item = nil 
+                            else
+                                local spawnedObject = nil
+                                local connection
+                                connection = Container.ChildAdded:Connect(function(child)
+                                    if child.Name == _G.AntiKickItemState.selectedToy then
+                                        spawnedObject = child
+                                    end
+                                end)
+                                
+                                if SpawnToyRemoteFunction then
+                                    task.spawn(function()
+                                        SpawnToyRemoteFunction:InvokeServer(_G.AntiKickItemState.selectedToy, SpawnCF, Vector3.zero)
+                                    end)
+                                end
+                                
+                                local start = tick()
+                                repeat task.wait(0.05) until spawnedObject or (tick() - start) > 2.5 or not _G.AntiKickItemState.enabled
+                                if connection then connection:Disconnect() end
+                                Item = spawnedObject
+                            end
+                        end
+                        
+                        if not Item then continue end 
+                        
+                        SoundPart = Item and FWD(Item, "Hitbox", 0.5)
+                        if SoundPart and SetNetworkOwner then 
+                            SetNetworkOwner:FireServer(SoundPart, SoundPart.CFrame) 
+                        end
+                        
+                        for _, v in pairs(Item:GetChildren()) do 
+                            if v:IsA("BasePart") then 
+                                v.CanCollide = false 
+                                v.Transparency = 0.8
+                                v.Color = Color3.fromRGB(0, 255, 255)
+                            end
+                        end
+                        Item.Name = "AntiKickItem"
+                    end
+                    
+                    local isNotOwner = false
+                    if SoundPart then
+                        local po = SoundPart:FindFirstChild("PartOwner")
+                        if not (po and po.Value == localPlayer.Name) then
+                            isNotOwner = true
+                        end
+                    end
+                    
+                    if SoundPart and isNotOwner and SetNetworkOwner then 
+                        SetNetworkOwner:FireServer(SoundPart, SoundPart.CFrame)
+                    end
+                    
+                    local targetPart = _G.AntiKickItemState.detector or hrp:FindFirstChild("FirePlayerPart") or hrp
+                    if SoundPart and targetPart then
+                        SoundPart.CFrame = targetPart.CFrame
+                        SoundPart.AssemblyLinearVelocity = Vector3.zero
+                        SoundPart.AssemblyAngularVelocity = Vector3.zero
+                    end
+                end
+            end)
+        else
+            if _G.AntiKickItemState.detectorConn then 
+                _G.AntiKickItemState.detectorConn:Disconnect() 
+                _G.AntiKickItemState.detectorConn = nil 
+            end
+            _G.AntiKickItemState.detector = nil
+            if _G.AntiKickItemState.task then
+                task.cancel(_G.AntiKickItemState.task)
+                _G.AntiKickItemState.task = nil
+            end
+            task.spawn(function()
+                local inv = Workspace:FindFirstChild(localPlayer.Name .. "SpawnedInToys")
+                if inv and DestroyToy then
+                    for _, v in pairs(inv:GetChildren()) do 
+                        if v.Name == "AntiKickItem" then 
+                            DestroyToy:FireServer(v)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
+end
 
 		Antis:AddToggle("AntiKick2", {
 			Text = "[PCLD 삭제] 안티 킥",
@@ -42518,6 +42982,8 @@ end
 				tbl8.AutoReset = autoReset
 			end,
 		})
+
+
 Antis:AddDivider("헬퍼 안티  계열")
 		Antis:AddToggle("AntiSticky", {
 			Text = "안티 스티키",
@@ -42746,100 +43212,7 @@ local function logBlock(remoteName, totalBytes, biggest)
     end
 end
 
-Antis:AddToggle("pakraganti", {
-    Text = "안티 패킷렉",
-    Default = false,
-    Tooltip = "패킷렉을 줄여주며 카운터 합니다.",
-    Callback = function(Value)
-        state.enabled = Value
-        if Value then
-            for _, conn in ipairs(state.connections) do
-                conn:Disconnect()
-            end
-            state.connections = {}
 
-            local GrabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
-            if not GrabEvents then return end
-
-            for _, remote in ipairs(GrabEvents:GetChildren()) do
-                if remote:IsA("RemoteEvent") then
-                    local conn = remote.OnClientEvent:Connect(function(...)
-                        if not state.enabled then return end
-                        local args = {...}
-                        local suspicious, totalBytes, biggest = analyze(args)
-                        if suspicious then
-                            logBlock(remote.Name, totalBytes, biggest)
-                            return
-                        else
-                            state.allowed = state.allowed + 1
-                        end
-                    end)
-                    table.insert(state.connections, conn)
-                elseif remote:IsA("RemoteFunction") then
-                    remote.OnClientInvoke = function(...)
-                        if not state.enabled then return nil end
-                        local args = {...}
-                        local suspicious, totalBytes, biggest = analyze(args)
-                        if suspicious then
-                            logBlock(remote.Name, totalBytes, biggest)
-                        else
-                            state.allowed = state.allowed + 1
-                        end
-                        return nil
-                    end
-                    table.insert(state.connections, {
-                        Disconnect = function()
-                            remote.OnClientInvoke = nil
-                        end,
-                    })
-                end
-            end
-
-            local ExtendGrabLine = GrabEvents:FindFirstChild("ExtendGrabLine")
-            if ExtendGrabLine then
-                if getrawmetatable then
-                    local mt = getrawmetatable(ExtendGrabLine)
-                    if mt then
-                        local oldNamecall = mt.__namecall
-                        setreadonly(mt, false)
-                        mt.__namecall = function(self, ...)
-                            if self == ExtendGrabLine and getnamecallmethod() == "FireServer" then
-                                local args = {...}
-                                local suspicious, totalBytes = analyze(args)
-                                if suspicious then
-                                    if state.logDetections then
-                                        warn("[AntiPacketLag] Blocked OUTGOING FireServer on ExtendGrabLine | Size: " .. string.format("%.2f KB", totalBytes / 1024))
-                                    end
-                                    return
-                                end
-                            end
-                            return oldNamecall(self, ...)
-                        end
-                        setreadonly(mt, true)
-                        table.insert(state.connections, {
-                            Disconnect = function()
-                                if getrawmetatable then
-                                    local m = getrawmetatable(ExtendGrabLine)
-                                    if m then
-                                        setreadonly(m, false)
-                                        m.__namecall = oldNamecall
-                                        setreadonly(m, true)
-                                    end
-                                end
-                            end,
-                        })
-                    end
-                end
-            end
-        else
-            for _, conn in ipairs(state.connections) do
-                conn:Disconnect()
-            end
-            state.connections = {}
-        end
-    end,
-})        
-          
                                                  
    Antis:AddDivider("안티 바나나 계열")
 		Antis:AddToggle("AntiBanana", {
@@ -43368,7 +43741,58 @@ Antis:AddDivider("기타")
 			end,
 		})
 	end
+do
+local OS = tbl15.Invincibility:AddRightGroupbox("안티킥 옵션", "bolt")
 
+_G.KatanaState = _G.KatanaState or {
+    enabled = false,
+    task = nil,
+    heldKatana = {},
+    armMode = "Right",
+    waitTime = 0.35
+}
+OS:AddDivider("안티킥 [카타나]")
+OS:AddDropdown("KatanaArmMode", {
+    Text = "카타나 안티킥 설정 파트",
+    Values = {"Right", "Left", "Both"},
+    Default = "Right",
+    Callback = function(value)
+        _G.KatanaState.armMode = value
+    end
+})
+
+_G.AntiKickItemState = _G.AntiKickItemState or {
+    enabled = false,
+    task = nil,
+    detector = nil,
+    detectorConn = nil,
+    selectedToy = "Spooky Candle"
+}
+OS:AddDivider("안티킥 [아이템]")
+OS:AddDropdown("AntikickitemD", {
+    Text = "안티킥 물건 설정 (아이템용)",
+    Values = (function()
+        local values = {}
+        if toyList then
+            for shortName, _ in pairs(toyList) do
+                table.insert(values, shortName)
+            end
+            table.sort(values)
+        else
+            values = {"Spooky Candle"}
+        end
+        return values
+    end)(),
+    Default = "Spooky Candle", 
+    Callback = function(Value)
+        if toyList and toyList[Value] then
+            _G.AntiKickItemState.selectedToy = toyList[Value]
+        else
+            _G.AntiKickItemState.selectedToy = Value
+        end
+    end
+})
+end
 
 	do
 		local Miscellaneous = tbl15.Invincibility:AddRightGroupbox("Miscellaneous", "bolt")
