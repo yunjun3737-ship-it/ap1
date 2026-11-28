@@ -16564,7 +16564,25 @@ WatermarkRunService.RenderStepped:Connect(function()
         Watermark:SetText(("알파 | v1.0 | Ping: %s | FPS: %d"):format(tostring(ping), WatermarkFPS))
     end
 end)
+local 1Tab = Window:AddTab("크레딧", "home")
 
+
+local 1 = WTab:AddLeftGroupbox("ALPHA제작")
+W:AddWD("WD_ID", {
+    Image = "rbxassetid://90416772323272",
+    Size = 64,
+    Color = Color3.fromRGB(255, 255, 255),
+    Transparency = 0,
+    Visible = true
+})
+W:AddParagraph("ALPHA올림", "안녕하세요. 제작자 알파입니다. 이스크립트는 개대충만들어서 그렇게 좋진않으며 제작자가 밴을때려서 빡쳐서  뿌리는 스크입니다. 잘사용해주세요")
+local 1 = STab:AddLeftGroupbox("ALPHA제작")
+
+S:AddPA("PA_ID", {
+    ProfileLink = "https://www.roblox.com/ko/users/11000044399/profile?friendshipSourceType=PlayerSearch",
+    Title = "ALPHA",
+    Description = "알파의 프로필입니다. 제작자 이기도하죠."
+})
 local Players          = game:GetService("Players")
 local RS               = game:GetService("ReplicatedStorage")
 local RunService       = game:GetService("RunService")
