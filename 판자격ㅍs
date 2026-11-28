@@ -16564,10 +16564,10 @@ WatermarkRunService.RenderStepped:Connect(function()
         Watermark:SetText(("알파 | v1.0 | Ping: %s | FPS: %d"):format(tostring(ping), WatermarkFPS))
     end
 end)
-local 1Tab = Window:AddTab("크레딧", "home")
+local YTab = Window:AddTab("크레딧", "home")
 
 
-local 1 = WTab:AddLeftGroupbox("ALPHA제작")
+local Y = WTab:AddLeftGroupbox("ALPHA제작")
 W:AddWD("WD_ID", {
     Image = "rbxassetid://90416772323272",
     Size = 64,
