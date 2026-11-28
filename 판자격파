@@ -16567,7 +16567,7 @@ end)
 local YTab = Window:AddTab("크레딧", "home")
 
 
-local Y = WTab:AddLeftGroupbox("ALPHA제작")
+local W = YTab:AddLeftGroupbox("ALPHA제작")
 W:AddWD("WD_ID", {
     Image = "rbxassetid://90416772323272",
     Size = 64,
@@ -16576,7 +16576,7 @@ W:AddWD("WD_ID", {
     Visible = true
 })
 W:AddParagraph("ALPHA올림", "안녕하세요. 제작자 알파입니다. 이스크립트는 개대충만들어서 그렇게 좋진않으며 제작자가 밴을때려서 빡쳐서  뿌리는 스크입니다. 잘사용해주세요")
-local Y = STab:AddLeftGroupbox("ALPHA제작")
+local S = YTab:AddLeftGroupbox("ALPHA제작")
 
 S:AddPA("PA_ID", {
     ProfileLink = "https://www.roblox.com/ko/users/11000044399/profile?friendshipSourceType=PlayerSearch",
