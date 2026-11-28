@@ -1,0 +1,518 @@
+local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
+local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+
+local Window = Library:CreateWindow({
+    Title = "허브",
+    Footer = "Obsidian Mobile",
+    ToggleKeybind = Enum.KeyCode.RightControl,
+    Center = true,
+    AutoShow = true,
+    MobileButtonsSide = "Right",
+    Resizable = false,
+})
+
+local Players          = game:GetService("Players")
+local RS               = game:GetService("ReplicatedStorage")
+local RunService       = game:GetService("RunService")
+local rs2              = RunService
+local Lighting         = game:GetService("Lighting")
+local UserInputService = game:GetService("UserInputService")
+local VirtualUser      = game:GetService("VirtualUser")
+local plr              = Players.LocalPlayer
+
+local FIRE_DELAY = 0.1
+
+local OBJ_MAP = {
+    ["나무"]     = { name = "WoodPlank", pos = Vector3.new(-0.306, 3.000,  14.466) },
+    ["유리"]     = { name = "Glass",     pos = Vector3.new(-0.211, 3.000,  40.010) },
+    ["얼음"]     = { name = "Ice",       pos = Vector3.new( 0.363, 3.000,  64.471) },
+    ["벽돌"]     = { name = "Brick",     pos = Vector3.new( 0.121, 3.000,  87.811) },
+    ["돌"]       = { name = "Rock",      pos = Vector3.new( 0.496, 3.000, 111.468) },
+    ["대리석"]   = { name = "Marble",    pos = Vector3.new(-0.000, 3.000, 139.000) },
+    ["콘크리트"] = { name = "Concrete",  pos = Vector3.new( 1.130, 3.000, 164.748) },
+    ["화강암"]   = { name = "Granite",   pos = Vector3.new(-0.000, 3.000, 189.000) },
+    ["철"]       = { name = "Iron",      pos = Vector3.new( 0.197, 3.000, 213.989) },
+    ["강철"]     = { name = "Steel",     pos = Vector3.new( 0.477, 3.000, 239.290) },
+    ["황금"]     = { name = "Gold",      pos = Vector3.new( 0.252, 3.000, 263.727) },
+    ["루비"]     = { name = "Ruby",      pos = Vector3.new(-0.427, 3.000, 289.488) },
+    ["에메랄드"] = { name = "Emerald",   pos = Vector3.new( 0.000, 3.000, 314.000) },
+    ["다이아몬드"] = { name = "Diamond", pos = Vector3.new( 0.000, 3.000, 339.000) },
+    ["다크메탈"] = { name = "DarkMatter", pos = Vector3.new( 1.131, 3.000, 488.142) },
+}
+local selectedObjName = "WoodPlank"
+local selectedPos     = Vector3.new(-0.306, 3.000, 14.466)
+
+local TP_MAP = {
+    ["미션섬"] = Vector3.new(-175.776, 45.324, 415.190),
+    ["2세계"]  = Vector3.new(-561.048, 3.242, -0.847),
+}
+local selectedTPName = "미션섬"
+local selectedTPPos  = TP_MAP["미션섬"]
+
+local farmRunning, fixConn, sendActive = false, nil, false
+local trainingRunning, trainingThread = false, nil
+local contestRunning = false
+
+local walkSpeedT = false
+local walkSpeedV = 80
+local activeLoop = nil
+local speedConn  = nil
+
+local currentJump, currentSpin = 50, 1
+local jumpToggleActive = false
+local spinToggleActive = false
+local spinConn         = nil
+
+local noclipActive, infJumpActive, antiAFKActive = false, false, false
+local antiFogActive, antiFogSavings   = false, {}
+local antiDarkActive, antiDarkSavings = false, {}
+local antiLagActive, antiLagSavings   = false, {}
+
+local function stopFarm()
+    farmRunning = false
+    sendActive  = false
+    if fixConn then pcall(function() fixConn:Disconnect() end) fixConn = nil end
+end
+local function stopTraining()
+    trainingRunning = false
+    if trainingThread then pcall(task.cancel, trainingThread) trainingThread = nil end
+end
+local function stopContest() contestRunning = false end
+
+local function updateWalkSpeedF()
+    local char = plr.Character
+    if not char then return end
+
+    local hum  = char:FindFirstChildOfClass("Humanoid")
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not hum or not root then return end
+
+    if activeLoop then activeLoop:Disconnect() activeLoop = nil end
+    if speedConn  then speedConn:Disconnect()  speedConn  = nil end
+
+    hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, not walkSpeedT)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll,     not walkSpeedT)
+
+    if not walkSpeedT then
+        hum.WalkSpeed = 16
+        return
+    end
+
+    hum.WalkSpeed = 16
+
+    speedConn = hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+        if walkSpeedT and hum.Parent and hum.WalkSpeed ~= 16 then
+            hum.WalkSpeed = 16
+        end
+    end)
+
+    activeLoop = rs2.Heartbeat:Connect(function()
+        if not walkSpeedT or not char:IsDescendantOf(workspace) then
+            if activeLoop then activeLoop:Disconnect() activeLoop = nil end
+            return
+        end
+        if not hum.Parent or not root.Parent then return end
+
+        local speed    = tonumber(walkSpeedV) or 80
+        local dir      = hum.MoveDirection
+        local velocity = root.AssemblyLinearVelocity
+
+        if dir.Magnitude > 0 then
+            root.AssemblyLinearVelocity = Vector3.new(dir.X * speed, velocity.Y, dir.Z * speed)
+        else
+            root.AssemblyLinearVelocity = Vector3.new(0, velocity.Y, 0)
+        end
+
+        for _, track in ipairs(hum:GetPlayingAnimationTracks()) do
+            local name = track.Name:lower()
+            local id   = track.Animation and track.Animation.AnimationId:lower() or ""
+            if name:find("walk") or name:find("run")
+            or id:find("walk") or id:find("run") then
+                track:AdjustSpeed(1)
+            end
+        end
+    end)
+end
+
+local Tab = Window:AddTab("메인", "home")
+
+local SelGroup = Tab:AddLeftGroupbox("오브젝트 선택")
+SelGroup:AddDropdown("ObjSelect", {
+    Text = "파괴할 오브젝트",
+    Values = {"나무", "유리", "얼음", "벽돌", "돌", "대리석", "콘크리트", "화강암",
+              "철", "강철", "황금", "루비", "에메랄드", "다이아몬드", "다크메탈"},
+    Default = "나무",
+    Callback = function(Value)
+        local d = OBJ_MAP[Value]
+        if d then selectedObjName = d.name; selectedPos = d.pos end
+    end,
+})
+
+local MainGroup = Tab:AddLeftGroupbox("돈 오토팜")
+MainGroup:AddToggle("FarmToggle", {
+    Text = "돈 오토팜",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            if farmRunning then return end
+            farmRunning, sendActive = true, true
+            local targetPos, objName = selectedPos, selectedObjName
+
+            fixConn = RunService.Heartbeat:Connect(function()
+                if not farmRunning then
+                    if fixConn then fixConn:Disconnect() fixConn = nil end
+                    return
+                end
+                local char = plr.Character
+                local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    hrp.CFrame     = CFrame.new(targetPos)
+                    hrp.Velocity   = Vector3.zero
+                    hrp.AssemblyLinearVelocity = Vector3.zero
+                end
+            end)
+
+            local remotes  = RS:WaitForChild("Remotes", 10)
+            local Event, crashObjs
+            if remotes then
+                Event     = remotes:WaitForChild("CrashObjectBroken", 10)
+                crashObjs = workspace:WaitForChild("CrashObjects", 10)
+            end
+
+            local function sendStep()
+                if not sendActive or not Event or not crashObjs then return end
+                local target = crashObjs:FindFirstChild(objName)
+                if target then pcall(function() Event:FireServer(target) end) end
+                task.wait(FIRE_DELAY)
+                if sendActive then task.spawn(sendStep) end
+            end
+            task.spawn(sendStep)
+        else
+            stopFarm()
+        end
+    end,
+})
+
+local TPGroup = Tab:AddLeftGroupbox("TP")
+TPGroup:AddDropdown("TPSelect", {
+    Text = "이동 위치",
+    Values = {"미션섬", "2세계"},
+    Default = "미션섬",
+    Callback = function(Value)
+        local p = TP_MAP[Value]
+        if p then selectedTPName = Value; selectedTPPos = p end
+    end,
+})
+TPGroup:AddButton({
+    Text = "텔레포트",
+    Func = function()
+        local char = plr.Character
+        local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = CFrame.new(selectedTPPos)
+        end
+    end,
+    DoubleClick = false,
+})
+
+local ContestGroup = Tab:AddLeftGroupbox("대회 오토팜")
+ContestGroup:AddLabel("개대충만들었습니다.", true)
+ContestGroup:AddToggle("ContestToggle", {
+    Text = "대회 오토팜 (대충만듬)",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            if contestRunning then return end
+            contestRunning = true
+
+            local remotes = RS:WaitForChild("Remotes", 10)
+            if not remotes then contestRunning = false return end
+            local Event = remotes:WaitForChild("CrashObjectBroken", 10)
+            if not Event then contestRunning = false return end
+
+            local arena  = workspace:WaitForChild("ContestArena", 10)
+            if not arena then contestRunning = false return end
+            local planks = arena:WaitForChild("Planks", 10)
+            if not planks then contestRunning = false return end
+
+            local function contestStep()
+                if not contestRunning then return end
+                local target = planks:GetChildren()[4]
+                if target then
+                    for i = 1, 5 do
+                        pcall(function() Event:FireServer(target) end)
+                    end
+                end
+                task.wait()
+                if contestRunning then task.spawn(contestStep) end
+            end
+            task.spawn(contestStep)
+        else
+            stopContest()
+        end
+    end,
+})
+
+local TrainGroup = Tab:AddRightGroupbox("오토훈련")
+TrainGroup:AddLabel("⚠ 주의: 이 기능은 훈련 모드를 키셔야 작동합니다", true)
+TrainGroup:AddToggle("AutoTraining", {
+    Text = "오토 훈련",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            if trainingRunning then return end
+            trainingRunning = true
+            trainingThread = task.spawn(function()
+                local remotes = RS:WaitForChild("Remotes", 10)
+                if not remotes then stopTraining() return end
+                local Event = remotes:WaitForChild("TrainingTiming", 10)
+                if not Event then stopTraining() return end
+                local function trainStep()
+                    if not trainingRunning then return end
+                    pcall(function() Event:FireServer("Perfect") end)
+                    task.wait(FIRE_DELAY)
+                    if trainingRunning then task.spawn(trainStep) end
+                end
+                task.spawn(trainStep)
+            end)
+        else
+            stopTraining()
+        end
+    end,
+})
+
+local PlayerTab = Window:AddTab("플레이어", "user")
+
+local MoveGroup = PlayerTab:AddLeftGroupbox("이동 설정")
+
+MoveGroup:AddToggle("WalkSpeedToggle", {
+    Text = "이동속도",
+    Default = false,
+    Callback = function(v)
+        walkSpeedT = v
+        updateWalkSpeedF()
+    end,
+})
+MoveGroup:AddSlider("WalkSpeedSlider", {
+    Text = "이동속도",
+    Default = 80,
+    Min = 16,
+    Max = 500,
+    Rounding = 0,
+    Callback = function(v)
+        walkSpeedV = v
+        if walkSpeedT then updateWalkSpeedF() end
+    end,
+})
+
+MoveGroup:AddToggle("JumpToggle", {
+    Text = "점프력",
+    Default = false,
+    Callback = function(v)
+        jumpToggleActive = v
+        local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.UseJumpPower = true
+            hum.JumpPower = v and currentJump or 50
+        end
+    end,
+})
+MoveGroup:AddSlider("JumpSlider", {
+    Text = "점프력",
+    Default = 50, Min = 1, Max = 500, Rounding = 0,
+    Callback = function(v)
+        currentJump = v
+        if jumpToggleActive then
+            local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+            if hum then hum.UseJumpPower = true; hum.JumpPower = v end
+        end
+    end,
+})
+
+MoveGroup:AddToggle("SpinToggle", {
+    Text = "스핀",
+    Default = false,
+    Callback = function(v)
+        spinToggleActive = v
+        if spinConn then spinConn:Disconnect() spinConn = nil end
+        local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+        if v then
+            if hum then hum.AutoRotate = false end
+            spinConn = RunService.Heartbeat:Connect(function(dt)
+                local char = plr.Character
+                if not char then return end
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+                hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(currentSpin) * dt, 0)
+            end)
+        else
+            if hum then hum.AutoRotate = true end
+        end
+    end,
+})
+MoveGroup:AddSlider("SpinSlider", {
+    Text = "스핀 속도 (1~500)",
+    Default = 1, Min = 1, Max = 2000, Rounding = 0,
+    Callback = function(v) currentSpin = v end,
+})
+
+local OtherGroup = PlayerTab:AddRightGroupbox("다른것")
+
+OtherGroup:AddToggle("NoClipToggle", {
+    Text = "노클립",
+    Default = false,
+    Callback = function(v) noclipActive = v end,
+})
+OtherGroup:AddToggle("InfJumpToggle", {
+    Text = "무한 점프",
+    Default = false,
+    Callback = function(v) infJumpActive = v end,
+})
+OtherGroup:AddToggle("AntiAFKToggle", {
+    Text = "안티 APK",
+    Default = false,
+    Callback = function(v) antiAFKActive = v end,
+})
+
+local HelperGroup = PlayerTab:AddRightGroupbox("도우미")
+
+HelperGroup:AddToggle("AntiFogToggle", {
+    Text = "안티 안개",
+    Default = false,
+    Callback = function(v)
+        antiFogActive = v
+        if v then
+            antiFogSavings = { FogEnd = Lighting.FogEnd, FogStart = Lighting.FogStart }
+            Lighting.FogEnd, Lighting.FogStart = 1e10, 1e10
+        else
+            Lighting.FogEnd   = antiFogSavings.FogEnd   or 100000
+            Lighting.FogStart = antiFogSavings.FogStart or 0
+            antiFogSavings = {}
+        end
+    end,
+})
+HelperGroup:AddToggle("AntiDarkToggle", {
+    Text = "안티 어둠 ",
+    Default = false,
+    Callback = function(v)
+        antiDarkActive = v
+        if v then
+            antiDarkSavings = {}
+            for _, prop in ipairs({"Brightness","Ambient","OutdoorAmbient","ClockTime",
+                                    "GlobalShadows","FogEnd","FogStart"}) do
+                antiDarkSavings[prop] = Lighting[prop]
+            end
+            Lighting.Brightness     = 2
+            Lighting.Ambient        = Color3.fromRGB(255, 255, 255)
+            Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+            Lighting.ClockTime      = 14
+            Lighting.GlobalShadows  = false
+            Lighting.FogEnd         = 1e10
+            Lighting.FogStart       = 1e10
+        else
+            for prop, val in pairs(antiDarkSavings) do
+                pcall(function() Lighting[prop] = val end)
+            end
+            antiDarkSavings = {}
+        end
+    end,
+})
+HelperGroup:AddToggle("AntiLagToggle", {
+    Text = "안티렉",
+    Default = false,
+    Callback = function(v)
+        antiLagActive = v
+        if v then
+            antiLagSavings = { objs = {}, lighting = {}, terrain = nil }
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                local cls = obj.ClassName
+                if cls == "ParticleEmitter" or cls == "Smoke" or cls == "Fire"
+                or cls == "Sparkles" or cls == "Trail" or cls == "Beam"
+                or cls == "PointLight" or cls == "SpotLight" or cls == "SurfaceLight" then
+                    table.insert(antiLagSavings.objs, { obj = obj, enabled = obj.Enabled })
+                    pcall(function() obj.Enabled = false end)
+                end
+            end
+            antiLagSavings.lighting.GlobalShadows = Lighting.GlobalShadows
+            antiLagSavings.lighting.Brightness    = Lighting.Brightness
+            Lighting.GlobalShadows = false
+            Lighting.Brightness    = 1
+            local terrain = workspace:FindFirstChildOfClass("Terrain")
+            if terrain then
+                antiLagSavings.terrain = {
+                    WaterWaveSize  = terrain.WaterWaveSize,
+                    WaterWaveSpeed = terrain.WaterWaveSpeed,
+                }
+                terrain.WaterWaveSize  = 0
+                terrain.WaterWaveSpeed = 0
+            end
+        else
+            for _, s in ipairs(antiLagSavings.objs or {}) do
+                if s.obj and s.obj.Parent then
+                    pcall(function() s.obj.Enabled = s.enabled end)
+                end
+            end
+            if antiLagSavings.lighting then
+                Lighting.GlobalShadows = antiLagSavings.lighting.GlobalShadows
+                Lighting.Brightness    = antiLagSavings.lighting.Brightness
+            end
+            if antiLagSavings.terrain then
+                local terrain = workspace:FindFirstChildOfClass("Terrain")
+                if terrain then
+                    terrain.WaterWaveSize  = antiLagSavings.terrain.WaterWaveSize
+                    terrain.WaterWaveSpeed = antiLagSavings.terrain.WaterWaveSpeed
+                end
+            end
+            antiLagSavings = {}
+        end
+    end,
+})
+
+RunService.Heartbeat:Connect(function()
+    if noclipActive then
+        local char = plr.Character
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = false end
+            end
+        end
+    end
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if not infJumpActive then return end
+    local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+    if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+end)
+
+plr.Idled:Connect(function()
+    if not antiAFKActive then return end
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+end)
+
+plr.CharacterAdded:Connect(function(char)
+    if activeLoop then activeLoop:Disconnect() activeLoop = nil end
+    if speedConn  then speedConn:Disconnect()  speedConn  = nil end
+
+    char:WaitForChild("Humanoid")
+    char:WaitForChild("HumanoidRootPart")
+    task.wait(0.1)
+    updateWalkSpeedF()
+
+    if farmRunning or trainingRunning or contestRunning then
+        stopFarm()
+        stopTraining()
+        stopContest()
+        Library:Notify({ Title = "자동 정지", Description = "리스폰 감지 → 모든 토글 Off", Duration = 3 })
+    end
+end)
+
+if plr.Character then
+    task.spawn(function()
+        plr.Character:WaitForChild("Humanoid")
+        plr.Character:WaitForChild("HumanoidRootPart")
+        updateWalkSpeedF()
+    end)
+end
