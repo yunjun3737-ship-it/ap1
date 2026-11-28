@@ -16529,17 +16529,41 @@ end
 Library:SetIconModule(Lucide)
 
 local Window = Library:CreateWindow({
-    Title = "허브",
-    Footer = "Obsidian Mobile",
+    Title = "알파허브",
+    Footer = "판자깨기 조지시러오신걸 환영해요!",
     ToggleKeybind = Enum.KeyCode.RightControl,
     Center = true,
     AutoShow = true,
-    MobileButtonsSide = "Right",
+    MobileButtonsSide = "Left",
     Resizable = false,
 })
 
-local Watermark = Library:AddDraggableLabel("허브")
+local Watermark = Library:AddDraggableLabel("알파 | v1.0 | Ping: -- ms | FPS: --")
 Watermark:SetVisible(true)
+
+local WatermarkStats = game:GetService("Stats")
+local WatermarkRunService = game:GetService("RunService")
+local WatermarkFrames = 0
+local WatermarkLast = os.clock()
+local WatermarkFPS = 0
+
+WatermarkRunService.RenderStepped:Connect(function()
+    WatermarkFrames += 1
+
+    local now = os.clock()
+    if now - WatermarkLast >= 1 then
+        WatermarkFPS = math.floor(WatermarkFrames / (now - WatermarkLast) + 0.5)
+        WatermarkFrames = 0
+        WatermarkLast = now
+
+        local ping = "--"
+        pcall(function()
+            ping = WatermarkStats.Network.ServerStatsItem["Data Ping"]:GetValueString()
+        end)
+
+        Watermark:SetText(("알파 | v1.0 | Ping: %s | FPS: %d"):format(tostring(ping), WatermarkFPS))
+    end
+end)
 
 local Players          = game:GetService("Players")
 local RS               = game:GetService("ReplicatedStorage")
