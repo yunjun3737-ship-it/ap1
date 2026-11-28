@@ -15119,8 +15119,7 @@ end
 
 getgenv().Library = Library
 return Library
-]====]
-sources.ThemeManager = [====[
+
 local cloneref = (cloneref or clonereference or function(instance: any)
     return instance
 end)
